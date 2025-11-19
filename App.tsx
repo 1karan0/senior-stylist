@@ -17,3 +17,5 @@ export default class App extends Component {
 // Another test for husky fix
 
 // Testing commitlint
+
+// Testing invalid commit

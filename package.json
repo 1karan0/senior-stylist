@@ -12,7 +12,9 @@
     "format": "prettier --write .",
     "type-check": "tsc --noEmit",
     "validate": "npm run type-check && npm run lint",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "commitlint": "commitlint --from=HEAD~1",
+    "commitlint:all": "commitlint --from=first-parent"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
