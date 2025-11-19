@@ -11,17 +11,14 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import LinearGradient from "react-native-linear-gradient";
 import axios from "axios";
-import Config from "react-native-config";
+import { BASE_URL } from "../../config";
 
 export default function LoginScreen({ navigation }: any) {
     const { control, handleSubmit } = useForm();
     const [loading, setLoading] = useState(false);
 
-    // Change this to your real API URL
-    const BASE_URL = Config.BASE_URL ;
-    console.log("Base URL:", Config.BASE_URL);
 
-    // 🌿 Login Function
+    // Login Function
     const handleLogin = async (form: any) => {
         try {
             setLoading(true);
@@ -36,9 +33,8 @@ export default function LoginScreen({ navigation }: any) {
             navigation.navigate("Pricing");
 
         } catch (err: any) {
-            console.log("base url:", BASE_URL);
             console.log("Login error:", err);
-            console.log("Login error:", err?.response?.data);
+            
 
             Alert.alert(
                 "Login Failed",
@@ -168,16 +164,20 @@ export default function LoginScreen({ navigation }: any) {
                     <Text className="text-[#64748B] font-normal text-[14px]">
                         Don’t have an account?{" "}
                     </Text>
-                    <Pressable onPress={() => navigation.navigate("Signup")}>
+                    <Pressable onPress={() => navigation.navigate("Signup",{user:"customer"})}>
                         <Text className="text-[#27B07D]">Sign Up</Text>
                     </Pressable>
                 </View>
 
                 {/* Consultant */}
-                <Text className="text-center mt-3 text-[#162721] font-medium text-[14px]">
+                <View className="flex-row justify-center mt-3">
+                    <Text className="text-center  text-[#162721] font-medium text-[14px]">
                     Want to be a Consultant?{" "}
-                    <Text className="text-[#27B07D]">Register here</Text>
                 </Text>
+                    <Pressable onPress={() => navigation.navigate("Signup",{user:"consultant"})}>
+                        <Text className="text-[#27B07D]">Register here</Text>
+                    </Pressable>
+                </View>
             </View>
         </LinearGradient>
     );
