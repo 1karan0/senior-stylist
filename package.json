@@ -2,7 +2,7 @@
   "name": "Senior_stylist",
   "version": "0.0.1",
   "private": true,
-  "scripts": {
+    "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
@@ -14,12 +14,13 @@
     "validate": "npm run type-check && npm run lint",
     "precommit": "lint-staged",
     "commitlint": "commitlint --from=HEAD~1",
-    "commitlint:all": "commitlint --from=first-parent"
+    "commitlint:all": "commitlint --from=first-parent",
+    "prepare": "husky"
   },
-  "lint-staged": {
+   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "prettier --write",
-      "eslint --fix"
+      "eslint --fix --max-warnings=0"
     ],
     "*.{json,md,mdx,css,html,yml,yaml}": [
       "prettier --write"
