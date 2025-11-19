@@ -8,7 +8,7 @@ import LinearGradient from "react-native-linear-gradient";
 
 
 
-const OnboardingScreen = ({ navigation }:any) => {
+const OnboardingScreen = ({ navigation }: any) => {
   const pagerRef = useRef<PagerView>(null);
   const [page, setPage] = useState(0);
 
@@ -21,56 +21,62 @@ const OnboardingScreen = ({ navigation }:any) => {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <LinearGradient
+      colors={["#ECFAF5", "#D1F6E7"]} // pick your exact light-green gradient shades
+      start={{ x: 0, y: 0 }}
+      end={{ x: 2, y: 4 }}
+      className="flex-1 px-6"
+    >
+      <View className="flex-1">
 
-      {/* Pager */}
-      <PagerView
-        ref={pagerRef}
-        style={{ flex: 1 }}
-        initialPage={0}
-        onPageSelected={(e) => setPage(e.nativeEvent.position)}
-      >
-        {onboardData.map((item) => (
-          <View key={item.id}>
-            <OnboardItem item={item} />
-          </View>
-        ))}
-      </PagerView>
-
-      {/* Page Indicators */}
-      <View className="flex-row justify-center mb-4">
-        {onboardData.map((_, i) => (
-          <View
-            key={i}
-            className={`h-2 mx-1 rounded-full ${
-              i === page ? "bg-green-500 w-6" : "bg-gray-300 w-2"
-            }`}
-          />
-        ))}
-      </View>
-
-      {/* Buttons */}
-      <View className="flex-row items-center justify-center gap-4 px-6 mb-8">
-        <TouchableOpacity onPress={() => navigation.replace("Login")} className="bg-[#F5F9F7] px-5 py-2 w-48 rounded-2xl items-center border border-[#DAE7E0]">
-          <Text className=" text-base font-bold">Skip</Text>
-        </TouchableOpacity>
-
-        
-        <LinearGradient
-        colors={["#2CCB91", "#23A76F"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ borderRadius: 14 }}
+        {/* Pager */}
+        <PagerView
+          ref={pagerRef}
+          style={{ flex: 1 }}
+          initialPage={0}
+          onPageSelected={(e) => setPage(e.nativeEvent.position)}
         >
+          {onboardData.map((item) => (
+            <View key={item.id}>
+              <OnboardItem item={item} />
+            </View>
+          ))}
+        </PagerView>
+
+        {/* Page Indicators */}
+        <View className="flex-row justify-center mb-4">
+          {onboardData.map((_, i) => (
+            <View
+              key={i}
+              className={`h-2 mx-1 rounded-full ${i === page ? "bg-green-500 w-6" : "bg-gray-300 w-2"
+                }`}
+            />
+          ))}
+        </View>
+
+        {/* Buttons */}
+        <View className="flex-row items-center justify-center gap-4 px-6 mb-8">
+          <TouchableOpacity onPress={() => navigation.replace("Login")} className="bg-[#F5F9F7] px-5 py-2 w-48 rounded-2xl items-center border border-[#DAE7E0]">
+            <Text className=" text-base font-bold">Skip</Text>
+          </TouchableOpacity>
+
+
+          <LinearGradient
+            colors={["#2CCB91", "#23A76F"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ borderRadius: 14 }}
+          >
             <TouchableOpacity
-          onPress={goNext}
-          className=" px-5 py-2 w-48 rounded-2xl items-center "
-        >
-          <Text className="text-white text-base font-bold">{page===2 ? "Get Started":"Next"}</Text>
-        </TouchableOpacity>
-        </LinearGradient>
+              onPress={goNext}
+              className=" px-5 py-2 w-48 rounded-2xl items-center "
+            >
+              <Text className="text-white text-base font-bold">{page === 2 ? "Get Started" : "Next"}</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
       </View>
-    </View>
+    </LinearGradient>
   );
 };
 

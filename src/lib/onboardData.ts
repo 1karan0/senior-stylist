@@ -14,14 +14,14 @@ const onboardData: OnboardItemType[] = [
   },
   {
     id: 2,
-    title: "Personalized Solutions",
-    description: "Get instant hair care suggestions based on your hair type.",
+    title: "Shop with Ease ",
+    description: "Browse thousands of products and get them delivered to your doorstep",
     icon: require("../assets/icon2.png"),
   },
   {
     id: 3,
-    title: "Track Your Routine",
-    description: "Stay consistent with your hair goals using daily check-ins.",
+    title: "Expert Consultants",
+    description: "Get professional advice from verified consultants in various fields.",
     icon: require("../assets/icon3.png"),
   },
 ];
