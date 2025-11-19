@@ -1,21 +1,64 @@
-import React from "react";
-import { View, Text, TextInput, Pressable, Image } from "react-native";
+import React, { useState } from "react";
+import {
+    View,
+    Text,
+    TextInput,
+    Pressable,
+    Image,
+    ActivityIndicator,
+    Alert,
+} from "react-native";
 import { useForm, Controller } from "react-hook-form";
-import LinearGradient from 'react-native-linear-gradient';
+import LinearGradient from "react-native-linear-gradient";
+import axios from "axios";
+import Config from "react-native-config";
 
 export default function LoginScreen({ navigation }: any) {
     const { control, handleSubmit } = useForm();
+    const [loading, setLoading] = useState(false);
+
+    // Change this to your real API URL
+    const BASE_URL = Config.BASE_URL ;
+    console.log("Base URL:", Config.BASE_URL);
+
+    // 🌿 Login Function
+    const handleLogin = async (form: any) => {
+        try {
+            setLoading(true);
+
+            const response = await axios.post(`${BASE_URL}/api/login`, {
+                email: form.email,
+                password: form.password,
+            });
+
+            console.log("Login success:", response.data);
+
+            navigation.navigate("Pricing");
+
+        } catch (err: any) {
+            console.log("base url:", BASE_URL);
+            console.log("Login error:", err);
+            console.log("Login error:", err?.response?.data);
+
+            Alert.alert(
+                "Login Failed",
+                err?.response?.data?.message || "Something feels off."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <LinearGradient
-            colors={["#ECFAF5", "#D1F6E7"]} // pick your exact light-green gradient shades
+            colors={["#ECFAF5", "#D1F6E7"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 2, y: 4 }}
             className="flex-1 px-6"
         >
-            <View className="">
+            <View>
 
-                {/* Logo + Headings */}
+                {/* Logo & Header */}
                 <View className="items-center mt-14 mb-10">
                     <Image
                         source={require("../../assets/colored_logo.png")}
@@ -32,7 +75,7 @@ export default function LoginScreen({ navigation }: any) {
                     </Text>
                 </View>
 
-                {/* Email Field */}
+                {/* Email */}
                 <Text className="font-medium text-[14px] text-black mb-2">
                     Email Address
                 </Text>
@@ -46,6 +89,7 @@ export default function LoginScreen({ navigation }: any) {
                     <Controller
                         control={control}
                         name="email"
+                        rules={{ required: "Email is required" }}
                         render={({ field: { onChange, value } }) => (
                             <TextInput
                                 placeholder="Enter your email"
@@ -53,12 +97,13 @@ export default function LoginScreen({ navigation }: any) {
                                 className="flex-1 font-normal text-black"
                                 value={value}
                                 onChangeText={onChange}
+                                keyboardType="email-address"
                             />
                         )}
                     />
                 </View>
 
-                {/* Password Field */}
+                {/* Password */}
                 <Text className="font-medium text-[14px] text-black mb-2">
                     Password
                 </Text>
@@ -72,6 +117,7 @@ export default function LoginScreen({ navigation }: any) {
                     <Controller
                         control={control}
                         name="password"
+                        rules={{ required: "Password is required" }}
                         render={({ field: { onChange, value } }) => (
                             <TextInput
                                 placeholder="Enter your password"
@@ -86,42 +132,52 @@ export default function LoginScreen({ navigation }: any) {
                 </View>
 
                 {/* Forgot Password */}
-                <Pressable onPress={() => navigation.navigate('ForgetPassword')} className="mt-4 mb-6 self-end">
+                <Pressable
+                    onPress={() => navigation.navigate("ForgetPassword")}
+                    className="mt-4 mb-6 self-end"
+                >
                     <Text className="font-normal text-[13px] text-[#27B07D]">
                         Forgot Password?
                     </Text>
                 </Pressable>
 
-                {/* Sign In Button — gradient */}
-                <Pressable className="rounded-2xl overflow-hidden mb-6">
+                {/* Sign In Button */}
+                <Pressable
+                    className="rounded-2xl overflow-hidden mb-6"
+                    onPress={handleSubmit(handleLogin)}
+                    disabled={loading}
+                >
                     <LinearGradient
                         colors={["#2CCB91", "#23A76F"]}
                         start={{ x: 0, y: 1 }}
                         end={{ x: 1, y: 0 }}
                         className="h-[50px] rounded-xl justify-center items-center"
                     >
-                        <Text className="text-white font-urbanistBold text-[16px]">
-                            Sign In
-                        </Text>
+                        {loading ? (
+                            <ActivityIndicator color="white" />
+                        ) : (
+                            <Text className="text-white font-bold text-[16px]">
+                                Sign In
+                            </Text>
+                        )}
                     </LinearGradient>
                 </Pressable>
 
-                {/* Sign Up link */}
-                <View className="text-center flex flex-row justify-center ">
-                    <Text className="text-center text-[#64748B] font-normal text-[14px]">
+                {/* Sign Up */}
+                <View className="flex-row justify-center">
+                    <Text className="text-[#64748B] font-normal text-[14px]">
                         Don’t have an account?{" "}
                     </Text>
-                    <Pressable onPress={() => navigation.navigate('Signup')} >
+                    <Pressable onPress={() => navigation.navigate("Signup")}>
                         <Text className="text-[#27B07D]">Sign Up</Text>
                     </Pressable>
                 </View>
 
-                {/* Consultant link */}
+                {/* Consultant */}
                 <Text className="text-center mt-3 text-[#162721] font-medium text-[14px]">
                     Want to be a Consultant?{" "}
-                    <Text className="text-[#27B07D] font-urbanistSemi">Register here</Text>
+                    <Text className="text-[#27B07D]">Register here</Text>
                 </Text>
-
             </View>
         </LinearGradient>
     );
