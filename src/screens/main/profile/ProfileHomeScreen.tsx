@@ -1,45 +1,42 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { ConsultationStackParamList } from '@/common/types';
+import { ProfileStackParamList } from '@/common/types';
 
-type ConsultationHomeScreenNavigationProp = StackNavigationProp<
-  ConsultationStackParamList,
-  'ConsultationHome'
->;
+type ProfileHomeScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 interface Props {
-  navigation: ConsultationHomeScreenNavigationProp;
+  navigation: ProfileHomeScreenNavigationProp;
 }
 
 const ProfileHomeScreen: React.FC<Props> = ({ navigation }) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Consultation Home</Text>
-      <Button
-        title="Go to Profile Details"
-        onPress={() => navigation.navigate('ConsultationDetail')}
-      />
-      <Button
-        title="Go to Profile Chat"
-        onPress={() => navigation.navigate('ConsultationChat')}
-      />
+    <View className="flex-1 bg-white">
+      {/* Header */}
+      <View className="flex-row items-center p-4 border-b border-gray-200">
+        <Text className="text-xl font-bold text-gray-800">Profile Home</Text>
+      </View>
+
+      {/* Content */}
+      <View className="flex-1 justify-center items-center px-4">
+        <Text className="text-2xl font-bold text-gray-800 mb-8">Profile Home</Text>
+
+        <TouchableOpacity
+          className="bg-blue-500 px-6 py-3 rounded-lg mb-4 w-64"
+          onPress={() => navigation.navigate('EditProfile')}
+        >
+          <Text className="text-white text-center text-lg font-semibold">Go to Edit Profile</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="bg-green-500 px-6 py-3 rounded-lg w-64"
+          onPress={() => navigation.navigate('Settings')}
+        >
+          <Text className="text-white text-center text-lg font-semibold">Go to Settings</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-});
 
 export default ProfileHomeScreen;

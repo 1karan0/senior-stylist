@@ -8,12 +8,12 @@ import { StoreStackParamList } from '@/common/types';
 const Stack = createNativeStackNavigator<StoreStackParamList>();
 
 const StoreStack: React.FC = () => (
-  <Stack.Navigator>
-    <Stack.Screen 
-      name="StoreHome" 
-      component={StoreHomeScreen}
-      options={{ title: 'Store' }}
-    />
+  <Stack.Navigator
+    screenOptions={{
+      headerShown: false, // ← This hides the header
+    }}
+  >
+    <Stack.Screen name="StoreHome" component={StoreHomeScreen} options={{ title: 'Store' }} />
     {/* <Stack.Screen 
       name="ProductDetail" 
       component={ProductDetailScreen}

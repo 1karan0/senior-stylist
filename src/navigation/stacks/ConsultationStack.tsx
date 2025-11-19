@@ -8,19 +8,23 @@ import { ConsultationStackParamList } from '@/common/types';
 const Stack = createNativeStackNavigator<ConsultationStackParamList>();
 
 const ConsultationStack: React.FC = () => (
-  <Stack.Navigator>
-    <Stack.Screen 
-      name="ConsultationHome" 
+  <Stack.Navigator
+    screenOptions={{
+      headerShown: false, // ← This hides the header
+    }}
+  >
+    <Stack.Screen
+      name="ConsultationHome"
       component={ConsultationHomeScreen}
       options={{ title: 'Consultation' }}
     />
-    <Stack.Screen 
-      name="ConsultationDetail" 
+    <Stack.Screen
+      name="ConsultationDetail"
       component={ConsultationDetailScreen}
       options={{ title: 'Consultation Details' }}
     />
-    <Stack.Screen 
-      name="ConsultationChat" 
+    <Stack.Screen
+      name="ConsultationChat"
       component={ConsultationChatScreen}
       options={{ title: 'Chat' }}
     />

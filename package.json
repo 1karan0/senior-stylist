@@ -2,7 +2,7 @@
   "name": "Senior_stylist",
   "version": "0.0.1",
   "private": true,
-    "scripts": {
+  "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
@@ -17,7 +17,7 @@
     "commitlint:all": "commitlint --from=first-parent",
     "prepare": "husky"
   },
-   "lint-staged": {
+  "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "prettier --write",
       "eslint --fix --max-warnings=0"
