@@ -5,9 +5,23 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "format": "prettier --write .",
+    "type-check": "tsc --noEmit",
+    "validate": "npm run type-check && npm run lint",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md,mdx,css,html,yml,yaml}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@react-native/new-app-screen": "0.82.1",
@@ -32,8 +46,17 @@
     "@types/jest": "^29.5.13",
     "@types/react": "^19.1.1",
     "@types/react-test-renderer": "^19.1.0",
-    "eslint": "^8.19.0",
+    "@typescript-eslint/eslint-plugin": "^8.47.0",
+    "@typescript-eslint/parser": "^8.47.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-native": "^5.0.0",
+    "husky": "^9.1.7",
     "jest": "^29.6.3",
+    "lint-staged": "^16.2.6",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.7.1",
     "react-test-renderer": "19.1.1",
