@@ -13,3 +13,5 @@ export default class App extends Component {
 }
 
 // Test comment for husky
+
+// Another test for husky fix
