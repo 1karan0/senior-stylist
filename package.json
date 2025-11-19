@@ -14,21 +14,25 @@
     "validate": "npm run type-check && npm run lint",
     "precommit": "lint-staged",
     "commitlint": "commitlint --from=HEAD~1",
-    "commitlint:all": "commitlint --from=first-parent"
+    "commitlint:all": "commitlint --from=first-parent",
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "prettier --write",
-      "eslint --fix"
+      "eslint --fix --max-warnings=0"
     ],
     "*.{json,md,mdx,css,html,yml,yaml}": [
       "prettier --write"
     ]
   },
   "dependencies": {
+    "@react-native-vector-icons/ionicons": "^12.3.0",
     "@react-native/new-app-screen": "0.82.1",
+    "@react-navigation/bottom-tabs": "^7.8.5",
     "@react-navigation/native": "^7.1.20",
     "@react-navigation/native-stack": "^7.6.3",
+    "@react-navigation/stack": "^7.6.4",
     "axios": "^1.13.2",
     "nativewind": "^4.2.1",
     "react": "19.1.1",
