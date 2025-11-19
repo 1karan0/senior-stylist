@@ -1,13 +1,23 @@
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const { withNativeWind } = require('nativewind/metro');
 
-// Get the default Metro config
 const defaultConfig = getDefaultConfig(__dirname);
 
-// Merge your custom settings (if any)
 const config = mergeConfig(defaultConfig, {
-  /* Add any custom metro settings here if needed */
+  resolver: {
+    alias: {
+      '@': `${__dirname}/src`,
+      '@/common': `${__dirname}/src/common`,
+      '@/components': `${__dirname}/src/components`,
+      '@/contexts': `${__dirname}/src/contexts`,
+      '@/screens': `${__dirname}/src/screens`,
+      '@/utils': `${__dirname}/src/utils`,
+      '@/constants': `${__dirname}/src/constants`,
+    },
+    extraNodeModules: {
+      '@': `${__dirname}/src`,
+    },
+  },
 });
 
-// Wrap it with NativeWind
 module.exports = withNativeWind(config, { input: './global.css' });

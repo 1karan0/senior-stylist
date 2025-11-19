@@ -1,21 +1,19 @@
-import { Text, View } from 'react-native';
-import React, { Component } from 'react';
-import './global.css';
+import React from 'react';
+import { View, Text } from 'react-native';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
-export default class App extends Component {
-  render() {
-    return (
-      <View className="bg-green-500 flex-1 justify-center items-center">
-        <Text>App</Text>
-      </View>
-    );
-  }
+function HomeScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Hello World - Navigation Disabled</Text>
+    </View>
+  );
 }
 
-// Test comment for husky
-
-// Another test for husky fix
-
-// Testing commitlint
-
-// Testing invalid commit
+export default function App() {
+  return (
+    <ThemeProvider>
+      <HomeScreen />
+    </ThemeProvider>
+  );
+}
