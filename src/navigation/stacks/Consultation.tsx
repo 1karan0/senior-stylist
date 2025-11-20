@@ -1,9 +1,9 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ConsultationHomeScreen from '@/screens/customer/consultation/ConsultationHomeScreen';
-import ConsultationDetailScreen from '@/screens/customer/consultation/ConsultationDetailScreen';
-import ConsultationChatScreen from '@/screens/customer/consultation/ConsultationChatScreen';
 import { ConsultationStackParamList } from '@/common/types';
+import Chat from '@/screens/customer/consultation/Chat';
+import Consultation from '@/screens/customer/consultation/Consultation';
+import Details from '@/screens/customer/consultation/Details';
 
 const Stack = createNativeStackNavigator<ConsultationStackParamList>();
 
@@ -15,19 +15,15 @@ const ConsultationStack: React.FC = () => (
   >
     <Stack.Screen
       name="ConsultationHome"
-      component={ConsultationHomeScreen}
+      component={Consultation}
       options={{ title: 'Consultation' }}
     />
     <Stack.Screen
       name="ConsultationDetail"
-      component={ConsultationDetailScreen}
+      component={Details}
       options={{ title: 'Consultation Details' }}
     />
-    <Stack.Screen
-      name="ConsultationChat"
-      component={ConsultationChatScreen}
-      options={{ title: 'Chat' }}
-    />
+    <Stack.Screen name="ConsultationChat" component={Chat} options={{ title: 'Chat' }} />
   </Stack.Navigator>
 );
 
