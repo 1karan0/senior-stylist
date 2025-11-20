@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ProfileStackParamList } from '@/common/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 type ProfileHomeScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 const ProfileHomeScreen: React.FC<Props> = ({ navigation }) => {
+  const { logout } = useAuth();
   return (
     <View className="flex-1 bg-white">
       {/* Header */}
@@ -33,6 +35,9 @@ const ProfileHomeScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => navigation.navigate('Settings')}
         >
           <Text className="text-white text-center text-lg font-semibold">Go to Settings</Text>
+        </TouchableOpacity>
+        <TouchableOpacity className="bg-red-500 px-6 py-3 rounded-lg w-64" onPress={() => logout()}>
+          <Text className="text-white text-center text-lg font-semibold">logout</Text>
         </TouchableOpacity>
       </View>
     </View>

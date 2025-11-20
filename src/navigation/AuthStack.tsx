@@ -1,11 +1,11 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import OnboardingScreen from '@/screens/onboarding/OnboardingScreen';
-import LoginScreen from '../screens/Auth/LoginScreen';
-import SignupScreen from '../screens/Auth/SignupScreen';
-import ForgetPasswordScreen from '../screens/Auth/ForgetPasswordScreen';
-import OtpVerificationScreen from '../screens/Auth/OtpVerificationScreen';
-import PricingScreen from '../screens/pricing/PricingScreen';
+import OnboardingScreen from '@/screens/onboarding/Onboarding';
+import LoginScreen from '../screens/Auth/Login';
+import SignupScreen from '../screens/Auth/Signup';
+import ForgetPasswordScreen from '../screens/Auth/ForgetPassword';
+import OtpVerificationScreen from '../screens/Auth/OtpVerification';
+import PricingScreen from '../screens/pricing/Pricing';
 import { AuthStackParamList } from '@/common/types';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();

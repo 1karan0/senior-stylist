@@ -1,10 +1,10 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import ConsultationStack from '@/navigation/stacks/ConsultationStack';
-import NewsStack from '@/navigation/stacks/NewsStack';
-import StoreStack from '@/navigation/stacks/StoreStack';
-import ProfileStack from '@/navigation/stacks/ProfileStack';
+import ConsultationStack from '@/navigation/stacks/Consultation';
+import NewsStack from '@/navigation/stacks/News';
+import StoreStack from '@/navigation/stacks/Store';
+import ProfileStack from '@/navigation/stacks/Profile';
 import { MainTabParamList } from '@/common/types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -44,26 +44,14 @@ const MainTabNavigator: React.FC = () => {
         headerShown: false,
       })}
     >
-      <Tab.Screen 
-        name="ConsultationTab" 
+      <Tab.Screen
+        name="ConsultationTab"
         component={ConsultationStack}
         options={{ title: 'Consultation' }}
       />
-      <Tab.Screen 
-        name="NewsTab" 
-        component={NewsStack}
-        options={{ title: 'News' }}
-      />
-      <Tab.Screen 
-        name="StoreTab" 
-        component={StoreStack}
-        options={{ title: 'Store' }}
-      />
-      <Tab.Screen 
-        name="ProfileTab" 
-        component={ProfileStack}
-        options={{ title: 'Profile' }}
-      />
+      <Tab.Screen name="NewsTab" component={NewsStack} options={{ title: 'News' }} />
+      <Tab.Screen name="StoreTab" component={StoreStack} options={{ title: 'Store' }} />
+      <Tab.Screen name="ProfileTab" component={ProfileStack} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
 };

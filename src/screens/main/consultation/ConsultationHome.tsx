@@ -12,16 +12,16 @@ interface Props {
   navigation: ConsultationHomeScreenNavigationProp;
 }
 
-const NewsHomeScreen: React.FC<Props> = ({ navigation }) => {
+const ConsultationHomeScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Consultation Home</Text>
       <Button
-        title="Go to Profile Details"
+        title="Go to Consultation Details"
         onPress={() => navigation.navigate('ConsultationDetail')}
       />
       <Button
-        title="Go to Profile Chat"
+        title="Go to Consultation Chat"
         onPress={() => navigation.navigate('ConsultationChat')}
       />
     </View>
@@ -42,4 +42,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NewsHomeScreen;
+export default ConsultationHomeScreen;

@@ -103,6 +103,7 @@ export interface AuthContextType {
 }
 
 export type RootStackParamList = {
+  Root: undefined;
   Auth: undefined;
   Main: undefined;
 };
