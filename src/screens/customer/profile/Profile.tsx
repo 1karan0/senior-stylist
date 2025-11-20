@@ -5,13 +5,13 @@ import { ProfileStackParamList } from '@/common/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
-type ProfileHomeScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
+type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 interface Props {
-  navigation: ProfileHomeScreenNavigationProp;
+  navigation: ProfileNavigationProp;
 }
 
-const ProfileHomeScreen: React.FC<Props> = ({ navigation }) => {
+const Profile: React.FC<Props> = ({ navigation }) => {
   const { logout } = useAuth();
   const { theme, setTheme, isDark } = useTheme();
 
@@ -115,4 +115,4 @@ const ProfileHomeScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-export default ProfileHomeScreen;
+export default Profile;

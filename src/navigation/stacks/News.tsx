@@ -1,9 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import NewsHomeScreen from '@/screens/customer/news/NewsHomeScreen';
-import NewsDetailScreen from '@/screens/customer/news/NewsDetailScreen';
-// import NewsCategoryScreen from '@/screens/main/news/NewsCategoryScreen';
 import { NewsStackParamList } from '@/common/types';
+import Details from '@/screens/customer/news/Details';
+import News from '@/screens/customer/news/News';
 
 const Stack = createNativeStackNavigator<NewsStackParamList>();
 
@@ -13,17 +12,8 @@ const NewsStack: React.FC = () => (
       headerShown: false, // ← This hides the header
     }}
   >
-    <Stack.Screen name="NewsHome" component={NewsHomeScreen} options={{ title: 'News' }} />
-    <Stack.Screen
-      name="NewsDetail"
-      component={NewsDetailScreen}
-      options={{ title: 'News Details' }}
-    />
-    {/* <Stack.Screen 
-      name="NewsCategory" 
-      component={NewsCategoryScreen}
-      options={{ title: 'Category' }}
-    /> */}
+    <Stack.Screen name="NewsHome" component={News} options={{ title: 'News' }} />
+    <Stack.Screen name="NewsDetail" component={Details} options={{ title: 'News Details' }} />
   </Stack.Navigator>
 );
 

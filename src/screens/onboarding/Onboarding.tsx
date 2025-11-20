@@ -1,16 +1,16 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import PagerView from 'react-native-pager-view';
-import OnboardItem from './components/OnboardItem';
-import onboardData from '../../lib/onboardData';
 import LinearGradient from 'react-native-linear-gradient';
+import OnboardItem from './components/OnboardItem';
+import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
-import { ThemeColors } from '@/constants/Theme';
+import onboardData from '@/lib/onboardData';
 
 const OnboardingScreen = ({ navigation }: any) => {
   const pagerRef = useRef<PagerView>(null);
   const [page, setPage] = useState(0);
-  const { isDark, theme } = useTheme();
+  const { isDark } = useTheme();
 
   const goNext = () => {
     if (page < onboardData.length - 1) {
@@ -20,19 +20,9 @@ const OnboardingScreen = ({ navigation }: any) => {
     }
   };
 
-  // Get gradient colors based on theme and convert to mutable array
-  const gradientColors = isDark
-    ? [...ThemeColors.gradients.dark.onboarding] // Convert to mutable array
-    : [...ThemeColors.gradients.light.onboarding]; // Convert to mutable array
-
   return (
-    <LinearGradient
-      colors={gradientColors}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-      className="flex-1 px-6"
-    >
-      <View className="flex-1">
+    <GradientBackground>
+      <View className="flex-1 px-6">
         {/* Pager */}
         <PagerView
           ref={pagerRef}
@@ -41,14 +31,14 @@ const OnboardingScreen = ({ navigation }: any) => {
           onPageSelected={(e) => setPage(e.nativeEvent.position)}
         >
           {onboardData.map((item) => (
-            <View key={item.id}>
+            <View key={item.id} className="flex-1">
               <OnboardItem item={item} />
             </View>
           ))}
         </PagerView>
 
-        {/* Page Indicators */}
-        <View className="flex-row justify-center mb-4">
+        {/* Page Indicators — now directly under Pager with tighter spacing */}
+        <View className="flex-row justify-center mt-3 mb-6">
           {onboardData.map((_, i) => (
             <View
               key={i}
@@ -66,15 +56,15 @@ const OnboardingScreen = ({ navigation }: any) => {
         </View>
 
         {/* Buttons */}
-        <View className="flex-row items-center justify-center gap-4 px-6 mb-8">
+        <View className="flex-row items-center justify-center gap-4 px-6 mb-10">
           <TouchableOpacity
             onPress={() => navigation.replace('Login')}
             className={`px-5 py-2 w-48 rounded-2xl items-center border ${
-              isDark ? 'bg-gray-800 border-gray-600' : 'bg-[#F5F9F7] border-[#DAE7E0]'
+              isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'
             }`}
           >
             <Text
-              className={`text-base font-urbanist-bold font- ${isDark ? 'text-white' : 'text-gray-800'}`}
+              className={`text-base font-urbanist-bold ${isDark ? 'text-white' : 'text-gray-800'}`}
             >
               Skip
             </Text>
@@ -94,7 +84,7 @@ const OnboardingScreen = ({ navigation }: any) => {
           </LinearGradient>
         </View>
       </View>
-    </LinearGradient>
+    </GradientBackground>
   );
 };
 

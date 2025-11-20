@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 
-const SettingsScreen: React.FC = () => {
+const Settings: React.FC = () => {
   const navigation = useNavigation();
 
   const handleBack = () => {
@@ -29,4 +29,4 @@ const SettingsScreen: React.FC = () => {
   );
 };
 
-export default SettingsScreen;
+export default Settings;

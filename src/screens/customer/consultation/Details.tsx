@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 
-const ConsultationDetailScreen: React.FC = () => {
+const Details: React.FC = () => {
   const navigation = useNavigation();
 
   const handleBack = () => {
@@ -31,4 +31,4 @@ const ConsultationDetailScreen: React.FC = () => {
   );
 };
 
-export default ConsultationDetailScreen;
+export default Details;

@@ -3,16 +3,16 @@ import { View, Text, Button, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ConsultationStackParamList } from '@/common/types';
 
-type ConsultationHomeScreenNavigationProp = StackNavigationProp<
+type ConsultationNavigationProp = StackNavigationProp<
   ConsultationStackParamList,
   'ConsultationHome'
 >;
 
 interface Props {
-  navigation: ConsultationHomeScreenNavigationProp;
+  navigation: ConsultationNavigationProp;
 }
 
-const ConsultationHomeScreen: React.FC<Props> = ({ navigation }) => {
+const Consultation: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Consultation Home</Text>
@@ -42,4 +42,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ConsultationHomeScreen;
+export default Consultation;
