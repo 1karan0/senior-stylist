@@ -6,15 +6,18 @@ import { RootStackParamList } from '@/common/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// This would come from your authentication context
+const userRole = 'consultant'; // or 'customer' - you'll get this from your auth state
+
 const AppNavigator: React.FC = () => {
-  // For testing, you can change the initialRouteName to 'Main'
   return (
-    <Stack.Navigator 
+    <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="Main" // Change to 'Auth' when you want auth screens
+      initialRouteName={userRole === 'consultant' ? 'ConsultantApp' : 'UserApp'}
     >
       <Stack.Screen name="Auth" component={AuthStack} />
-      <Stack.Screen name="Main" component={AppStack} />
+      <Stack.Screen name="UserApp" component={AppStack} />
+      <Stack.Screen name="ConsultantApp" component={AppStack} />
     </Stack.Navigator>
   );
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import NewsHomeScreen from '@/screens/main/news/NewsHomeScreen';
-import NewsDetailScreen from '@/screens/main/news/NewsDetailScreen';
+import NewsHomeScreen from '@/screens/customer/news/NewsHomeScreen';
+import NewsDetailScreen from '@/screens/customer/news/NewsDetailScreen';
 // import NewsCategoryScreen from '@/screens/main/news/NewsCategoryScreen';
 import { NewsStackParamList } from '@/common/types';
 

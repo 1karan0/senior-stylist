@@ -33,6 +33,12 @@ export type ProfileStackParamList = {
   Settings: undefined;
 };
 
+export type AppStackParamList = {
+  UserTabs: undefined;
+  ConsultantTabs: undefined;
+  Pricing: undefined;
+};
+
 export type MainTabParamList = {
   ConsultationTab: undefined;
   NewsTab: undefined;
@@ -40,9 +46,11 @@ export type MainTabParamList = {
   ProfileTab: undefined;
 };
 
-export type AppStackParamList = {
-  MainTabs: undefined;
-  Pricing: undefined;
+export type ConsultantTabParamList = {
+  DashboardTab: undefined;
+  RequestTab: undefined;
+  ChatTab: undefined;
+  ProfileTab: undefined;
 };
 
 // Navigation prop types
@@ -104,5 +112,6 @@ export interface AuthContextType {
 
 export type RootStackParamList = {
   Auth: undefined;
-  Main: undefined;
+  UserApp: undefined;
+  ConsultantApp: undefined;
 };
