@@ -5,12 +5,12 @@ import OnboardItem from './components/OnboardItem';
 import onboardData from '../../lib/onboardData';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
-import { ThemeColors } from '@/constants/Theme';
+import GradientBackground from '@/common/components/GradientBackground';
 
 const OnboardingScreen = ({ navigation }: any) => {
   const pagerRef = useRef<PagerView>(null);
   const [page, setPage] = useState(0);
-  const { isDark, theme } = useTheme();
+  const { isDark } = useTheme();
 
   const goNext = () => {
     if (page < onboardData.length - 1) {
@@ -20,19 +20,9 @@ const OnboardingScreen = ({ navigation }: any) => {
     }
   };
 
-  // Get gradient colors based on theme and convert to mutable array
-  const gradientColors = isDark
-    ? [...ThemeColors.gradients.dark.onboarding] // Convert to mutable array
-    : [...ThemeColors.gradients.light.onboarding]; // Convert to mutable array
-
   return (
-    <LinearGradient
-      colors={gradientColors}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-      className="flex-1 px-6"
-    >
-      <View className="flex-1">
+    <GradientBackground>
+      <View className="flex-1 px-6">
         {/* Pager */}
         <PagerView
           ref={pagerRef}
@@ -74,7 +64,7 @@ const OnboardingScreen = ({ navigation }: any) => {
             }`}
           >
             <Text
-              className={`text-base font-urbanist-bold font- ${isDark ? 'text-white' : 'text-gray-800'}`}
+              className={`text-base font-urbanist-bold ${isDark ? 'text-white' : 'text-gray-800'}`}
             >
               Skip
             </Text>
@@ -94,7 +84,7 @@ const OnboardingScreen = ({ navigation }: any) => {
           </LinearGradient>
         </View>
       </View>
-    </LinearGradient>
+    </GradientBackground>
   );
 };
 
