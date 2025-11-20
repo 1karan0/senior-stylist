@@ -5,13 +5,13 @@ export const ThemeColors = {
     dark: '#000000',
   },
   gradients: {
-    primary: {
-      from: '#667EEA',
-      to: '#764BA2',
-      class: 'bg-primary-gradient',
+    light: {
+      onboarding: ['#ECFAF5', '#D1F6E7'],
+      background: ['hsl(146, 25%, 97%)', 'hsl(158, 64%, 95%)'],
     },
-    primaryHorizontal: {
-      class: 'bg-primary-gradient-horizontal',
+    dark: {
+      onboarding: ['hsl(158, 32%, 8%)', 'hsl(158, 32%, 12%)'],
+      background: ['hsl(158, 32%, 8%)', 'hsl(158, 32%, 12%)'],
     },
   },
   text: {
