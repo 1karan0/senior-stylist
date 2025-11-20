@@ -4,7 +4,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useResendVerificationCodeApi } from '@/api/auth/useResendCode';
 
-export default function OtpVerificationScreen({ navigation }: any) {
+export default function OtpVerificationScreen({ navigation, route }: any) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [serverError, setServerError] = useState('');
   const [resendMessage, setResendMessage] = useState('');
@@ -18,7 +18,7 @@ export default function OtpVerificationScreen({ navigation }: any) {
   const isOtpComplete = otp.every((digit) => digit !== '');
   const resendMutation = useResendVerificationCodeApi();
 
-  // const email = route.params.email;
+  const email = route.params.email;
 
   useEffect(() => {
     if (!isTimerActive) return;
@@ -58,7 +58,7 @@ export default function OtpVerificationScreen({ navigation }: any) {
     const code = otp.join('');
 
     setLoading(true);
-    const res = await verifyEmail('test7@gmail.com', code);
+    const res = await verifyEmail(email, code);
 
     if (!res.success) {
       setServerError(res.error || 'Invalid code');

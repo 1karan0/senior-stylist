@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, Switch, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, Switch, ScrollView, Pressable } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Profile: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -9,6 +10,7 @@ const Profile: React.FC = () => {
   const toggleTheme = () => {
     setTheme(isDark ? 'light' : 'dark');
   };
+  const { logout } = useAuth();
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-900">
@@ -128,6 +130,14 @@ const Profile: React.FC = () => {
             </View>
           </View>
         </View>
+        <View>
+          <Pressable
+            onPress={() => logout()}
+            className="bg-red-500 w-full  p-5 items-center rounded-xl"
+          >
+            <Text className="text-white font-bold">logout</Text>
+          </Pressable>
+        </View>
 
         {/* Theme State Indicator */}
         <View
@@ -150,32 +160,32 @@ const Profile: React.FC = () => {
         >
           <Text className="text-white text-center text-lg font-semibold">Open Profile Modal</Text>
         </TouchableOpacity>
-      </ScrollView>
 
-      {/* Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 mx-4 w-80">
-            <Text className="text-xl font-bold text-gray-800 dark:text-white mb-4 text-center">
-              Profile Settings
-            </Text>
-            <Text className="text-gray-600 dark:text-gray-400 mb-6 text-center">
-              Manage your consultant profile, availability, and services.
-            </Text>
-            <TouchableOpacity
-              className="bg-blue-500 dark:bg-blue-600 px-4 py-3 rounded-lg"
-              onPress={() => setModalVisible(false)}
-            >
-              <Text className="text-white text-center font-semibold">Close Modal</Text>
-            </TouchableOpacity>
+        {/* Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View className="flex-1 justify-center items-center bg-black/50">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 mx-4 w-80">
+              <Text className="text-xl font-bold text-gray-800 dark:text-white mb-4 text-center">
+                Profile Settings
+              </Text>
+              <Text className="text-gray-600 dark:text-gray-400 mb-6 text-center">
+                Manage your consultant profile, availability, and services.
+              </Text>
+              <TouchableOpacity
+                className="bg-blue-500 dark:bg-blue-600 px-4 py-3 rounded-lg"
+                onPress={() => setModalVisible(false)}
+              >
+                <Text className="text-white text-center font-semibold">Close Modal</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      </ScrollView>
     </View>
   );
 };
