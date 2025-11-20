@@ -1,18 +1,48 @@
-import React, { useRef, useState } from 'react';
+import React, { use, useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
+import { useResendVerificationCodeApi } from '@/api/auth/useResendCode';
 
-export default function OtpVerificationScreen({ navigation, route }: any) {
+export default function OtpVerificationScreen({ navigation }: any) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [serverError, setServerError] = useState('');
+  const [resendMessage, setResendMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [timer, setTimer] = useState(30);
+  const [isTimerActive, setIsTimerActive] = useState(true);
+
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const { verifyEmail } = useAuth();
 
   const isOtpComplete = otp.every((digit) => digit !== '');
+  const resendMutation = useResendVerificationCodeApi();
 
-  const email = route.params.email;
+  // const email = route.params.email;
+
+  useEffect(() => {
+    if (!isTimerActive) return;
+
+    const interval = setInterval(() => {
+      setTimer((prev) => {
+        if (prev === 1) {
+          setIsTimerActive(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isTimerActive]);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setResendMessage('');
+      setServerError('');
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleChange = (value: string, index: number) => {
     const updated = [...otp];
@@ -28,7 +58,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
     const code = otp.join('');
 
     setLoading(true);
-    const res = await verifyEmail(email, code);
+    const res = await verifyEmail('test7@gmail.com', code);
 
     if (!res.success) {
       setServerError(res.error || 'Invalid code');
@@ -38,6 +68,23 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
     setLoading(false);
     setServerError('');
     navigation.navigate('NextScreen');
+  };
+  const handleResend = async () => {
+    if (isTimerActive) return; // prevent spam tap
+
+    try {
+      const res = await resendMutation.mutateAsync({ email: 'test4@gmail.com' });
+
+      setResendMessage('OTP has been resent successfully.');
+      setServerError('');
+
+      // restart timer
+      setTimer(30);
+      setIsTimerActive(true);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Something went wrong.';
+      setServerError(msg);
+    }
   };
 
   return (
@@ -86,11 +133,22 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
       {/* Resend */}
       <View className="flex-row mb-6">
         <Text className="text-[#6B6B6B] text-[13px]">Didn’t receive the code? </Text>
-        <Pressable onPress={() => console.log('Resend pressed')}>
-          <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend</Text>
-        </Pressable>
+
+        {isTimerActive ? (
+          <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend in {timer}s</Text>
+        ) : (
+          <Pressable onPress={handleResend}>
+            <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend</Text>
+          </Pressable>
+        )}
       </View>
+
       {/* Server Error */}
+      {resendMessage ? (
+        <View>
+          <Text className="text-green-500 text-[13px] mb-4">{resendMessage}</Text>
+        </View>
+      ) : null}
 
       {serverError ? (
         <View>

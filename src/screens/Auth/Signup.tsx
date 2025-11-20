@@ -13,7 +13,7 @@ import { useForm, Controller, set } from 'react-hook-form';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
 import { BASE_URL } from '../../config';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 export default function SignupScreen({ navigation, route }: any) {
   const { control, handleSubmit } = useForm();
   const [loading, setLoading] = useState(false);
@@ -21,39 +21,22 @@ export default function SignupScreen({ navigation, route }: any) {
 
   const user = route.params.user;
 
-  const pickCV = async () => {
+  const pickDocument = async () => {
     try {
-      const result = await launchImageLibrary({
-        mediaType: 'mixed', // allow all file types
-        selectionLimit: 1,
-        includeBase64: false,
+      const pickerResult = await pick({
+        type: [types.allFiles],
+        allowMultiSelection: false,
       });
 
-      if (result.didCancel) {
-        console.log('User cancelled');
-        return;
+      if (pickerResult && pickerResult.length > 0) {
+        setCvFile(pickerResult[0]); // <-- FIX
       }
-
-      const file = result.assets?.[0];
-
-      if (!file) return;
-
-      // validate file type
-      const allowed = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      ];
-
-      if (!allowed.includes(file.type || '')) {
-        Alert.alert('Invalid File', 'Only PDF, DOC, DOCX allowed.');
-        return;
+    } catch (err) {
+      if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
+        console.log('User cancelled.');
+      } else {
+        console.error('Error picking document:', err);
       }
-
-      console.log('Picked file:', file);
-      setCvFile(file);
-    } catch (error) {
-      console.log('CV picker error:', error);
     }
   };
 
@@ -72,11 +55,13 @@ export default function SignupScreen({ navigation, route }: any) {
         data.append('password', form.password);
 
         if (cvFile) {
-          data.append('cv', {
+          const fileToUpload = {
             uri: cvFile.uri,
-            name: cvFile.fileName,
+            name: cvFile.name,
             type: cvFile.type,
-          } as any);
+          };
+
+          data.append('cv', fileToUpload);
         }
 
         response = await axios.post(`${BASE_URL}/api/consultant/register`, data, {
@@ -214,13 +199,13 @@ export default function SignupScreen({ navigation, route }: any) {
               <Text className="font-medium text-[14px] text-black mb-2">Upload CV</Text>
 
               <Pressable
-                onPress={pickCV}
+                onPress={pickDocument}
                 className="border border-dashed border-[#27B07D] bg-[#F5F9F7] rounded-lg h-[120px] justify-center items-center"
               >
                 <Image source={require('../../assets/upload.png')} className="w-10 h-10 mb-2" />
 
                 <Text className="text-[#162721] font-medium">
-                  {cvFile ? cvFile.fileName : 'Upload your CV'}
+                  {cvFile ? cvFile.name : 'Upload your CV'}
                 </Text>
 
                 <Text className="text-[#658176] text-[12px]">.pdf , .docx , .doc</Text>
