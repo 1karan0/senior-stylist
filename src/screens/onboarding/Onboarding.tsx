@@ -73,7 +73,9 @@ const OnboardingScreen = ({ navigation }: any) => {
               isDark ? 'bg-gray-800 border-gray-600' : 'bg-[#F5F9F7] border-[#DAE7E0]'
             }`}
           >
-            <Text className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+            <Text
+              className={`text-base font-urbanist-bold font- ${isDark ? 'text-white' : 'text-gray-800'}`}
+            >
               Skip
             </Text>
           </TouchableOpacity>

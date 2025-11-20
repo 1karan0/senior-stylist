@@ -1,14 +1,29 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./App.{js,jsx,ts,tsx}",
-    "./src/**/*.{js,jsx,ts,tsx}",
-    "./src/**/**/*.{js,jsx,ts,tsx}",
-    "./components/**/*.{js,jsx,ts,tsx}",
+    './App.{js,jsx,ts,tsx}',
+    './src/**/*.{js,jsx,ts,tsx}',
+    './src/**/**/*.{js,jsx,ts,tsx}',
+    './components/**/*.{js,jsx,ts,tsx}',
   ],
   presets: [require('nativewind/preset')],
   theme: {
-   extend: {
+    extend: {
+      // -- FONT FAMILIES (custom) --
+      fontFamily: {
+        // Poppins (use separate names per weight for reliable RN rendering)
+        poppins: ['Poppins-Regular'],
+        'poppins-medium': ['Poppins-Medium'],
+        'poppins-semibold': ['Poppins-SemiBold'],
+        'poppins-bold': ['Poppins-Bold'],
+
+        // Urbanist
+        urbanist: ['Urbanist-Regular'],
+        'urbanist-medium': ['Urbanist-Medium'],
+        'urbanist-semibold': ['Urbanist-SemiBold'],
+        'urbanist-bold': ['Urbanist-Bold'],
+      },
+
       colors: {
         // Core theme colors
         background: {
@@ -108,37 +123,8 @@ module.exports = {
         'gradient-3': 'linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%)',
         'gradient-4': 'linear-gradient(135deg, #43E97B 0%, #38F9D7 100%)',
       },
-
-      // Custom spacing
-      spacing: {
-        xs: 8,
-        sm: 12,
-        md: 16,
-        lg: 24,
-        xl: 32,
-        '2xl': 40,
-        '3xl': 48,
-      },
-
-      // Custom border radius
-      borderRadius: {
-        sm: 4,
-        md: 8,
-        lg: 12,
-        xl: 16,
-        '2xl': 20,
-        full: 9999,
-      },
     },
   },
   plugins: [],
   darkMode: 'class',
 };
-
-
-
-
-
-
-
-
