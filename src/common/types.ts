@@ -104,7 +104,7 @@ export interface AuthContextType {
   accessToken: string | null;
   isLoading: boolean;
   login: (userData: User, token: string) => Promise<void>;
-  signup: (userData: User, token: string) => Promise<void>;
+  verifyEmail: (userData: User, token: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updatedUserData: User) => Promise<void>;
   isAuthenticated: boolean;

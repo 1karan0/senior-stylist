@@ -93,7 +93,7 @@ export default function SignupScreen({ navigation, route }: any) {
       }
 
       console.log('Signup success:', response.data);
-      navigation.navigate('Login');
+      navigation.navigate('OtpVerification', { email: form.email });
     } catch (err: any) {
       console.log('Signup error:', err);
       Alert.alert('Signup Failed', err?.response?.data?.message || 'Something went wrong.');

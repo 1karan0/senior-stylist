@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Profile: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
+  const { logout } = useAuth();
 
   return (
     <View className="flex-1 bg-white">
@@ -20,6 +22,9 @@ const Profile: React.FC = () => {
           onPress={() => setModalVisible(true)}
         >
           <Text className="text-white text-center text-lg font-semibold">Open Profile Modal</Text>
+        </TouchableOpacity>
+        <TouchableOpacity className="bg-red-500 px-6 py-4 rounded-lg w-64" onPress={() => logout()}>
+          <Text className="text-white text-center text-lg font-semibold">log out</Text>
         </TouchableOpacity>
       </View>
 

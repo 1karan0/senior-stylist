@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, Image, ActivityIndicator, Alert } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import LinearGradient from 'react-native-linear-gradient';
-import axios from 'axios';
-import { BASE_URL } from '../../config';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginScreen({ navigation }: any) {
@@ -16,9 +14,7 @@ export default function LoginScreen({ navigation }: any) {
   const handleLogin = async (form: any) => {
     try {
       setLoading(true);
-
       login(form.email, form.password);
-
       navigation.navigate('Pricing');
     } catch (err: any) {
       console.log('Login error:', err);

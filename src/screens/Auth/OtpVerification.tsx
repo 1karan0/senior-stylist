@@ -1,12 +1,18 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, Pressable, Image } from 'react-native';
+import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { useAuth } from '@/contexts/AuthContext';
 
-export default function OtpVerificationScreen({ navigation }: any) {
+export default function OtpVerificationScreen({ navigation, route }: any) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [serverError, setServerError] = useState('');
+  const [loading, setLoading] = useState(false);
   const inputRefs = useRef<Array<TextInput | null>>([]);
+  const { verifyEmail } = useAuth();
 
   const isOtpComplete = otp.every((digit) => digit !== '');
+
+  const email = route.params.email;
 
   const handleChange = (value: string, index: number) => {
     const updated = [...otp];
@@ -16,6 +22,22 @@ export default function OtpVerificationScreen({ navigation }: any) {
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
+  };
+
+  const handleVerify = async () => {
+    const code = otp.join('');
+
+    setLoading(true);
+    const res = await verifyEmail(email, code);
+
+    if (!res.success) {
+      setServerError(res.error || 'Invalid code');
+      setLoading(false);
+      return;
+    }
+    setLoading(false);
+    setServerError('');
+    navigation.navigate('NextScreen');
   };
 
   return (
@@ -68,9 +90,20 @@ export default function OtpVerificationScreen({ navigation }: any) {
           <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend</Text>
         </Pressable>
       </View>
+      {/* Server Error */}
+
+      {serverError ? (
+        <View>
+          <Text className="text-red-500 text-[13px] mb-4">{serverError}</Text>
+        </View>
+      ) : null}
 
       {/* Verify */}
-      <Pressable disabled={!isOtpComplete} className="w-full rounded-xl overflow-hidden mb-4">
+      <Pressable
+        disabled={!isOtpComplete}
+        onPress={handleVerify}
+        className="w-full rounded-xl overflow-hidden mb-4"
+      >
         {isOtpComplete ? (
           <LinearGradient
             colors={['#2CCB91', '#23A76F']}
@@ -78,7 +111,11 @@ export default function OtpVerificationScreen({ navigation }: any) {
             end={{ x: 1, y: 0 }}
             className="h-[50px] rounded-xl justify-center items-center"
           >
-            <Text className="text-white font-bold text-[16px]">Verify</Text>
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-white font-bold text-[16px]">Verify</Text>
+            )}
           </LinearGradient>
         ) : (
           <View className="h-[50px] rounded-xl justify-center items-center bg-[#DADADA]">

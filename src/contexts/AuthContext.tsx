@@ -1,19 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storage } from '@/services/storage';
 import { useLoginApi } from '@/api/auth/useLogin';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+import { useVerifyEmailApi } from '@/api/auth/useVerifyEmail';
+import { User } from '@/common/types';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isOnbordingCompleted: boolean;
   login: (email: string, password: string) => void;
-  signup: (email: string, password: string, name: string) => void;
+  verifyEmail: (email: string, otp: string) => Promise<{ success: boolean; error?: string }>;
+
   logout: () => void;
   completeOnbording: () => void;
 }
@@ -26,6 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isOnBordingCompleted, setIsBordingCompleted] = useState(false);
 
   const loginMutation = useLoginApi();
+  const verifyEmailMutation = useVerifyEmailApi();
 
   //check if user is logged in
   useEffect(() => {
@@ -75,27 +73,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (email: string, password: string, name: string) => {
-    //simulate API call
-    setIsLoading(true);
+  const verifyEmail = async (email: string, code: string) => {
     try {
-      // call the signup API here
-      const mockUser: User = {
-        id: '1',
-        email: email,
-        name: name,
-      };
+      const response = await verifyEmailMutation.mutateAsync({ email, code });
 
-      const mockToken = 'mock_jwt_token';
+      const token = response.data?.access_token;
+      const userData = response.data?.user;
 
-      await Promise.all([storage.setToken(mockToken), storage.setUserData(mockUser)]);
+      if (!token) {
+        return { success: false, error: 'Token missing' };
+      }
 
-      setUser(mockUser);
-    } catch (error) {
-      console.log('Signup error:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
+      await Promise.all([storage.setToken(token), storage.setUserData(userData)]);
+
+      setUser(userData);
+
+      return { success: true };
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.errors?.code?.[0] ||
+        err?.response?.data?.message ||
+        'Something went wrong';
+
+      return { success: false, error: message };
     }
   };
 
@@ -121,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     isOnbordingCompleted: isOnBordingCompleted,
     login,
-    signup,
+    verifyEmail,
     logout,
     completeOnbording,
   };
