@@ -1,16 +1,28 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import MainTabNavigator from '@/navigation/MainTabNavigator';
-import PricingScreen from '../screens/pricing/Pricing';
+import UserTabNavigator from '@/navigation/UserTabNavigator';
+import ConsultantTabNavigator from '@/navigation/ConsultantTabNavigator';
+import PricingScreen from '@/screens/pricing/Pricing';
 import { AppStackParamList } from '@/common/types';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
-const AppStack: React.FC = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-    <Stack.Screen name="Pricing" component={PricingScreen} />
-  </Stack.Navigator>
-);
+// This should come from your navigation route or context
+// For now, we'll use a simple variable
+const userRole = 'consultant'; // or 'customer'
+
+const AppStack: React.FC = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {/* Conditionally show only one tab navigator based on user role */}
+      {userRole === 'consultant' ? (
+        <Stack.Screen name="ConsultantTabs" component={ConsultantTabNavigator} />
+      ) : (
+        <Stack.Screen name="UserTabs" component={UserTabNavigator} />
+      )}
+      <Stack.Screen name="Pricing" component={PricingScreen} />
+    </Stack.Navigator>
+  );
+};
 
 export default AppStack;

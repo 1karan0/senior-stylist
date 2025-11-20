@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import StoreHomeScreen from '@/screens/main/store/StoreHome';
+import StoreHomeScreen from '@/screens/customer/store/StoreHomeScreen';
 // import ProductDetailScreen from '@/screens/main/store/ProductDetailScreen';
 // import CartScreen from '@/screens/main/store/CartScreen';
 import { StoreStackParamList } from '@/common/types';

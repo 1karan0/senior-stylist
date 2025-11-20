@@ -1,8 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ConsultationHomeScreen from '@/screens/main/consultation/ConsultationHome';
-import ConsultationDetailScreen from '@/screens/main/consultation/ConsultationDetail';
-import ConsultationChatScreen from '@/screens/main/consultation/ConsultationChat';
+import ConsultationHomeScreen from '@/screens/customer/consultation/ConsultationHomeScreen';
+import ConsultationDetailScreen from '@/screens/customer/consultation/ConsultationDetailScreen';
+import ConsultationChatScreen from '@/screens/customer/consultation/ConsultationChatScreen';
 import { ConsultationStackParamList } from '@/common/types';
 
 const Stack = createNativeStackNavigator<ConsultationStackParamList>();
