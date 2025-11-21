@@ -8,21 +8,21 @@ export interface OnboardItemType {
 const onboardData: OnboardItemType[] = [
   {
     id: 1,
-    title: "Connect with Experts",
-    description: "Hair SoS Emergency? Connect with a real Senior Stylist in real time.",
-    icon: require("../assets/icon1.png"),
+    title: 'Connect with Experts',
+    description: 'Hair SoS Emergency? Connect with a real Senior Stylist in real time.',
+    icon: require('../assets/icons/icon1.png'),
   },
   {
     id: 2,
-    title: "Shop with Ease ",
-    description: "Browse thousands of products and get them delivered to your doorstep",
-    icon: require("../assets/icon2.png"),
+    title: 'Shop with Ease ',
+    description: 'Browse thousands of products and get them delivered to your doorstep',
+    icon: require('../assets/icons/icon2.png'),
   },
   {
     id: 3,
-    title: "Expert Consultants",
-    description: "Get professional advice from verified consultants in various fields.",
-    icon: require("../assets/icon3.png"),
+    title: 'Expert Consultants',
+    description: 'Get professional advice from verified consultants in various fields.',
+    icon: require('../assets/icons/icon3.png'),
   },
 ];
 

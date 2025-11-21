@@ -6,6 +6,7 @@ import NewsStack from '@/navigation/stacks/News';
 import StoreStack from '@/navigation/stacks/Store';
 import ProfileStack from '@/navigation/stacks/Profile';
 import { MainTabParamList } from '@/common/types';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -43,20 +44,41 @@ const createTabBarIcon = (routeName: string) => {
 };
 
 const UserTabNavigator: React.FC = () => {
+  const { isDark } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: '#27B07D',
+        tabBarInactiveTintColor: '#658176',
         tabBarStyle: {
-          paddingVertical: 5,
-          height: 60,
+          position: 'absolute',
+          bottom: 10,
+          left: 24,
+          right: 24,
+          height: 65,
+          borderRadius: 40,
+          backgroundColor: `${isDark ? '#0E1B16' : 'rgba(255, 255, 255, 0.95)'}`,
+          borderWidth: 1,
+          borderColor: `${isDark ? '#0E1B16' : '#DAE7E0'}`,
+          elevation: 5,
+          shadowColor: '#000',
+          shadowOffset: {
+            width: 0,
+            height: 2,
+          },
+          shadowOpacity: 0.1,
+          shadowRadius: 3.84,
+          paddingHorizontal: 8,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 14,
+          fontWeight: '500',
           marginBottom: 5,
         },
-        headerShown: false,
+        headerShown: false, // This hides the header for all screens
       }}
     >
       <Tab.Screen

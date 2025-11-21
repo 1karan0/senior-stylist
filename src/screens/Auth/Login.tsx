@@ -62,8 +62,8 @@ export default function LoginScreen({ navigation }: any) {
           <Image
             source={
               isDark
-                ? require('../../assets/dark-logo.png')
-                : require('../../assets/colored_logo.png')
+                ? require('../../assets/icons/dark-logo.png')
+                : require('../../assets/icons/colored_logo.png')
             }
             className="w-[90px] h-[90px]"
             resizeMode="contain"
@@ -90,7 +90,7 @@ export default function LoginScreen({ navigation }: any) {
         <View
           className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
         >
-          <Image source={require('../../assets/email.png')} className="w-5 h-5 mr-3" />
+          <Image source={require('../../assets/icons/email.png')} className="w-5 h-5 mr-3" />
 
           <Controller
             control={control}
@@ -110,7 +110,6 @@ export default function LoginScreen({ navigation }: any) {
         </View>
 
         {/* Password */}
-        {/* Password */}
         <Text className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}>
           Password
         </Text>
@@ -118,7 +117,7 @@ export default function LoginScreen({ navigation }: any) {
         <View
           className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
         >
-          <Image source={require('../../assets/lock.png')} className="w-5 h-5 mr-3" />
+          <Image source={require('../../assets/icons/lock.png')} className="w-5 h-5 mr-3" />
 
           <Controller
             control={control}
@@ -141,8 +140,8 @@ export default function LoginScreen({ navigation }: any) {
             <Image
               source={
                 showPassword
-                  ? require('../../assets/eye-open.png')
-                  : require('../../assets/eye-closed.png')
+                  ? require('../../assets/icons/eye-open.png')
+                  : require('../../assets/icons/eye-closed.png')
               }
               className="w-5 h-5 ml-2"
             />

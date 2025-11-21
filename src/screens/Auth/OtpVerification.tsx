@@ -3,8 +3,10 @@ import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from 'reac
 import LinearGradient from 'react-native-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useResendVerificationCodeApi } from '@/api/auth/useResendCode';
+import GradientBackground from '@/common/components/GradientBackground';
+import { useTheme } from '@/contexts/ThemeContext';
 
-export default function OtpVerificationScreen({ navigation, route }: any) {
+export default function OtpVerificationScreen({ navigation }: any) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [serverError, setServerError] = useState('');
   const [resendMessage, setResendMessage] = useState('');
@@ -18,7 +20,9 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
   const isOtpComplete = otp.every((digit) => digit !== '');
   const resendMutation = useResendVerificationCodeApi();
 
-  const email = route.params.email;
+  const { isDark } = useTheme();
+
+  // const email = route.params.email;
 
   useEffect(() => {
     if (!isTimerActive) return;
@@ -58,7 +62,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
     const code = otp.join('');
 
     setLoading(true);
-    const res = await verifyEmail(email, code);
+    const res = await verifyEmail('email', code);
 
     if (!res.success) {
       setServerError(res.error || 'Invalid code');
@@ -88,22 +92,25 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
   };
 
   return (
-    <LinearGradient
-      colors={['#ECFAF5', '#D1F6E7']} // pick your exact light-green gradient shades
-      start={{ x: 0, y: 0 }}
-      end={{ x: 2, y: 4 }}
-      className="flex-1 px-6 items-center"
-    >
+    <GradientBackground className="flex-1 px-6 items-center">
       {/* Logo */}
       <Image
-        source={require('../../assets/colored_logo.png')}
-        className="w-[100px] h-[100px] mt-14 mb-6"
+        source={
+          isDark
+            ? require('../../assets/icons/dark-logo.png')
+            : require('../../assets/icons/colored_logo.png')
+        }
+        className="w-[90px] h-[90px] mt-14 mb-6"
         resizeMode="contain"
       />
 
-      <Text className="text-[22px] font-bold text-[#162721]">Enter OTP Verification Code</Text>
+      <Text className={`text-[22px] font-bold ${isDark ? 'text-white' : 'text-[#162721]'} `}>
+        Enter OTP Verification Code
+      </Text>
 
-      <Text className="text-[13px] text-[#658176] mt-2">Verification code has been sent to</Text>
+      <Text className={`text-[13px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}  mt-2`}>
+        Verification code has been sent to
+      </Text>
 
       {/* OTP BOXES */}
       <View className="flex-row justify-center gap-2 mt-6 mb-4">
@@ -125,14 +132,16 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
             }}
             maxLength={1}
             keyboardType="number-pad"
-            className="w-12 h-12 border border-[#27B07D] rounded-md mx-1 text-center text-[20px] text-black bg-white"
+            className={`w-12 h-12 border border-[#27B07D] ${isDark ? 'bg-[#0E1B16] text-white' : 'bg-white text-black'} rounded-md mx-1 text-center text-[20px]  `}
           />
         ))}
       </View>
 
       {/* Resend */}
       <View className="flex-row mb-6">
-        <Text className="text-[#6B6B6B] text-[13px]">Didn’t receive the code? </Text>
+        <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-[#6B6B6B]'} text-[13px]`}>
+          Didn’t receive the code?{' '}
+        </Text>
 
         {isTimerActive ? (
           <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend in {timer}s</Text>
@@ -176,7 +185,9 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
             )}
           </LinearGradient>
         ) : (
-          <View className="h-[50px] rounded-xl justify-center items-center bg-[#DADADA]">
+          <View
+            className={`h-[50px] rounded-xl justify-center items-center  ${isDark ? 'bg-[#8AA897]' : 'bg-[#DADADA]'}`}
+          >
             <Text className="text-white font-bold text-[16px]">Verify</Text>
           </View>
         )}
@@ -185,10 +196,12 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
       {/* Go Back */}
       <Pressable
         onPress={() => navigation.goBack()}
-        className="w-full h-[50px] rounded-xl border border-[#DAE7E0] justify-center items-center"
+        className={`w-full h-[50px] rounded-xl border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} justify-center items-center`}
       >
-        <Text className="text-[15px] text-[#162721] font-bold">Go Back</Text>
+        <Text className={`text-[15px]  ${isDark ? 'text-white' : 'text-[#162721]'} font-bold`}>
+          Go Back
+        </Text>
       </Pressable>
-    </LinearGradient>
+    </GradientBackground>
   );
 }
