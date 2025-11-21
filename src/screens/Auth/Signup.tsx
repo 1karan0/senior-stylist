@@ -37,7 +37,7 @@ export default function SignupScreen({ navigation, route }: any) {
       if (pickerResult && pickerResult.length > 0) {
         setCvFile(pickerResult[0]); // <-- FIX
       }
-    } catch (err) {
+    } catch (err: any) {
       if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
         console.log('User cancelled.');
       } else {

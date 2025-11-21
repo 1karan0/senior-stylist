@@ -7,16 +7,18 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        urbanist: [
-          tokens.fonts.urbanistRegular,
-          tokens.fonts.urbanistMedium,
-          tokens.fonts.urbanistBold,
-        ],
-        poppins: [
-          tokens.fonts.poppinsRegular,
-          tokens.fonts.poppinsMedium,
-          tokens.fonts.poppinsBold,
-        ],
+        urbanist: {
+          regular: tokens.fonts.urbanistRegular,
+          medium: tokens.fonts.urbanistMedium,
+          semibold: tokens.fonts.urbanistSemibold,
+          bold: tokens.fonts.urbanistBold,
+        },
+        poppins: {
+          regular: tokens.fonts.poppinsRegular,
+          medium: tokens.fonts.poppinsMedium,
+          semibold: tokens.fonts.poppinsSemibold,
+          bold: tokens.fonts.poppinsBold,
+        },
       },
       colors: {
         textDark: tokens.colors.text.dark,
