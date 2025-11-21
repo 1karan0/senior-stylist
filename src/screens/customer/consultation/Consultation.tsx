@@ -1,45 +1,19 @@
+import { View, Text } from 'react-native';
 import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { ConsultationStackParamList } from '@/common/types';
 
-type ConsultationNavigationProp = StackNavigationProp<
-  ConsultationStackParamList,
-  'ConsultationHome'
->;
+import { useGetConsultation } from '@/api/user/consultation/usegetconsultation';
+import NoConsultant from './NoConsultant';
+import Chat from './Chat';
 
-interface Props {
-  navigation: ConsultationNavigationProp;
-}
+const Consultation = ({ navigation }: any) => {
+  const { data, isLoading } = useGetConsultation();
+  console.log('consultation data', data);
 
-const Consultation: React.FC<Props> = ({ navigation }) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Consultation Home</Text>
-      <Button
-        title="Go to Consultation Details"
-        onPress={() => navigation.navigate('ConsultationDetail')}
-      />
-      <Button
-        title="Go to Consultation Chat"
-        onPress={() => navigation.navigate('ConsultationChat')}
-      />
+    <View className="flex-1">
+      {data?.length ? <Chat data={data} isLoading={isLoading} /> : <NoConsultant />}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-});
 
 export default Consultation;

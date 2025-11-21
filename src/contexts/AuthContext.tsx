@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isOnbordingCompleted: boolean;
-  login: (email: string, password: string) => void;
+  login: (email: string, password: string) => Promise<void>;
   verifyEmail: (email: string, otp: string) => Promise<{ success: boolean; error?: string }>;
 
   logout: () => void;
@@ -50,26 +50,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
-
     try {
       const response = await loginMutation.mutateAsync({ email, password });
 
-      const token = response.data?.access_token;
-      const user = response.data?.user;
+      const token = response?.data?.access_token;
+      const user = response?.data?.user;
 
-      if (!token) {
-        throw new Error('Token missing in API response');
-      }
+      if (!token) throw new Error('Token missing in API response');
 
       await Promise.all([storage.setToken(token), storage.setUserData(user)]);
-
       setUser(user);
     } catch (err) {
-      console.log('Login API error:', err);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 

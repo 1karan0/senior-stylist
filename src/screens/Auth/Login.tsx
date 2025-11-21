@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, Image, ActivityIndicator, Alert } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import LinearGradient from 'react-native-linear-gradient';
+
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import GradientBackground from '@/common/components/GradientBackground';
 
 export default function LoginScreen({ navigation }: any) {
   const { control, handleSubmit } = useForm();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const { isDark } = useTheme();
 
   const { login } = useAuth();
 
@@ -14,44 +19,77 @@ export default function LoginScreen({ navigation }: any) {
   const handleLogin = async (form: any) => {
     try {
       setLoading(true);
-      login(form.email, form.password);
-      navigation.navigate('Pricing');
+      await login(form.email, form.password);
     } catch (err: any) {
-      console.log('Login error:', err);
+      // Normalize possible error shapes and extract a friendly message
+      console.log('Login error:', err?.response ?? err);
 
-      Alert.alert('Login Failed', err?.response?.data?.message || 'Something feels off.');
+      const data = err?.response?.data ?? err?.response ?? err;
+
+      let message = 'Something went wrong.';
+
+      if (data) {
+        // API returns { message: string, errors: { field: [msg] } }
+        if (data.errors && typeof data.errors === 'object') {
+          // flatten error arrays into a single string
+          const parts: string[] = [];
+          for (const key of Object.keys(data.errors)) {
+            const val = data.errors[key];
+            if (Array.isArray(val)) parts.push(...val);
+            else if (typeof val === 'string') parts.push(val);
+          }
+          if (parts.length) message = parts.join('\n');
+        } else if (data.message && typeof data.message === 'string') {
+          message = data.message;
+        } else if (typeof data === 'string') {
+          message = data;
+        }
+      } else if (err?.message) {
+        message = err.message;
+      }
+
+      Alert.alert('Login Failed', message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <LinearGradient
-      colors={['#ECFAF5', '#D1F6E7']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 2, y: 4 }}
-      className="flex-1 px-6"
-    >
-      <View>
+    <GradientBackground>
+      <View className="px-6">
         {/* Logo & Header */}
         <View className="items-center mt-14 mb-10">
           <Image
-            source={require('../../assets/colored_logo.png')}
+            source={
+              isDark
+                ? require('../../assets/dark-logo.png')
+                : require('../../assets/colored_logo.png')
+            }
             className="w-[90px] h-[90px]"
             resizeMode="contain"
           />
 
-          <Text className="font-bold text-[24px] text-[#162721] mt-4">Welcome Back</Text>
+          <Text
+            className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-[#162721]'} mt-4`}
+          >
+            Welcome Back
+          </Text>
 
-          <Text className="font-normal text-[14px] text-[#658176] mt-1">
+          <Text
+            className={`font-normal text-[14px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}  mt-1`}
+          >
             Sign in to continue to StyleHub
           </Text>
         </View>
 
         {/* Email */}
-        <Text className="font-medium text-[14px] text-black mb-2">Email Address</Text>
+        <Text className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}>
+          Email Address
+        </Text>
 
-        <View className="flex-row items-center border border-[#DADADA] bg-[#F5F9F7] rounded-xl px-4 h-[52px] mb-5">
+        <View
+          className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+        >
           <Image source={require('../../assets/email.png')} className="w-5 h-5 mr-3" />
 
           <Controller
@@ -61,8 +99,8 @@ export default function LoginScreen({ navigation }: any) {
             render={({ field: { onChange, value } }) => (
               <TextInput
                 placeholder="Enter your email"
-                placeholderTextColor="#94A3B8"
-                className="flex-1 font-normal text-black"
+                placeholderTextColor={` ${isDark ? 'text-[#8AA897]' : '#94A3B8'}`}
+                className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                 value={value}
                 onChangeText={onChange}
                 keyboardType="email-address"
@@ -72,9 +110,14 @@ export default function LoginScreen({ navigation }: any) {
         </View>
 
         {/* Password */}
-        <Text className="font-medium text-[14px] text-black mb-2">Password</Text>
+        {/* Password */}
+        <Text className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}>
+          Password
+        </Text>
 
-        <View className="flex-row items-center border border-[#DADADA] bg-[#F5F9F7] rounded-xl px-4 h-[52px]">
+        <View
+          className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+        >
           <Image source={require('../../assets/lock.png')} className="w-5 h-5 mr-3" />
 
           <Controller
@@ -84,14 +127,26 @@ export default function LoginScreen({ navigation }: any) {
             render={({ field: { onChange, value } }) => (
               <TextInput
                 placeholder="Enter your password"
-                placeholderTextColor="#94A3B8"
-                secureTextEntry
-                className="flex-1 font-normal text-black"
+                placeholderTextColor={` ${isDark ? 'text-[#8AA897]' : '#94A3B8'}`}
+                secureTextEntry={!showPassword}
+                className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                 value={value}
                 onChangeText={onChange}
               />
             )}
           />
+
+          {/* Toggle eye button */}
+          <Pressable onPress={() => setShowPassword(!showPassword)}>
+            <Image
+              source={
+                showPassword
+                  ? require('../../assets/eye-open.png')
+                  : require('../../assets/eye-closed.png')
+              }
+              className="w-5 h-5 ml-2"
+            />
+          </Pressable>
         </View>
 
         {/* Forgot Password */}
@@ -124,7 +179,11 @@ export default function LoginScreen({ navigation }: any) {
 
         {/* Sign Up */}
         <View className="flex-row justify-center">
-          <Text className="text-[#64748B] font-normal text-[14px]">Don’t have an account? </Text>
+          <Text
+            className={` ${isDark ? 'text-[#8AA897]' : 'text-[#64748B]'} font-normal text-[14px]`}
+          >
+            Don’t have an account?{' '}
+          </Text>
           <Pressable onPress={() => navigation.navigate('Signup', { user: 'customer' })}>
             <Text className="text-[#27B07D]">Sign Up</Text>
           </Pressable>
@@ -132,7 +191,9 @@ export default function LoginScreen({ navigation }: any) {
 
         {/* Consultant */}
         <View className="flex-row justify-center mt-3">
-          <Text className="text-center  text-[#162721] font-medium text-[14px]">
+          <Text
+            className={`text-center ${isDark ? 'text-white' : 'text-[#162721]'}  font-medium text-[14px]`}
+          >
             Want to be a Consultant?{' '}
           </Text>
           <Pressable onPress={() => navigation.navigate('Signup', { user: 'consultant' })}>
@@ -140,6 +201,6 @@ export default function LoginScreen({ navigation }: any) {
           </Pressable>
         </View>
       </View>
-    </LinearGradient>
+    </GradientBackground>
   );
 }

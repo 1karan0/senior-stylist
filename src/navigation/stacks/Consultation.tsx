@@ -4,6 +4,8 @@ import { ConsultationStackParamList } from '@/common/types';
 import Chat from '@/screens/customer/consultation/Chat';
 import Consultation from '@/screens/customer/consultation/Consultation';
 import Details from '@/screens/customer/consultation/Details';
+import NoConsultant from '@/screens/customer/consultation/NoConsultant';
+import NewConsultant from '@/screens/customer/consultation/NewConsultant';
 
 const Stack = createNativeStackNavigator<ConsultationStackParamList>();
 
@@ -23,7 +25,19 @@ const ConsultationStack: React.FC = () => (
       component={Details}
       options={{ title: 'Consultation Details' }}
     />
-    <Stack.Screen name="ConsultationChat" component={Chat} options={{ title: 'Chat' }} />
+    <Stack.Screen
+      name="NoConsultant"
+      component={NoConsultant}
+      options={{ title: 'No Consultant Available' }}
+    />
+    <Stack.Screen
+      name="NewConsultant"
+      component={NewConsultant}
+      options={{ title: 'No Consultant Available' }}
+    />
+    <Stack.Screen name="ConsultationChat" options={{ title: 'Chat' }}>
+      {(props) => <Chat {...(props as any)} />}
+    </Stack.Screen>
   </Stack.Navigator>
 );
 

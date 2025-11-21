@@ -3,34 +3,48 @@ import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import LinearGradient from 'react-native-linear-gradient';
 
+import { useTheme } from '@/contexts/ThemeContext';
+import GradientBackground from '@/common/components/GradientBackground';
+
 export default function ForgetPasswordScreen({ navigation }: any) {
   const { control, handleSubmit } = useForm();
+
+  const { isDark } = useTheme();
   return (
-    <LinearGradient
-      colors={['#ECFAF5', '#D1F6E7']} // pick your exact light-green gradient shades
-      start={{ x: 0, y: 0 }}
-      end={{ x: 2, y: 4 }}
-      className="flex-1 px-6"
-    >
-      <View className="">
+    <GradientBackground>
+      <View className="flex-1 px-6">
         {/* Logo + Headings */}
         <View className="items-center mt-14 mb-10">
           <Image
-            source={require('../../assets/colored_logo.png')}
+            source={
+              isDark
+                ? require('../../assets/dark-logo.png')
+                : require('../../assets/colored_logo.png')
+            }
             className="w-[90px] h-[90px]"
             resizeMode="contain"
           />
 
-          <Text className="font-bold text-[24px] text-[#162721] mt-4">Forgot Password?</Text>
+          <Text
+            className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-[#162721]'} mt-4`}
+          >
+            Forgot Password?
+          </Text>
 
-          <Text className="font-normal text-[14px] text-[#658176] mt-1">
+          <Text
+            className={`font-normal text-[14px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}  mt-1`}
+          >
             No worries, we'll send you reset instructions
           </Text>
         </View>
 
-        <Text className="font-medium text-[14px] text-black mb-2">Email Address</Text>
+        <Text className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}>
+          Email Address
+        </Text>
 
-        <View className="flex-row items-center border border-[#DADADA] bg-[#F5F9F7] rounded-xl px-4 h-[52px] mb-5">
+        <View
+          className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+        >
           <Image source={require('../../assets/email.png')} className="w-5 h-5 mr-3" />
 
           <Controller
@@ -39,8 +53,8 @@ export default function ForgetPasswordScreen({ navigation }: any) {
             render={({ field: { onChange, value } }) => (
               <TextInput
                 placeholder="Enter your email"
-                placeholderTextColor="#94A3B8"
-                className="flex-1 font-normal text-black"
+                placeholderTextColor={` ${isDark ? 'text-[#8AA897]' : '#94A3B8'}`}
+                className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                 value={value}
                 onChangeText={onChange}
               />
@@ -67,6 +81,6 @@ export default function ForgetPasswordScreen({ navigation }: any) {
           <Text className="font-normal text-[13px] text-[#27B07D]">Back to Login</Text>
         </Pressable>
       </View>
-    </LinearGradient>
+    </GradientBackground>
   );
 }

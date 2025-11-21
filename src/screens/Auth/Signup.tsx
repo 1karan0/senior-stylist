@@ -10,14 +10,20 @@ import {
   ScrollView,
 } from 'react-native';
 import { useForm, Controller, set } from 'react-hook-form';
-import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
-import { BASE_URL } from '../../config';
+import LinearGradient from 'react-native-linear-gradient';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
+
+import { BASE_URL } from '@/config';
+import { useTheme } from '@/contexts/ThemeContext';
+import GradientBackground from '@/common/components/GradientBackground';
+
 export default function SignupScreen({ navigation, route }: any) {
   const { control, handleSubmit } = useForm();
   const [loading, setLoading] = useState(false);
   const [cvFile, setCvFile] = useState<any>(null);
+
+  const { isDark } = useTheme();
 
   const user = route.params.user;
 
@@ -89,30 +95,43 @@ export default function SignupScreen({ navigation, route }: any) {
 
   return (
     <ScrollView>
-      <LinearGradient
-        colors={['#ECFAF5', '#D1F6E7']} // pick your exact light-green gradient shades
-        start={{ x: 0, y: 0 }}
-        end={{ x: 2, y: 4 }}
-        className="flex-1 px-6"
-      >
-        <View className="">
+      <GradientBackground>
+        <View className={`flex-1 px-6 ${user === 'customer' && 'h-screen'}`}>
           {/* Logo + Headings */}
           <View className="items-center mt-14 mb-10">
             <Image
-              source={require('../../assets/colored_logo.png')}
+              source={
+                isDark
+                  ? require('../../assets/dark-logo.png')
+                  : require('../../assets/colored_logo.png')
+              }
               className="w-[90px] h-[90px]"
               resizeMode="contain"
             />
 
-            <Text className="font-bold text-[24px] text-[#162721] mt-4">Create Account</Text>
+            <Text
+              className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-[#162721]'} mt-4`}
+            >
+              Create Account
+            </Text>
 
-            <Text className="font-normal text-[14px] text-[#658176] mt-1">Join us today</Text>
+            <Text
+              className={`font-normal text-[14px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}  mt-1`}
+            >
+              Join us today
+            </Text>
           </View>
 
           {/* Name Field */}
-          <Text className="font-medium text-[14px] text-black mb-2">Full Name</Text>
+          <Text
+            className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+          >
+            Full Name
+          </Text>
 
-          <View className="flex-row items-center border border-[#DADADA] bg-[#F5F9F7] rounded-xl px-4 h-[52px] mb-5">
+          <View
+            className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+          >
             <Image source={require('../../assets/user.png')} className="w-5 h-5 mr-3" />
 
             <Controller
@@ -121,8 +140,8 @@ export default function SignupScreen({ navigation, route }: any) {
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   placeholder="Enter your Name"
-                  placeholderTextColor="#94A3B8"
-                  className="flex-1 font-normal text-black"
+                  placeholderTextColor={` ${isDark ? 'text-[#8AA897]' : '#94A3B8'}`}
+                  className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                   value={value}
                   onChangeText={onChange}
                 />
@@ -131,9 +150,15 @@ export default function SignupScreen({ navigation, route }: any) {
           </View>
 
           {/* Email Field */}
-          <Text className="font-medium text-[14px] text-black mb-2">Email Address</Text>
+          <Text
+            className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+          >
+            Email Address
+          </Text>
 
-          <View className="flex-row items-center border border-[#DADADA] bg-[#F5F9F7] rounded-xl px-4 h-[52px] mb-5">
+          <View
+            className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+          >
             <Image source={require('../../assets/email.png')} className="w-5 h-5 mr-3" />
 
             <Controller
@@ -142,8 +167,8 @@ export default function SignupScreen({ navigation, route }: any) {
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   placeholder="Enter your email"
-                  placeholderTextColor="#94A3B8"
-                  className="flex-1 font-normal text-black"
+                  placeholderTextColor={` ${isDark ? 'text-[#8AA897]' : '#94A3B8'}`}
+                  className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                   value={value}
                   onChangeText={onChange}
                 />
@@ -152,9 +177,15 @@ export default function SignupScreen({ navigation, route }: any) {
           </View>
 
           {/* Phone Field */}
-          <Text className="font-medium text-[14px] text-black mb-2">Phone Number</Text>
+          <Text
+            className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+          >
+            Phone Number
+          </Text>
 
-          <View className="flex-row items-center border border-[#DADADA] bg-[#F5F9F7] rounded-xl px-4 h-[52px] mb-5">
+          <View
+            className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+          >
             <Image source={require('../../assets/phone.png')} className="w-5 h-5 mr-3" />
 
             <Controller
@@ -163,9 +194,9 @@ export default function SignupScreen({ navigation, route }: any) {
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   placeholder="Enter your phone number"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={` ${isDark ? 'text-[#8AA897]' : '#94A3B8'}`}
                   keyboardType="number-pad"
-                  className="flex-1 font-normal text-black"
+                  className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                   value={value}
                   onChangeText={onChange}
                 />
@@ -174,9 +205,15 @@ export default function SignupScreen({ navigation, route }: any) {
           </View>
 
           {/* Password Field */}
-          <Text className="font-medium text-[14px] text-black mb-2">Password</Text>
+          <Text
+            className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+          >
+            Password
+          </Text>
 
-          <View className="flex-row items-center border border-[#DADADA] bg-[#F5F9F7] rounded-xl px-4 h-[52px] mb-5">
+          <View
+            className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+          >
             <Image source={require('../../assets/lock.png')} className="w-5 h-5 mr-3" />
 
             <Controller
@@ -185,9 +222,9 @@ export default function SignupScreen({ navigation, route }: any) {
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   placeholder="Enter your password"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={` ${isDark ? 'text-[#8AA897]' : '#94A3B8'}`}
                   secureTextEntry
-                  className="flex-1 font-normal text-black"
+                  className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                   value={value}
                   onChangeText={onChange}
                 />
@@ -196,15 +233,19 @@ export default function SignupScreen({ navigation, route }: any) {
           </View>
           {user === 'consultant' && (
             <View className="mb-5">
-              <Text className="font-medium text-[14px] text-black mb-2">Upload CV</Text>
+              <Text
+                className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+              >
+                Upload CV
+              </Text>
 
               <Pressable
                 onPress={pickDocument}
-                className="border border-dashed border-[#27B07D] bg-[#F5F9F7] rounded-lg h-[120px] justify-center items-center"
+                className={`border border-dashed  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#27B07D]'} rounded-lg h-[120px] justify-center items-center`}
               >
                 <Image source={require('../../assets/upload.png')} className="w-10 h-10 mb-2" />
 
-                <Text className="text-[#162721] font-medium">
+                <Text className={` ${isDark ? 'text-white' : 'text-[#162721]'} font-medium1`}>
                   {cvFile ? cvFile.name : 'Upload your CV'}
                 </Text>
 
@@ -234,7 +275,9 @@ export default function SignupScreen({ navigation, route }: any) {
 
           {/* Sign Up link */}
           <View className="text-center mb-5 flex flex-row justify-center ">
-            <Text className="text-center text-[#64748B] font-normal text-[14px]">
+            <Text
+              className={`text-center  ${isDark ? 'text-[#8AA897]' : 'text-[#64748B]'} font-normal text-[14px]`}
+            >
               Already have an account?{' '}
             </Text>
             <Pressable onPress={() => navigation.navigate('Login')}>
@@ -242,7 +285,7 @@ export default function SignupScreen({ navigation, route }: any) {
             </Pressable>
           </View>
         </View>
-      </LinearGradient>
+      </GradientBackground>
     </ScrollView>
   );
 }

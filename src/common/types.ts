@@ -13,6 +13,8 @@ export type ConsultationStackParamList = {
   ConsultationHome: undefined;
   ConsultationDetail: undefined;
   ConsultationChat: undefined;
+  NoConsultant: undefined;
+  NewConsultant: undefined;
 };
 
 export type NewsStackParamList = {
@@ -116,3 +118,59 @@ export type RootStackParamList = {
   UserApp: undefined;
   ConsultantApp: undefined;
 };
+
+export interface ConsultantDetails {
+  id: number;
+  user_id: number;
+  specialization: string | null;
+  bio: string | null;
+  years_experience: number;
+  average_rating: string;
+  total_sessions: number;
+  is_approved: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Consultant {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: string | null;
+  role: string;
+  status: string;
+  cv_path: string | null;
+  profile_picture_url: string | null;
+  email_verified_at: string | null;
+  email_verified: boolean;
+  onboarding_status: string;
+  onboarding_completed_at: string | null;
+  subscription_purchased_at: string | null;
+  last_app_access_at: string | null;
+  last_session_at: string | null;
+  last_app_version: string | null;
+  last_device_type: string | null;
+  last_ip_address: string | null;
+  is_away: boolean;
+  away_since: string | null;
+  created_at: string;
+  updated_at: string;
+  consultant_details: ConsultantDetails | null;
+}
+
+export interface Message {
+  id?: number;
+  message?: string;
+  read?: boolean;
+  created_at?: string;
+}
+
+export interface ConsultationItem {
+  id: number;
+  status: string;
+  problem_description: string;
+  updated_at: string;
+  consultant: Consultant | null;
+  messages: Message[];
+}
