@@ -16,25 +16,18 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
   dismissOnBackdropPress = true,
   containerClassName = '',
 }) => {
+  console.log('ModalWrapper - visible:', visible);
+
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-      {/* Backdrop */}
-      <Pressable
-        className="flex-1 bg-black/40"
-        onPress={dismissOnBackdropPress ? onClose : undefined}
-        disabled={!dismissOnBackdropPress}
-      />
-
-      {/* Modal Container */}
-      <View
-        className={`
-          absolute top-1/2 left-1/2 w-80 
-          -translate-x-1/2 -translate-y-1/2
-          rounded-2xl p-6 bg-white
-          ${containerClassName}
-        `}
-      >
-        {children}
+      <View className="flex-1 justify-center items-center bg-black/80">
+        <Pressable
+          className="absolute inset-0"
+          onPress={dismissOnBackdropPress ? onClose : undefined}
+        />
+        <View className={`rounded-md p-6 bg-white w-[95%] mx-2 ${containerClassName}`}>
+          {children}
+        </View>
       </View>
     </Modal>
   );

@@ -4,9 +4,11 @@ export const tokens = {
   fonts: {
     urbanistRegular: 'Urbanist-Regular',
     urbanistMedium: 'Urbanist-Medium',
+    urbanistSemibold: 'Urbanist-SemiBold',
     urbanistBold: 'Urbanist-Bold',
     poppinsRegular: 'Poppins-Regular',
     poppinsMedium: 'Poppins-Medium',
+    poppinsSemibold: 'Poppins-SemiBold',
     poppinsBold: 'Poppins-Bold',
   },
 

@@ -33,11 +33,15 @@ export const AppButton: React.FC<AppButtonProps> = ({
     <TouchableOpacity disabled={disabled} onPress={onPress} activeOpacity={0.8}>
       {/* Gradient Variant (when NOT disabled) */}
       {isGradient && !disabled ? (
-        <LinearGradient colors={gradientColors} className={`py-3 px-4 rounded-xl ${className}`}>
+        <LinearGradient
+          colors={gradientColors}
+          className={`py-3 px-4 !rounded-[10px] ${className}`}
+          style={{ borderRadius: 10 }} // Fallback
+        >
           <View className="flex-row items-center justify-center gap-2">
             {icon}
             {text && (
-              <Text className={`text-base font-semibold ${labelClass} ${textClassName}`}>
+              <Text className={`text-base font-urbanist font-bold ${labelClass} ${textClassName}`}>
                 {text}
               </Text>
             )}
@@ -47,10 +51,11 @@ export const AppButton: React.FC<AppButtonProps> = ({
         // Light variant OR Disabled (solid background)
         <View
           className={`
-            py-3 px-4 rounded-xl
+            py-3 px-4 !rounded-[10px]
             ${disabled ? 'bg-disabled' : 'bg-white'}
             ${className}
           `}
+          style={{ borderRadius: 10 }} // Fallback
         >
           <View className="flex-row items-center justify-center gap-2">
             {icon}

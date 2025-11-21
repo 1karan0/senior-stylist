@@ -50,7 +50,7 @@ const ConsultantTabNavigator: React.FC = () => {
         tabBarInactiveTintColor: '#658176',
         tabBarStyle: {
           position: 'absolute',
-          bottom: 20,
+          bottom: 10,
           left: 24,
           right: 24,
           height: 65,
@@ -77,7 +77,7 @@ const ConsultantTabNavigator: React.FC = () => {
           fontWeight: '500',
           marginBottom: 5,
         },
-        headerShown: false,
+        headerShown: false, // This hides the header for all screens
       }}
     >
       <Tab.Screen

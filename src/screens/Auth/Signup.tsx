@@ -11,9 +11,11 @@ import {
 } from 'react-native';
 import { useForm, Controller, set } from 'react-hook-form';
 import LinearGradient from 'react-native-linear-gradient';
-import axios from 'axios';
-import { BASE_URL } from '../../config';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
+import axios from 'axios';
+
+import { BASE_URL } from '@/config';
+
 export default function SignupScreen({ navigation, route }: any) {
   const { control, handleSubmit } = useForm();
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ export default function SignupScreen({ navigation, route }: any) {
       if (pickerResult && pickerResult.length > 0) {
         setCvFile(pickerResult[0]); // <-- FIX
       }
-    } catch (err) {
+    } catch (err: any) {
       if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
         console.log('User cancelled.');
       } else {
@@ -99,7 +101,7 @@ export default function SignupScreen({ navigation, route }: any) {
           {/* Logo + Headings */}
           <View className="items-center mt-14 mb-10">
             <Image
-              source={require('../../assets/colored_logo.png')}
+              source={require('@/assets/colored_logo.png')}
               className="w-[90px] h-[90px]"
               resizeMode="contain"
             />
