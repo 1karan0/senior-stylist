@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,13 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useForm, Controller, set } from 'react-hook-form';
 import axios from 'axios';
 import LinearGradient from 'react-native-linear-gradient';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BASE_URL } from '@/config';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -23,8 +25,10 @@ export default function SignupScreen({ navigation, route }: any) {
   const [loading, setLoading] = useState(false);
   const [cvFile, setCvFile] = useState<any>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   const { isDark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const user = route.params.user;
 
@@ -46,6 +50,14 @@ export default function SignupScreen({ navigation, route }: any) {
       }
     }
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setApiError('');
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSignup = async (form: any) => {
     try {
@@ -87,220 +99,243 @@ export default function SignupScreen({ navigation, route }: any) {
       console.log('Signup success:', response.data);
       navigation.navigate('OtpVerification', { email: form.email });
     } catch (err: any) {
-      console.log('Signup error:', err);
-      Alert.alert('Signup Failed', err?.response?.data?.message || 'Something went wrong.');
-    } finally {
       setLoading(false);
+      console.log('Signup error:', err.response.data.errors.email[0]);
+      setApiError(err.response.data.errors.email[0] || 'Something went wrong. Please try again.');
     }
   };
 
   return (
-    <ScrollView>
-      <GradientBackground>
-        <View className={`flex-1 px-6 ${user === 'customer' && 'h-screen'}`}>
-          {/* Logo + Headings */}
-          <View className="items-center mt-14 mb-10">
-            <Image
-              source={
-                isDark
-                  ? require('../../assets/icons/dark-logo.png')
-                  : require('../../assets/icons/colored_logo.png')
-              }
-              className="w-[90px] h-[90px]"
-              resizeMode="contain"
-            />
-
-            <Text
-              className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-[#162721]'} mt-4`}
+    <SafeAreaView style={{ flex: 1 }}>
+      <KeyboardAvoidingView>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+          }}
+        >
+          <GradientBackground>
+            <View
+              className={`flex-1 px-6 ${user === 'customer' && 'h-screen'} ${apiError && 'mb-10'}`}
             >
-              Create Account
-            </Text>
-
-            <Text
-              className={`font-normal text-[14px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}  mt-1`}
-            >
-              Join us today
-            </Text>
-          </View>
-
-          {/* Name Field */}
-          <Text
-            className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
-          >
-            Full Name
-          </Text>
-
-          <View
-            className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
-          >
-            <Image source={require('../../assets/icons/user.png')} className="w-5 h-5 mr-3" />
-
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  placeholder="Enter your Name"
-                  placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
-                  className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
-                  value={value}
-                  onChangeText={onChange}
+              {/* Logo + Headings */}
+              <View className="items-center mt-14 mb-10">
+                <Image
+                  source={
+                    isDark
+                      ? require('../../assets/icons/dark-logo.png')
+                      : require('../../assets/icons/colored_logo.png')
+                  }
+                  className="w-[90px] h-[90px]"
+                  resizeMode="contain"
                 />
-              )}
-            />
-          </View>
 
-          {/* Email Field */}
-          <Text
-            className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
-          >
-            Email Address
-          </Text>
+                <Text
+                  className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-[#162721]'} mt-4`}
+                >
+                  Create Account
+                </Text>
 
-          <View
-            className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
-          >
-            <Image source={require('../../assets/icons/email.png')} className="w-5 h-5 mr-3" />
+                <Text
+                  className={`font-normal text-[14px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}  mt-1`}
+                >
+                  Join us today
+                </Text>
+              </View>
 
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  placeholder="Enter your email"
-                  placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
-                  className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
-                  value={value}
-                  onChangeText={onChange}
-                />
-              )}
-            />
-          </View>
+              {/* API Error Message */}
+              {apiError ? (
+                <View
+                  className={`flex-row items-center ${isDark ? 'bg-red-900/20 border-red-500/30' : 'bg-red-50 border-red-200'} border rounded-xl px-4 py-3 mb-4`}
+                >
+                  <Text className="text-red-500 text-[20px] mr-2">⚠</Text>
+                  <Text
+                    className={`flex-1 ${isDark ? 'text-red-400' : 'text-red-600'} text-[13px] font-medium`}
+                  >
+                    {apiError}
+                  </Text>
+                </View>
+              ) : null}
 
-          {/* Phone Field */}
-          <Text
-            className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
-          >
-            Phone Number
-          </Text>
-
-          <View
-            className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
-          >
-            <Image source={require('../../assets/icons/phone.png')} className="w-5 h-5 mr-3" />
-
-            <Controller
-              control={control}
-              name="phone"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  placeholder="Enter your phone number"
-                  placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
-                  keyboardType="number-pad"
-                  className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
-                  value={value}
-                  onChangeText={onChange}
-                />
-              )}
-            />
-          </View>
-
-          {/* Password Field */}
-          <Text
-            className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
-          >
-            Password
-          </Text>
-
-          <View
-            className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
-          >
-            <Image source={require('../../assets/icons/lock.png')} className="w-5 h-5 mr-3" />
-
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  placeholder="Enter your password"
-                  placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
-                  secureTextEntry={!showPassword}
-                  className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
-                  value={value}
-                  onChangeText={onChange}
-                />
-              )}
-            />
-            {/* Toggle eye button */}
-            <Pressable onPress={() => setShowPassword(!showPassword)}>
-              <Image
-                source={
-                  showPassword
-                    ? require('../../assets/icons/eye-open.png')
-                    : require('../../assets/icons/eye-closed.png')
-                }
-                className="w-5 h-5 ml-2"
-              />
-            </Pressable>
-          </View>
-          {user === 'consultant' && (
-            <View className="mb-5">
+              {/* Name Field */}
               <Text
                 className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
               >
-                Upload CV
+                Full Name
               </Text>
 
-              <Pressable
-                onPress={pickDocument}
-                className={`border border-dashed  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#27B07D]'} rounded-lg h-[120px] justify-center items-center`}
+              <View
+                className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
               >
-                <Image
-                  source={require('../../assets/icons/upload.png')}
-                  className="w-10 h-10 mb-2"
+                <Image source={require('../../assets/icons/user.png')} className="w-5 h-5 mr-3" />
+
+                <Controller
+                  control={control}
+                  name="name"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      placeholder="Enter your Name"
+                      placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
+                      className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )}
                 />
+              </View>
 
-                <Text className={` ${isDark ? 'text-white' : 'text-[#162721]'} font-medium1`}>
-                  {cvFile ? cvFile.name : 'Upload your CV'}
-                </Text>
+              {/* Email Field */}
+              <Text
+                className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+              >
+                Email Address
+              </Text>
 
-                <Text className="text-[#658176] text-[12px]">.pdf , .docx , .doc</Text>
-              </Pressable>
-            </View>
-          )}
+              <View
+                className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+              >
+                <Image source={require('../../assets/icons/email.png')} className="w-5 h-5 mr-3" />
 
-          {/* Sign Un Button — gradient */}
-          <Pressable
-            onPress={handleSubmit(handleSignup)}
-            className=" rounded-lg overflow-hidden mb-6"
-          >
-            <LinearGradient
-              colors={['#2CCB91', '#23A76F']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="h-[50px]  justify-center items-center"
-            >
-              {loading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white font-urbanistBold text-[16px]">Create Account</Text>
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      placeholder="Enter your email"
+                      placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
+                      className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )}
+                />
+              </View>
+
+              {/* Phone Field */}
+              <Text
+                className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+              >
+                Phone Number
+              </Text>
+
+              <View
+                className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+              >
+                <Image source={require('../../assets/icons/phone.png')} className="w-5 h-5 mr-3" />
+
+                <Controller
+                  control={control}
+                  name="phone"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      placeholder="Enter your phone number"
+                      placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
+                      keyboardType="number-pad"
+                      className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )}
+                />
+              </View>
+
+              {/* Password Field */}
+              <Text
+                className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+              >
+                Password
+              </Text>
+
+              <View
+                className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+              >
+                <Image source={require('../../assets/icons/lock.png')} className="w-5 h-5 mr-3" />
+
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      placeholder="Enter your password"
+                      placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
+                      secureTextEntry={!showPassword}
+                      className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )}
+                />
+                {/* Toggle eye button */}
+                <Pressable onPress={() => setShowPassword(!showPassword)}>
+                  <Image
+                    source={
+                      showPassword
+                        ? require('../../assets/icons/eye-open.png')
+                        : require('../../assets/icons/eye-closed.png')
+                    }
+                    className="w-5 h-5 ml-2"
+                  />
+                </Pressable>
+              </View>
+              {user === 'consultant' && (
+                <View className="mb-5">
+                  <Text
+                    className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                  >
+                    Upload CV
+                  </Text>
+
+                  <Pressable
+                    onPress={pickDocument}
+                    className={`border border-dashed  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#27B07D]'} rounded-lg h-[120px] justify-center items-center`}
+                  >
+                    <Image
+                      source={require('../../assets/icons/upload.png')}
+                      className="w-10 h-10 mb-2"
+                    />
+
+                    <Text className={` ${isDark ? 'text-white' : 'text-[#162721]'} font-medium1`}>
+                      {cvFile ? cvFile.name : 'Upload your CV'}
+                    </Text>
+
+                    <Text className="text-[#658176] text-[12px]">.pdf , .docx , .doc</Text>
+                  </Pressable>
+                </View>
               )}
-            </LinearGradient>
-          </Pressable>
 
-          {/* Sign Up link */}
-          <View className="text-center mb-5 flex flex-row justify-center ">
-            <Text
-              className={`text-center  ${isDark ? 'text-[#8AA897]' : 'text-[#64748B]'} font-normal text-[14px]`}
-            >
-              Already have an account?{' '}
-            </Text>
-            <Pressable onPress={() => navigation.navigate('Login')}>
-              <Text className="text-[#27B07D] font-urbanistSemi">Sign In</Text>
-            </Pressable>
-          </View>
-        </View>
-      </GradientBackground>
-    </ScrollView>
+              {/* Sign Un Button — gradient */}
+              <Pressable
+                onPress={handleSubmit(handleSignup)}
+                className=" rounded-lg overflow-hidden mb-6"
+              >
+                <LinearGradient
+                  colors={['#2CCB91', '#23A76F']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  className="h-[50px]  justify-center items-center"
+                >
+                  {loading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text className="text-white font-urbanistBold text-[16px]">Create Account</Text>
+                  )}
+                </LinearGradient>
+              </Pressable>
+
+              {/* Sign ip link */}
+              <View className={`text-center mb-5 flex flex-row justify-center `}>
+                <Text
+                  className={`text-center  ${isDark ? 'text-[#8AA897]' : 'text-[#64748B]'} font-normal text-[14px]`}
+                >
+                  Already have an account?{' '}
+                </Text>
+                <Pressable onPress={() => navigation.navigate('Login')}>
+                  <Text className="text-[#27B07D] font-urbanistSemi">Sign In</Text>
+                </Pressable>
+              </View>
+            </View>
+          </GradientBackground>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

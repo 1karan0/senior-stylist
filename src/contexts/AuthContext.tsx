@@ -83,9 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true };
     } catch (err: any) {
       const message =
-        err?.response?.data?.errors?.code?.[0] ||
-        err?.response?.data?.message ||
-        'Something went wrong';
+        err?.response?.data?.errors?.code?.[0] || err?.message || 'Something went wrong';
 
       return { success: false, error: message };
     }

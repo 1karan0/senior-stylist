@@ -25,10 +25,8 @@ const Chat: React.FC<ChatProps> = ({ navigation, data, isLoading }) => {
   // unwrap API structure
 
   // keep only active ones
-  console.log('All Chats:', data);
   const activeChats = data?.filter((item: any) => ACTIVE_STATUSES.includes(item.status));
   // apply search
-  console.log('Active Chats:', activeChats);
   const filteredChats = activeChats?.filter((item: any) => {
     const name = item?.consultant?.name?.toLowerCase() || '';
     const problem = item?.problem_description?.toLowerCase() || '';
@@ -86,7 +84,7 @@ const Chat: React.FC<ChatProps> = ({ navigation, data, isLoading }) => {
 
   return (
     <GradientBackground>
-      <View className="flex-1 ">
+      <View className="flex-1 pb-20">
         {/* Header */}
 
         <View className="">

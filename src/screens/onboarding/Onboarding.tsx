@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import LinearGradient from 'react-native-linear-gradient';
@@ -19,6 +19,22 @@ const OnboardingScreen = ({ navigation }: any) => {
       navigation.replace('Login');
     }
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPage((prev) => {
+        if (prev < onboardData.length - 1) {
+          pagerRef.current?.setPage(prev + 1);
+          return prev + 1;
+        } else {
+          clearInterval(interval); // stop sliding at last screen
+          return prev;
+        }
+      });
+    }, 3500); // 1.5s for softer vibes
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <GradientBackground>

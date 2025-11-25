@@ -19,7 +19,9 @@ export type ConsultationStackParamList = {
 
 export type NewsStackParamList = {
   NewsHome: undefined;
-  NewsDetail: undefined;
+  NewsDetail: {
+    slug: string; // only slug/name goes here
+  };
   NewsCategory: undefined;
 };
 
@@ -173,4 +175,38 @@ export interface ConsultationItem {
   updated_at: string;
   consultant: Consultant | null;
   messages: Message[];
+}
+
+export interface NewsCategory {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface NewsArticle {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  image_url: string;
+  body: string;
+  author: string;
+  published_date: string;
+  created_at: string;
+  views_count: number; // ← add this
+  category: NewsCategory | null;
+}
+
+export interface Article {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  image_url: string;
+  body: string; // this is the HTML string
+  author: string;
+  published_date: string; // "2025-11-13"
+  created_at: string; // ISO date format
+  views_count: number;
+  category: NewsCategory | null;
 }

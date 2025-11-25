@@ -6,7 +6,7 @@ import { useResendVerificationCodeApi } from '@/api/auth/useResendCode';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 
-export default function OtpVerificationScreen({ navigation }: any) {
+export default function OtpVerificationScreen({ navigation, route }: any) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [serverError, setServerError] = useState('');
   const [resendMessage, setResendMessage] = useState('');
@@ -22,7 +22,7 @@ export default function OtpVerificationScreen({ navigation }: any) {
 
   const { isDark } = useTheme();
 
-  // const email = route.params.email;
+  const email = route.params.email;
 
   useEffect(() => {
     if (!isTimerActive) return;
@@ -62,22 +62,22 @@ export default function OtpVerificationScreen({ navigation }: any) {
     const code = otp.join('');
 
     setLoading(true);
-    const res = await verifyEmail('email', code);
+    const res = await verifyEmail(email, code);
 
     if (!res.success) {
       setServerError(res.error || 'Invalid code');
       setLoading(false);
+      console.log('res:', res);
       return;
     }
     setLoading(false);
     setServerError('');
-    navigation.navigate('NextScreen');
   };
   const handleResend = async () => {
     if (isTimerActive) return; // prevent spam tap
 
     try {
-      const res = await resendMutation.mutateAsync({ email: 'test4@gmail.com' });
+      const res = await resendMutation.mutateAsync({ email: email });
 
       setResendMessage('OTP has been resent successfully.');
       setServerError('');
@@ -86,7 +86,7 @@ export default function OtpVerificationScreen({ navigation }: any) {
       setTimer(30);
       setIsTimerActive(true);
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Something went wrong.';
+      const msg = err.message || 'Something went wrong.';
       setServerError(msg);
     }
   };
@@ -154,14 +154,32 @@ export default function OtpVerificationScreen({ navigation }: any) {
 
       {/* Server Error */}
       {resendMessage ? (
-        <View>
-          <Text className="text-green-500 text-[13px] mb-4">{resendMessage}</Text>
+        <View
+          className={`flex-row items-center ${
+            isDark ? 'bg-green-900/20 border-green-500/30' : 'bg-green-50 border-green-200'
+          } border rounded-xl px-4 py-3 mb-4`}
+        >
+          <Text className="text-green-500 text-[20px] mr-2">✔</Text>
+
+          <Text
+            className={`flex-1 ${
+              isDark ? 'text-green-400' : 'text-green-700'
+            } text-[13px] font-medium`}
+          >
+            {resendMessage}
+          </Text>
         </View>
       ) : null}
-
       {serverError ? (
-        <View>
-          <Text className="text-red-500 text-[13px] mb-4">{serverError}</Text>
+        <View
+          className={`flex-row items-center ${isDark ? 'bg-red-900/20 border-red-500/30' : 'bg-red-50 border-red-200'} border rounded-xl px-4 py-3 mb-4`}
+        >
+          <Text className="text-red-500 text-[20px] mr-2">⚠</Text>
+          <Text
+            className={`flex-1 ${isDark ? 'text-red-400' : 'text-red-600'} text-[13px] font-medium`}
+          >
+            {serverError}
+          </Text>
         </View>
       ) : null}
 
