@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ConsultationStackParamList } from '@/common/types';
+import GradientBackground from '@/common/components/GradientBackground';
 
 type StoreNavigationProp = StackNavigationProp<ConsultationStackParamList, 'ConsultationHome'>;
 
@@ -11,14 +12,19 @@ interface Props {
 
 const Store: React.FC<Props> = ({ navigation }) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Consultation Home</Text>
-      <Button
-        title="Go to Profile Details"
-        onPress={() => navigation.navigate('ConsultationDetail')}
-      />
-      <Button title="Go to Profile Chat" onPress={() => navigation.navigate('ConsultationChat')} />
-    </View>
+    <GradientBackground>
+      <View style={styles.container}>
+        <Text style={styles.title}>Consultation Home</Text>
+        <Button
+          title="Go to Profile Details"
+          onPress={() => navigation.navigate('ConsultationDetail')}
+        />
+        <Button
+          title="Go to Profile Chat"
+          onPress={() => navigation.navigate('ConsultationChat')}
+        />
+      </View>
+    </GradientBackground>
   );
 };
 

@@ -52,9 +52,9 @@ const Details: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <GradientBackground className="flex-1 justify-center">
         <ActivityIndicator size="large" />
-      </View>
+      </GradientBackground>
     );
   }
 
@@ -71,7 +71,7 @@ const Details: React.FC = () => {
       <GradientBackground style={{ flex: 1 }}>
         <View className="flex-1 px-5 mt-10">
           {/* Top Bar */}
-          <View className="flex-row justify-between items-center mb-6">
+          <View className="flex-row justify-between items-center ">
             <TouchableOpacity onPress={() => navigation.goBack()} className="">
               <Image
                 source={
@@ -169,19 +169,18 @@ const Details: React.FC = () => {
               <RenderHTML
                 contentWidth={width}
                 source={{ html: article.body }}
+                baseStyle={{
+                  color: isDark ? '#8AA897' : '#162721',
+                  fontSize: 16,
+                  lineHeight: 22,
+                }}
                 tagsStyles={{
-                  p: {
-                    marginBottom: 10,
-                    fontSize: 16,
-                    color: `#fffff`,
-                    lineHeight: 22,
-                  },
                   h2: {
                     fontSize: 20,
                     fontWeight: '700',
+                    color: isDark ? '#FFFFFF' : '#162721',
                     marginTop: 16,
-                    marginBottom: 8,
-                    color: '#fffff',
+                    marginBottom: 2,
                   },
                 }}
               />

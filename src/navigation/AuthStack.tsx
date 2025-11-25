@@ -7,6 +7,7 @@ import ForgetPasswordScreen from '../screens/Auth/ForgetPassword';
 import OtpVerificationScreen from '../screens/Auth/OtpVerification';
 import PricingScreen from '../screens/pricing/Pricing';
 import { AuthStackParamList } from '@/common/types';
+import ResetPassword from '@/screens/Auth/ResetPassword';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
@@ -16,6 +17,7 @@ const AuthStack: React.FC = () => (
     <Stack.Screen name="Login" component={LoginScreen} />
     <Stack.Screen name="Signup" component={SignupScreen} />
     <Stack.Screen name="ForgetPassword" component={ForgetPasswordScreen} />
+    <Stack.Screen name="ResetPassword" component={ResetPassword} />
     <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
     <Stack.Screen name="Pricing" component={PricingScreen} />
   </Stack.Navigator>

@@ -3,29 +3,24 @@ import {
   View,
   Text,
   TextInput,
-  ScrollView,
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
-import { useGetNewsArticles } from '@/api/user/news/useGetNewsArticles';
-import ArticleCard from './components/ArticleCard';
 import { useNavigation } from '@react-navigation/native';
-import { Article, NewsArticle } from '@/common/types';
-import { useTheme } from '@/contexts/ThemeContext';
+import { FlashList } from '@shopify/flash-list';
+import { useGetNewsArticles } from '@/api/user/news/useGetNewsArticles';
+import { useGetNewsCategories } from '@/api/user/news/useGetNewsCategories';
+import ArticleCard from './components/ArticleCard';
 import GradientBackground from '@/common/components/GradientBackground';
-
-const categories = [
-  { id: 0, name: 'All' },
-  { id: 1, name: 'Announcements' },
-  { id: 2, name: 'Updates' },
-  { id: 3, name: 'Tips' },
-  { id: 4, name: 'Timeline' },
-];
+import { useTheme } from '@/contexts/ThemeContext';
 
 const NewsScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const { data: articles, isLoading } = useGetNewsArticles();
+  const { data: rawCategories = [] } = useGetNewsCategories();
+  const categories = [{ id: 'all', name: 'All' }, ...rawCategories];
 
   const { isDark } = useTheme();
   const navigation = useNavigation<any>();
@@ -37,12 +32,13 @@ const NewsScreen = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1  px-5 pt-10 pb-20">
-        <Text className={`text-2xl font-bold  ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
+      <View className="flex-1 px-5 pt-10 pb-20">
+        <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
           News Feed
         </Text>
+
         <Text
-          className={` ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} mt-1 text-sm font-poppins w-[70%]`}
+          className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} mt-1 text-sm font-poppins w-[70%]`}
         >
           Stay updated with the latest news and announcements
         </Text>
@@ -50,7 +46,9 @@ const NewsScreen = () => {
         {/* Search */}
         <View className="flex flex-col gap-3">
           <View
-            className={`flex-row items-center border ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'} rounded-xl px-3 py-2 mt-3`}
+            className={`flex-row items-center border ${
+              isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'
+            } rounded-xl px-3 py-2 mt-3`}
           >
             <Image
               source={require('../../../assets/icons/search-icon.png')}
@@ -64,21 +62,21 @@ const NewsScreen = () => {
           </View>
 
           {/* Categories */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="">
-            {categories.map((cat) => (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
+            {categories.map((cat: any) => (
               <TouchableOpacity
                 key={cat.id}
                 onPress={() => setSelectedCategory(cat.name)}
-                className={`px-3 py-1 rounded-xl mr-2  ${
+                className={`px-3 py-1 rounded-xl mr-2 ${
                   selectedCategory === cat.name
                     ? 'bg-[#00C896]'
-                    : `${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-white border-gray-300'}  border `
+                    : `${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-white border-gray-300'} border`
                 }`}
               >
                 <Text
                   className={`${
                     selectedCategory === cat.name ? 'text-white' : 'text-gray-700'
-                  } ${isDark ? 'text-white' : ' text-gray-700'} font-bold text-sm`}
+                  } ${isDark ? 'text-white' : 'text-gray-700'} font-bold text-sm`}
                 >
                   {cat.name}
                 </Text>
@@ -87,21 +85,26 @@ const NewsScreen = () => {
           </ScrollView>
         </View>
 
-        {/* Articles */}
-        <ScrollView className="mt-4">
-          {isLoading ? (
-            <ActivityIndicator size="large" color="#00C896" />
-          ) : (
-            filtered.map((item: NewsArticle) => (
+        {/* Articles List using FlashList */}
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#00C896" className="mt-10" />
+        ) : (
+          <FlashList
+            data={filtered}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingTop: 16, paddingBottom: 200 }}
+            renderItem={({ item }) => (
               <TouchableOpacity
-                key={item.id}
                 onPress={() => navigation.navigate('NewsDetail', { slug: item.slug })}
               >
                 <ArticleCard item={item} />
               </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
+            )}
+            overrideItemLayout={(layout: any) => {
+              layout.size = 250;
+            }}
+          />
+        )}
       </View>
     </GradientBackground>
   );

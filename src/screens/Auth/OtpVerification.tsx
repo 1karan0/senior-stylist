@@ -1,15 +1,20 @@
-import React, { use, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, TextInput, Pressable, Image, ActivityIndicator, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useResendVerificationCodeApi } from '@/api/auth/useResendCode';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useVerifyForgotPassOtp } from '@/api/auth/useverifyForgotPassOtp';
+import Toast from '@/common/components/Toast';
 
 export default function OtpVerificationScreen({ navigation, route }: any) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [serverError, setServerError] = useState('');
-  const [resendMessage, setResendMessage] = useState('');
+  const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'info' as any,
+  });
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(30);
   const [isTimerActive, setIsTimerActive] = useState(true);
@@ -23,6 +28,16 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
   const { isDark } = useTheme();
 
   const email = route.params.email;
+  const screen = route.params.screen;
+  const verifyForgotMutation = useVerifyForgotPassOtp();
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({
+      visible: true,
+      message,
+      type,
+    });
+  };
 
   useEffect(() => {
     if (!isTimerActive) return;
@@ -39,14 +54,6 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
 
     return () => clearInterval(interval);
   }, [isTimerActive]);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setResendMessage('');
-      setServerError('');
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const handleChange = (value: string, index: number) => {
     const updated = [...otp];
@@ -62,37 +69,81 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
     const code = otp.join('');
 
     setLoading(true);
-    const res = await verifyEmail(email, code);
+    try {
+      if (screen === 'signup') {
+        const res = await verifyEmail(email, code);
 
-    if (!res.success) {
-      setServerError(res.error || 'Invalid code');
+        if (!res.success) {
+          showToast(res.error || 'Invalid verification code', 'error');
+          console.log('verify signup res:', res);
+          return;
+        }
+
+        showToast('Email verified successfully! Welcome aboard.', 'success');
+        setTimeout(() => {
+          navigation.navigate('UserApp');
+        }, 1500);
+        return;
+      }
+
+      // forgot password flow: call verify OTP mutation
+      const resp = await verifyForgotMutation.mutateAsync({ email, code });
+
+      // API may return different shapes; check common patterns
+      if (resp?.success === false) {
+        showToast(resp.message || 'Invalid verification code', 'error');
+        return;
+      }
+      console.log('resp=====', resp);
+
+      // If API provided a token for password reset, navigate to reset screen
+      const resetToken = resp?.data?.token ?? resp?.token ?? resp?.reset_token;
+
+      if (resetToken) {
+        showToast('Code verified! Redirecting to reset password...', 'success');
+        setTimeout(() => {
+          navigation.navigate('ResetPassword', { token: resetToken });
+        }, 1500);
+      } else {
+        showToast('Verification successful!', 'success');
+        setTimeout(() => {
+          navigation.navigate('Login');
+        }, 1500);
+      }
+    } catch (err: any) {
+      const msg = err?.message || 'Invalid verification code. Please try again.';
+      showToast(msg, 'error');
+      console.log('verify error:', err);
+    } finally {
       setLoading(false);
-      console.log('res:', res);
-      return;
     }
-    setLoading(false);
-    setServerError('');
   };
+
   const handleResend = async () => {
-    if (isTimerActive) return; // prevent spam tap
+    if (isTimerActive) return;
 
     try {
       const res = await resendMutation.mutateAsync({ email: email });
-
-      setResendMessage('OTP has been resent successfully.');
-      setServerError('');
+      showToast('OTP has been resent successfully to your email.', 'success');
 
       // restart timer
       setTimer(30);
       setIsTimerActive(true);
     } catch (err: any) {
-      const msg = err.message || 'Something went wrong.';
-      setServerError(msg);
+      const msg = err.message || 'Failed to resend OTP. Please try again.';
+      showToast(msg, 'error');
     }
   };
 
   return (
     <GradientBackground className="flex-1 px-6 items-center">
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, visible: false })}
+      />
+
       {/* Logo */}
       <Image
         source={
@@ -110,6 +161,12 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
 
       <Text className={`text-[13px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}  mt-2`}>
         Verification code has been sent to
+      </Text>
+
+      <Text
+        className={`text-[14px] font-semibold ${isDark ? 'text-[#2CCB91]' : 'text-[#27B07D]'} mt-1`}
+      >
+        {email}
       </Text>
 
       {/* OTP BOXES */}
@@ -132,7 +189,9 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
             }}
             maxLength={1}
             keyboardType="number-pad"
-            className={`w-12 h-12 border border-[#27B07D] ${isDark ? 'bg-[#0E1B16] text-white' : 'bg-white text-black'} rounded-md mx-1 text-center text-[20px]  `}
+            className={`w-12 h-12 border border-[#27B07D] ${
+              isDark ? 'bg-[#0E1B16] text-white' : 'bg-white text-black'
+            } rounded-md mx-1 text-center text-[20px]  `}
           />
         ))}
       </View>
@@ -140,7 +199,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
       {/* Resend */}
       <View className="flex-row mb-6">
         <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-[#6B6B6B]'} text-[13px]`}>
-          Didn’t receive the code?{' '}
+          Didn't receive the code?{' '}
         </Text>
 
         {isTimerActive ? (
@@ -152,46 +211,15 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
         )}
       </View>
 
-      {/* Server Error */}
-      {resendMessage ? (
-        <View
-          className={`flex-row items-center ${
-            isDark ? 'bg-green-900/20 border-green-500/30' : 'bg-green-50 border-green-200'
-          } border rounded-xl px-4 py-3 mb-4`}
-        >
-          <Text className="text-green-500 text-[20px] mr-2">✔</Text>
-
-          <Text
-            className={`flex-1 ${
-              isDark ? 'text-green-400' : 'text-green-700'
-            } text-[13px] font-medium`}
-          >
-            {resendMessage}
-          </Text>
-        </View>
-      ) : null}
-      {serverError ? (
-        <View
-          className={`flex-row items-center ${isDark ? 'bg-red-900/20 border-red-500/30' : 'bg-red-50 border-red-200'} border rounded-xl px-4 py-3 mb-4`}
-        >
-          <Text className="text-red-500 text-[20px] mr-2">⚠</Text>
-          <Text
-            className={`flex-1 ${isDark ? 'text-red-400' : 'text-red-600'} text-[13px] font-medium`}
-          >
-            {serverError}
-          </Text>
-        </View>
-      ) : null}
-
       {/* Verify */}
       <Pressable
-        disabled={!isOtpComplete}
+        disabled={!isOtpComplete || loading}
         onPress={handleVerify}
         className="w-full rounded-xl overflow-hidden mb-4"
       >
         {isOtpComplete ? (
           <LinearGradient
-            colors={['#2CCB91', '#23A76F']}
+            colors={loading ? ['#94A3B8', '#64748B'] : ['#2CCB91', '#23A76F']}
             start={{ x: 0, y: 1 }}
             end={{ x: 1, y: 0 }}
             className="h-[50px] rounded-xl justify-center items-center"
@@ -204,7 +232,9 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
           </LinearGradient>
         ) : (
           <View
-            className={`h-[50px] rounded-xl justify-center items-center  ${isDark ? 'bg-[#8AA897]' : 'bg-[#DADADA]'}`}
+            className={`h-[50px] rounded-xl justify-center items-center  ${
+              isDark ? 'bg-[#8AA897]' : 'bg-[#DADADA]'
+            }`}
           >
             <Text className="text-white font-bold text-[16px]">Verify</Text>
           </View>
@@ -214,7 +244,9 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
       {/* Go Back */}
       <Pressable
         onPress={() => navigation.goBack()}
-        className={`w-full h-[50px] rounded-xl border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} justify-center items-center`}
+        className={`w-full h-[50px] rounded-xl border  ${
+          isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+        } justify-center items-center`}
       >
         <Text className={`text-[15px]  ${isDark ? 'text-white' : 'text-[#162721]'} font-bold`}>
           Go Back

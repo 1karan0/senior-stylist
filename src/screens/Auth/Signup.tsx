@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   Pressable,
   Image,
-  Alert,
   ActivityIndicator,
   ScrollView,
   KeyboardAvoidingView,
+  Animated,
 } from 'react-native';
-import { useForm, Controller, set } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
 import LinearGradient from 'react-native-linear-gradient';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
@@ -19,18 +19,35 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BASE_URL } from '@/config';
 import { useTheme } from '@/contexts/ThemeContext';
 import GradientBackground from '@/common/components/GradientBackground';
+import Toast from '@/common/components/Toast';
 
 export default function SignupScreen({ navigation, route }: any) {
-  const { control, handleSubmit } = useForm();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
   const [loading, setLoading] = useState(false);
   const [cvFile, setCvFile] = useState<any>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [apiError, setApiError] = useState('');
+  const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'info' as any,
+  });
 
   const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
   const user = route.params.user;
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
+    setToast({
+      visible: true,
+      message,
+      type,
+    });
+  };
 
   const pickDocument = async () => {
     try {
@@ -40,26 +57,26 @@ export default function SignupScreen({ navigation, route }: any) {
       });
 
       if (pickerResult && pickerResult.length > 0) {
-        setCvFile(pickerResult[0]); // <-- FIX
+        setCvFile(pickerResult[0]);
+        showToast('CV uploaded successfully', 'success');
       }
     } catch (err: any) {
       if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
         console.log('User cancelled.');
       } else {
         console.error('Error picking document:', err);
+        showToast('Failed to upload CV. Please try again.', 'error');
       }
     }
   };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setApiError('');
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   const handleSignup = async (form: any) => {
+    // Check if CV is required for consultant
+    if (user === 'consultant' && !cvFile) {
+      showToast('Please upload your CV to continue', 'warning');
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -97,26 +114,39 @@ export default function SignupScreen({ navigation, route }: any) {
       }
 
       console.log('Signup success:', response.data);
-      navigation.navigate('OtpVerification', { email: form.email });
+      showToast('Account created successfully! Redirecting...', 'success');
+      setTimeout(() => {
+        navigation.navigate('OtpVerification', { email: form.email, screen: 'signup' });
+      }, 1500);
     } catch (err: any) {
+      console.log('Signup error:', err.response?.data);
+      const errorMessage =
+        err.response?.data?.errors?.email?.[0] ||
+        err.response?.data?.message ||
+        'Something went wrong. Please try again.';
+      showToast(errorMessage, 'error');
+    } finally {
       setLoading(false);
-      console.log('Signup error:', err.response.data.errors.email[0]);
-      setApiError(err.response.data.errors.email[0] || 'Something went wrong. Please try again.');
     }
   };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <KeyboardAvoidingView>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
           }}
         >
           <GradientBackground>
-            <View
-              className={`flex-1 px-6 ${user === 'customer' && 'h-screen'} ${apiError && 'mb-10'}`}
-            >
+            <Toast
+              visible={toast.visible}
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast({ ...toast, visible: false })}
+            />
+
+            <View className="flex-1 px-6">
               {/* Logo + Headings */}
               <View className="items-center mt-14 mb-10">
                 <Image
@@ -130,31 +160,21 @@ export default function SignupScreen({ navigation, route }: any) {
                 />
 
                 <Text
-                  className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-[#162721]'} mt-4`}
+                  className={`font-bold text-[24px] ${
+                    isDark ? 'text-white' : 'text-[#162721]'
+                  } mt-4`}
                 >
                   Create Account
                 </Text>
 
                 <Text
-                  className={`font-normal text-[14px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}  mt-1`}
+                  className={`font-normal text-[14px] ${
+                    isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+                  }  mt-1`}
                 >
                   Join us today
                 </Text>
               </View>
-
-              {/* API Error Message */}
-              {apiError ? (
-                <View
-                  className={`flex-row items-center ${isDark ? 'bg-red-900/20 border-red-500/30' : 'bg-red-50 border-red-200'} border rounded-xl px-4 py-3 mb-4`}
-                >
-                  <Text className="text-red-500 text-[20px] mr-2">⚠</Text>
-                  <Text
-                    className={`flex-1 ${isDark ? 'text-red-400' : 'text-red-600'} text-[13px] font-medium`}
-                  >
-                    {apiError}
-                  </Text>
-                </View>
-              ) : null}
 
               {/* Name Field */}
               <Text
@@ -164,13 +184,26 @@ export default function SignupScreen({ navigation, route }: any) {
               </Text>
 
               <View
-                className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+                className={`flex-row items-center border ${
+                  errors.name
+                    ? 'border-red-500'
+                    : isDark
+                      ? 'bg-[#0E1B16] border-[#273F36]'
+                      : 'bg-[#F5F9F7] border-[#DADADA]'
+                } rounded-xl px-4 h-[52px] mb-1`}
               >
                 <Image source={require('../../assets/icons/user.png')} className="w-5 h-5 mr-3" />
 
                 <Controller
                   control={control}
                   name="name"
+                  rules={{
+                    required: 'Full name is required',
+                    minLength: {
+                      value: 2,
+                      message: 'Name must be at least 2 characters',
+                    },
+                  }}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       placeholder="Enter your Name"
@@ -182,22 +215,42 @@ export default function SignupScreen({ navigation, route }: any) {
                   )}
                 />
               </View>
+              {errors.name && (
+                <Text className="text-red-500 text-[12px] mb-3 ml-1">
+                  {errors.name.message as string}
+                </Text>
+              )}
 
               {/* Email Field */}
               <Text
-                className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                className={`font-medium text-[14px] ${
+                  isDark ? 'text-[#ffff]' : 'text-black'
+                } mb-2 mt-2`}
               >
                 Email Address
               </Text>
 
               <View
-                className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+                className={`flex-row items-center border ${
+                  errors.email
+                    ? 'border-red-500'
+                    : isDark
+                      ? 'bg-[#0E1B16] border-[#273F36]'
+                      : 'bg-[#F5F9F7] border-[#DADADA]'
+                } rounded-xl px-4 h-[52px] mb-1`}
               >
                 <Image source={require('../../assets/icons/email.png')} className="w-5 h-5 mr-3" />
 
                 <Controller
                   control={control}
                   name="email"
+                  rules={{
+                    required: 'Email is required',
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: 'Please enter a valid email address',
+                    },
+                  }}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       placeholder="Enter your email"
@@ -205,26 +258,48 @@ export default function SignupScreen({ navigation, route }: any) {
                       className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                       value={value}
                       onChangeText={onChange}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
                     />
                   )}
                 />
               </View>
+              {errors.email && (
+                <Text className="text-red-500 text-[12px] mb-3 ml-1">
+                  {errors.email.message as string}
+                </Text>
+              )}
 
               {/* Phone Field */}
               <Text
-                className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                className={`font-medium text-[14px] ${
+                  isDark ? 'text-[#ffff]' : 'text-black'
+                } mb-2 mt-2`}
               >
                 Phone Number
               </Text>
 
               <View
-                className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+                className={`flex-row items-center border ${
+                  errors.phone
+                    ? 'border-red-500'
+                    : isDark
+                      ? 'bg-[#0E1B16] border-[#273F36]'
+                      : 'bg-[#F5F9F7] border-[#DADADA]'
+                } rounded-xl px-4 h-[52px] mb-1`}
               >
                 <Image source={require('../../assets/icons/phone.png')} className="w-5 h-5 mr-3" />
 
                 <Controller
                   control={control}
                   name="phone"
+                  rules={{
+                    required: 'Phone number is required',
+                    pattern: {
+                      value: /^[0-9]{10,15}$/,
+                      message: 'Please enter a valid phone number (10-15 digits)',
+                    },
+                  }}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       placeholder="Enter your phone number"
@@ -237,22 +312,42 @@ export default function SignupScreen({ navigation, route }: any) {
                   )}
                 />
               </View>
+              {errors.phone && (
+                <Text className="text-red-500 text-[12px] mb-3 ml-1">
+                  {errors.phone.message as string}
+                </Text>
+              )}
 
               {/* Password Field */}
               <Text
-                className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                className={`font-medium text-[14px] ${
+                  isDark ? 'text-[#ffff]' : 'text-black'
+                } mb-2 mt-2`}
               >
                 Password
               </Text>
 
               <View
-                className={`flex-row items-center border  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DADADA]'}  rounded-xl px-4 h-[52px] mb-5`}
+                className={`flex-row items-center border mb-5 ${
+                  errors.password
+                    ? 'border-red-500'
+                    : isDark
+                      ? 'bg-[#0E1B16] border-[#273F36]'
+                      : 'bg-[#F5F9F7] border-[#DADADA]'
+                } rounded-xl px-4 h-[52px] mb-1`}
               >
                 <Image source={require('../../assets/icons/lock.png')} className="w-5 h-5 mr-3" />
 
                 <Controller
                   control={control}
                   name="password"
+                  rules={{
+                    required: 'Password is required',
+                    minLength: {
+                      value: 6,
+                      message: 'Password must be at least 6 characters',
+                    },
+                  }}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       placeholder="Enter your password"
@@ -276,60 +371,75 @@ export default function SignupScreen({ navigation, route }: any) {
                   />
                 </Pressable>
               </View>
+              {errors.password && (
+                <Text className="text-red-500 text-[12px] mb-3 ml-1">
+                  {errors.password.message as string}
+                </Text>
+              )}
+
               {user === 'consultant' && (
-                <View className="mb-5">
+                <View className="mb-5 mt-2">
                   <Text
-                    className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                    className={`font-medium text-[14px] ${
+                      isDark ? 'text-[#ffff]' : 'text-black'
+                    } mb-2`}
                   >
                     Upload CV
                   </Text>
 
                   <Pressable
                     onPress={pickDocument}
-                    className={`border border-dashed  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#27B07D]'} rounded-lg h-[120px] justify-center items-center`}
+                    className={`border border-dashed ${
+                      isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#27B07D]'
+                    } rounded-lg h-[120px] justify-center items-center`}
                   >
                     <Image
                       source={require('../../assets/icons/upload.png')}
                       className="w-10 h-10 mb-2"
                     />
 
-                    <Text className={` ${isDark ? 'text-white' : 'text-[#162721]'} font-medium1`}>
+                    <Text
+                      className={` ${isDark ? 'text-white' : 'text-[#162721]'} font-medium text-center px-4`}
+                    >
                       {cvFile ? cvFile.name : 'Upload your CV'}
                     </Text>
 
-                    <Text className="text-[#658176] text-[12px]">.pdf , .docx , .doc</Text>
+                    <Text className="text-[#658176] text-[12px] mt-1">.pdf , .docx , .doc</Text>
                   </Pressable>
                 </View>
               )}
 
-              {/* Sign Un Button — gradient */}
+              {/* Sign Up Button — gradient */}
               <Pressable
                 onPress={handleSubmit(handleSignup)}
-                className=" rounded-lg overflow-hidden mb-6"
+                className="rounded-lg overflow-hidden mb-6"
+                disabled={loading}
               >
                 <LinearGradient
-                  colors={['#2CCB91', '#23A76F']}
+                  colors={loading ? ['#94A3B8', '#64748B'] : ['#2CCB91', '#23A76F']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  className="h-[50px]  justify-center items-center"
+                  className="h-[50px] justify-center items-center"
                 >
                   {loading ? (
                     <ActivityIndicator color="white" />
                   ) : (
-                    <Text className="text-white font-urbanistBold text-[16px]">Create Account</Text>
+                    <Text className="text-white font-bold text-[16px]">Create Account</Text>
                   )}
                 </LinearGradient>
               </Pressable>
 
-              {/* Sign ip link */}
-              <View className={`text-center mb-5 flex flex-row justify-center `}>
+              {/* Sign in link */}
+              <View className="text-center mb-5 flex flex-row justify-center">
                 <Text
-                  className={`text-center  ${isDark ? 'text-[#8AA897]' : 'text-[#64748B]'} font-normal text-[14px]`}
+                  className={`text-center ${
+                    isDark ? 'text-[#8AA897]' : 'text-[#64748B]'
+                  } font-normal text-[14px]`}
                 >
                   Already have an account?{' '}
                 </Text>
                 <Pressable onPress={() => navigation.navigate('Login')}>
-                  <Text className="text-[#27B07D] font-urbanistSemi">Sign In</Text>
+                  <Text className="text-[#27B07D] font-semibold">Sign In</Text>
                 </Pressable>
               </View>
             </View>

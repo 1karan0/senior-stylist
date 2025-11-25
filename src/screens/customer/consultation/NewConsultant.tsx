@@ -158,7 +158,7 @@ const NewConsultant = ({ navigation }: any) => {
           >
             <TouchableOpacity
               onPress={handleSubmit(onSubmit)}
-              className="flex-row items-center justify-center"
+              className="flex-row items-center justify-center w-full h-full"
               disabled={loading}
             >
               <Image

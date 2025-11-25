@@ -1,46 +1,63 @@
-import { View, Text, Image, TextInput, Pressable, Alert, ActivityIndicator } from 'react-native';
-import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useForgotPassword } from '@/api/auth/useForgotPasswod';
+import { useEffect, useState } from 'react';
+import { useTheme } from '@/contexts/ThemeContext';
+import GradientBackground from '@/common/components/GradientBackground';
+import Toast from '@/common/components/Toast';
+
+import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
-import { useTheme } from '@/contexts/ThemeContext';
-import { useResendVerificationCodeApi } from '@/api/auth/useResendCode';
-import GradientBackground from '@/common/components/GradientBackground';
-
-export default function ForgetPasswordScreen({ navigation }: any) {
+export default function ForgetPassword({ navigation }: any) {
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm();
   const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState('');
+  const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'info' as any,
+  });
+  const sendOtpMutation = useForgotPassword();
+  const { isDark } = useTheme();
 
-  const sendOtpMutation = useResendVerificationCodeApi();
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({
+      visible: true,
+      message,
+      type,
+    });
+  };
 
   const onSubmit = async (data: any) => {
     try {
       setLoading(true);
-      setApiError('');
       const res = await sendOtpMutation.mutateAsync({ email: data.email });
-      if (!res.success) {
-        setLoading(false);
-        setApiError(res.message || 'Failed to send reset link. Please try again.');
-        return;
-      } else {
-        setLoading(false);
-        navigation.navigate('OtpVerification', { email: data.email });
-      }
+      console.log('ress--===', res);
+
+      showToast('Verification code sent to your email!', 'success');
+      setTimeout(() => {
+        navigation.navigate('OtpVerification', { email: data.email, screen: 'forgotPassword' });
+      }, 1500);
     } catch (err: any) {
+      const errorMessage = err.message || 'Something went wrong. Please try again.';
+      showToast(errorMessage, 'error');
+    } finally {
       setLoading(false);
-      setApiError(err.message || 'Something went wrong. Please try again.');
     }
   };
 
-  const { isDark } = useTheme();
-
   return (
     <GradientBackground>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, visible: false })}
+      />
+
       <View className="flex-1 px-6">
         {/* Logo + Headings */}
         <View className="items-center mt-14 mb-10">
@@ -61,25 +78,13 @@ export default function ForgetPasswordScreen({ navigation }: any) {
           </Text>
 
           <Text
-            className={`font-normal text-[14px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} mt-1`}
+            className={`font-normal text-[14px] ${
+              isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+            } mt-1`}
           >
             No worries, we'll send you reset instructions
           </Text>
         </View>
-
-        {/* API Error Message */}
-        {apiError ? (
-          <View
-            className={`flex-row items-center ${isDark ? 'bg-red-900/20 border-red-500/30' : 'bg-red-50 border-red-200'} border rounded-xl px-4 py-3 mb-4`}
-          >
-            <Text className="text-red-500 text-[20px] mr-2">⚠</Text>
-            <Text
-              className={`flex-1 ${isDark ? 'text-red-400' : 'text-red-600'} text-[13px] font-medium`}
-            >
-              {apiError}
-            </Text>
-          </View>
-        ) : null}
 
         <Text className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}>
           Email Address
@@ -88,7 +93,7 @@ export default function ForgetPasswordScreen({ navigation }: any) {
         <View
           className={`flex-row items-center border ${
             errors.email
-              ? 'border-red-500 bg-red-50/5'
+              ? 'border-red-500'
               : isDark
                 ? 'bg-[#0E1B16] border-[#273F36]'
                 : 'bg-[#F5F9F7] border-[#DADADA]'
@@ -113,10 +118,7 @@ export default function ForgetPasswordScreen({ navigation }: any) {
                 placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
                 className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'}`}
                 value={value}
-                onChangeText={(text) => {
-                  onChange(text);
-                  if (apiError) setApiError('');
-                }}
+                onChangeText={onChange}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -126,12 +128,9 @@ export default function ForgetPasswordScreen({ navigation }: any) {
 
         {/* Field Error Message */}
         {errors.email && (
-          <View className="flex-row items-center mb-4 px-1">
-            <Text className="text-red-500 text-[18px] mr-1">•</Text>
-            <Text className="text-red-500 text-[12px] font-medium">
-              {errors.email.message as string}
-            </Text>
-          </View>
+          <Text className="text-red-500 text-[12px] mb-4 ml-1">
+            {errors.email.message as string}
+          </Text>
         )}
 
         {!errors.email && <View className="mb-5" />}
@@ -143,7 +142,7 @@ export default function ForgetPasswordScreen({ navigation }: any) {
           disabled={loading}
         >
           <LinearGradient
-            colors={loading ? ['#94A3B8', '#94A3B8'] : ['#2CCB91', '#23A76F']}
+            colors={loading ? ['#94A3B8', '#64748B'] : ['#2CCB91', '#23A76F']}
             start={{ x: 0, y: 1 }}
             end={{ x: 1, y: 0 }}
             className="h-[50px] rounded-xl justify-center items-center"
@@ -151,7 +150,7 @@ export default function ForgetPasswordScreen({ navigation }: any) {
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-white font-urbanistBold text-[16px]">Send Reset Link</Text>
+              <Text className="text-white font-bold text-[16px]">Send Reset Link</Text>
             )}
           </LinearGradient>
         </Pressable>

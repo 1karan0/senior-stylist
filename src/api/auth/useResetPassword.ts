@@ -1,0 +1,17 @@
+import { BASE_URL } from '@/config';
+import { parseApiError } from '@/utils/parseApiError';
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
+
+export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: async (data: { token: string; password: string }) => {
+      try {
+        const res = await axios.post(`${BASE_URL}/api/forgot-password/reset`, data);
+        return res.data;
+      } catch (err) {
+        throw new Error(parseApiError(err));
+      }
+    },
+  });
+};
