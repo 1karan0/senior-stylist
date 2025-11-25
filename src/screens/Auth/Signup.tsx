@@ -174,7 +174,7 @@ export default function SignupScreen({ navigation, route }: any) {
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       placeholder="Enter your Name"
-                      placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
+                      placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
                       className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                       value={value}
                       onChangeText={onChange}
@@ -201,7 +201,7 @@ export default function SignupScreen({ navigation, route }: any) {
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       placeholder="Enter your email"
-                      placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
+                      placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
                       className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                       value={value}
                       onChangeText={onChange}
@@ -228,7 +228,7 @@ export default function SignupScreen({ navigation, route }: any) {
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       placeholder="Enter your phone number"
-                      placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
+                      placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
                       keyboardType="number-pad"
                       className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                       value={value}
@@ -256,7 +256,7 @@ export default function SignupScreen({ navigation, route }: any) {
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       placeholder="Enter your password"
-                      placeholderTextColor={` ${isDark ? '#8AA897' : '#94A3B8'}`}
+                      placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
                       secureTextEntry={!showPassword}
                       className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
                       value={value}

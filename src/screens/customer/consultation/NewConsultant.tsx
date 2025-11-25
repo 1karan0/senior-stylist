@@ -114,7 +114,7 @@ const NewConsultant = ({ navigation }: any) => {
                   value={value}
                   onChangeText={onChange}
                   className={` ${isDark ? 'text-white' : 'text-black'} `}
-                  placeholderTextColor={` ${isDark ? '#8AA897' : '#9AA0A6'}`}
+                  placeholderTextColor={isDark ? '#8AA897' : '#9AA0A6'}
                 />
               </View>
             )}

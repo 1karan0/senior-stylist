@@ -53,7 +53,7 @@ const Details: React.FC = () => {
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#00C896" />
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -69,7 +69,7 @@ const Details: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <GradientBackground style={{ flex: 1 }}>
-        <View className="flex-1 px-5 mt-5">
+        <View className="flex-1 px-5 mt-10">
           {/* Top Bar */}
           <View className="flex-row justify-between items-center mb-6">
             <TouchableOpacity onPress={() => navigation.goBack()} className="">
