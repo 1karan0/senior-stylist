@@ -8,13 +8,12 @@ import {
   ActivityIndicator,
   ScrollView,
   KeyboardAvoidingView,
-  Animated,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
 import LinearGradient from 'react-native-linear-gradient';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BASE_URL } from '@/config';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -37,7 +36,6 @@ export default function SignupScreen({ navigation, route }: any) {
   });
 
   const { isDark } = useTheme();
-  const insets = useSafeAreaInsets();
 
   const user = route.params.user;
 

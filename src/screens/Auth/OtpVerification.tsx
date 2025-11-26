@@ -75,7 +75,6 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
 
         if (!res.success) {
           showToast(res.error || 'Invalid verification code', 'error');
-          console.log('verify signup res:', res);
           return;
         }
 
@@ -113,7 +112,6 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
     } catch (err: any) {
       const msg = err?.message || 'Invalid verification code. Please try again.';
       showToast(msg, 'error');
-      console.log('verify error:', err);
     } finally {
       setLoading(false);
     }

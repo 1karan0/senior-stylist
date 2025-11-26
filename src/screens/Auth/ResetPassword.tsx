@@ -62,8 +62,7 @@ const ResetPassword = () => {
 
     try {
       setLoading(true);
-      const res = await mutation.mutateAsync({ token, password: data.password });
-      console.log('res====', res, token);
+      await mutation.mutateAsync({ token, password: data.password });
       showToast('Password reset successful! Redirecting to login...', 'success');
       setTimeout(() => {
         navigation.navigate('Login' as never);
