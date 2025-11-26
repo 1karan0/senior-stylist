@@ -1,55 +1,215 @@
-import React, { useState } from 'react';
-import { View, Text } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Text, View } from 'react-native';
+import type { Unsubscribe } from 'firebase/firestore';
+
 import RequestList, { RequestItem } from './List';
 import RequestDetailsModal from './DetailsModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
+import { initializeFirebase, listenToStylistRequests, StylistRequest } from '@/services/firebase';
+
+const mapConsultationToRequestItem = (consultation: ConsultantConsultation): RequestItem => {
+  const customerName = consultation.user?.name || 'Unknown User';
+  const requestedAt = new Date(consultation.requested_at).getTime();
+  const expiresAt = consultation.expires_at ? new Date(consultation.expires_at).getTime() : null;
+
+  return {
+    id: consultation.id,
+    customerName,
+    problemDescription: consultation.problem_description || '',
+    hasImage: Boolean(consultation.image_path),
+    requestedAt,
+    expiresAt: expiresAt ?? undefined,
+  };
+};
+
+const mapFirebaseRequestToItem = (
+  firebaseRequest: StylistRequest,
+  consultationId: number
+): RequestItem => {
+  const customerName = firebaseRequest.customer_name || 'Unknown User';
+  const requestedAt = firebaseRequest.sent_at ? firebaseRequest.sent_at * 1000 : Date.now();
+  const expiresAt = firebaseRequest.expires_at ? firebaseRequest.expires_at * 1000 : undefined;
+
+  return {
+    id: consultationId,
+    customerName,
+    problemDescription: firebaseRequest.short_meta?.problem_description || '',
+    hasImage: Boolean(firebaseRequest.short_meta?.has_image),
+    requestedAt,
+    expiresAt,
+  };
+};
+
+const sortRequests = (requests: RequestItem[]) =>
+  [...requests].sort((a, b) => (b.requestedAt || 0) - (a.requestedAt || 0));
 
 const Request: React.FC = () => {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState('Pending');
-  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
+  const { user } = useAuth();
+  const isConsultant = user?.role === 'consultant';
 
-  // Mock data for requests
-  const requests: RequestItem[] = [
-    {
-      id: 1,
-      initials: 'JS',
-      name: 'John Smith',
-      time: '5 min ago',
-      hasAttachment: true,
-      attachmentName: 'Photo Attached',
-      requirements:
-        'I need help with styling for a corporate event next week. Looking for formal yet modern looks that make a statement.',
-    },
-    {
-      id: 2,
-      initials: 'JS',
-      name: 'John Smith',
-      time: '5 min ago',
-      hasAttachment: false,
-      requirements:
-        'Need advice on financial planning and investment strategies for long-term growth.',
-    },
-  ];
+  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [requirementsModal, setRequirementsModal] = useState<RequestItem | null>(null);
+  const [acceptingId, setAcceptingId] = useState<number | null>(null);
+  const unsubscribeRef = useRef<Unsubscribe | null>(null);
 
-  const handleAcceptRequest = (requestId: number) => {
-    const request = requests.find((req) => req.id === requestId);
-    setSelectedRequest(request || null);
-    setModalVisible(true);
+  useEffect(() => {
+    if (!user?.id || !isConsultant) {
+      setLoading(false);
+      return;
+    }
+
+    const bootstrap = async () => {
+      try {
+        await initializeFirebase();
+      } catch (error) {
+        if (__DEV__) {
+          console.warn('Failed to initialize Firebase:', error);
+        }
+      }
+
+      await loadInitialRequests({ silent: false });
+      setupFirebaseListener(user.id);
+    };
+
+    bootstrap();
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, isConsultant]);
+
+  const loadInitialRequests = async ({ silent }: { silent: boolean }) => {
+    if (!user?.id || !isConsultant) {
+      return;
+    }
+
+    if (!silent) {
+      setLoading(true);
+    }
+
+    try {
+      const consultations = await consultantConsultationsApi.available();
+      const mapped = consultations.map(mapConsultationToRequestItem);
+      setRequests(sortRequests(mapped));
+    } catch (error) {
+      if (__DEV__) {
+        console.error('Failed to load consultation requests:', error);
+      }
+    } finally {
+      if (!silent) {
+        setLoading(false);
+      }
+    }
+  };
+
+  const setupFirebaseListener = (stylistId: number) => {
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+    }
+
+    const unsubscribe = listenToStylistRequests(stylistId, {
+      onRequestAdded: async (firebaseRequest, requestId) => {
+        const consultationId = Number(requestId);
+        if (Number.isNaN(consultationId)) {
+          return;
+        }
+
+        let consultation: ConsultantConsultation | null = null;
+        try {
+          consultation = await consultantConsultationsApi.get(consultationId);
+        } catch (error) {
+          if (__DEV__) {
+            console.warn('Failed to fetch consultation details:', error);
+          }
+        }
+
+        const normalized = consultation
+          ? mapConsultationToRequestItem(consultation)
+          : mapFirebaseRequestToItem(firebaseRequest, consultationId);
+
+        setRequests((prev) => {
+          const exists = prev.some((req) => req.id === normalized.id);
+          if (exists) {
+            return sortRequests(prev.map((req) => (req.id === normalized.id ? normalized : req)));
+          }
+          return sortRequests([normalized, ...prev]);
+        });
+      },
+      onRequestRemoved: (requestId) => {
+        const id = Number(requestId);
+        setRequests((prev) => prev.filter((req) => req.id !== id));
+      },
+      onConnectionChange: (isConnected) => {
+        setConnected(isConnected);
+      },
+      onError: (error) => {
+        if (__DEV__) {
+          console.error('Firebase listener error:', error);
+        }
+      },
+    });
+
+    if (unsubscribe) {
+      unsubscribeRef.current = unsubscribe;
+    }
+  };
+
+  const handleAcceptRequest = async (requestId: number) => {
+    if (acceptingId) {
+      return;
+    }
+
+    setAcceptingId(requestId);
+    try {
+      await consultantConsultationsApi.accept(requestId);
+      setRequests((prev) => prev.filter((req) => req.id !== requestId));
+      setRequirementsModal(null);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        'Failed to accept the consultation. It might have been assigned already.';
+      Alert.alert('Unable to accept request', message);
+    } finally {
+      setAcceptingId(null);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadInitialRequests({ silent: true });
+    setRefreshing(false);
   };
 
   const handleViewDetails = (request: RequestItem) => {
-    setSelectedRequest(request);
-    setModalVisible(true);
+    setRequirementsModal(request);
   };
 
   const handleCloseModal = () => {
-    setModalVisible(false);
-    setSelectedRequest(null);
+    setRequirementsModal(null);
   };
+
+  if (!isConsultant) {
+    return (
+      <View className="flex-1 bg-white p-6 justify-center items-center">
+        <Text className="text-2xl font-urbanist font-bold text-[#162721] mb-4">
+          Consultant Only
+        </Text>
+        <Text className="font-poppins text-center text-[#658176]">
+          You need a consultant account to view incoming requests.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-white p-3">
-      {/* Header */}
       <View className="flex-col items-start p-4">
         <Text className="text-2xl font-urbanist font-bold text-[#162721]">
           Consultation Requests
@@ -57,37 +217,51 @@ const Request: React.FC = () => {
         <Text className="font-poppins text-sm text-[#658176]">
           Accept requests to start earning
         </Text>
+        {connected && (
+          <View className="flex-row items-center mt-2">
+            <View className="w-2 h-2 rounded-full bg-[#27B07D] mr-2" />
+            <Text className="font-poppins text-xs text-[#658176]">Real-time updates enabled</Text>
+          </View>
+        )}
       </View>
 
-      {/* Stats Section */}
-      <View className="">
+      <View>
         <View className="flex-row justify-between items-center">
-          {/* Pending Box */}
           <View className="flex-1 items-center bg-white rounded-xl border border-[#DAE7E0] p-4 mx-2">
-            <Text className="text-3xl font-urbanist font-bold text-[#162721]">2</Text>
+            <Text className="text-3xl font-urbanist font-bold text-[#162721]">
+              {requests.length}
+            </Text>
             <Text className="font-poppins text-[#658176] text-sm mt-1">Pending</Text>
           </View>
-
-          {/* This Month Box */}
           <View className="flex-1 items-center bg-white rounded-xl border border-[#DAE7E0] p-4 mx-2">
-            <Text className="text-3xl font-urbanist font-bold text-[#162721]">24</Text>
+            <Text className="text-3xl font-urbanist font-bold text-[#162721]">0</Text>
             <Text className="font-poppins text-[#658176] text-sm mt-1">This Month</Text>
           </View>
         </View>
       </View>
 
-      {/* Requests List */}
-      <RequestList
-        requests={requests}
-        onAcceptRequest={handleAcceptRequest}
-        onViewDetails={handleViewDetails}
-      />
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#27B07D" />
+          <Text className="font-poppins text-sm text-[#658176] mt-3">
+            Loading consultation requests...
+          </Text>
+        </View>
+      ) : (
+        <RequestList
+          requests={requests}
+          onAcceptRequest={handleAcceptRequest}
+          onViewDetails={handleViewDetails}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          acceptingId={acceptingId}
+        />
+      )}
 
-      {/* Request Details Modal */}
       <RequestDetailsModal
-        visible={modalVisible}
+        visible={Boolean(requirementsModal)}
         onClose={handleCloseModal}
-        request={selectedRequest || requests[0]}
+        request={requirementsModal}
       />
     </View>
   );

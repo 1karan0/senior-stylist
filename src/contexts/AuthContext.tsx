@@ -3,6 +3,13 @@ import { storage } from '@/services/storage';
 import { useLoginApi } from '@/api/auth/useLogin';
 import { useVerifyEmailApi } from '@/api/auth/useVerifyEmail';
 import { User } from '@/common/types';
+import { fetchFirebaseCustomToken } from '@/api/auth/getFirebaseCustomToken';
+import {
+  getFirebaseAuth,
+  initializeFirebase,
+  signInWithFirebaseCustomToken,
+  signOutFirebase,
+} from '@/services/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -30,6 +37,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuthStatus();
   }, []);
 
+  const ensureFirebaseSession = async () => {
+    try {
+      const app = initializeFirebase();
+      if (!app) {
+        return;
+      }
+
+      const auth = getFirebaseAuth();
+      if (auth?.currentUser) {
+        return;
+      }
+
+      const customToken = await fetchFirebaseCustomToken();
+      if (customToken) {
+        await signInWithFirebaseCustomToken(customToken);
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('Failed to restore Firebase session:', error);
+      }
+    }
+  };
+
   const checkAuthStatus = async () => {
     try {
       const [token, userData, onbordingCompleted] = await Promise.all([
@@ -40,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (token && userData) {
         setUser(userData);
+        await ensureFirebaseSession();
       }
       setIsBordingCompleted(onbordingCompleted);
     } catch (error) {
@@ -55,11 +86,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const token = response?.data?.access_token;
       const user = response?.data?.user;
+      const firebaseToken = response?.data?.firebase_custom_token;
 
       if (!token) throw new Error('Token missing in API response');
 
       await Promise.all([storage.setToken(token), storage.setUserData(user)]);
       setUser(user);
+
+      if (firebaseToken) {
+        await initializeFirebase();
+        await signInWithFirebaseCustomToken(firebaseToken);
+      } else {
+        await ensureFirebaseSession();
+      }
     } catch (err) {
       throw err;
     }
@@ -93,6 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       await storage.clearAuthData();
+      await signOutFirebase();
       setUser(null);
     } catch (error) {
       console.log('Logout error:', error);
