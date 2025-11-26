@@ -33,33 +33,32 @@ import {
   initChatDatabase,
   saveConsultations,
 } from '@/services/chatDatabase';
-import type { AppStackParamList } from '@/common/types';
+import type { AppStackParamList, ConsultationStackParamList } from '@/common/types';
 
 type ConversationPreview = {
   id: number;
-  customerName: string;
+  title: string;
   avatarUrl?: string | null;
   lastMessage: string;
   lastMessageAt?: string | null;
   unreadCount: number;
 };
 
-type FilterKey = 'all' | 'unread';
-
 const MAX_ITEMS = 40;
 
-const ChatHome: React.FC = () => {
+type NavParamList = AppStackParamList & ConsultationStackParamList;
+
+const CustomerChatHome: React.FC = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
-  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<NavParamList>>();
 
-  const consultantKey = useMemo(() => (user?.id ? String(user.id) : null), [user?.id]);
+  const userKey = useMemo(() => (user?.id ? String(user.id) : null), [user?.id]);
 
   const [consultations, setConsultations] = useState<ConsultantConsultation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const [isRealtimeConnected, setRealtimeConnected] = useState(false);
 
   const unsubscribeRef = useRef<(() => void) | null>(null);
@@ -102,12 +101,12 @@ const ChatHome: React.FC = () => {
   const createPreview = useCallback(
     (consultation: ConsultantConsultation): ConversationPreview => ({
       id: consultation.id,
-      customerName: consultation.user?.name || 'Unknown User',
-      avatarUrl: consultation.user?.profile_picture_url,
+      title: consultation.consultant?.name || 'Unknown Consultant',
+      avatarUrl: consultation.consultant?.profile_picture_url,
       lastMessage:
         consultation.last_message || consultation.problem_description || 'Tap to view conversation',
       lastMessageAt: consultation.last_message_at ?? consultation.requested_at,
-      unreadCount: consultation.unread_count_consultant ?? 0,
+      unreadCount: consultation.unread_count_user ?? 0,
     }),
     []
   );
@@ -116,16 +115,14 @@ const ChatHome: React.FC = () => {
     initChatDatabase();
   }, []);
 
-  const filterByConsultant = useCallback(
+  const filterByUser = useCallback(
     (items: ConsultantConsultation[]) =>
-      consultantKey
-        ? items.filter((item) => String(item.consultant_id ?? '') === consultantKey)
-        : [],
-    [consultantKey]
+      userKey ? items.filter((item) => String(item.user_id ?? '') === userKey) : [],
+    [userKey]
   );
 
   const fetchFromFirestore = useCallback(async () => {
-    if (!consultantKey) {
+    if (!userKey) {
       return [];
     }
     const firestore = getFirestoreInstance();
@@ -135,29 +132,34 @@ const ChatHome: React.FC = () => {
 
     const baseQuery = query(
       collection(firestore, 'consultations'),
-      where('consultant_id', '==', consultantKey),
+      where('user_id', '==', userKey),
       orderBy('last_message_at', 'desc'),
       firestoreLimit(MAX_ITEMS)
     );
 
     const snapshot = await getDocs(baseQuery);
     return snapshot.docs.map((doc) => mapFirestoreConsultation(doc.id, doc.data()));
-  }, [consultantKey]);
+  }, [userKey]);
 
   const fetchFromApi = useCallback(async () => {
     try {
       const response = await consultantConsultationsApi.list();
-      return response;
+      // For the customer, we only want consultations where this user is the customer
+      return userKey
+        ? (response as ConsultantConsultation[]).filter(
+            (item) => String(item.user_id ?? '') === userKey
+          )
+        : [];
     } catch (error) {
       if (__DEV__) {
-        console.error('Failed to fetch consultations via API:', error);
+        console.error('Failed to fetch consultations via API (customer):', error);
       }
       return [];
     }
-  }, []);
+  }, [userKey]);
 
   const subscribeToRealtime = useCallback(async () => {
-    if (!consultantKey) {
+    if (!userKey) {
       return;
     }
     const firestore = getFirestoreInstance();
@@ -172,7 +174,7 @@ const ChatHome: React.FC = () => {
 
     const realtimeQuery = query(
       collection(firestore, 'consultations'),
-      where('consultant_id', '==', consultantKey),
+      where('user_id', '==', userKey),
       orderBy('last_message_at', 'desc'),
       firestoreLimit(MAX_ITEMS)
     );
@@ -190,25 +192,25 @@ const ChatHome: React.FC = () => {
         if (docs.length) {
           saveConsultations(docs).catch((error) => {
             if (__DEV__) {
-              console.warn('[chat] failed to cache realtime consultations', error);
+              console.warn('[customer-chat] failed to cache realtime consultations', error);
             }
           });
         }
       },
       (error) => {
         if (__DEV__) {
-          console.error('Consultant chat realtime listener error:', error);
+          console.error('Customer chat realtime listener error:', error);
         }
         setRealtimeConnected(false);
       }
     );
 
     unsubscribeRef.current = unsubscribe;
-  }, [consultantKey, mergeConsultations, sortByLatest]);
+  }, [mergeConsultations, sortByLatest, userKey]);
 
   const loadConversations = useCallback(
     async (showLoader: boolean) => {
-      if (!consultantKey) {
+      if (!userKey) {
         setLoading(false);
         return;
       }
@@ -222,14 +224,14 @@ const ChatHome: React.FC = () => {
       try {
         const cached = await getCachedConsultations();
         if (cached.length) {
-          const filtered = filterByConsultant(cached);
+          const filtered = filterByUser(cached);
           if (filtered.length) {
             setConsultations(sortByLatest(filtered));
           }
         }
       } catch (error) {
         if (__DEV__) {
-          console.warn('[chat] failed to load cached consultations', error);
+          console.warn('[customer-chat] failed to load cached consultations', error);
         }
       }
 
@@ -249,7 +251,7 @@ const ChatHome: React.FC = () => {
         }
       }
     },
-    [consultantKey, fetchFromApi, fetchFromFirestore, filterByConsultant, sortByLatest]
+    [fetchFromApi, fetchFromFirestore, filterByUser, sortByLatest, userKey]
   );
 
   useEffect(() => {
@@ -259,40 +261,25 @@ const ChatHome: React.FC = () => {
     return () => {
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
+        unsubscribeRef.current = null;
       }
     };
   }, [loadConversations, subscribeToRealtime]);
 
-  const onRefresh = useCallback(async () => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await loadConversations(false);
     setRefreshing(false);
   }, [loadConversations]);
 
-  const previews = useMemo(() => consultations.map(createPreview), [consultations, createPreview]);
+  const handleConversationPress = (conversation: ConversationPreview) => {
+    navigation.navigate('ConsultantChat', { consultationId: conversation.id, asCustomer: true });
+  };
 
-  const filteredConversations = useMemo(() => {
-    const queryLower = searchQuery.trim().toLowerCase();
-
-    return previews.filter((conversation) => {
-      const matchesSearch =
-        !queryLower ||
-        conversation.customerName.toLowerCase().includes(queryLower) ||
-        conversation.lastMessage.toLowerCase().includes(queryLower);
-
-      const matchesFilter =
-        activeFilter === 'all' || (activeFilter === 'unread' && conversation.unreadCount > 0);
-
-      return matchesSearch && matchesFilter;
-    });
-  }, [activeFilter, previews, searchQuery]);
-
-  const formatRelativeTime = (value?: string | null) => {
-    if (!value) return '';
-    const timestamp = new Date(value).getTime();
-    if (Number.isNaN(timestamp)) return '';
-    const diff = Date.now() - timestamp;
-    const minutes = Math.floor(diff / 60000);
+  const getRelativeTime = (timestamp?: string | null) => {
+    if (!timestamp) return '';
+    const diffMs = Date.now() - new Date(timestamp).getTime();
+    const minutes = Math.floor(diffMs / 60000);
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
@@ -309,9 +296,20 @@ const ChatHome: React.FC = () => {
       .join('')
       .slice(0, 2) || 'SS';
 
-  const handleConversationPress = (conversation: ConversationPreview) => {
-    navigation.navigate('ConsultantChat', { consultationId: conversation.id });
-  };
+  const previews: ConversationPreview[] = useMemo(
+    () => consultations.map((c) => createPreview(c)),
+    [consultations, createPreview]
+  );
+
+  const filteredConversations = useMemo(() => {
+    const term = searchQuery.trim().toLowerCase();
+    if (!term) return previews;
+    return previews.filter(
+      (conversation) =>
+        conversation.title.toLowerCase().includes(term) ||
+        conversation.lastMessage.toLowerCase().includes(term)
+    );
+  }, [previews, searchQuery]);
 
   const renderConversation = ({ item }: { item: ConversationPreview }) => (
     <TouchableOpacity
@@ -332,32 +330,32 @@ const ChatHome: React.FC = () => {
           style={{ backgroundColor: '#27B07D' }}
         >
           <Text className="text-white font-urbanist text-lg font-semibold">
-            {getInitials(item.customerName)}
+            {getInitials(item.title)}
           </Text>
         </View>
       )}
 
       <View className="flex-1">
-        <View className="flex-row items-center justify-between mb-1">
+        <View className="flex-row justify-between items-center mb-1">
           <Text
             className="font-urbanist font-semibold text-base"
-            numberOfLines={1}
             style={{ color: textPrimary }}
+            numberOfLines={1}
           >
-            {item.customerName}
+            {item.title}
           </Text>
           <Text className="text-xs font-urbanist" style={{ color: textMuted }}>
-            {formatRelativeTime(item.lastMessageAt)}
+            {getRelativeTime(item.lastMessageAt)}
           </Text>
         </View>
-        <Text className="text-sm font-poppins" numberOfLines={1} style={{ color: textMuted }}>
+        <Text className="text-xs font-urbanist" style={{ color: textMuted }} numberOfLines={1}>
           {item.lastMessage}
         </Text>
       </View>
 
       {item.unreadCount > 0 && (
-        <View className="ml-3 bg-[#27B07D] rounded-full px-2 py-1 min-w-[28px] items-center">
-          <Text className="text-white text-xs font-semibold">
+        <View className="ml-3 min-w-[24px] h-6 rounded-full px-2 items-center justify-center bg-[#27B07D]">
+          <Text className="text-xs font-urbanist font-semibold text-white">
             {item.unreadCount > 99 ? '99+' : item.unreadCount}
           </Text>
         </View>
@@ -369,86 +367,65 @@ const ChatHome: React.FC = () => {
     if (loading) {
       return null;
     }
-
     return (
-      <View className="items-center justify-center py-20 px-8">
-        <Text className="text-xl font-urbanist font-semibold mb-2" style={{ color: textPrimary }}>
-          No conversations yet
+      <View className="flex-1 items-center justify-center mt-16 px-8">
+        <Text className="font-urbanist text-base text-center mb-1" style={{ color: textPrimary }}>
+          No consultations yet
         </Text>
-        <Text className="text-center text-sm font-poppins" style={{ color: textMuted }}>
-          New chats with your customers will show up here as soon as they start a session with you.
+        <Text className="font-urbanist text-xs text-center" style={{ color: textMuted }}>
+          Start a new consultation to begin chatting with a stylist.
         </Text>
       </View>
     );
   };
 
-  const connectionIndicator = isRealtimeConnected ? (
-    <View className="flex-row items-center mt-3">
-      <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: '#27B07D' }} />
-      <Text className="text-xs font-poppins" style={{ color: textMuted }}>
-        Live updates enabled
-      </Text>
-    </View>
-  ) : null;
-
   return (
     <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
-      <View className="flex-1 pt-12 pb-4">
-        <View className="px-6 mb-4">
-          <Text className="text-3xl font-urbanist font-bold mb-1" style={{ color: textPrimary }}>
-            Chats
-          </Text>
-          <Text className="text-sm font-poppins" style={{ color: textMuted }}>
-            Continue conversations and stay on top of every consultation.
-          </Text>
-          {connectionIndicator}
+      <View className="flex-1 pt-14 pb-4">
+        <View className="px-5 mb-4">
+          <View className="flex-row justify-between items-center mb-1">
+            <View>
+              <Text className="font-urbanist text-2xl font-bold text-white">Consultations</Text>
+              <Text className="font-urbanist text-xs text-white/80">
+                Manage your styling sessions
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('NewConsultant')}
+              className="bg-yellow-300 px-4 py-2 rounded-full"
+              activeOpacity={0.85}
+            >
+              <Text className="font-urbanist font-semibold text-green-700 text-sm">+ New</Text>
+            </TouchableOpacity>
+          </View>
 
-          <View
-            className="flex-row items-center mt-4 rounded-2xl px-4"
-            style={{
-              backgroundColor: isDark ? '#0F241C' : '#F5F9F7',
-              borderWidth: 1,
-              borderColor,
-            }}
-          >
+          <View className="mt-4 flex-row items-center px-3 py-2 rounded-2xl border bg-[#0E1B16] border-[#152821]">
+            <Image source={require('@/assets/icons/search-icon.png')} className="w-5 h-5 mr-3" />
             <TextInput
-              placeholder="Search clients or topics..."
+              placeholder="Search conversations..."
               placeholderTextColor={textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              className="flex-1 py-3 font-poppins text-sm"
+              className="flex-1 font-urbanist text-sm"
               style={{ color: textPrimary }}
             />
           </View>
 
-          <View className="flex-row gap-3 mt-4">
-            {(['all', 'unread'] as FilterKey[]).map((filter) => {
-              const isActive = activeFilter === filter;
-              const backgroundColor = isActive ? '#27B07D' : 'transparent';
-              const color = isActive ? '#0E1B16' : textMuted;
-              return (
-                <TouchableOpacity
-                  key={filter}
-                  onPress={() => setActiveFilter(filter)}
-                  className="px-4 py-2 rounded-full border"
-                  style={{
-                    borderColor,
-                    backgroundColor,
-                  }}
-                >
-                  <Text className="text-sm font-semibold" style={{ color }}>
-                    {filter === 'all' ? 'All' : 'Unread'}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          {isRealtimeConnected ? (
+            <Text className="mt-2 text-[11px] font-urbanist" style={{ color: textMuted }}>
+              Connected to live updates
+            </Text>
+          ) : (
+            <Text className="mt-2 text-[11px] font-urbanist" style={{ color: textMuted }}>
+              Showing last synced conversations
+            </Text>
+          )}
         </View>
 
         {loading && consultations.length === 0 ? (
           <View className="flex-1 justify-center items-center">
             <ActivityIndicator size="large" color="#27B07D" />
-            <Text className="mt-3 font-poppins text-sm" style={{ color: textMuted }}>
+            <Text className="mt-3 font-urbanist text-sm" style={{ color: textMuted }}>
               Loading your conversations...
             </Text>
           </View>
@@ -460,7 +437,11 @@ const ChatHome: React.FC = () => {
             contentContainerStyle={{ paddingBottom: 32, paddingHorizontal: 12 }}
             ListEmptyComponent={renderEmpty}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#27B07D" />
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor="#27B07D"
+              />
             }
           />
         )}
@@ -469,4 +450,4 @@ const ChatHome: React.FC = () => {
   );
 };
 
-export default ChatHome;
+export default CustomerChatHome;

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import UserTabNavigator from '@/navigation/UserTabNavigator';
 import ConsultantTabNavigator from '@/navigation/ConsultantTabNavigator';
 import PricingScreen from '@/screens/pricing/Pricing';
+import ConsultantChatScreen from '@/screens/consulant/chat/Conversation';
 import { AppStackParamList } from '@/common/types';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -22,6 +23,8 @@ const AppStack: React.FC = () => {
       ) : (
         <Stack.Screen name="UserTabs" component={UserTabNavigator} />
       )}
+      {/* Shared chat screen (used by both consultants and customers) */}
+      <Stack.Screen name="ConsultantChat" component={ConsultantChatScreen} />
       <Stack.Screen name="Pricing" component={PricingScreen} />
     </Stack.Navigator>
   );

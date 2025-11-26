@@ -16,23 +16,38 @@ const withAuthHeaders = async () => {
   };
 };
 
-export interface ConsultantUser {
+export interface ConsultantProfile {
   id: number;
   name: string;
   email?: string;
   profile_picture_url?: string | null;
+  consultant_details?: Record<string, unknown> | null;
 }
 
 export interface ConsultantConsultation {
   id: number;
   user_id: number;
-  consultant_id?: number;
+  consultant_id?: number | null;
   problem_description: string;
   image_path?: string | null;
   status: string;
   requested_at: string;
+  assigned_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
   expires_at?: string | null;
-  user?: ConsultantUser | null;
+  chat_window_is_open?: boolean;
+  chat_window_expires_at?: string | null;
+  chat_window_days?: number;
+  last_message?: string | null;
+  last_message_at?: string | null;
+  last_message_sender_id?: string | null;
+  unread_count_consultant?: number;
+  unread_count_user?: number;
+  rating?: number;
+  rating_comment?: string | null;
+  consultant?: ConsultantProfile | null;
+  user?: ConsultantProfile | null;
 }
 
 export const consultantConsultationsApi = {
@@ -57,5 +72,13 @@ export const consultantConsultationsApi = {
     await axios.post(`${BASE_URL}/api/consultant/consultations/${id}/accept`, undefined, {
       headers,
     });
+  },
+
+  list: async (): Promise<ConsultantConsultation[]> => {
+    const headers = await withAuthHeaders();
+    const response = await axios.get(`${BASE_URL}/api/consultant/consultations`, {
+      headers,
+    });
+    return response.data?.data?.consultations ?? [];
   },
 };

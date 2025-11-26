@@ -16,6 +16,7 @@ export type ConsultationStackParamList = {
   ConsultationChat: undefined;
   NoConsultant: undefined;
   NewConsultant: undefined;
+  FindingStylist: { consultationId: number };
 };
 
 export type NewsStackParamList = {
@@ -41,6 +42,7 @@ export type ProfileStackParamList = {
 export type AppStackParamList = {
   UserTabs: undefined;
   ConsultantTabs: undefined;
+  ConsultantChat: { consultationId: number; asCustomer?: boolean };
   Pricing: undefined;
 };
 

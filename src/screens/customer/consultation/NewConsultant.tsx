@@ -48,9 +48,18 @@ const NewConsultant = ({ navigation }: any) => {
 
       const response = await createConsultation(data.description, selectedImage);
 
-      Alert.alert('Consultation created successfully!');
-      navigation.navigate('ConsultationChat');
-      console.log('Consultation created:', response);
+      const newId =
+        response?.data?.consultation?.id ??
+        response?.consultation?.id ??
+        response?.data?.id ??
+        response?.id;
+
+      if (!newId) {
+        Alert.alert('Consultation created', 'We could not open the chat automatically.');
+        return;
+      }
+
+      navigation.replace('FindingStylist', { consultationId: Number(newId) });
     } catch (err: any) {
       console.log('Submit error:', err?.response ?? err);
 

@@ -3,9 +3,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ConsultationStackParamList } from '@/common/types';
 import Chat from '@/screens/customer/consultation/Chat';
 import Consultation from '@/screens/customer/consultation/Consultation';
+import CustomerChatHome from '@/screens/customer/consultation/ChatHome';
 import Details from '@/screens/customer/consultation/Details';
 import NoConsultant from '@/screens/customer/consultation/NoConsultant';
 import NewConsultant from '@/screens/customer/consultation/NewConsultant';
+import FindingStylist from '@/screens/customer/consultation/FindingStylist';
 
 const Stack = createNativeStackNavigator<ConsultationStackParamList>();
 
@@ -17,7 +19,7 @@ const ConsultationStack: React.FC = () => (
   >
     <Stack.Screen
       name="ConsultationHome"
-      component={Consultation}
+      component={CustomerChatHome}
       options={{ title: 'Consultation' }}
     />
     <Stack.Screen
@@ -34,6 +36,11 @@ const ConsultationStack: React.FC = () => (
       name="NewConsultant"
       component={NewConsultant}
       options={{ title: 'No Consultant Available' }}
+    />
+    <Stack.Screen
+      name="FindingStylist"
+      component={FindingStylist}
+      options={{ title: 'Finding Stylist' }}
     />
     <Stack.Screen name="ConsultationChat" options={{ title: 'Chat' }}>
       {(props) => <Chat {...(props as any)} />}

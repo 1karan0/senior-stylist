@@ -246,6 +246,28 @@ export const listenToStylistRequests = (
   }
 };
 
+const uriToBlob = (uri: string): Promise<Blob> =>
+  new Promise((resolve, reject) => {
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        const blob = xhr.response as Blob;
+        resolve(blob);
+      };
+      xhr.onerror = function (e) {
+        if (__DEV__) {
+          console.error('[firebase] XMLHttpRequest failed while converting uri to blob', e);
+        }
+        reject(new Error('Failed to load file data'));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    } catch (error) {
+      reject(error as Error);
+    }
+  });
+
 export const uploadImageToStorage = async (
   consultationId: number,
   imageUri: string,
@@ -256,8 +278,17 @@ export const uploadImageToStorage = async (
     throw new Error('Firebase Storage not initialized');
   }
 
-  const response = await fetch(imageUri);
-  const blob = await response.blob();
+  let blob: Blob;
+
+  if (imageUri.startsWith('data:')) {
+    // For data URLs, fetch can reliably convert to a Blob.
+    const response = await fetch(imageUri);
+    blob = await response.blob();
+  } else {
+    // Convert the local URI (file:// or content://) to a Blob using XMLHttpRequest,
+    // which is more reliable than fetch() with React Native file URIs.
+    blob = await uriToBlob(imageUri);
+  }
 
   const imageName = fileName || `image_${Date.now()}.jpg`;
   const storageRef = ref(storage, `consultations/${consultationId}/images/${imageName}`);
@@ -289,8 +320,14 @@ export const sendMessageToFirestore = async (
   let messageType: 'text' | 'image' = 'text';
 
   if (imageUri) {
+    if (__DEV__) {
+      console.log('[chat] uploading image for consultation', { consultationId, imageUri });
+    }
     attachmentUrl = await uploadImageToStorage(consultationId, imageUri);
     messageType = 'image';
+    if (__DEV__) {
+      console.log('[chat] image uploaded, got URL', attachmentUrl);
+    }
   }
 
   const messagesRef = collection(firestore, 'consultations', String(consultationId), 'messages');
