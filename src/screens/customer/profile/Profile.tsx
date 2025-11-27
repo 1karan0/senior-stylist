@@ -4,6 +4,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { ProfileStackParamList } from '@/common/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
 
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
@@ -18,6 +19,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const toggleTheme = () => {
     setTheme(isDark ? 'light' : 'dark');
   };
+  const { data: profile, isLoading, error } = useGetProfile();
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-900">

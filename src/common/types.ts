@@ -222,3 +222,16 @@ export interface ConversationPreview {
   lastMessageAt?: string | null;
   unreadCount: number;
 }
+
+export interface ProfileUser {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: string | null;
+  profile_picture_url: string | null;
+  role: string;
+  created_at: string;
+  is_away: boolean;
+  away_since: string | null;
+}
