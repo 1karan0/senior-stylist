@@ -1,12 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -14,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { customerConsultationsApi } from '@/api/customer/consultations';
 import type { AppStackParamList, ConsultationStackParamList } from '@/common/types';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type CombinedStackParamList = AppStackParamList & ConsultationStackParamList;
 type FindingRoute = RouteProp<CombinedStackParamList, 'FindingStylist'>;
@@ -29,6 +23,7 @@ const FindingStylist: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [searchFailedMessage, setSearchFailedMessage] = useState<string | null>(null);
+  const { isDark } = useTheme();
 
   const statusIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -134,18 +129,20 @@ const FindingStylist: React.FC = () => {
 
   const renderSearchingState = () => (
     <>
-      <View style={styles.iconCircle}>
-        <Ionicons name="sparkles" size={36} color="#27B07D" />
+      <View className={`w-22 h-22 rounded-md bg-[#E8FFF3] justify-center items-center mb-4`}>
+        <Image source={require('@/assets/icons/animation.png')} />
       </View>
-      <Text style={styles.title}>Finding your Stylist...</Text>
-      <Text style={styles.subtitle}>
+      <Text className="text-[22px] font-bold text-[#0E1B16] text-center mb-2">
+        Finding your Stylist...
+      </Text>
+      <Text className="text-[15px] text-[#5C5C5C] text-center mb-5">
         We&apos;re matching you with the best stylist for your needs.
       </Text>
 
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${progress}%` }]} />
+      <View className="w-full h-2 rounded bg-[#ECECEC] overflow-hidden mb-3">
+        <View className="h-full rounded bg-[#27B07D]" style={{ width: `${progress}%` }} />
       </View>
-      <Text style={styles.progressCaption}>
+      <Text className="text-[13px] text-[#7C7C7C] mb-5 text-center">
         {loading ? 'This usually takes just a few seconds.' : 'Hang tight, we are still looking...'}
       </Text>
     </>
@@ -153,39 +150,50 @@ const FindingStylist: React.FC = () => {
 
   const renderFailureState = () => (
     <>
-      <View style={[styles.iconCircle, styles.failureCircle]}>
+      <View className="w-22 h-22 rounded-full bg-[#FEECEC] justify-center items-center mb-4">
         <Ionicons name="alert-circle" size={36} color="#E05959" />
       </View>
-      <Text style={styles.title}>No stylists available right now</Text>
-      <Text style={styles.subtitle}>
+      <Text className="text-[22px] font-bold text-[#0E1B16] text-center mb-2">
+        No stylists available right now
+      </Text>
+      <Text className="text-[15px] text-[#5C5C5C] text-center mb-5">
         {searchFailedMessage ||
           'This is a very busy period for our stylists. Please try again in a few minutes.'}
       </Text>
 
-      <TouchableOpacity style={styles.primaryButton} onPress={handleTryAgain}>
-        <Text style={styles.primaryButtonText}>Try again</Text>
+      <TouchableOpacity
+        className="mt-4 w-full rounded-[18px] bg-[#27B07D] py-3.5 items-center"
+        onPress={handleTryAgain}
+      >
+        <Text className="text-[#0E1B16] text-[15px] font-bold">Try again</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.secondaryButton} onPress={handleViewConsultations}>
-        <Text style={styles.secondaryButtonText}>View my consultations</Text>
+      <TouchableOpacity
+        className="mt-2.5 w-full rounded-[18px] border border-[#DAE7E0] py-3.5 items-center"
+        onPress={handleViewConsultations}
+      >
+        <Text className="text-[#0E1B16] text-[15px] font-semibold">View my consultations</Text>
       </TouchableOpacity>
     </>
   );
 
   return (
-    <LinearGradient colors={['#0E1B16', '#152821']} style={styles.fullScreen}>
-      <SafeAreaView style={styles.safeArea}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+    <LinearGradient colors={['#0E1B16', '#152821']} className="flex-1">
+      <SafeAreaView className="flex-1 px-5">
+        <TouchableOpacity
+          className="w-10 h-10 rounded-full border border-white/20 justify-center items-center mb-4"
+          onPress={() => navigation.goBack()}
+        >
           <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
         </TouchableOpacity>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
-          <View style={styles.card}>
+        <ScrollView contentContainerClassName="flex-grow justify-center" bounces={false}>
+          <View className="bg-white rounded-[20px] p-6 items-center">
             {searchFailedMessage ? renderFailureState() : renderSearchingState()}
 
             {!searchFailedMessage && loading && (
-              <View style={styles.loadingRow}>
+              <View className="flex-row items-center gap-2 mt-3">
                 <ActivityIndicator color="#27B07D" size="small" />
-                <Text style={styles.loadingText}>Connecting you with stylists…</Text>
+                <Text className="text-[13px] text-[#7C7C7C]">Connecting you with stylists…</Text>
               </View>
             )}
           </View>
@@ -194,116 +202,5 @@ const FindingStylist: React.FC = () => {
     </LinearGradient>
   );
 };
-
-const styles = StyleSheet.create({
-  fullScreen: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-  },
-  iconCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: '#E8FFF3',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  failureCircle: {
-    backgroundColor: '#FEECEC',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#0E1B16',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#5C5C5C',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  progressTrack: {
-    width: '100%',
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#ECECEC',
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 4,
-    backgroundColor: '#27B07D',
-  },
-  progressCaption: {
-    fontSize: 13,
-    color: '#7C7C7C',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  loadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 12,
-  },
-  loadingText: {
-    fontSize: 13,
-    color: '#7C7C7C',
-  },
-  primaryButton: {
-    marginTop: 16,
-    width: '100%',
-    borderRadius: 18,
-    backgroundColor: '#27B07D',
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: '#0E1B16',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  secondaryButton: {
-    marginTop: 10,
-    width: '100%',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#DAE7E0',
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: '#0E1B16',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-});
 
 export default FindingStylist;

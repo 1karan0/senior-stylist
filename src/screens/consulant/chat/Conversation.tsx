@@ -524,7 +524,7 @@ const ConsultantChatScreen: React.FC = () => {
     return (
       <LinearGradient colors={['#0E1B16', '#152821']} className="flex-1">
         <View className="bg-[#27B07D] pt-[50px] pb-4 px-4 flex-row items-center">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3 p-1">
+          <TouchableOpacity onPress={() => navigation.goBack()} className=" p-1">
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <View className="flex-1 flex-row items-center justify-center">

@@ -6,12 +6,25 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { useForm, Controller } from 'react-hook-form';
 import { createConsultation } from '@/api/user/consultation/useCreateConsultation';
 import { useTheme } from '@/contexts/ThemeContext';
+import Toast from '@/common/components/Toast';
 
 const NewConsultant = ({ navigation }: any) => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'error' as any,
+  });
 
   const { isDark } = useTheme();
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
+    setToast({
+      visible: true,
+      message,
+      type,
+    });
+  };
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -39,7 +52,7 @@ const NewConsultant = ({ navigation }: any) => {
 
   const onSubmit = async (data: any) => {
     if (!data.description.trim()) {
-      Alert.alert('Please enter your styling requirement.');
+      showToast('Please enter your styling requirement.', 'error');
       return;
     }
 
@@ -55,7 +68,7 @@ const NewConsultant = ({ navigation }: any) => {
         response?.id;
 
       if (!newId) {
-        Alert.alert('Consultation created', 'We could not open the chat automatically.');
+        showToast('We could not open the chat automatically.', 'warning');
         return;
       }
 
@@ -63,7 +76,7 @@ const NewConsultant = ({ navigation }: any) => {
     } catch (err: any) {
       console.log('Submit error:', err?.response ?? err);
 
-      Alert.alert('Something went wrong!');
+      showToast(err?.message || 'Something went wrong', 'error');
     } finally {
       setLoading(false);
     }
@@ -72,6 +85,12 @@ const NewConsultant = ({ navigation }: any) => {
   return (
     <View className="flex-1 bg-white">
       <GradientBackground className="flex-1 px-5 pt-14">
+        <Toast
+          visible={toast.visible}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, visible: false })}
+        />
         {/* Header */}
         <View className="flex-row items-center mb-5">
           <TouchableOpacity onPress={() => navigation.goBack()}>

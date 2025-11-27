@@ -1,6 +1,7 @@
 import React from 'react';
-import { Linking, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
+import { Linking, Text, TouchableOpacity, View, Image } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import { useTheme } from '@/contexts/ThemeContext';
 
 import type { ChatLinkPreview, ChatMessage } from '@/types/chat';
 
@@ -13,11 +14,12 @@ interface MessageBubbleProps {
 
 const formatTime = (value: string) => {
   const date = new Date(value);
-  const diffInSeconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (diffInSeconds < 60) return 'Just now';
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  return date.toLocaleDateString();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const formattedHours = hours % 12 || 12;
+  const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+  return `${formattedHours}:${formattedMinutes} ${ampm}`;
 };
 
 const removeUrlsFromText = (text: string, linkPreview?: ChatLinkPreview) => {
@@ -41,35 +43,33 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onImagePress,
   onRetry,
 }) => {
+  const { isDark } = useTheme();
   const renderLinkPreview = (preview: ChatLinkPreview) => (
     <View
-      style={[styles.linkPreview, isOwnMessage ? styles.linkPreviewOwn : styles.linkPreviewOther]}
+      className={`mt-2 rounded-xl overflow-hidden border ${
+        isOwnMessage ? 'border-white/20' : 'border-[#152821]'
+      }`}
     >
       {preview.image ? (
-        <Image source={{ uri: preview.image }} style={styles.linkPreviewImage} resizeMode="cover" />
+        <Image
+          source={{ uri: preview.image }}
+          className="w-full h-40 bg-[#0E1B16]"
+          resizeMode="cover"
+        />
       ) : null}
-      <View
-        style={[
-          styles.linkPreviewContent,
-          isOwnMessage ? styles.linkPreviewContentOwn : styles.linkPreviewContentOther,
-        ]}
-      >
+      <View className={`p-3 ${isOwnMessage ? 'bg-white/10' : 'bg-[#0E1B16]'}`}>
         {preview.site_name ? (
           <Text
-            style={[
-              styles.linkPreviewSite,
-              isOwnMessage ? styles.linkPreviewSiteOwn : styles.linkPreviewSiteOther,
-            ]}
+            className={`text-[10px] tracking-widest mb-1 ${
+              isOwnMessage ? 'text-white/60' : 'text-[#A1A09A]'
+            }`}
           >
             {preview.site_name.toUpperCase()}
           </Text>
         ) : null}
         {preview.title ? (
           <Text
-            style={[
-              styles.linkPreviewTitle,
-              isOwnMessage ? styles.linkPreviewTitleOwn : styles.linkPreviewTitleOther,
-            ]}
+            className={`text-sm font-semibold mb-1 ${isOwnMessage ? 'text-white' : 'text-white'}`}
             numberOfLines={2}
           >
             {preview.title}
@@ -77,10 +77,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         ) : null}
         {preview.description ? (
           <Text
-            style={[
-              styles.linkPreviewDescription,
-              isOwnMessage ? styles.linkPreviewDescriptionOwn : styles.linkPreviewDescriptionOther,
-            ]}
+            className={`text-xs mb-2 ${isOwnMessage ? 'text-white/80' : 'text-[#A1A09A]'}`}
             numberOfLines={2}
           >
             {preview.description}
@@ -88,17 +85,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         ) : null}
         {preview.show_buy_now_button ? (
           <TouchableOpacity
-            style={[
-              styles.buyNowButton,
-              isOwnMessage ? styles.buyNowButtonOwn : styles.buyNowButtonOther,
-            ]}
+            className={`py-2 px-4 rounded-lg mt-1 ${isOwnMessage ? 'bg-white' : 'bg-[#27B07D]'}`}
             onPress={() => Linking.openURL(preview.url)}
           >
             <Text
-              style={[
-                styles.buyNowText,
-                isOwnMessage ? styles.buyNowTextOwn : styles.buyNowTextOther,
-              ]}
+              className={`text-sm font-semibold text-center ${
+                isOwnMessage ? 'text-[#27B07D]' : 'text-white'
+              }`}
             >
               Buy Now
             </Text>
@@ -106,7 +99,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         ) : (
           <TouchableOpacity onPress={() => Linking.openURL(preview.url)}>
             <Text
-              style={[styles.linkUrl, isOwnMessage ? styles.linkUrlOwn : styles.linkUrlOther]}
+              className={`text-xs underline mt-1 ${
+                isOwnMessage ? 'text-white/80' : 'text-[#A1A09A]'
+              }`}
               numberOfLines={1}
             >
               {preview.url}
@@ -118,14 +113,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   );
 
   return (
-    <View style={[styles.container, isOwnMessage ? styles.containerOwn : styles.containerOther]}>
-      <View style={[styles.bubble, isOwnMessage ? styles.bubbleOwn : styles.bubbleOther]}>
+    <View className={`my-1 px-4 ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+      <View
+        className={`max-w-[75%] p-3 rounded-2xl ${
+          isOwnMessage
+            ? `bg-[#36D399] ${isDark ? 'border-[#27B07D]' : 'border-[#DAE7E0]'} border rounded-br-sm`
+            : ` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} border rounded-bl-sm`
+        }`}
+      >
         {message.message ? (
           <Text
-            style={[
-              styles.messageText,
-              isOwnMessage ? styles.messageTextOwn : styles.messageTextOther,
-            ]}
+            className={`text-sm leading-5 ${
+              isOwnMessage ? `text-white` : ` ${isDark ? 'text-white' : 'text-[#1C1C1C]'}`
+            }`}
           >
             {removeUrlsFromText(message.message, message.link_preview)}
           </Text>
@@ -134,7 +134,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         {message.link_preview ? renderLinkPreview(message.link_preview) : null}
 
         {message.attachment_url ? (
-          <View style={styles.attachmentContainer}>
+          <View className="mt-2">
             {isImageUrl(message.attachment_url, message.message_type) ? (
               <TouchableOpacity
                 onPress={() => onImagePress?.(message.attachment_url!)}
@@ -142,17 +142,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               >
                 <Image
                   source={{ uri: message.attachment_url }}
-                  style={styles.attachmentImage}
+                  className="w-[200px] h-[200px] rounded-xl border border-[#152821]"
                   resizeMode="cover"
                 />
               </TouchableOpacity>
             ) : (
               <TouchableOpacity onPress={() => Linking.openURL(message.attachment_url!)}>
                 <Text
-                  style={[
-                    styles.attachmentLink,
-                    isOwnMessage ? styles.attachmentLinkOwn : styles.attachmentLinkOther,
-                  ]}
+                  className={`text-sm underline ${isOwnMessage ? 'text-white' : 'text-[#27B07D]'}`}
                 >
                   View attachment
                 </Text>
@@ -161,10 +158,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </View>
         ) : null}
 
-        <View style={styles.timestampContainer}>
-          <Text
-            style={[styles.timestamp, isOwnMessage ? styles.timestampOwn : styles.timestampOther]}
-          >
+        <View className="flex-row items-center mt-1 gap-1">
+          <Text className={`text-[10px] ${isOwnMessage ? 'text-white/70' : 'text-[#8E8E93]'}`}>
             {formatTime(message.created_at)}
           </Text>
           {isOwnMessage && message.status === 'pending' ? (
@@ -172,13 +167,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               name="time-outline"
               size={12}
               color="rgba(255, 255, 255, 0.7)"
-              style={styles.statusIcon}
+              style={{ marginLeft: 2 }}
             />
           ) : null}
           {isOwnMessage && message.status === 'failed' ? (
             <TouchableOpacity
               onPress={() => onRetry?.(message.temp_id || message.id)}
-              style={styles.retryButton}
+              className="ml-1 p-1"
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Ionicons name="refresh" size={14} color="#FF4433" />
@@ -189,59 +184,5 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { marginVertical: 4, paddingHorizontal: 16 },
-  containerOwn: { alignItems: 'flex-end' },
-  containerOther: { alignItems: 'flex-start' },
-  bubble: { maxWidth: '75%', padding: 12, borderRadius: 16 },
-  bubbleOwn: { backgroundColor: '#27B07D', borderBottomRightRadius: 4 },
-  bubbleOther: { backgroundColor: '#1A1A1A', borderBottomLeftRadius: 4 },
-  messageText: { fontSize: 14, lineHeight: 20 },
-  messageTextOwn: { color: '#FFFFFF' },
-  messageTextOther: { color: '#FFFFFF' },
-  timestampContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 4 },
-  timestamp: { fontSize: 11 },
-  timestampOwn: { color: 'rgba(255, 255, 255, 0.7)' },
-  timestampOther: { color: '#A1A09A' },
-  statusIcon: { marginLeft: 2 },
-  retryButton: { marginLeft: 4, padding: 4 },
-  attachmentContainer: { marginTop: 8 },
-  attachmentImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#152821',
-  },
-  attachmentLink: { fontSize: 14, textDecorationLine: 'underline' },
-  attachmentLinkOwn: { color: '#FFFFFF' },
-  attachmentLinkOther: { color: '#27B07D' },
-  linkPreview: { marginTop: 8, borderRadius: 12, overflow: 'hidden' },
-  linkPreviewOwn: { borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)' },
-  linkPreviewOther: { borderWidth: 1, borderColor: '#152821' },
-  linkPreviewImage: { width: '100%', height: 160, backgroundColor: '#0E1B16' },
-  linkPreviewContent: { padding: 12 },
-  linkPreviewContentOwn: { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
-  linkPreviewContentOther: { backgroundColor: '#0E1B16' },
-  linkPreviewSite: { fontSize: 10, letterSpacing: 1, marginBottom: 4 },
-  linkPreviewSiteOwn: { color: 'rgba(255, 255, 255, 0.6)' },
-  linkPreviewSiteOther: { color: '#A1A09A' },
-  linkPreviewTitle: { fontSize: 14, fontWeight: '600', marginBottom: 4 },
-  linkPreviewTitleOwn: { color: '#FFFFFF' },
-  linkPreviewTitleOther: { color: '#FFFFFF' },
-  linkPreviewDescription: { fontSize: 12, marginBottom: 8 },
-  linkPreviewDescriptionOwn: { color: 'rgba(255, 255, 255, 0.8)' },
-  linkPreviewDescriptionOther: { color: '#A1A09A' },
-  buyNowButton: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, marginTop: 4 },
-  buyNowButtonOwn: { backgroundColor: '#FFFFFF' },
-  buyNowButtonOther: { backgroundColor: '#27B07D' },
-  buyNowText: { fontSize: 14, fontWeight: '600', textAlign: 'center' },
-  buyNowTextOwn: { color: '#27B07D' },
-  buyNowTextOther: { color: '#FFFFFF' },
-  linkUrl: { fontSize: 12, textDecorationLine: 'underline', marginTop: 4 },
-  linkUrlOwn: { color: 'rgba(255, 255, 255, 0.8)' },
-  linkUrlOther: { color: '#A1A09A' },
-});
 
 export default MessageBubble;

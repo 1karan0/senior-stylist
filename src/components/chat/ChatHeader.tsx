@@ -39,8 +39,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   return (
     <View>
-      <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
-      <View className="bg-[#27B07D] pt-12 pb-4 px-4 rounded-b-3xl">
+      <StatusBar translucent backgroundColor="#36D399" barStyle="light-content" />
+      <View className="bg-[#36D399] pt-16 pb-7 px-4 rounded-b-3xl">
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={onBack}
@@ -73,7 +73,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             </View>
           </View>
 
-          {/* {onFinish && consultation.status !== 'completed' && ( */}
           <TouchableOpacity
             onPress={onFinish}
             className="flex-row absolute right-1 items-center bg-white px-3 py-1.5 rounded-xl gap-1.5"
@@ -81,7 +80,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             <Image source={require('@/assets/icons/finish.png')} />
             <Text className=" text-sm font-semibold">Finish</Text>
           </TouchableOpacity>
-          {/* )} */}
 
           {consultation.status === 'completed' && (
             <View className="flex-row absolute right-1 items-center bg-white/20 px-3 py-1.5 rounded-lg gap-1.5">
