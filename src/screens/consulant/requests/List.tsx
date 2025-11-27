@@ -55,10 +55,10 @@ const List: React.FC<ListProps> = ({
     >
       {requests.length === 0 ? (
         <View className="flex-1 items-center justify-center py-10">
-          <Text className="font-urbanist text-lg font-semibold text-[#162721] mb-2">
+          <Text className="font-urbanist text-lg font-semibold text-textDark mb-2">
             No pending requests
           </Text>
-          <Text className="font-poppins text-sm text-[#658176] text-center px-10">
+          <Text className="font-poppins text-sm text-textMuted text-center px-10">
             Pull down to refresh. New consultation requests will appear here as soon as they arrive.
           </Text>
         </View>
@@ -95,10 +95,10 @@ const List: React.FC<ListProps> = ({
                       </Text>
                     </View>
                   )}
-                  <Text className="text-[#162721] text-xl font-urbanist font-semibold">
+                  <Text className="text-textDark text-xl font-urbanist font-semibold">
                     {request.customerName}
                   </Text>
-                  <Text className="text-[#658176] font-poppins text-sm">{timeAgo}</Text>
+                  <Text className="text-textMuted font-poppins text-sm">{timeAgo}</Text>
 
                   <TouchableOpacity
                     className="flex flex-row items-center px-2 py-1 border border-[#DAE7E0] rounded-lg self-start mt-2"

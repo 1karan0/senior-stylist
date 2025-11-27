@@ -29,7 +29,7 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
 
       {/* Title */}
       <Text
-        className={`text-2xl font-bold text-center  mb-3 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+        className={`text-2xl font-bold text-center  mb-3 ${isDark ? 'text-white' : 'text-textDark'}`}
       >
         {item.title}
       </Text>

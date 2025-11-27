@@ -11,7 +11,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ item }) => {
   const { isDark } = useTheme();
   return (
     <View
-      className={`${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DADADA]'}  rounded-xl  mb-4 shadow-sm border `}
+      className={`${isDark ? 'bg-textDark border-[#273F36]' : 'bg-white border-[#DADADA]'}  rounded-xl  mb-4 shadow-sm border `}
     >
       {/* Category Chip */}
       <View>
@@ -38,14 +38,16 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ item }) => {
         </Text>
 
         {/* Excerpt */}
-        <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-base mb-2`}>
+        <Text className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} text-base mb-2`}>
           {item.excerpt}
         </Text>
 
         {/* Published time */}
         <View className="flex flex-row items-center gap-2">
           <Image source={require('@/assets/icons/clock.png')} className="w-5 h-5" />
-          <Text className={`text-sm font-normal ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} `}>
+          <Text
+            className={`text-sm font-normal ${isDark ? 'text-textSecondary' : 'text-textMuted'} `}
+          >
             {item.published_date}
           </Text>
         </View>

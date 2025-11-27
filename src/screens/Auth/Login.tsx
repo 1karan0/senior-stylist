@@ -90,14 +90,14 @@ export default function LoginScreen({ navigation }: any) {
               />
 
               <Text
-                className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-[#162721]'} mt-4`}
+                className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}
               >
                 Welcome Back
               </Text>
 
               <Text
                 className={`font-normal text-[14px] ${
-                  isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+                  isDark ? 'text-textSecondary' : 'text-textMuted'
                 }  mt-1`}
               >
                 Sign in to continue to StyleHub
@@ -216,7 +216,7 @@ export default function LoginScreen({ navigation }: any) {
               onPress={() => navigation.navigate('ForgetPassword')}
               className="mt-4 mb-6 self-end"
             >
-              <Text className="font-normal text-[13px] text-[#27B07D]">Forgot Password?</Text>
+              <Text className="font-normal text-[13px] text-textPrimary">Forgot Password?</Text>
             </Pressable>
 
             {/* Sign In Button */}
@@ -243,13 +243,13 @@ export default function LoginScreen({ navigation }: any) {
             <View className="flex-row justify-center">
               <Text
                 className={` ${
-                  isDark ? 'text-[#8AA897]' : 'text-[#64748B]'
+                  isDark ? 'text-textSecondary' : 'text-[#64748B]'
                 } font-normal text-[14px]`}
               >
                 Don't have an account?{' '}
               </Text>
               <Pressable onPress={() => navigation.navigate('Signup', { user: 'customer' })}>
-                <Text className="text-[#27B07D]">Sign Up</Text>
+                <Text className="text-textPrimary">Sign Up</Text>
               </Pressable>
             </View>
 
@@ -257,13 +257,13 @@ export default function LoginScreen({ navigation }: any) {
             <View className="flex-row justify-center mt-3">
               <Text
                 className={`text-center ${
-                  isDark ? 'text-white' : 'text-[#162721]'
+                  isDark ? 'text-white' : 'text-textDark'
                 }  font-medium text-[14px]`}
               >
                 Want to be a Consultant?{' '}
               </Text>
               <Pressable onPress={() => navigation.navigate('Signup', { user: 'consultant' })}>
-                <Text className="text-[#27B07D]">Register here</Text>
+                <Text className="text-textPrimary">Register here</Text>
               </Pressable>
             </View>
           </ScrollView>

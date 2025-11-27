@@ -63,7 +63,9 @@ const StoreScreen = () => {
           Partner Store
         </Text>
 
-        <Text className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} mt-1 text-sm w-[75%]`}>
+        <Text
+          className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} mt-1 text-sm w-[75%]`}
+        >
           Recommended products and services.
         </Text>
 

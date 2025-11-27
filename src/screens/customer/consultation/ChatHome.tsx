@@ -24,7 +24,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { tokens } from '@/constants/design-tokens';
 import { getFirestoreInstance, initializeFirebase, waitForFirebaseUser } from '@/services/firebase';
 import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
 import { mapFirestoreConsultation } from '@/utils/firestoreConsultationMapper';
@@ -48,6 +47,22 @@ const MAX_ITEMS = 40;
 
 type NavParamList = AppStackParamList & ConsultationStackParamList;
 
+/**
+ * IMPORTANT: Keep these literal values in sync with your tailwind.config.js
+ * (colors and fonts declared there). These literals are only used for runtime
+ * props that require strings (gradients, placeholderTextColor, ActivityIndicator color).
+ */
+const LIGHT_BG = ['hsl(146 25% 97%)', 'hsl(158 64% 95%)'];
+const DARK_BG = ['hsl(158 32% 8%)', 'hsl(158 32% 12%)'];
+
+const TEXT_MUTED = '#658176'; // matches tailwind textMuted
+const TEXT_DARK = '#162721'; // matches tailwind textDark
+const TEXT_WHITE = '#FFFFFF'; // matches tailwind textWhite
+const BUTTON_PRIMARY = '#27B07D'; // matches tailwind buttonPrimaryBg
+const SURFACE_DARK = 'rgba(14,27,22,0.85)'; // used previously for dark surface fallback
+const BORDER_LIGHT = '#DAE7E0'; // matches earlier border for light
+const BORDER_DARK = '#273F36'; // matches earlier border for dark
+
 const CustomerChatHome: React.FC = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
@@ -63,11 +78,14 @@ const CustomerChatHome: React.FC = () => {
 
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  const gradientColors = isDark ? ['#0E1B16', '#152821'] : tokens.colors.lightBg;
-  const surfaceColor = isDark ? 'rgba(14,27,22,0.85)' : '#FFFFFF';
-  const borderColor = isDark ? '#273F36' : '#DAE7E0';
-  const textPrimary = isDark ? tokens.colors.text.white : tokens.colors.text.dark;
-  const textMuted = tokens.colors.text.muted;
+  // gradient colors (used by LinearGradient)
+  const gradientColors = isDark ? DARK_BG : LIGHT_BG;
+
+  // surface / border / text values used when inline style string is required
+  const surfaceColor = isDark ? SURFACE_DARK : TEXT_WHITE;
+  const borderColor = isDark ? BORDER_DARK : BORDER_LIGHT;
+  const textPrimary = isDark ? TEXT_WHITE : TEXT_DARK;
+  const textMuted = TEXT_MUTED;
 
   const getTimestampValue = useCallback((value?: string | null) => {
     if (!value) return 0;
@@ -315,8 +333,11 @@ const CustomerChatHome: React.FC = () => {
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={() => handleConversationPress(item)}
-      className="flex-row items-center mb-4 px-4 py-3 rounded-2xl"
+      className={`flex-row items-center mb-4 px-4 py-3 rounded-2xl ${
+        isDark ? 'bg-bgDark0 border border-bgDark1' : 'bg-white border border-bgLight1'
+      }`}
       style={{
+        // fallback surface + border colors for anything that needs inline strings
         backgroundColor: surfaceColor,
         borderWidth: 1,
         borderColor,
@@ -327,9 +348,9 @@ const CustomerChatHome: React.FC = () => {
       ) : (
         <View
           className="w-14 h-14 rounded-full mr-4 items-center justify-center"
-          style={{ backgroundColor: '#27B07D' }}
+          style={{ backgroundColor: BUTTON_PRIMARY }}
         >
-          <Text className="text-white font-urbanist text-lg font-semibold">
+          <Text className="text-white font-urbanist-semibold text-lg">
             {getInitials(item.title)}
           </Text>
         </View>
@@ -338,24 +359,28 @@ const CustomerChatHome: React.FC = () => {
       <View className="flex-1">
         <View className="flex-row justify-between items-center mb-1">
           <Text
-            className="font-urbanist font-semibold text-base"
-            style={{ color: textPrimary }}
+            className={`font-urbanist-semibold text-base ${isDark ? 'text-textWhite' : 'text-textDark'}`}
             numberOfLines={1}
           >
             {item.title}
           </Text>
-          <Text className="text-xs font-urbanist" style={{ color: textMuted }}>
+          <Text
+            className={`text-xs font-urbanist-regular ${isDark ? 'text-textMuted' : 'text-textMuted'}`}
+          >
             {getRelativeTime(item.lastMessageAt)}
           </Text>
         </View>
-        <Text className="text-xs font-urbanist" style={{ color: textMuted }} numberOfLines={1}>
+        <Text
+          className={`text-xs font-urbanist-regular ${isDark ? 'text-textMuted' : 'text-textMuted'}`}
+          numberOfLines={1}
+        >
           {item.lastMessage}
         </Text>
       </View>
 
       {item.unreadCount > 0 && (
-        <View className="ml-3 min-w-[24px] h-6 rounded-full px-2 items-center justify-center bg-[#27B07D]">
-          <Text className="text-xs font-urbanist font-semibold text-white">
+        <View className="ml-3 min-w-[24px] h-6 rounded-full px-2 items-center justify-center bg-buttonPrimaryBg">
+          <Text className="text-xs font-urbanist-semibold text-white">
             {item.unreadCount > 99 ? '99+' : item.unreadCount}
           </Text>
         </View>
@@ -369,10 +394,14 @@ const CustomerChatHome: React.FC = () => {
     }
     return (
       <View className="flex-1 items-center justify-center mt-16 px-8">
-        <Text className="font-urbanist text-base text-center mb-1" style={{ color: textPrimary }}>
+        <Text
+          className={`font-urbanist-regular text-base text-center mb-1 ${isDark ? 'text-textWhite' : 'text-textDark'}`}
+        >
           No consultations yet
         </Text>
-        <Text className="font-urbanist text-xs text-center" style={{ color: textMuted }}>
+        <Text
+          className={`font-urbanist-regular text-xs text-center ${isDark ? 'text-textMuted' : 'text-textMuted'}`}
+        >
           Start a new consultation to begin chatting with a stylist.
         </Text>
       </View>
@@ -385,8 +414,8 @@ const CustomerChatHome: React.FC = () => {
         <View className="px-5 mb-4">
           <View className="flex-row justify-between items-center mb-1">
             <View>
-              <Text className="font-urbanist text-2xl font-bold text-white">Consultations</Text>
-              <Text className="font-urbanist text-xs text-white/80">
+              <Text className="font-urbanist-bold text-2xl text-textWhite">Consultations</Text>
+              <Text className="font-urbanist-regular text-xs text-white/80">
                 Manage your styling sessions
               </Text>
             </View>
@@ -395,28 +424,30 @@ const CustomerChatHome: React.FC = () => {
               className="bg-yellow-300 px-4 py-2 rounded-full"
               activeOpacity={0.85}
             >
-              <Text className="font-urbanist font-semibold text-green-700 text-sm">+ New</Text>
+              <Text className="font-urbanist-semibold text-sm text-green-700">+ New</Text>
             </TouchableOpacity>
           </View>
 
-          <View className="mt-4 flex-row items-center px-3 py-2 rounded-2xl border bg-[#0E1B16] border-[#152821]">
+          <View
+            className={`mt-4 flex-row items-center px-3 py-2 rounded-2xl border ${isDark ? 'bg-bgDark0 border-bgDark1' : 'bg-white border-bgLight1'}`}
+          >
             <Image source={require('@/assets/icons/search-icon.png')} className="w-5 h-5 mr-3" />
             <TextInput
               placeholder="Search conversations..."
               placeholderTextColor={textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              className="flex-1 font-urbanist text-sm"
+              className="flex-1 font-urbanist-regular text-sm"
               style={{ color: textPrimary }}
             />
           </View>
 
           {isRealtimeConnected ? (
-            <Text className="mt-2 text-[11px] font-urbanist" style={{ color: textMuted }}>
+            <Text className="mt-2 text-[11px] font-urbanist-regular" style={{ color: textMuted }}>
               Connected to live updates
             </Text>
           ) : (
-            <Text className="mt-2 text-[11px] font-urbanist" style={{ color: textMuted }}>
+            <Text className="mt-2 text-[11px] font-urbanist-regular" style={{ color: textMuted }}>
               Showing last synced conversations
             </Text>
           )}
@@ -424,8 +455,8 @@ const CustomerChatHome: React.FC = () => {
 
         {loading && consultations.length === 0 ? (
           <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#27B07D" />
-            <Text className="mt-3 font-urbanist text-sm" style={{ color: textMuted }}>
+            <ActivityIndicator size="large" color={BUTTON_PRIMARY} />
+            <Text className="mt-3 font-urbanist-regular text-sm" style={{ color: textMuted }}>
               Loading your conversations...
             </Text>
           </View>
@@ -440,7 +471,7 @@ const CustomerChatHome: React.FC = () => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                tintColor="#27B07D"
+                tintColor={BUTTON_PRIMARY}
               />
             }
           />

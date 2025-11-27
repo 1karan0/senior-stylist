@@ -85,25 +85,25 @@ const NewConsultant = ({ navigation }: any) => {
             />
           </TouchableOpacity>
           <Text
-            className={`text-[22px] ${isDark ? 'text-white' : 'text-[#162721]'} font-semibold ml-3`}
+            className={`text-[22px] ${isDark ? 'text-white' : 'text-textDark'} font-semibold ml-3`}
           >
             New Consultation
           </Text>
         </View>
 
-        <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-gray-500'} -mt-3 mb-4`}>
+        <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} -mt-3 mb-4`}>
           Tell us about your styling needs
         </Text>
 
         {/* Card */}
         <View
-          className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-gray-100'} rounded-md p-5 shadow border `}
+          className={` ${isDark ? 'bg-textDark border-[#273F36]' : 'bg-white border-gray-100'} rounded-md p-5 shadow border `}
         >
           <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
             Describe Your Requirements
           </Text>
 
-          <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-gray-500'} mt-3 mb-2`}>
+          <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-3 mb-2`}>
             What styling help do you need? *
           </Text>
 
@@ -130,7 +130,7 @@ const NewConsultant = ({ navigation }: any) => {
           />
 
           {/* Upload Image */}
-          <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-gray-500'} mt-5 mb-2`}>
+          <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-5 mb-2`}>
             Upload Photo (Optional)
           </Text>
 
@@ -139,7 +139,7 @@ const NewConsultant = ({ navigation }: any) => {
             className="bg-[#DAE7E0] rounded-xl py-3 flex-row items-center justify-center"
           >
             <Image source={require('@/assets/icons/upload-2.png')} className="w-5 h-5 mr-2" />
-            <Text className="text-[#162721] font-semibold">Upload reference photo</Text>
+            <Text className="text-textDark font-semibold">Upload reference photo</Text>
           </TouchableOpacity>
 
           {/* Show Preview */}
@@ -153,7 +153,7 @@ const NewConsultant = ({ navigation }: any) => {
             </View>
           )}
 
-          <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-gray-500'} mt-2 text-sm`}>
+          <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-2 text-sm`}>
             Share a photo of your current style or inspiration
           </Text>
 

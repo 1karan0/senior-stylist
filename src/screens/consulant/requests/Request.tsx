@@ -198,10 +198,8 @@ const Request: React.FC = () => {
   if (!isConsultant) {
     return (
       <View className="flex-1 bg-white p-6 justify-center items-center">
-        <Text className="text-2xl font-urbanist font-bold text-[#162721] mb-4">
-          Consultant Only
-        </Text>
-        <Text className="font-poppins text-center text-[#658176]">
+        <Text className="text-2xl font-urbanist font-bold text-textDark mb-4">Consultant Only</Text>
+        <Text className="font-poppins text-center text-textMuted">
           You need a consultant account to view incoming requests.
         </Text>
       </View>
@@ -211,16 +209,16 @@ const Request: React.FC = () => {
   return (
     <View className="flex-1 bg-white p-3">
       <View className="flex-col items-start p-4">
-        <Text className="text-2xl font-urbanist font-bold text-[#162721]">
+        <Text className="text-2xl font-urbanist font-bold text-textDark">
           Consultation Requests
         </Text>
-        <Text className="font-poppins text-sm text-[#658176]">
+        <Text className="font-poppins text-sm text-textMuted">
           Accept requests to start earning
         </Text>
         {connected && (
           <View className="flex-row items-center mt-2">
-            <View className="w-2 h-2 rounded-full bg-[#27B07D] mr-2" />
-            <Text className="font-poppins text-xs text-[#658176]">Real-time updates enabled</Text>
+            <View className="w-2 h-2 rounded-full bg-textPrimary mr-2" />
+            <Text className="font-poppins text-xs text-textMuted">Real-time updates enabled</Text>
           </View>
         )}
       </View>
@@ -228,14 +226,14 @@ const Request: React.FC = () => {
       <View>
         <View className="flex-row justify-between items-center">
           <View className="flex-1 items-center bg-white rounded-xl border border-[#DAE7E0] p-4 mx-2">
-            <Text className="text-3xl font-urbanist font-bold text-[#162721]">
+            <Text className="text-3xl font-urbanist font-bold text-textDark">
               {requests.length}
             </Text>
-            <Text className="font-poppins text-[#658176] text-sm mt-1">Pending</Text>
+            <Text className="font-poppins text-textMuted text-sm mt-1">Pending</Text>
           </View>
           <View className="flex-1 items-center bg-white rounded-xl border border-[#DAE7E0] p-4 mx-2">
-            <Text className="text-3xl font-urbanist font-bold text-[#162721]">0</Text>
-            <Text className="font-poppins text-[#658176] text-sm mt-1">This Month</Text>
+            <Text className="text-3xl font-urbanist font-bold text-textDark">0</Text>
+            <Text className="font-poppins text-textMuted text-sm mt-1">This Month</Text>
           </View>
         </View>
       </View>
@@ -243,7 +241,7 @@ const Request: React.FC = () => {
       {loading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#27B07D" />
-          <Text className="font-poppins text-sm text-[#658176] mt-3">
+          <Text className="font-poppins text-sm text-textMuted mt-3">
             Loading consultation requests...
           </Text>
         </View>

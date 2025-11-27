@@ -112,7 +112,7 @@ const Details: React.FC = () => {
           >
             {/* Title */}
             <Text
-              className={`text-xl font-semibold  ${isDark ? 'text-white' : 'text-[#162721]'} mb-2 leading-snug`}
+              className={`text-xl font-semibold  ${isDark ? 'text-white' : 'text-textDark'} mb-2 leading-snug`}
             >
               {}
             </Text>
@@ -120,7 +120,7 @@ const Details: React.FC = () => {
             {/* Info Row */}
             <View className="flex-row items-center gap-2 mb-1">
               <Image source={require('@/assets/icons/green-user.png')} className="w-5 h-5" />
-              <Text className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} `}>
+              <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} `}>
                 {article.author}
               </Text>
             </View>
@@ -128,13 +128,13 @@ const Details: React.FC = () => {
             <View className="flex-row gap-4">
               <View className="flex-row items-center gap-2 mb-4">
                 <Image source={require('@/assets/icons/calendar.png')} className="w-5 h-5" />
-                <Text className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} `}>
+                <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} `}>
                   {article.published_date}
                 </Text>
               </View>
               <View className="flex-row items-center gap-2 mb-4">
                 <Image source={require('@/assets/icons/clock.png')} className="w-5 h-5" />
-                <Text className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} `}>
+                <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} `}>
                   {formatRelativeTime(article.created_at)}
                 </Text>
               </View>
@@ -159,7 +159,7 @@ const Details: React.FC = () => {
 
             {/* Excerpt */}
             <Text
-              className={`text-base ${isDark ? 'text-[#8AA897]' : 'text-gray-700'}  leading-relaxed mb-4`}
+              className={`text-base ${isDark ? 'text-textSecondary' : 'text-gray-700'}  leading-relaxed mb-4`}
             >
               {article.excerpt}
             </Text>
