@@ -1,99 +1,154 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
 import EarningsModal from './EarningsModal';
+import { AppButton } from '@/common/components/Button';
+import GradientBackground from '@/common/components/GradientBackground';
 
 const Dashboard: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
 
   return (
-    <View className="flex-1 bg-gradient-to-b from-[hsl(146,25%,97%)] to-[hsl(158,64%,95%)]">
-      {/* Header */}
-      <View className="pt-12 px-6 pb-4">
-        <Text className="text-2xl font-bold text-gray-800">Dashboard</Text>
-        <Text className="text-gray-600 mt-1">Overview of your consulting performance</Text>
-      </View>
-
-      {/* Content */}
-      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
-        {/* Stats Grid */}
-        <View className="flex-row flex-wrap justify-between mb-6">
-          {/* Total Sessions */}
-          <View className="bg-white rounded-2xl p-4 w-[48%] mb-4 shadow-sm">
-            <View className="flex-row justify-between items-start mb-2">
-              <Text className="text-green-500 text-sm font-semibold">+12%</Text>
-              <Text className="text-2xl font-bold text-gray-800">156</Text>
-            </View>
-            <Text className="text-gray-500 text-sm">Total Sessions</Text>
-          </View>
-
-          {/* Active Clients */}
-          <View className="bg-white rounded-2xl p-4 w-[48%] mb-4 shadow-sm">
-            <View className="flex-row justify-between items-start mb-2">
-              <Text className="text-green-500 text-sm font-semibold">+5%</Text>
-              <Text className="text-2xl font-bold text-gray-800">23</Text>
-            </View>
-            <Text className="text-gray-500 text-sm">Active Clients</Text>
-          </View>
-
-          {/* Avg Rating */}
-          <View className="bg-white rounded-2xl p-4 w-[48%] shadow-sm">
-            <View className="flex-row justify-between items-start mb-2">
-              <Text className="text-green-500 text-sm font-semibold">+0.2</Text>
-              <Text className="text-2xl font-bold text-gray-800">4.8</Text>
-            </View>
-            <Text className="text-gray-500 text-sm">Avg Rating</Text>
-          </View>
-
-          {/* This Month */}
-          <View className="bg-white rounded-2xl p-4 w-[48%] shadow-sm">
-            <View className="flex-row justify-between items-start mb-2">
-              <Text className="text-green-500 text-sm font-semibold">+18%</Text>
-              <Text className="text-2xl font-bold text-gray-800">$2,340</Text>
-            </View>
-            <Text className="text-gray-500 text-sm">This Month</Text>
-          </View>
+    <GradientBackground>
+      <View className="flex-1">
+        {/* Header */}
+        <View className="px-5 py-6">
+          <Text className="text-2xl font-urbanist-bold text-[#162721]">Dashboard</Text>
+          <Text className="font-poppins-regular text-[#658176]  text-sm">
+            Overview of your consulting performance
+          </Text>
         </View>
 
-        {/* About Earnings Button */}
-        <View className="mb-6">
-          <TouchableOpacity
-            className="bg-white rounded-2xl p-6 shadow-sm"
-            onPress={() => setModalVisible(true)}
-          >
-            <Text className="text-lg font-bold text-gray-800 mb-2">About Earnings</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Recent Activity Section */}
-        <View className="mb-8">
-          <Text className="text-lg font-bold text-gray-800 mb-4">Recent Activity</Text>
-          <Text className="text-gray-600 mb-3">Your latest consultations</Text>
-
-          {/* Activity Items */}
-          <View className="bg-white rounded-2xl p-4 shadow-sm">
-            {['Alice T.', 'Bob W.', 'Alice T.'].map((name, index) => (
-              <View
-                key={index}
-                className={`flex-row justify-between items-center py-3 ${index < 2 ? 'border-b border-gray-100' : ''}`}
-              >
-                <View className="flex-1">
-                  <Text className="font-semibold text-gray-800">{name}</Text>
-                  <Text className="text-gray-500 text-sm">
-                    {index === 0 || index === 2 ? 'Marketing Strategy' : 'Business Plan'}
+        {/* Content */}
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          {/* Stats Grid */}
+          <View className="px-5">
+            <View className="flex-row justify-between mb-4">
+              {/* Total Sessions */}
+              <View className="bg-white rounded-xl p-4 flex-1 mr-2 shadow-sm border border-[#DAE7E0]">
+                <View className="flex-col items-center">
+                  <View className="flex-row items-center justify-between w-full mb-1">
+                    <View className="flex-1" /> {/* Spacer to balance the layout */}
+                    <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
+                      <Ionicons name="chatbubble-outline" size={20} color="#14B8A6" />
+                    </View>
+                    <Text className="text-[#27B07D] text-sm font-poppins-medium">+12%</Text>
+                  </View>
+                  <Text className="font-urbanist-bold text-3xl text-[#162721] mt-2">156</Text>
+                  <Text className="font-poppins-regular text-[#658176] text-sm">
+                    Total Sessions
                   </Text>
                 </View>
-                <Text className="text-gray-400 text-sm">
-                  {index === 0 || index === 2 ? '2 hours ago' : '5 hours ago'}
-                </Text>
+              </View>
+
+              {/* Active Clients */}
+              <View className="bg-white rounded-xl p-4 flex-1 ml-2 shadow-sm border border-[#DAE7E0]">
+                <View className="flex-col items-center">
+                  <View className="flex-row items-center justify-between w-full mb-1">
+                    <View className="flex-1" /> {/* Spacer to balance the layout */}
+                    <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
+                      <Ionicons name="people-outline" size={20} color="#14B8A6" />
+                    </View>
+                    <Text className="text-[#27B07D] text-sm font-poppins-medium">+5%</Text>
+                  </View>
+                  <Text className="font-urbanist-bold text-3xl text-[#162721] mt-2">23</Text>
+                  <Text className="font-poppins-regular text-[#658176] text-sm">
+                    Active Clients
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View className="flex-row justify-between mb-5">
+              {/* Avg Rating */}
+              <View className="bg-white rounded-xl p-4 flex-1 mr-2 shadow-sm border border-[#DAE7E0]">
+                <View className="flex-col items-center">
+                  <View className="flex-row items-center justify-between w-full mb-1">
+                    <View className="flex-1" /> {/* Spacer to balance the layout */}
+                    <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
+                      <Ionicons name="star-outline" size={20} color="#14B8A6" />
+                    </View>
+                    <Text className="text-[#27B07D] text-sm font-poppins-medium">+0.2</Text>
+                  </View>
+                  <Text className="font-urbanist-bold text-3xl text-[#162721] mt-2">4.8</Text>
+                  <Text className="font-poppins-regular text-[#658176] text-sm">Avg Rating</Text>
+                </View>
+              </View>
+
+              {/* This Month */}
+              <View className="bg-white rounded-xl p-4 flex-1 ml-2 shadow-sm border border-[#DAE7E0]">
+                <View className="flex-col items-center">
+                  <View className="flex-row items-center justify-between w-full mb-1">
+                    <View className="flex-1" /> {/* Spacer to balance the layout */}
+                    <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
+                      <Ionicons name="trending-up-outline" size={20} color="#14B8A6" />
+                    </View>
+                    <Text className="text-[#27B07D] text-sm font-poppins-medium">+18%</Text>
+                  </View>
+                  <Text className="font-urbanist-bold text-3xl text-[#162721] mt-2">$2,340</Text>
+                  <Text className="font-poppins-regular text-[#658176] text-sm">This Month</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* About Earnings Button */}
+          <View className="px-5 mb-5">
+            <AppButton
+              text="About Earnings"
+              icon={<Text className="text-white text-xl font-bold">$</Text>}
+              onPress={() => setModalVisible(true)}
+              variant="gradient"
+              className="shadow-sm"
+            />
+          </View>
+
+          {/* Recent Activity Section */}
+          <View className="bg-white border border-[#DAE7E0] p-4 mb-8 mx-5 rounded-xl">
+            <Text className="text-xl text-[#162721] font-urbanist-semibold">Recent Activity</Text>
+            <Text className="font-poppins-regular text-[#658176] mb-4 text-sm">
+              Your latest consultations
+            </Text>
+
+            {/* Activity Items */}
+            {[
+              { name: 'Alice T.', service: 'Marketing Strategy', time: '2 hours ago', rating: 5 },
+              { name: 'Bob W.', service: 'Business Plan', time: '5 hours ago', rating: 5 },
+              { name: 'Alice T.', service: 'Marketing Strategy', time: '2 hours ago', rating: 5 },
+              { name: 'Alice T.', service: 'Marketing Strategy', time: '2 hours ago', rating: 5 },
+              { name: 'Bob W.', service: 'Business Plan', time: '5 hours ago', rating: 5 },
+              { name: 'Alice T.', service: 'Marketing Strategy', time: '2 hours ago', rating: 5 },
+            ].map((item, index) => (
+              <View
+                key={index}
+                className="bg-[#F5F9F7] rounded-xl p-4 mb-3 border border-[#DAE7E0]"
+              >
+                <View className="flex-row justify-between items-center">
+                  <View className="flex-1">
+                    <Text className="font-urbanist-semibold text-[#162721] text-base">
+                      {item.name}
+                    </Text>
+                    <Text className="font-poppins-regular text-[#658176] text-sm">
+                      {item.service}
+                    </Text>
+                  </View>
+                  <View className="items-end">
+                    <View className="flex-row items-center">
+                      <Text className="text-yellow-400 text-base mr-1">⭐</Text>
+                      <Text className="font-poppins-medium text-[#161616]">{item.rating}</Text>
+                    </View>
+                    <Text className="font-poppins-regular text-[#658176] text-xs">{item.time}</Text>
+                  </View>
+                </View>
               </View>
             ))}
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
 
-      {/* Modal */}
-      <EarningsModal visible={modalVisible} onClose={() => setModalVisible(false)} />
-    </View>
+        {/* Modal */}
+        <EarningsModal visible={modalVisible} onClose={() => setModalVisible(false)} />
+      </View>
+    </GradientBackground>
   );
 };
 

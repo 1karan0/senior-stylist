@@ -1,6 +1,9 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { ModalWrapper } from '@/common/components/ModalWrapper';
+import { AppButton } from '@/common/components/Button';
 
 interface EarningsModalProps {
   visible: boolean;
@@ -9,73 +12,116 @@ interface EarningsModalProps {
 
 const EarningsModal: React.FC<EarningsModalProps> = ({ visible, onClose }) => {
   return (
-    <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>
-      <View className="flex-1 justify-center items-center bg-black/50">
-        {/* Modal Container */}
-        <View className="bg-white rounded-3xl mx-6 w-11/12 max-h-[85%]">
-          {/* Header with Close Button */}
-          <View className="flex-row justify-between items-center p-6 border-b border-gray-200">
-            <View className="flex-1">
-              <Text className="text-2xl font-bold text-gray-800">Earnings</Text>
-              <Text className="text-gray-600 mt-1">Track your consultation revenue</Text>
-            </View>
-            <TouchableOpacity onPress={onClose} className="p-2">
-              <Ionicons name="close" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Content */}
-          <ScrollView className="flex-1 p-6" showsVerticalScrollIndicator={false}>
-            {/* Total Earnings */}
-            <View className="mb-6">
-              <Text className="text-lg font-bold text-gray-800 mb-4">Total Earnings</Text>
-              <View className="bg-gray-50 rounded-2xl p-5">
-                <Text className="text-3xl font-bold text-gray-800 mb-2">$8,542</Text>
-                <View className="flex-row items-center">
-                  <Text className="text-green-500 font-semibold mr-1">+13%</Text>
-                  <Text className="text-gray-500">from last month</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* This Month & Pending */}
-            <View className="flex-row justify-between mb-8">
-              <View className="bg-white rounded-2xl p-5 w-[48%] shadow-sm border border-gray-100">
-                <Text className="text-2xl font-bold text-gray-800">$2,340</Text>
-                <Text className="text-gray-500 text-sm mt-2">This Month</Text>
-              </View>
-              <View className="bg-white rounded-2xl p-5 w-[48%] shadow-sm border border-gray-100">
-                <Text className="text-2xl font-bold text-gray-800">$1,200</Text>
-                <Text className="text-gray-500 text-sm mt-2">Pending</Text>
-              </View>
-            </View>
-
-            {/* Recent Transactions */}
-            <View className="mb-8">
-              <Text className="text-lg font-bold text-gray-800 mb-4">Recent Transactions</Text>
-              <Text className="text-gray-600 mb-4">Your latest payouts</Text>
-
-              {/* Transaction Items */}
-              <View className="space-y-4">
-                {[1, 2, 3].map((_, index) => (
-                  <View key={index} className="bg-gray-50 rounded-2xl p-4">
-                    <Text className="font-semibold text-gray-800 text-base mb-1">Jan 15, 2024</Text>
-                    <Text className="text-green-500 font-medium">Completed</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            {/* Download Statement Button */}
-            <TouchableOpacity className="bg-gray-800 rounded-2xl py-4">
-              <Text className="text-white text-center font-semibold text-lg">
-                Download Statement
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
+    <ModalWrapper
+      visible={visible}
+      onClose={onClose}
+      dismissOnBackdropPress={true}
+      containerClassName="max-h-[90%]"
+    >
+      {/* Header with Close Button - MOVED OUTSIDE SCROLLVIEW */}
+      <View className="">
+        {/* Close button at top right */}
+        <View className="flex-row justify-end">
+          <TouchableOpacity onPress={onClose} className="">
+            <Ionicons name="close" size={24} color="#162721" />
+          </TouchableOpacity>
         </View>
       </View>
-    </Modal>
+
+      {/* Scrollable Content */}
+      <ScrollView showsVerticalScrollIndicator={false} className="-mx-6 px-6">
+        {/* Content below */}
+        <View className="flex-1 mb-3">
+          <Text className="text-xl font-poppins-semibold text-[#162721]">Earnings</Text>
+          <Text className="font-poppins-regular text-[#658176] text-sm">
+            Track your consultation revenue
+          </Text>
+        </View>
+        {/* Total Earnings Card */}
+        <LinearGradient
+          colors={['#27B07D', '#36D399']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="rounded-xl p-5 mb-5"
+          style={{ borderRadius: 12 }}
+        >
+          <View className="flex-row items-center mb-2 self-start">
+            <Ionicons name="logo-usd" size={20} color="white" />
+            <Text className="text-white text-xl font-urbanist-bold ml-2">Total Earnings</Text>
+          </View>
+          <View className="items-center justify-center mt-2">
+            <Text className="text-white text-4xl font-urbanist-bold mb-2">$8,542</Text>
+            <View className="flex-row items-center">
+              <Ionicons name="trending-up" size={16} color="white" />
+              <Text className="text-white text-sm font-poppins-regular ml-1">
+                +18% from last month
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* This Month & Pending */}
+        <View className="flex-row justify-between mb-6">
+          <View className="flex-1 mr-2 bg-white border border-[#DAE7E0] rounded-xl items-center justify-center py-4 shadow-sm">
+            <Text className="text-2xl font-urbanist-bold mb-1">$2,340</Text>
+            <Text className="text-[#658176] text-sm font-poppins-regular">This Month</Text>
+          </View>
+          <View className="flex-1 ml-2 items-center justify-center bg-white border border-[#DAE7E0] rounded-xl py-4 shadow-sm">
+            <Text className="text-2xl font-urbanist-bold mb-1">$1,200</Text>
+            <Text className="text-[#658176] text-sm font-poppins-regular">Pending</Text>
+          </View>
+        </View>
+
+        {/* Recent Transactions */}
+        <View className="mb-2">
+          <Text className="text-xl font-urbanist-semibold text-[#162721]">Recent Transactions</Text>
+          <Text className="font-poppins-regular text-[#658176] mb-3 text-sm">
+            Your latest payouts
+          </Text>
+
+          {/* Transaction Items */}
+          <View>
+            {[
+              { date: 'Jan 15, 2024', status: 'Completed', amount: '$1,850' },
+              { date: 'Jan 15, 2024', status: 'Completed', amount: '$1,850' },
+              { date: 'Jan 15, 2024', status: 'Completed', amount: '$1,850' },
+            ].map((transaction, index) => (
+              <View
+                key={index}
+                className="bg-[#F5F9F7] border border-[#DAE7E0] rounded-xl p-4 mb-3 flex-row justify-between items-center"
+              >
+                <View className="flex-row items-center flex-1">
+                  <View className="w-10 h-10 bg-teal-50 rounded-full items-center justify-center mr-1">
+                    <Ionicons name="calendar-outline" size={20} color="#27B07D" />
+                  </View>
+                  <View>
+                    <Text className="font-urbanist-semibold text-[#162721] text-base">
+                      {transaction.date}
+                    </Text>
+                    <Text className="text-[#658176] text-sm font-poppins-regular">
+                      {transaction.status}
+                    </Text>
+                  </View>
+                </View>
+                <Text className="text-[#27B07D] font-poppins-semibold text-base">
+                  {transaction.amount}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Download Statement Button with Download Icon */}
+        <View className="mb-4">
+          <AppButton
+            text="Download Statement"
+            icon={<Ionicons name="download-outline" size={20} color="white" />}
+            variant="gradient"
+            onPress={() => console.log('Download statement')}
+          />
+        </View>
+      </ScrollView>
+    </ModalWrapper>
   );
 };
 
