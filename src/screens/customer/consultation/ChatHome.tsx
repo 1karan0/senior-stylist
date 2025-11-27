@@ -3,13 +3,12 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  RefreshControl,
+  StatusBar,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import {
   collection,
   getDocs,
@@ -19,33 +18,34 @@ import {
   query,
   where,
 } from 'firebase/firestore';
+
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { tokens } from '@/constants/design-tokens';
 import { getFirestoreInstance, initializeFirebase, waitForFirebaseUser } from '@/services/firebase';
+
 import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
+
 import { mapFirestoreConsultation } from '@/utils/firestoreConsultationMapper';
+
 import {
   getCachedConsultations,
   initChatDatabase,
   saveConsultations,
 } from '@/services/chatDatabase';
-import type { AppStackParamList, ConsultationStackParamList } from '@/common/types';
 
-type ConversationPreview = {
-  id: number;
-  title: string;
-  avatarUrl?: string | null;
-  lastMessage: string;
-  lastMessageAt?: string | null;
-  unreadCount: number;
-};
+import GradientBackground from '@/common/components/GradientBackground';
+import type {
+  AppStackParamList,
+  ConsultationStackParamList,
+  ConversationPreview,
+} from '@/common/types';
+import LinearGradient from 'react-native-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MAX_ITEMS = 40;
-
 type NavParamList = AppStackParamList & ConsultationStackParamList;
 
 const CustomerChatHome: React.FC = () => {
@@ -63,16 +63,11 @@ const CustomerChatHome: React.FC = () => {
 
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  const gradientColors = isDark ? ['#0E1B16', '#152821'] : tokens.colors.lightBg;
-  const surfaceColor = isDark ? 'rgba(14,27,22,0.85)' : '#FFFFFF';
-  const borderColor = isDark ? '#273F36' : '#DAE7E0';
-  const textPrimary = isDark ? tokens.colors.text.white : tokens.colors.text.dark;
-  const textMuted = tokens.colors.text.muted;
-
+  // utils
   const getTimestampValue = useCallback((value?: string | null) => {
     if (!value) return 0;
-    const time = new Date(value).getTime();
-    return Number.isNaN(time) ? 0 : time;
+    const t = new Date(value).getTime();
+    return Number.isNaN(t) ? 0 : t;
   }, []);
 
   const sortByLatest = useCallback(
@@ -86,12 +81,12 @@ const CustomerChatHome: React.FC = () => {
   );
 
   const mergeConsultations = useCallback(
-    (existing: ConsultantConsultation[], incoming: ConsultantConsultation[]) => {
+    (oldData: ConsultantConsultation[], newData: ConsultantConsultation[]) => {
       const map = new Map<number, ConsultantConsultation>();
-      existing.forEach((item) => map.set(item.id, item));
-      incoming.forEach((item) => {
-        const previous = map.get(item.id);
-        map.set(item.id, { ...previous, ...item });
+      oldData.forEach((i) => map.set(i.id, i));
+      newData.forEach((i) => {
+        const prev = map.get(i.id);
+        map.set(i.id, { ...prev, ...i });
       });
       return Array.from(map.values());
     },
@@ -99,14 +94,13 @@ const CustomerChatHome: React.FC = () => {
   );
 
   const createPreview = useCallback(
-    (consultation: ConsultantConsultation): ConversationPreview => ({
-      id: consultation.id,
-      title: consultation.consultant?.name || 'Unknown Consultant',
-      avatarUrl: consultation.consultant?.profile_picture_url,
-      lastMessage:
-        consultation.last_message || consultation.problem_description || 'Tap to view conversation',
-      lastMessageAt: consultation.last_message_at ?? consultation.requested_at,
-      unreadCount: consultation.unread_count_user ?? 0,
+    (c: ConsultantConsultation): ConversationPreview => ({
+      id: c.id,
+      title: c.consultant?.name || 'Unknown Consultant',
+      avatarUrl: c.consultant?.profile_picture_url,
+      lastMessage: c.last_message || c.problem_description || 'Tap to view conversation',
+      lastMessageAt: c.last_message_at ?? c.requested_at,
+      unreadCount: c.unread_count_user ?? 0,
     }),
     []
   );
@@ -116,337 +110,281 @@ const CustomerChatHome: React.FC = () => {
   }, []);
 
   const filterByUser = useCallback(
-    (items: ConsultantConsultation[]) =>
-      userKey ? items.filter((item) => String(item.user_id ?? '') === userKey) : [],
+    (list: ConsultantConsultation[]) =>
+      userKey ? list.filter((c) => String(c.user_id ?? '') === userKey) : [],
     [userKey]
   );
 
   const fetchFromFirestore = useCallback(async () => {
-    if (!userKey) {
-      return [];
-    }
-    const firestore = getFirestoreInstance();
-    if (!firestore) {
-      return [];
-    }
+    if (!userKey) return [];
 
-    const baseQuery = query(
-      collection(firestore, 'consultations'),
+    const fs = getFirestoreInstance();
+    if (!fs) return [];
+
+    const q = query(
+      collection(fs, 'consultations'),
       where('user_id', '==', userKey),
       orderBy('last_message_at', 'desc'),
       firestoreLimit(MAX_ITEMS)
     );
 
-    const snapshot = await getDocs(baseQuery);
-    return snapshot.docs.map((doc) => mapFirestoreConsultation(doc.id, doc.data()));
+    const snap = await getDocs(q);
+    return snap.docs.map((doc) => mapFirestoreConsultation(doc.id, doc.data()));
   }, [userKey]);
 
   const fetchFromApi = useCallback(async () => {
     try {
-      const response = await consultantConsultationsApi.list();
-      // For the customer, we only want consultations where this user is the customer
+      const res = await consultantConsultationsApi.list();
       return userKey
-        ? (response as ConsultantConsultation[]).filter(
-            (item) => String(item.user_id ?? '') === userKey
-          )
+        ? (res as ConsultantConsultation[]).filter((c) => String(c.user_id ?? '') === userKey)
         : [];
-    } catch (error) {
-      if (__DEV__) {
-        console.error('Failed to fetch consultations via API (customer):', error);
-      }
+    } catch (err) {
       return [];
     }
   }, [userKey]);
 
-  const subscribeToRealtime = useCallback(async () => {
-    if (!userKey) {
-      return;
-    }
-    const firestore = getFirestoreInstance();
-    if (!firestore) {
-      return;
-    }
+  const subscribeRealtime = useCallback(async () => {
+    if (!userKey) return;
+    const fs = getFirestoreInstance();
+    if (!fs) return;
 
     const firebaseUser = await waitForFirebaseUser(3000);
-    if (!firebaseUser) {
-      return;
-    }
+    if (!firebaseUser) return;
 
-    const realtimeQuery = query(
-      collection(firestore, 'consultations'),
+    const q = query(
+      collection(fs, 'consultations'),
       where('user_id', '==', userKey),
       orderBy('last_message_at', 'desc'),
       firestoreLimit(MAX_ITEMS)
     );
 
-    const unsubscribe = onSnapshot(
-      realtimeQuery,
-      (snapshot) => {
-        const docs = snapshot.docs.map((doc) => mapFirestoreConsultation(doc.id, doc.data()));
-        const realtimeIds = new Set(docs.map((doc) => doc.id));
-        setRealtimeConnected(!snapshot.metadata.fromCache);
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const docs = snap.docs.map((d) => mapFirestoreConsultation(d.id, d.data()));
+
+        const realtimeIds = new Set(docs.map((d) => d.id));
+        setRealtimeConnected(!snap.metadata.fromCache);
+
         setConsultations((prev) => {
-          const older = prev.filter((item) => !realtimeIds.has(item.id));
-          return sortByLatest(mergeConsultations(older, docs));
+          const stale = prev.filter((x) => !realtimeIds.has(x.id));
+          return sortByLatest(mergeConsultations(stale, docs));
         });
-        if (docs.length) {
-          saveConsultations(docs).catch((error) => {
-            if (__DEV__) {
-              console.warn('[customer-chat] failed to cache realtime consultations', error);
-            }
-          });
-        }
+
+        saveConsultations(docs).catch(() => {});
       },
-      (error) => {
-        if (__DEV__) {
-          console.error('Customer chat realtime listener error:', error);
-        }
-        setRealtimeConnected(false);
-      }
+      () => setRealtimeConnected(false)
     );
 
-    unsubscribeRef.current = unsubscribe;
+    unsubscribeRef.current = unsub;
   }, [mergeConsultations, sortByLatest, userKey]);
 
   const loadConversations = useCallback(
-    async (showLoader: boolean) => {
-      if (!userKey) {
-        setLoading(false);
-        return;
-      }
+    async (withLoader: boolean) => {
+      if (!userKey) return setLoading(false);
 
-      if (showLoader) {
-        setLoading(true);
-      }
+      if (withLoader) setLoading(true);
 
       await initializeFirebase();
 
       try {
         const cached = await getCachedConsultations();
-        if (cached.length) {
-          const filtered = filterByUser(cached);
-          if (filtered.length) {
-            setConsultations(sortByLatest(filtered));
-          }
+        const filtered = filterByUser(cached);
+        if (filtered.length) {
+          setConsultations(sortByLatest(filtered));
         }
-      } catch (error) {
-        if (__DEV__) {
-          console.warn('[customer-chat] failed to load cached consultations', error);
-        }
-      }
+      } catch {}
 
       try {
-        const firebaseItems = await fetchFromFirestore();
-        if (firebaseItems.length) {
-          await saveConsultations(firebaseItems);
-          setConsultations(sortByLatest(firebaseItems));
+        const fsData = await fetchFromFirestore();
+        if (fsData.length) {
+          await saveConsultations(fsData);
+          setConsultations(sortByLatest(fsData));
         } else {
-          const fallback = await fetchFromApi();
-          await saveConsultations(fallback);
-          setConsultations(sortByLatest(fallback));
+          const apiData = await fetchFromApi();
+          await saveConsultations(apiData);
+          setConsultations(sortByLatest(apiData));
         }
       } finally {
-        if (showLoader) {
-          setLoading(false);
-        }
+        if (withLoader) setLoading(false);
       }
     },
-    [fetchFromApi, fetchFromFirestore, filterByUser, sortByLatest, userKey]
+    [userKey, fetchFromFirestore, fetchFromApi, filterByUser, sortByLatest]
   );
 
   useEffect(() => {
     loadConversations(true);
-    subscribeToRealtime();
+    subscribeRealtime();
 
     return () => {
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-        unsubscribeRef.current = null;
-      }
+      if (unsubscribeRef.current) unsubscribeRef.current();
     };
-  }, [loadConversations, subscribeToRealtime]);
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadConversations(false);
-    setRefreshing(false);
-  }, [loadConversations]);
-
-  const handleConversationPress = (conversation: ConversationPreview) => {
-    navigation.navigate('ConsultantChat', { consultationId: conversation.id, asCustomer: true });
-  };
-
-  const getRelativeTime = (timestamp?: string | null) => {
-    if (!timestamp) return '';
-    const diffMs = Date.now() - new Date(timestamp).getTime();
-    const minutes = Math.floor(diffMs / 60000);
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  };
-
-  const getInitials = (name: string) =>
-    name
-      .split(' ')
-      .filter(Boolean)
-      .map((chunk) => chunk[0]?.toUpperCase() ?? '')
-      .join('')
-      .slice(0, 2) || 'SS';
+  }, [loadConversations, subscribeRealtime]);
 
   const previews: ConversationPreview[] = useMemo(
     () => consultations.map((c) => createPreview(c)),
     [consultations, createPreview]
   );
 
-  const filteredConversations = useMemo(() => {
-    const term = searchQuery.trim().toLowerCase();
+  const filteredConvos = useMemo(() => {
+    const term = searchQuery.toLowerCase().trim();
     if (!term) return previews;
     return previews.filter(
-      (conversation) =>
-        conversation.title.toLowerCase().includes(term) ||
-        conversation.lastMessage.toLowerCase().includes(term)
+      (p) => p.title.toLowerCase().includes(term) || p.lastMessage.toLowerCase().includes(term)
     );
   }, [previews, searchQuery]);
 
-  const renderConversation = ({ item }: { item: ConversationPreview }) => (
+  const getInitials = (name: string) =>
+    name
+      .split(' ')
+      .map((x) => x.charAt(0).toUpperCase())
+      .join('')
+      .slice(0, 2);
+
+  const getRelative = (ts?: string | null) => {
+    if (!ts) return '';
+    const diff = Date.now() - new Date(ts).getTime();
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return 'Just now';
+    if (min < 60) return `${min}m ago`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  };
+
+  const renderItem = ({ item }: { item: ConversationPreview }) => (
     <TouchableOpacity
       activeOpacity={0.85}
-      onPress={() => handleConversationPress(item)}
-      className="flex-row items-center mb-4 px-4 py-3 rounded-2xl"
-      style={{
-        backgroundColor: surfaceColor,
-        borderWidth: 1,
-        borderColor,
-      }}
+      onPress={() =>
+        navigation.navigate('ConsultantChat', {
+          consultationId: item.id,
+          asCustomer: true,
+        })
+      }
+      className={`${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
     >
       {item.avatarUrl ? (
-        <Image source={{ uri: item.avatarUrl }} className="w-14 h-14 rounded-full mr-4" />
+        <Image source={{ uri: item.avatarUrl }} className="w-12 h-12 rounded-full mr-4" />
       ) : (
-        <View
-          className="w-14 h-14 rounded-full mr-4 items-center justify-center"
-          style={{ backgroundColor: '#27B07D' }}
-        >
-          <Text className="text-white font-urbanist text-lg font-semibold">
-            {getInitials(item.title)}
-          </Text>
+        <View className="w-12 h-12 rounded-full bg-[#27B07D] items-center justify-center mr-4">
+          <Text className="text-white text-lg font-semibold">{getInitials(item.title)}</Text>
         </View>
       )}
 
       <View className="flex-1">
         <View className="flex-row justify-between items-center mb-1">
           <Text
-            className="font-urbanist font-semibold text-base"
-            style={{ color: textPrimary }}
+            className={`font-semibold text-base ${isDark ? 'text-white' : 'text-[#162721]'}  capitalize`}
             numberOfLines={1}
           >
             {item.title}
           </Text>
-          <Text className="text-xs font-urbanist" style={{ color: textMuted }}>
-            {getRelativeTime(item.lastMessageAt)}
-          </Text>
         </View>
-        <Text className="text-xs font-urbanist" style={{ color: textMuted }} numberOfLines={1}>
+        <Text className={` ${isDark ? 'text-[#658176]' : 'text-[#8AA897]'}`} numberOfLines={1}>
           {item.lastMessage}
         </Text>
       </View>
 
-      {item.unreadCount > 0 && (
-        <View className="ml-3 min-w-[24px] h-6 rounded-full px-2 items-center justify-center bg-[#27B07D]">
-          <Text className="text-xs font-urbanist font-semibold text-white">
-            {item.unreadCount > 99 ? '99+' : item.unreadCount}
-          </Text>
-        </View>
-      )}
+      <View className="items-end ml-2">
+        <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-[#9EA3AE]'} font-medium text-xs`}>
+          {getRelative(item.lastMessageAt)}
+        </Text>
+        {item.unreadCount > 0 && (
+          <View className={`bg-[#27B07D] w-6 h-6 rounded-full justify-center items-center mt-2`}>
+            <Text className="text-white text-xs font-semibold">
+              {item.unreadCount > 99 ? '99+' : item.unreadCount}
+            </Text>
+          </View>
+        )}
+      </View>
     </TouchableOpacity>
   );
 
-  const renderEmpty = () => {
-    if (loading) {
-      return null;
-    }
-    return (
-      <View className="flex-1 items-center justify-center mt-16 px-8">
-        <Text className="font-urbanist text-base text-center mb-1" style={{ color: textPrimary }}>
-          No consultations yet
-        </Text>
-        <Text className="font-urbanist text-xs text-center" style={{ color: textMuted }}>
-          Start a new consultation to begin chatting with a stylist.
-        </Text>
-      </View>
-    );
-  };
-
   return (
-    <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
-      <View className="flex-1 pt-14 pb-4">
-        <View className="px-5 mb-4">
-          <View className="flex-row justify-between items-center mb-1">
-            <View>
-              <Text className="font-urbanist text-2xl font-bold text-white">Consultations</Text>
-              <Text className="font-urbanist text-xs text-white/80">
-                Manage your styling sessions
+    <SafeAreaView style={{ flex: 1 }}>
+      <GradientBackground className="flex-1">
+        <View className="flex-1 pb-20">
+          {/* HEADER */}
+          <View className="px-5 mt-10">
+            <View className="flex-row justify-between items-center ">
+              <Text
+                className={` ${isDark ? 'text-white' : 'text-[#162721]'} text-2xl font-urbanist font-bold`}
+              >
+                Consultations
               </Text>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('NewConsultant')}
+                className="bg-yellow-300 px-4 py-2 rounded-full"
+              >
+                <Text className="font-semibold text-green-700">+ New</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('NewConsultant')}
-              className="bg-yellow-300 px-4 py-2 rounded-full"
-              activeOpacity={0.85}
+
+            <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} opacity-90 mb-4`}>
+              Manage your styling sessions
+            </Text>
+
+            {/* Search */}
+            <View
+              className={`flex-row items-center border mt-3 px-3 py-2 rounded-xl ${
+                isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'
+              }`}
             >
-              <Text className="font-urbanist font-semibold text-green-700 text-sm">+ New</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View className="mt-4 flex-row items-center px-3 py-2 rounded-2xl border bg-[#0E1B16] border-[#152821]">
-            <Image source={require('@/assets/icons/search-icon.png')} className="w-5 h-5 mr-3" />
-            <TextInput
-              placeholder="Search conversations..."
-              placeholderTextColor={textMuted}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              className="flex-1 font-urbanist text-sm"
-              style={{ color: textPrimary }}
-            />
-          </View>
-
-          {isRealtimeConnected ? (
-            <Text className="mt-2 text-[11px] font-urbanist" style={{ color: textMuted }}>
-              Connected to live updates
+              <Image
+                source={require('../../../assets/icons/search-icon.png')}
+                className="w-5 h-5 mr-3"
+              />
+              <TextInput
+                placeholder="Search conversations..."
+                placeholderTextColor="#6D837A"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                className={`ml-2 flex-1 ${isDark ? 'text-white' : 'text-black'}`}
+              />
+            </View>
+            <Text
+              className={`mb-3 mt-2 text-[11px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+            >
+              {isRealtimeConnected
+                ? 'Connected to live updates'
+                : 'Showing last synced conversations'}
             </Text>
+          </View>
+
+          {/* LIST */}
+          {loading && consultations.length === 0 ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#27B07D" />
+              <Text className="mt-3 text-sm text-white/80">Loading your conversations...</Text>
+            </View>
           ) : (
-            <Text className="mt-2 text-[11px] font-urbanist" style={{ color: textMuted }}>
-              Showing last synced conversations
-            </Text>
+            <View className="flex-1 px-5 mb-4 mt-4 ">
+              <FlatList
+                data={filteredConvos}
+                keyExtractor={(i) => i.id.toString()}
+                renderItem={renderItem}
+                showsVerticalScrollIndicator={false}
+                refreshing={refreshing}
+                onRefresh={async () => {
+                  setRefreshing(true);
+                  await loadConversations(false);
+                  setRefreshing(false);
+                }}
+                ListEmptyComponent={() => (
+                  <View className="flex-1 items-center justify-center mt-14 px-10">
+                    <Text className="text-white text-base mb-1">No consultations yet</Text>
+                    <Text className="text-white/60 text-xs text-center">
+                      Start a new consultation to begin chatting with a stylist.
+                    </Text>
+                  </View>
+                )}
+              />
+            </View>
           )}
         </View>
-
-        {loading && consultations.length === 0 ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#27B07D" />
-            <Text className="mt-3 font-urbanist text-sm" style={{ color: textMuted }}>
-              Loading your conversations...
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={filteredConversations}
-            keyExtractor={(item) => String(item.id)}
-            renderItem={renderConversation}
-            contentContainerStyle={{ paddingBottom: 32, paddingHorizontal: 12 }}
-            ListEmptyComponent={renderEmpty}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                tintColor="#27B07D"
-              />
-            }
-          />
-        )}
-      </View>
-    </LinearGradient>
+      </GradientBackground>
+    </SafeAreaView>
   );
 };
 

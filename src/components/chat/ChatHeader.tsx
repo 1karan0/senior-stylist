@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Image, StatusBar } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 import type { ConsultantConsultation } from '@/api/consultant/consultations';
@@ -38,172 +38,83 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const specialization = consultantDetails?.specialization;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <TouchableOpacity
-          onPress={onBack}
-          style={styles.backButton}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+    <View>
+      <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
+      <View className="bg-[#27B07D] pt-12 pb-4 px-4 rounded-b-3xl">
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            onPress={onBack}
+            className="mr-3 p-1"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
 
-        {otherPerson?.profile_picture_url ? (
-          <Image source={{ uri: otherPerson.profile_picture_url }} style={styles.avatar} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarText}>{getInitials(otherPersonName)}</Text>
+          {otherPerson?.profile_picture_url ? (
+            <Image
+              source={{ uri: otherPerson.profile_picture_url }}
+              className="w-12 h-12 rounded-full mr-3"
+            />
+          ) : (
+            <View className="w-10 h-10 rounded-full bg-white/20 justify-center items-center mr-3">
+              <Text className="text-white text-base font-semibold">
+                {getInitials(otherPersonName)}
+              </Text>
+            </View>
+          )}
+          <View>
+            <View className="flex-1 items-center">
+              <Text className="text-base  font-semibold text-white">{otherPersonName}</Text>
+              {specialization ? (
+                <View className="px-2 py-1 bg-[#658176] rounded-xl">
+                  <Text className="text-xs font-bold text-white ">{specialization ?? ''}</Text>
+                </View>
+              ) : null}
+            </View>
           </View>
-        )}
 
-        <View style={styles.info}>
-          <Text style={styles.name}>{otherPersonName}</Text>
-          {specialization ? (
-            <Text style={styles.specialization}>{specialization ?? ''}</Text>
-          ) : null}
+          {/* {onFinish && consultation.status !== 'completed' && ( */}
+          <TouchableOpacity
+            onPress={onFinish}
+            className="flex-row absolute right-1 items-center bg-white px-3 py-1.5 rounded-xl gap-1.5"
+          >
+            <Image source={require('@/assets/icons/finish.png')} />
+            <Text className=" text-sm font-semibold">Finish</Text>
+          </TouchableOpacity>
+          {/* )} */}
+
+          {consultation.status === 'completed' && (
+            <View className="flex-row absolute right-1 items-center bg-white/20 px-3 py-1.5 rounded-lg gap-1.5">
+              <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+              <Text className="text-white text-sm font-medium">Completed</Text>
+            </View>
+          )}
         </View>
 
-        {onFinish && consultation.status !== 'completed' && (
-          <TouchableOpacity onPress={onFinish} style={styles.finishButton}>
-            <Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.finishText}>Finish</Text>
-          </TouchableOpacity>
-        )}
-
-        {consultation.status === 'completed' && (
-          <View style={styles.completedBadge}>
-            <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-            <Text style={styles.completedText}>Completed</Text>
+        {(isConnecting || isLoading) && (
+          <View
+            className={`flex-row items-center justify-center mt-1.5 rounded-full px-2.5 py-0.5 self-start ${
+              isConnecting ? 'bg-[#FFE08A]' : 'bg-white/25'
+            }`}
+          >
+            {isConnecting ? (
+              <>
+                <Ionicons name="warning" size={14} color="#3A2F00" className="mr-1.5" />
+                <Text className="text-[#3A2F00] text-xs font-semibold">
+                  Offline. Waiting for connection…
+                </Text>
+              </>
+            ) : (
+              <>
+                <ActivityIndicator size="small" color="#1C1C1C" style={{ marginRight: 6 }} />
+                <Text className="text-[#1C1C1C] text-xs font-medium">Loading messages…</Text>
+              </>
+            )}
           </View>
         )}
       </View>
-
-      {(isConnecting || isLoading) && (
-        <View
-          style={[styles.statusBanner, isConnecting ? styles.offlineBanner : styles.loadingBanner]}
-        >
-          {isConnecting ? (
-            <>
-              <Ionicons name="warning" size={14} color="#3A2F00" style={styles.statusIcon} />
-              <Text style={styles.offlineText}>Offline. Waiting for connection…</Text>
-            </>
-          ) : (
-            <>
-              <ActivityIndicator size="small" color="#1C1C1C" style={styles.statusIcon} />
-              <Text style={styles.loadingText}>Loading messages…</Text>
-            </>
-          )}
-        </View>
-      )}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#27B07D',
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backButton: {
-    marginRight: 12,
-    padding: 4,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  avatarText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  info: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  specialization: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginTop: 2,
-  },
-  finishButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: 6,
-  },
-  finishText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  completedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: 6,
-  },
-  completedText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  statusBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 6,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    alignSelf: 'flex-start',
-  },
-  loadingBanner: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  offlineBanner: {
-    backgroundColor: '#FFE08A',
-  },
-  statusIcon: {
-    marginRight: 6,
-  },
-  loadingText: {
-    color: '#1C1C1C',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  offlineText: {
-    color: '#3A2F00',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-});
 
 export default ChatHeader;

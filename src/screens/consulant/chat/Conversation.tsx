@@ -4,7 +4,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -39,7 +38,6 @@ import {
 import {
   getCachedConsultation,
   getMessages,
-  getPendingMessages,
   initChatDatabase,
   markAllAsRead,
   saveConsultation,
@@ -49,6 +47,7 @@ import {
 } from '@/services/chatDatabase';
 import type { ChatMessage } from '@/types/chat';
 import type { AppStackParamList } from '@/common/types';
+import GradientBackground from '@/common/components/GradientBackground';
 
 type RouteProps = RouteProp<AppStackParamList, 'ConsultantChat'>;
 
@@ -485,7 +484,7 @@ const ConsultantChatScreen: React.FC = () => {
       return null;
     }
     return (
-      <View style={styles.loadingHeader}>
+      <View className="p-4 items-center">
         <ActivityIndicator size="small" color="#27B07D" />
       </View>
     );
@@ -494,25 +493,27 @@ const ConsultantChatScreen: React.FC = () => {
   const renderEmpty = () => {
     if (offlineError && messages.length === 0) {
       return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.errorText}>{offlineError}</Text>
+        <View className="flex-1 justify-center items-center p-10">
+          <Text className="text-[#FF4433] text-base text-center mb-4">{offlineError}</Text>
           <TouchableOpacity
-            style={styles.retryButton}
+            className="bg-[#27B07D] px-6 py-3 rounded-lg"
             onPress={() => {
               if (!realtimeEnabled) {
                 loadMessages(true);
               }
             }}
           >
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Text className="text-white text-base font-semibold">Retry</Text>
           </TouchableOpacity>
         </View>
       );
     }
     if (messages.length === 0 && !loading) {
       return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No messages yet. Start the conversation!</Text>
+        <View className="flex-1 justify-center items-center p-10">
+          <Text className="text-[#A1A09A] text-base text-center">
+            No messages yet. Start the conversation!
+          </Text>
         </View>
       );
     }
@@ -521,14 +522,14 @@ const ConsultantChatScreen: React.FC = () => {
 
   if (!consultation) {
     return (
-      <LinearGradient colors={['#0E1B16', '#152821']} style={styles.container}>
-        <View style={styles.headerPlaceholder}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <LinearGradient colors={['#0E1B16', '#152821']} className="flex-1">
+        <View className="bg-[#27B07D] pt-[50px] pb-4 px-4 flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3 p-1">
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <View style={styles.headerLoadingContainer}>
+          <View className="flex-1 flex-row items-center justify-center">
             <ActivityIndicator size="small" color="#FFFFFF" />
-            <Text style={styles.headerLoadingText}>Loading chat…</Text>
+            <Text className="text-white text-sm font-medium ml-2">Loading chat…</Text>
           </View>
         </View>
       </LinearGradient>
@@ -539,12 +540,9 @@ const ConsultantChatScreen: React.FC = () => {
     consultation.chat_window_is_open ?? ['assigned', 'active'].includes(consultation.status);
 
   return (
-    <LinearGradient
-      colors={['#0E1B16', '#152821']}
-      style={[styles.container, { paddingBottom: insets.bottom }]}
-    >
+    <GradientBackground>
       <KeyboardAvoidingView
-        style={styles.container}
+        className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
@@ -557,10 +555,10 @@ const ConsultantChatScreen: React.FC = () => {
         />
 
         {loading && messages.length === 0 ? (
-          <View style={styles.loadingMessagesOverlay}>
-            <View style={styles.loadingMessagesBubble}>
+          <View className="absolute top-[110px] left-0 right-0 items-center z-10 pointer-events-none">
+            <View className="flex-row items-center bg-white/25 rounded-full px-3 py-1.5 gap-2">
               <ActivityIndicator size="small" color="#1C1C1C" />
-              <Text style={styles.loadingMessagesText}>Loading messages…</Text>
+              <Text className="text-[#1C1C1C] text-xs font-medium">Loading messages…</Text>
             </View>
           </View>
         ) : null}
@@ -570,7 +568,7 @@ const ConsultantChatScreen: React.FC = () => {
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.messagesContainer}
+          contentContainerStyle={{ paddingVertical: 16, paddingBottom: 20 }}
           ListHeaderComponent={renderHeader}
           ListEmptyComponent={renderEmpty}
           maintainVisibleContentPosition={{
@@ -588,8 +586,10 @@ const ConsultantChatScreen: React.FC = () => {
         />
 
         {!chatWindowOpen ? (
-          <View style={styles.closedBanner}>
-            <Text style={styles.closedText}>This chat is closed for new messages.</Text>
+          <View className="bg-[#1A1A1A] p-3 border-t border-[#152821]">
+            <Text className="text-[#A1A09A] text-xs text-center">
+              This chat is closed for new messages.
+            </Text>
           </View>
         ) : null}
 
@@ -601,14 +601,14 @@ const ConsultantChatScreen: React.FC = () => {
 
         {showScrollToBottom ? (
           <TouchableOpacity
-            style={styles.scrollToBottomButton}
+            className="absolute bottom-[100px] right-4"
             onPress={() => {
               flashListRef.current?.scrollToEnd({ animated: true });
               setShowScrollToBottom(false);
             }}
             activeOpacity={0.7}
           >
-            <View style={styles.scrollToBottomIconContainer}>
+            <View className="w-11 h-11 rounded-full bg-black/50 justify-center items-center">
               <Ionicons name="chevron-down" size={20} color="#FFFFFF" />
             </View>
           </TouchableOpacity>
@@ -620,75 +620,8 @@ const ConsultantChatScreen: React.FC = () => {
         imageUri={selectedImage}
         onClose={() => setSelectedImage(null)}
       />
-    </LinearGradient>
+    </GradientBackground>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  messagesContainer: { paddingVertical: 16, paddingBottom: 20 },
-  loadingHeader: { padding: 16, alignItems: 'center' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  emptyText: { color: '#A1A09A', fontSize: 16, textAlign: 'center' },
-  errorText: { color: '#FF4433', fontSize: 16, textAlign: 'center', marginBottom: 16 },
-  retryButton: {
-    backgroundColor: '#27B07D',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
-  closedBanner: {
-    backgroundColor: '#1A1A1A',
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#152821',
-  },
-  closedText: { color: '#A1A09A', fontSize: 12, textAlign: 'center' },
-  scrollToBottomButton: { position: 'absolute', bottom: 100, right: 16 },
-  scrollToBottomIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingMessagesOverlay: {
-    position: 'absolute',
-    top: 110,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 10,
-    pointerEvents: 'none',
-  },
-  loadingMessagesBubble: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    gap: 8,
-  },
-  loadingMessagesText: { color: '#1C1C1C', fontSize: 12, fontWeight: '500' },
-  headerPlaceholder: {
-    backgroundColor: '#27B07D',
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backButton: { marginRight: 12, padding: 4 },
-  headerLoadingContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerLoadingText: { color: '#FFFFFF', fontSize: 14, fontWeight: '500', marginLeft: 8 },
-});
 
 export default ConsultantChatScreen;

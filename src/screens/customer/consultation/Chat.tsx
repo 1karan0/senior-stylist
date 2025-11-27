@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Image, FlatList } from 'react-native';
-import { useGetConsultation } from '@/api/user/consultation/usegetconsultation';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import LinearGradient from 'react-native-linear-gradient';

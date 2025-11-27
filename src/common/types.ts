@@ -213,3 +213,12 @@ export interface Article {
   views_count: number;
   category: NewsCategory | null;
 }
+
+export interface ConversationPreview {
+  id: number;
+  title: string;
+  avatarUrl?: string | null;
+  lastMessage: string;
+  lastMessageAt?: string | null;
+  unreadCount: number;
+}
