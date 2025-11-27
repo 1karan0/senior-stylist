@@ -1,6 +1,9 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import DashboardScreen from '@/screens/consulant/dashboard/Dashboard';
 import RequestScreen from '@/screens/consulant/requests/Request';
 import ChatScreen from '@/screens/consulant/chat/Home';
@@ -9,10 +12,15 @@ import { ConsultantTabParamList } from '@/common/types';
 
 const Tab = createBottomTabNavigator<ConsultantTabParamList>();
 
-// Define the valid icon names type
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
-// Move the icon component outside of render to fix unstable nested components warning
+const iconMap: Record<string, { focused: IoniconsName; outline: IoniconsName }> = {
+  DashboardTab: { focused: 'grid', outline: 'grid-outline' },
+  RequestTab: { focused: 'download', outline: 'download-outline' },
+  ChatTab: { focused: 'chatbubble', outline: 'chatbubble-outline' },
+  ProfileTab: { focused: 'person-circle', outline: 'person-circle-outline' },
+};
+
 const TabBarIcon = ({
   routeName,
   focused,
@@ -22,62 +30,67 @@ const TabBarIcon = ({
   focused: boolean;
   color: string;
 }) => {
-  const iconMap: Record<string, { focused: IoniconsName; outline: IoniconsName }> = {
-    DashboardTab: { focused: 'speedometer', outline: 'speedometer-outline' },
-    RequestTab: { focused: 'document-text', outline: 'document-text-outline' },
-    ChatTab: { focused: 'chatbubbles', outline: 'chatbubbles-outline' },
-    ProfileTab: { focused: 'person', outline: 'person-outline' },
-  };
-
-  const config = iconMap[routeName] || { focused: 'help-circle', outline: 'help-circle-outline' };
-  const iconName = focused ? config.focused : config.outline;
-
-  return <Ionicons name={iconName} size={24} color={color} />;
+  const cfg = iconMap[routeName] ?? { focused: 'help-circle', outline: 'help-circle-outline' };
+  const name = focused ? cfg.focused : cfg.outline;
+  return <Ionicons name={name} size={18} color={color} />;
 };
 
-// Create a function that returns the tabBarIcon configuration
-const createTabBarIcon = (routeName: string) => {
-  return ({ focused, color }: { focused: boolean; color: string }) => (
+const createTabBarIcon =
+  (routeName: string) =>
+  ({ focused, color }: { focused: boolean; color: string }) => (
     <TabBarIcon routeName={routeName} focused={focused} color={color} />
   );
-};
 
 const ConsultantTabNavigator: React.FC = () => {
+  const insets = useSafeAreaInsets();
+
+  const baseBottom = Platform.OS === 'ios' ? 20 : 16;
+  const bottomOffset = baseBottom + Math.max(0, insets.bottom - 6);
+
   return (
     <Tab.Navigator
       screenOptions={{
         tabBarActiveTintColor: '#27B07D',
         tabBarInactiveTintColor: '#658176',
+
         tabBarStyle: {
           position: 'absolute',
-          bottom: 10,
-          left: 24,
-          right: 24,
-          height: 65,
-          borderRadius: 40,
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          bottom: bottomOffset,
+          marginHorizontal: 10,
+          height: 64,
+          borderRadius: 36,
+          backgroundColor: 'rgba(255,255,255,0.95)',
           borderTopWidth: 0,
           borderWidth: 1,
           borderColor: '#DAE7E0',
-          elevation: 5,
+          elevation: 8,
           shadowColor: '#000',
-          shadowOffset: {
-            width: 0,
-            height: 2,
-          },
-          shadowOpacity: 0.1,
-          shadowRadius: 3.84,
-          paddingHorizontal: 8,
-        },
-        tabBarItemStyle: {
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.12,
+          shadowRadius: 8,
+          paddingHorizontal: 12,
           paddingVertical: 8,
+          alignItems: 'center',
+          justifyContent: 'center',
         },
+
+        tabBarItemStyle: {
+          paddingTop: 6,
+          paddingBottom: 6,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+
+        // 🔥 Updated based on your request
         tabBarLabelStyle: {
-          fontSize: 14,
-          fontWeight: '500',
-          marginBottom: 5,
+          fontSize: 12,
+          fontFamily: 'Poppins-Medium',
+          marginTop: 2,
+          marginBottom: 2,
+          lineHeight: 18,
         },
-        headerShown: false, // This hides the header for all screens
+
+        headerShown: false,
       }}
     >
       <Tab.Screen
@@ -85,7 +98,13 @@ const ConsultantTabNavigator: React.FC = () => {
         component={DashboardScreen}
         options={{
           title: 'Dashboard',
-          tabBarIcon: createTabBarIcon('DashboardTab'),
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? 'grid' : 'grid-outline'}
+              size={20} // ← larger icon
+              color={color}
+            />
+          ),
         }}
       />
       <Tab.Screen
@@ -93,7 +112,9 @@ const ConsultantTabNavigator: React.FC = () => {
         component={RequestScreen}
         options={{
           title: 'Requests',
-          tabBarIcon: createTabBarIcon('RequestTab'),
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons name={focused ? 'download' : 'download-outline'} size={20} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -101,7 +122,13 @@ const ConsultantTabNavigator: React.FC = () => {
         component={ChatScreen}
         options={{
           title: 'Chat',
-          tabBarIcon: createTabBarIcon('ChatTab'),
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? 'chatbubble' : 'chatbubble-outline'}
+              size={20}
+              color={color}
+            />
+          ),
         }}
       />
       <Tab.Screen
@@ -109,7 +136,13 @@ const ConsultantTabNavigator: React.FC = () => {
         component={ConsultantProfileScreen}
         options={{
           title: 'Profile',
-          tabBarIcon: createTabBarIcon('ProfileTab'),
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? 'person-circle' : 'person-circle-outline'}
+              size={20}
+              color={color}
+            />
+          ),
         }}
       />
     </Tab.Navigator>

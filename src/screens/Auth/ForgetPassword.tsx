@@ -71,15 +71,13 @@ export default function ForgetPassword({ navigation }: any) {
             resizeMode="contain"
           />
 
-          <Text
-            className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-[#162721]'} mt-4`}
-          >
+          <Text className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}>
             Forgot Password?
           </Text>
 
           <Text
             className={`font-normal text-[14px] ${
-              isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+              isDark ? 'text-textSecondary' : 'text-textMuted'
             } mt-1`}
           >
             No worries, we'll send you reset instructions
@@ -156,7 +154,7 @@ export default function ForgetPassword({ navigation }: any) {
         </Pressable>
 
         <Pressable onPress={() => navigation.navigate('Login')} className="self-center">
-          <Text className="font-normal text-[13px] text-[#27B07D]">Back to Login</Text>
+          <Text className="font-normal text-[13px] text-textPrimary">Back to Login</Text>
         </Pressable>
       </View>
     </GradientBackground>

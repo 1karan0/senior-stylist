@@ -153,16 +153,16 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
         resizeMode="contain"
       />
 
-      <Text className={`text-[22px] font-bold ${isDark ? 'text-white' : 'text-[#162721]'} `}>
+      <Text className={`text-[22px] font-bold ${isDark ? 'text-white' : 'text-textDark'} `}>
         Enter OTP Verification Code
       </Text>
 
-      <Text className={`text-[13px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}  mt-2`}>
+      <Text className={`text-[13px] ${isDark ? 'text-textSecondary' : 'text-textMuted'}  mt-2`}>
         Verification code has been sent to
       </Text>
 
       <Text
-        className={`text-[14px] font-semibold ${isDark ? 'text-[#2CCB91]' : 'text-[#27B07D]'} mt-1`}
+        className={`text-[14px] font-semibold ${isDark ? 'text-[#2CCB91]' : 'text-textPrimary'} mt-1`}
       >
         {email}
       </Text>
@@ -187,7 +187,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
             }}
             maxLength={1}
             keyboardType="number-pad"
-            className={`w-12 h-12 border border-[#27B07D] ${
+            className={`w-12 h-12 border border-textPrimary ${
               isDark ? 'bg-[#0E1B16] text-white' : 'bg-white text-black'
             } rounded-md mx-1 text-center text-[20px]  `}
           />
@@ -196,7 +196,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
 
       {/* Resend */}
       <View className="flex-row mb-6">
-        <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-[#6B6B6B]'} text-[13px]`}>
+        <Text className={` ${isDark ? 'text-textSecondary' : 'text-[#6B6B6B]'} text-[13px]`}>
           Didn't receive the code?{' '}
         </Text>
 
@@ -231,7 +231,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
         ) : (
           <View
             className={`h-[50px] rounded-xl justify-center items-center  ${
-              isDark ? 'bg-[#8AA897]' : 'bg-[#DADADA]'
+              isDark ? 'bg-textSecondary' : 'bg-[#DADADA]'
             }`}
           >
             <Text className="text-white font-bold text-[16px]">Verify</Text>
@@ -246,7 +246,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
           isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
         } justify-center items-center`}
       >
-        <Text className={`text-[15px]  ${isDark ? 'text-white' : 'text-[#162721]'} font-bold`}>
+        <Text className={`text-[15px]  ${isDark ? 'text-white' : 'text-textDark'} font-bold`}>
           Go Back
         </Text>
       </Pressable>

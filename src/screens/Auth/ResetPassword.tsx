@@ -105,14 +105,14 @@ const ResetPassword = () => {
               />
 
               <Text
-                className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-[#162721]'} mt-4`}
+                className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}
               >
                 Welcome Back
               </Text>
 
               <Text
                 className={`font-normal text-[14px] ${
-                  isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+                  isDark ? 'text-textSecondary' : 'text-textMuted'
                 } mt-1`}
               >
                 Reset your StyleHub password
@@ -121,12 +121,14 @@ const ResetPassword = () => {
 
             {/* Title */}
             <Text
-              className={`text-[22px] font-bold ${isDark ? 'text-white' : 'text-[#162721]'} mb-2`}
+              className={`text-[22px] font-bold ${isDark ? 'text-white' : 'text-textDark'} mb-2`}
             >
               Reset Password
             </Text>
 
-            <Text className={`text-[14px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} mb-6`}>
+            <Text
+              className={`text-[14px] ${isDark ? 'text-textSecondary' : 'text-textMuted'} mb-6`}
+            >
               Set a new password for your account
             </Text>
 

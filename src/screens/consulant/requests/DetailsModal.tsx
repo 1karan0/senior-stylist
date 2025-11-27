@@ -50,11 +50,11 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ visible, onClose, request }
           </LinearGradient>
         </View>
 
-        <Text className="text-2xl font-urbanist font-bold text-[#162721]">
+        <Text className="text-2xl font-urbanist font-bold text-textDark">
           {request.customerName}
         </Text>
         {requestedAtText ? (
-          <Text className="text-sm font-poppins text-[#658176] mt-1">{requestedAtText}</Text>
+          <Text className="text-sm font-poppins text-textMuted mt-1">{requestedAtText}</Text>
         ) : null}
 
         {request.hasImage && (
@@ -64,15 +64,15 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ visible, onClose, request }
               className="w-4 h-4 mr-2"
               resizeMode="contain"
             />
-            <Text className="font-urbanist font-semibold text-[#162721] text-xs">
+            <Text className="font-urbanist font-semibold text-textDark text-xs">
               Photo attached
             </Text>
           </View>
         )}
 
         <View className="mt-6">
-          <Text className="text-lg font-poppins font-bold text-[#162721] mb-2">Requirements</Text>
-          <Text className="text-[#658176] font-poppins leading-6">
+          <Text className="text-lg font-poppins font-bold text-textDark mb-2">Requirements</Text>
+          <Text className="text-textMuted font-poppins leading-6">
             {request.problemDescription || 'No specific requirements provided.'}
           </Text>
         </View>

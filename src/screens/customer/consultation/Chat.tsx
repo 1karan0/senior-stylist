@@ -40,7 +40,7 @@ const Chat: React.FC<ChatProps> = ({ navigation, data, isLoading }) => {
 
     return (
       <TouchableOpacity
-        className={`${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
+        className={`${isDark ? 'bg-textDark border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
       >
         {/* Avatar */}
         <View className="mr-4">
@@ -55,24 +55,31 @@ const Chat: React.FC<ChatProps> = ({ navigation, data, isLoading }) => {
         {/* Text */}
         <View className="flex-1">
           <Text
-            className={`font-semibold text-base ${isDark ? 'text-white' : 'text-[#162721]'}  capitalize`}
+            className={`font-semibold text-base ${isDark ? 'text-white' : 'text-textDark'}  capitalize`}
           >
             {item?.consultant?.name || 'Unknown Consultant'}
           </Text>
 
-          <Text className={` ${isDark ? 'text-[#658176]' : 'text-[#8AA897]'}`} numberOfLines={1}>
+          <Text
+            className={` ${isDark ? 'text-textMuted' : 'text-textSecondary'}`}
+            numberOfLines={1}
+          >
             {lastMsg?.message ?? item.problem_description}
           </Text>
         </View>
 
         {/* Time + Unread */}
         <View className="items-end ml-2">
-          <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-[#9EA3AE]'} font-medium text-xs`}>
+          <Text
+            className={` ${isDark ? 'text-textSecondary' : 'text-[#9EA3AE]'} font-medium text-xs`}
+          >
             {dayjs(item.updated_at).fromNow()}
           </Text>
 
           {unread > 0 && (
-            <View className={`bg-[#27B07D] w-6 h-6 rounded-full justify-center items-center mt-2`}>
+            <View
+              className={`bg-textPrimary w-6 h-6 rounded-full justify-center items-center mt-2`}
+            >
               <Text className="text-white font-semibold text-sm">{unread}</Text>
             </View>
           )}

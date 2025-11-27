@@ -61,7 +61,9 @@ const NewsScreen = () => {
         <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
           News Feed
         </Text>
-        <Text className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} mt-1 text-sm w-[70%]`}>
+        <Text
+          className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} mt-1 text-sm w-[70%]`}
+        >
           Stay updated with the latest news and announcements
         </Text>
 

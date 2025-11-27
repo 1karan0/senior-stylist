@@ -159,7 +159,7 @@ export default function SignupScreen({ navigation, route }: any) {
 
                 <Text
                   className={`font-bold text-[24px] ${
-                    isDark ? 'text-white' : 'text-[#162721]'
+                    isDark ? 'text-white' : 'text-textDark'
                   } mt-4`}
                 >
                   Create Account
@@ -167,7 +167,7 @@ export default function SignupScreen({ navigation, route }: any) {
 
                 <Text
                   className={`font-normal text-[14px] ${
-                    isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+                    isDark ? 'text-textSecondary' : 'text-textMuted'
                   }  mt-1`}
                 >
                   Join us today
@@ -388,7 +388,7 @@ export default function SignupScreen({ navigation, route }: any) {
                   <Pressable
                     onPress={pickDocument}
                     className={`border border-dashed ${
-                      isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#27B07D]'
+                      isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-textPrimary'
                     } rounded-lg h-[120px] justify-center items-center`}
                   >
                     <Image
@@ -397,12 +397,12 @@ export default function SignupScreen({ navigation, route }: any) {
                     />
 
                     <Text
-                      className={` ${isDark ? 'text-white' : 'text-[#162721]'} font-medium text-center px-4`}
+                      className={` ${isDark ? 'text-white' : 'text-textDark'} font-medium text-center px-4`}
                     >
                       {cvFile ? cvFile.name : 'Upload your CV'}
                     </Text>
 
-                    <Text className="text-[#658176] text-[12px] mt-1">.pdf , .docx , .doc</Text>
+                    <Text className="text-textMuted text-[12px] mt-1">.pdf , .docx , .doc</Text>
                   </Pressable>
                 </View>
               )}
@@ -431,13 +431,13 @@ export default function SignupScreen({ navigation, route }: any) {
               <View className="text-center mb-5 flex flex-row justify-center">
                 <Text
                   className={`text-center ${
-                    isDark ? 'text-[#8AA897]' : 'text-[#64748B]'
+                    isDark ? 'text-textSecondary' : 'text-[#64748B]'
                   } font-normal text-[14px]`}
                 >
                   Already have an account?{' '}
                 </Text>
                 <Pressable onPress={() => navigation.navigate('Login')}>
-                  <Text className="text-[#27B07D] font-semibold">Sign In</Text>
+                  <Text className="text-textPrimary font-semibold">Sign In</Text>
                 </Pressable>
               </View>
             </View>

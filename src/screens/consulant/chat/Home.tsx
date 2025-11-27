@@ -24,7 +24,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { tokens } from '@/constants/design-tokens';
 import { getFirestoreInstance, initializeFirebase, waitForFirebaseUser } from '@/services/firebase';
 import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
 import { mapFirestoreConsultation } from '@/utils/firestoreConsultationMapper';
@@ -48,6 +47,24 @@ type FilterKey = 'all' | 'unread';
 
 const MAX_ITEMS = 40;
 
+/**
+ * Keep these values in sync with tailwind.config.js:
+ * - bgLight0/bgLight1
+ * - bgDark0/bgDark1
+ * - textDark, textMuted, textWhite
+ * - buttonPrimaryBg
+ */
+const LIGHT_BG = ['hsl(146 25% 97%)', 'hsl(158 64% 95%)'];
+const DARK_BG = ['hsl(158 32% 8%)', 'hsl(158 32% 12%)'];
+
+const TEXT_MUTED = '#658176';
+const TEXT_DARK = '#162721';
+const TEXT_WHITE = '#FFFFFF';
+const BUTTON_PRIMARY = '#27B07D';
+const SURFACE_DARK = 'rgba(14,27,22,0.85)';
+const BORDER_LIGHT = '#DAE7E0';
+const BORDER_DARK = '#273F36';
+
 const ChatHome: React.FC = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
@@ -64,11 +81,11 @@ const ChatHome: React.FC = () => {
 
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  const gradientColors = isDark ? ['#0E1B16', '#152821'] : tokens.colors.lightBg;
-  const surfaceColor = isDark ? 'rgba(14,27,22,0.85)' : '#FFFFFF';
-  const borderColor = isDark ? '#273F36' : '#DAE7E0';
-  const textPrimary = isDark ? tokens.colors.text.white : tokens.colors.text.dark;
-  const textMuted = tokens.colors.text.muted;
+  const gradientColors = isDark ? DARK_BG : LIGHT_BG;
+  const surfaceColor = isDark ? SURFACE_DARK : TEXT_WHITE;
+  const borderColor = isDark ? BORDER_DARK : BORDER_LIGHT;
+  const textPrimary = isDark ? TEXT_WHITE : TEXT_DARK;
+  const textMuted = TEXT_MUTED;
 
   const getTimestampValue = useCallback((value?: string | null) => {
     if (!value) return 0;
@@ -317,7 +334,9 @@ const ChatHome: React.FC = () => {
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={() => handleConversationPress(item)}
-      className="flex-row items-center mb-4 px-4 py-3 rounded-2xl"
+      className={`flex-row items-center mb-4 px-4 py-3 rounded-2xl ${
+        isDark ? 'bg-bgDark0 border border-bgDark1' : 'bg-white border border-bgLight1'
+      }`}
       style={{
         backgroundColor: surfaceColor,
         borderWidth: 1,
@@ -329,9 +348,9 @@ const ChatHome: React.FC = () => {
       ) : (
         <View
           className="w-14 h-14 rounded-full mr-4 items-center justify-center"
-          style={{ backgroundColor: '#27B07D' }}
+          style={{ backgroundColor: BUTTON_PRIMARY }}
         >
-          <Text className="text-white font-urbanist text-lg font-semibold">
+          <Text className="text-white font-urbanist-semibold text-lg">
             {getInitials(item.customerName)}
           </Text>
         </View>
@@ -340,24 +359,26 @@ const ChatHome: React.FC = () => {
       <View className="flex-1">
         <View className="flex-row items-center justify-between mb-1">
           <Text
-            className="font-urbanist font-semibold text-base"
+            className={`font-urbanist-semibold text-base ${isDark ? 'text-textWhite' : 'text-textDark'}`}
             numberOfLines={1}
-            style={{ color: textPrimary }}
           >
             {item.customerName}
           </Text>
-          <Text className="text-xs font-urbanist" style={{ color: textMuted }}>
+          <Text className={`text-xs font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}>
             {formatRelativeTime(item.lastMessageAt)}
           </Text>
         </View>
-        <Text className="text-sm font-poppins" numberOfLines={1} style={{ color: textMuted }}>
+        <Text
+          className={`text-sm font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}
+          numberOfLines={1}
+        >
           {item.lastMessage}
         </Text>
       </View>
 
       {item.unreadCount > 0 && (
-        <View className="ml-3 bg-[#27B07D] rounded-full px-2 py-1 min-w-[28px] items-center">
-          <Text className="text-white text-xs font-semibold">
+        <View className="ml-3 bg-buttonPrimaryBg rounded-full px-2 py-1 min-w-[28px] items-center">
+          <Text className="text-white text-xs font-urbanist-semibold">
             {item.unreadCount > 99 ? '99+' : item.unreadCount}
           </Text>
         </View>
@@ -372,10 +393,14 @@ const ChatHome: React.FC = () => {
 
     return (
       <View className="items-center justify-center py-20 px-8">
-        <Text className="text-xl font-urbanist font-semibold mb-2" style={{ color: textPrimary }}>
+        <Text
+          className={`text-xl font-urbanist-semibold mb-2 ${isDark ? 'text-textWhite' : 'text-textDark'}`}
+        >
           No conversations yet
         </Text>
-        <Text className="text-center text-sm font-poppins" style={{ color: textMuted }}>
+        <Text
+          className={`text-center text-sm font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}
+        >
           New chats with your customers will show up here as soon as they start a session with you.
         </Text>
       </View>
@@ -384,8 +409,8 @@ const ChatHome: React.FC = () => {
 
   const connectionIndicator = isRealtimeConnected ? (
     <View className="flex-row items-center mt-3">
-      <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: '#27B07D' }} />
-      <Text className="text-xs font-poppins" style={{ color: textMuted }}>
+      <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: BUTTON_PRIMARY }} />
+      <Text className={`text-xs font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}>
         Live updates enabled
       </Text>
     </View>
@@ -395,10 +420,12 @@ const ChatHome: React.FC = () => {
     <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
       <View className="flex-1 pt-12 pb-4">
         <View className="px-6 mb-4">
-          <Text className="text-3xl font-urbanist font-bold mb-1" style={{ color: textPrimary }}>
+          <Text
+            className={`text-3xl font-urbanist-bold mb-1 ${isDark ? 'text-textWhite' : 'text-textDark'}`}
+          >
             Chats
           </Text>
-          <Text className="text-sm font-poppins" style={{ color: textMuted }}>
+          <Text className={`text-sm font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}>
             Continue conversations and stay on top of every consultation.
           </Text>
           {connectionIndicator}
@@ -424,7 +451,7 @@ const ChatHome: React.FC = () => {
           <View className="flex-row gap-3 mt-4">
             {(['all', 'unread'] as FilterKey[]).map((filter) => {
               const isActive = activeFilter === filter;
-              const backgroundColor = isActive ? '#27B07D' : 'transparent';
+              const backgroundColor = isActive ? BUTTON_PRIMARY : 'transparent';
               const color = isActive ? '#0E1B16' : textMuted;
               return (
                 <TouchableOpacity
@@ -436,7 +463,7 @@ const ChatHome: React.FC = () => {
                     backgroundColor,
                   }}
                 >
-                  <Text className="text-sm font-semibold" style={{ color }}>
+                  <Text className="text-sm font-urbanist-semibold" style={{ color }}>
                     {filter === 'all' ? 'All' : 'Unread'}
                   </Text>
                 </TouchableOpacity>
@@ -447,7 +474,7 @@ const ChatHome: React.FC = () => {
 
         {loading && consultations.length === 0 ? (
           <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#27B07D" />
+            <ActivityIndicator size="large" color={BUTTON_PRIMARY} />
             <Text className="mt-3 font-poppins text-sm" style={{ color: textMuted }}>
               Loading your conversations...
             </Text>
@@ -460,7 +487,11 @@ const ChatHome: React.FC = () => {
             contentContainerStyle={{ paddingBottom: 32, paddingHorizontal: 12 }}
             ListEmptyComponent={renderEmpty}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#27B07D" />
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={BUTTON_PRIMARY}
+              />
             }
           />
         )}

@@ -40,14 +40,14 @@ const Itemcard: React.FC<ItemProps> = ({ item, onPress }) => {
           {item.title}
         </Text>
 
-        <Text className={`text-sm mt-1 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}>
+        <Text className={`text-sm mt-1 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
           {item.description}
         </Text>
 
         <View className="mt-3 mb-3 flex-row items-center justify-between">
-          <Text className="text-[#27B07D] font-semibold text-xl">₹{item.display_price}</Text>
+          <Text className="text-textPrimary font-semibold text-xl">₹{item.display_price}</Text>
 
-          <Text className={`text-sm ${isDark ? 'text-[#8AA897]' : 'text-gray-500'}`}>
+          <Text className={`text-sm ${isDark ? 'text-textSecondary' : 'text-gray-500'}`}>
             by {item.provider}
           </Text>
         </View>
