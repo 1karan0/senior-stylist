@@ -73,13 +73,15 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             </View>
           </View>
 
-          <TouchableOpacity
-            onPress={onFinish}
-            className="flex-row absolute right-1 items-center bg-white px-3 py-1.5 rounded-xl gap-1.5"
-          >
-            <Image source={require('@/assets/icons/finish.png')} />
-            <Text className=" text-sm font-semibold">Finish</Text>
-          </TouchableOpacity>
+          {consultation.status !== 'completed' && (
+            <TouchableOpacity
+              onPress={onFinish}
+              className="flex-row absolute right-1 items-center bg-white px-3 py-1.5 rounded-xl gap-1.5"
+            >
+              <Image source={require('@/assets/icons/finish.png')} />
+              <Text className=" text-sm font-semibold">Finish</Text>
+            </TouchableOpacity>
+          )}
 
           {consultation.status === 'completed' && (
             <View className="flex-row absolute right-1 items-center bg-white/20 px-3 py-1.5 rounded-lg gap-1.5">
@@ -97,15 +99,19 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           >
             {isConnecting ? (
               <>
-                <Ionicons name="warning" size={14} color="#3A2F00" className="mr-1.5" />
-                <Text className="text-[#3A2F00] text-xs font-semibold">
-                  Offline. Waiting for connection…
-                </Text>
+                <View>
+                  <Ionicons name="warning" size={14} color="#ffffff" />
+                  <Text className="text-white text-xs ml-1 font-semibold">
+                    Offline. Waiting for connection…
+                  </Text>
+                </View>
               </>
             ) : (
               <>
-                <ActivityIndicator size="small" color="#1C1C1C" style={{ marginRight: 6 }} />
-                <Text className="text-[#1C1C1C] text-xs font-medium">Loading messages…</Text>
+                <View>
+                  <ActivityIndicator size={14} color="#ffffff" style={{ marginRight: 6 }} />
+                  <Text className="text-[#ffffff] text-xs font-medium">Loading messages…</Text>
+                </View>
               </>
             )}
           </View>

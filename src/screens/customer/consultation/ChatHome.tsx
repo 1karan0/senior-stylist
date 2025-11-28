@@ -321,7 +321,7 @@ const CustomerChatHome: React.FC = () => {
       <GradientBackground className="flex-1">
         <View className="flex-1 pb-20">
           {/* HEADER */}
-          <View className="px-5 mt-10">
+          <View className="px-5 pt-6">
             <View className="flex-row justify-between items-center ">
               <Text
                 className={` ${isDark ? 'text-white' : 'text-[#162721]'} text-2xl font-urbanist font-bold`}
@@ -359,9 +359,7 @@ const CustomerChatHome: React.FC = () => {
                 className={`ml-2 flex-1 ${isDark ? 'text-white' : 'text-black'}`}
               />
             </View>
-            <Text
-              className={`mb-3 mt-2 text-[11px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-            >
+            <Text className={` mt-2 text-[11px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}>
               {isRealtimeConnected
                 ? 'Connected to live updates'
                 : 'Showing last synced conversations'}
@@ -389,8 +387,12 @@ const CustomerChatHome: React.FC = () => {
                 }}
                 ListEmptyComponent={() => (
                   <View className="flex-1 items-center justify-center mt-14 px-10">
-                    <Text className="text-white text-base mb-1">No consultations yet</Text>
-                    <Text className="text-white/60 text-xs text-center">
+                    <Text className={` ${isDark ? 'text-white' : 'text-[#658176]'} text-base mb-1`}>
+                      No consultations yet
+                    </Text>
+                    <Text
+                      className={`${isDark ? 'text-white' : 'text-[#658176]'} text-xs text-center`}
+                    >
                       Start a new consultation to begin chatting with a stylist.
                     </Text>
                   </View>

@@ -84,7 +84,7 @@ const NewConsultant = ({ navigation }: any) => {
 
   return (
     <View className="flex-1 bg-white">
-      <GradientBackground className="flex-1 px-5 pt-14">
+      <GradientBackground className="flex-1 px-5 pt-6">
         <Toast
           visible={toast.visible}
           message={toast.message}

@@ -33,6 +33,8 @@ import {
   saveConsultations,
 } from '@/services/chatDatabase';
 import type { AppStackParamList } from '@/common/types';
+import GradientBackground from '@/common/components/GradientBackground';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ConversationPreview = {
   id: number;
@@ -46,24 +48,6 @@ type ConversationPreview = {
 type FilterKey = 'all' | 'unread';
 
 const MAX_ITEMS = 40;
-
-/**
- * Keep these values in sync with tailwind.config.js:
- * - bgLight0/bgLight1
- * - bgDark0/bgDark1
- * - textDark, textMuted, textWhite
- * - buttonPrimaryBg
- */
-const LIGHT_BG = ['hsl(146 25% 97%)', 'hsl(158 64% 95%)'];
-const DARK_BG = ['hsl(158 32% 8%)', 'hsl(158 32% 12%)'];
-
-const TEXT_MUTED = '#658176';
-const TEXT_DARK = '#162721';
-const TEXT_WHITE = '#FFFFFF';
-const BUTTON_PRIMARY = '#27B07D';
-const SURFACE_DARK = 'rgba(14,27,22,0.85)';
-const BORDER_LIGHT = '#DAE7E0';
-const BORDER_DARK = '#273F36';
 
 const ChatHome: React.FC = () => {
   const { user } = useAuth();
@@ -80,13 +64,6 @@ const ChatHome: React.FC = () => {
   const [isRealtimeConnected, setRealtimeConnected] = useState(false);
 
   const unsubscribeRef = useRef<(() => void) | null>(null);
-
-  const gradientColors = isDark ? DARK_BG : LIGHT_BG;
-  const surfaceColor = isDark ? SURFACE_DARK : TEXT_WHITE;
-  const borderColor = isDark ? BORDER_DARK : BORDER_LIGHT;
-  const textPrimary = isDark ? TEXT_WHITE : TEXT_DARK;
-  const textMuted = TEXT_MUTED;
-
   const getTimestampValue = useCallback((value?: string | null) => {
     if (!value) return 0;
     const time = new Date(value).getTime();
@@ -334,55 +311,42 @@ const ChatHome: React.FC = () => {
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={() => handleConversationPress(item)}
-      className={`flex-row items-center mb-4 px-4 py-3 rounded-2xl ${
-        isDark ? 'bg-bgDark0 border border-bgDark1' : 'bg-white border border-bgLight1'
-      }`}
-      style={{
-        backgroundColor: surfaceColor,
-        borderWidth: 1,
-        borderColor,
-      }}
+      className={`${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
     >
       {item.avatarUrl ? (
-        <Image source={{ uri: item.avatarUrl }} className="w-14 h-14 rounded-full mr-4" />
+        <Image source={{ uri: item.avatarUrl }} className="w-12 h-12 rounded-full mr-4" />
       ) : (
-        <View
-          className="w-14 h-14 rounded-full mr-4 items-center justify-center"
-          style={{ backgroundColor: BUTTON_PRIMARY }}
-        >
-          <Text className="text-white font-urbanist-semibold text-lg">
-            {getInitials(item.customerName)}
-          </Text>
+        <View className="w-12 h-12 rounded-full bg-[#27B07D] items-center justify-center mr-4">
+          <Text className="text-white text-lg font-semibold">{getInitials(item.customerName)}</Text>
         </View>
       )}
 
       <View className="flex-1">
-        <View className="flex-row items-center justify-between mb-1">
+        <View className="flex-row justify-between items-center mb-1">
           <Text
-            className={`font-urbanist-semibold text-base ${isDark ? 'text-textWhite' : 'text-textDark'}`}
+            className={`font-semibold text-base ${isDark ? 'text-white' : 'text-[#162721]'}  capitalize`}
             numberOfLines={1}
           >
             {item.customerName}
           </Text>
-          <Text className={`text-xs font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}>
-            {formatRelativeTime(item.lastMessageAt)}
-          </Text>
         </View>
-        <Text
-          className={`text-sm font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}
-          numberOfLines={1}
-        >
+        <Text className={` ${isDark ? 'text-[#658176]' : 'text-[#8AA897]'}`} numberOfLines={1}>
           {item.lastMessage}
         </Text>
       </View>
 
-      {item.unreadCount > 0 && (
-        <View className="ml-3 bg-buttonPrimaryBg rounded-full px-2 py-1 min-w-[28px] items-center">
-          <Text className="text-white text-xs font-urbanist-semibold">
-            {item.unreadCount > 99 ? '99+' : item.unreadCount}
-          </Text>
-        </View>
-      )}
+      <View className="items-end ml-2">
+        <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-[#9EA3AE]'} font-medium text-xs`}>
+          {formatRelativeTime(item.lastMessageAt)}
+        </Text>
+        {item.unreadCount > 0 && (
+          <View className={`bg-[#27B07D] w-6 h-6 rounded-full justify-center items-center mt-2`}>
+            <Text className="text-white text-xs font-semibold">
+              {item.unreadCount > 99 ? '99+' : item.unreadCount}
+            </Text>
+          </View>
+        )}
+      </View>
     </TouchableOpacity>
   );
 
@@ -409,7 +373,7 @@ const ChatHome: React.FC = () => {
 
   const connectionIndicator = isRealtimeConnected ? (
     <View className="flex-row items-center mt-3">
-      <View className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: BUTTON_PRIMARY }} />
+      <View className="w-2 h-2 rounded-full mr-2" />
       <Text className={`text-xs font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}>
         Live updates enabled
       </Text>
@@ -417,86 +381,74 @@ const ChatHome: React.FC = () => {
   ) : null;
 
   return (
-    <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
-      <View className="flex-1 pt-12 pb-4">
-        <View className="px-6 mb-4">
-          <Text
-            className={`text-3xl font-urbanist-bold mb-1 ${isDark ? 'text-textWhite' : 'text-textDark'}`}
-          >
-            Chats
-          </Text>
-          <Text className={`text-sm font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}>
-            Continue conversations and stay on top of every consultation.
-          </Text>
-          {connectionIndicator}
-
-          <View
-            className="flex-row items-center mt-4 rounded-2xl px-4"
-            style={{
-              backgroundColor: isDark ? '#0F241C' : '#F5F9F7',
-              borderWidth: 1,
-              borderColor,
-            }}
-          >
-            <TextInput
-              placeholder="Search clients or topics..."
-              placeholderTextColor={textMuted}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              className="flex-1 py-3 font-poppins text-sm"
-              style={{ color: textPrimary }}
-            />
-          </View>
-
-          <View className="flex-row gap-3 mt-4">
-            {(['all', 'unread'] as FilterKey[]).map((filter) => {
-              const isActive = activeFilter === filter;
-              const backgroundColor = isActive ? BUTTON_PRIMARY : 'transparent';
-              const color = isActive ? '#0E1B16' : textMuted;
-              return (
-                <TouchableOpacity
-                  key={filter}
-                  onPress={() => setActiveFilter(filter)}
-                  className="px-4 py-2 rounded-full border"
-                  style={{
-                    borderColor,
-                    backgroundColor,
-                  }}
-                >
-                  <Text className="text-sm font-urbanist-semibold" style={{ color }}>
-                    {filter === 'all' ? 'All' : 'Unread'}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        {loading && consultations.length === 0 ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color={BUTTON_PRIMARY} />
-            <Text className="mt-3 font-poppins text-sm" style={{ color: textMuted }}>
-              Loading your conversations...
+    <SafeAreaView style={{ flex: 1 }}>
+      <GradientBackground className="flex-1">
+        <View className="flex-1 pt-6 pb-20">
+          <View className="px-6 mb-4">
+            <Text
+              className={`text-2xl font-urbanist-bold mb-1 ${isDark ? 'text-textWhite' : 'text-textDark'}`}
+            >
+              Client Consultations
             </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={filteredConversations}
-            keyExtractor={(item) => String(item.id)}
-            renderItem={renderConversation}
-            contentContainerStyle={{ paddingBottom: 32, paddingHorizontal: 12 }}
-            ListEmptyComponent={renderEmpty}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor={BUTTON_PRIMARY}
+            {connectionIndicator}
+
+            <View
+              className={`flex-row items-center border mt-3 px-3 py-2 rounded-xl ${
+                isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'
+              }`}
+            >
+              <Image
+                source={require('../../../assets/icons/search-icon.png')}
+                className="w-5 h-5 mr-3"
               />
-            }
-          />
-        )}
-      </View>
-    </LinearGradient>
+
+              <TextInput
+                placeholder="Search clients or topics..."
+                value={searchQuery}
+                placeholderTextColor="#6D837A"
+                onChangeText={setSearchQuery}
+                className={`ml-2 flex-1 ${isDark ? 'text-white' : 'text-black'}`}
+              />
+            </View>
+
+            <View className="flex-row gap-3 mt-4">
+              {(['all', 'unread'] as FilterKey[]).map((filter) => {
+                const isActive = activeFilter === filter;
+                return (
+                  <TouchableOpacity
+                    key={filter}
+                    onPress={() => setActiveFilter(filter)}
+                    className={`px-4 py-2  rounded-full border ${isDark ? 'border-[#273F36]' : 'border-[#DADADA]'} ${isActive && 'bg-[#27B07D]'}`}
+                  >
+                    <Text
+                      className={`text-sm font-urbanist-semibold ${isActive && 'text-white'} ${isDark ? 'text-white' : ''}`}
+                    >
+                      {filter === 'all' ? 'All' : 'Unread'}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {loading && consultations.length === 0 ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" />
+              <Text className="mt-3 font-poppins text-sm">Loading your conversations...</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredConversations}
+              keyExtractor={(item) => String(item.id)}
+              renderItem={renderConversation}
+              contentContainerStyle={{ paddingBottom: 32, paddingHorizontal: 12 }}
+              ListEmptyComponent={renderEmpty}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            />
+          )}
+        </View>
+      </GradientBackground>
+    </SafeAreaView>
   );
 };
 

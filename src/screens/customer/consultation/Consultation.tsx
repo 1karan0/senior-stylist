@@ -5,6 +5,8 @@ import { useGetConsultation } from '@/api/user/consultation/usegetconsultation';
 import NoConsultant from './NoConsultant';
 import Chat from './Chat';
 import { useTheme } from '@/contexts/ThemeContext';
+import ChatHome from '@/screens/consulant/chat/Home';
+import CustomerChatHome from './ChatHome';
 
 const Consultation = ({ navigation }: any) => {
   const { data, isLoading } = useGetConsultation();
@@ -18,7 +20,7 @@ const Consultation = ({ navigation }: any) => {
           <ActivityIndicator size="large" />
         </View>
       ) : data?.length > 0 ? (
-        <Chat data={data} isLoading={isLoading} navigation={navigation} />
+        <CustomerChatHome />
       ) : (
         <NoConsultant />
       )}

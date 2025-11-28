@@ -69,7 +69,7 @@ const Details: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <GradientBackground style={{ flex: 1 }}>
-        <View className="flex-1 px-5 mt-10">
+        <View className="flex-1 px-5 pt-6">
           {/* Top Bar */}
           <View className="flex-row justify-between items-center ">
             <TouchableOpacity onPress={() => navigation.goBack()} className="">

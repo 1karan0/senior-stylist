@@ -60,7 +60,7 @@ export default function PricingScreen() {
     >
       <View className="">
         {/* HEADER */}
-        <View className="mt-14 items-center">
+        <View className="pt-6 items-center">
           <Text className="text-[24px] font-bold text-textDark">Choose Your Plan</Text>
           <Text className="text-center text-textMuted mt-2">
             Select a subscription to get started with expert{'\n'}consultations

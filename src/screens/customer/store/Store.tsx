@@ -58,7 +58,7 @@ const StoreScreen = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1 px-5 pt-10 pb-20">
+      <View className="flex-1 px-5 pt-6 pb-20">
         <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
           Partner Store
         </Text>

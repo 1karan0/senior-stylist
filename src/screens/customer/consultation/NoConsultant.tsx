@@ -17,7 +17,7 @@ const NoConsultant = () => {
   return (
     <View className={`flex-1  bg-white`}>
       {/* Soft gradient background */}
-      <GradientBackground className="flex-1 px-5 pt-16">
+      <GradientBackground className="flex-1 px-5 pt-6">
         {/* Header */}
         <Text className={`text-[26px] font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
           Chats

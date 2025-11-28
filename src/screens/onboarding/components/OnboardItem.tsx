@@ -35,7 +35,9 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
       </Text>
 
       {/* Description */}
-      <Text className={`text-center text-base px-6 ${isDark ? 'text-secondary' : 'text-gray-600'}`}>
+      <Text
+        className={`text-center text-base px-6 ${isDark ? 'text-textSecondary' : 'text-gray-600'}`}
+      >
         {item.description}
       </Text>
     </View>

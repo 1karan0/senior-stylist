@@ -19,7 +19,7 @@ const ConsultationStack: React.FC = () => (
   >
     <Stack.Screen
       name="ConsultationHome"
-      component={CustomerChatHome}
+      component={Consultation}
       options={{ title: 'Consultation' }}
     />
     <Stack.Screen
