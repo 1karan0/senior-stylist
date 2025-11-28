@@ -2,10 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Text, View } from 'react-native';
 import type { Unsubscribe } from 'firebase/firestore';
 
-import RequestList, { RequestItem } from './List';
 import RequestDetailsModal from './DetailsModal';
-import { useAuth } from '@/contexts/AuthContext';
+import RequestList, { RequestItem } from './List';
 import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
+import GradientBackground from '@/common/components/GradientBackground';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { initializeFirebase, listenToStylistRequests, StylistRequest } from '@/services/firebase';
 
 const mapConsultationToRequestItem = (consultation: ConsultantConsultation): RequestItem => {
@@ -47,6 +49,7 @@ const sortRequests = (requests: RequestItem[]) =>
 const Request: React.FC = () => {
   const { user } = useAuth();
   const isConsultant = user?.role === 'consultant';
+  const { isDark } = useTheme();
 
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -207,61 +210,80 @@ const Request: React.FC = () => {
   }
 
   return (
-    <View className="flex-1 bg-white p-3">
-      <View className="flex-col items-start p-4">
-        <Text className="text-2xl font-urbanist font-bold text-textDark">
-          Consultation Requests
-        </Text>
-        <Text className="font-poppins text-sm text-textMuted">
-          Accept requests to start earning
-        </Text>
-        {connected && (
-          <View className="flex-row items-center mt-2">
-            <View className="w-2 h-2 rounded-full bg-textPrimary mr-2" />
-            <Text className="font-poppins text-xs text-textMuted">Real-time updates enabled</Text>
-          </View>
-        )}
-      </View>
-
-      <View>
-        <View className="flex-row justify-between items-center">
-          <View className="flex-1 items-center bg-white rounded-xl border border-[#DAE7E0] p-4 mx-2">
-            <Text className="text-3xl font-urbanist font-bold text-textDark">
-              {requests.length}
-            </Text>
-            <Text className="font-poppins text-textMuted text-sm mt-1">Pending</Text>
-          </View>
-          <View className="flex-1 items-center bg-white rounded-xl border border-[#DAE7E0] p-4 mx-2">
-            <Text className="text-3xl font-urbanist font-bold text-textDark">0</Text>
-            <Text className="font-poppins text-textMuted text-sm mt-1">This Month</Text>
-          </View>
-        </View>
-      </View>
-
-      {loading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#27B07D" />
-          <Text className="font-poppins text-sm text-textMuted mt-3">
-            Loading consultation requests...
+    <GradientBackground>
+      <View className="flex-1 px-5 py-6">
+        <View className="flex-col items-start">
+          <Text
+            className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+          >
+            Consultation Requests
           </Text>
+          {connected && (
+            <View className="flex-row items-center mt-2">
+              <View className="w-2 h-2 rounded-full bg-textPrimary mr-2" />
+              <Text
+                className={`font-poppins text-xs  ${isDark ? 'text-[#8AA897]' : 'text-textMuted'}`}
+              >
+                Real-time updates enabled
+              </Text>
+            </View>
+          )}
         </View>
-      ) : (
-        <RequestList
-          requests={requests}
-          onAcceptRequest={handleAcceptRequest}
-          onViewDetails={handleViewDetails}
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          acceptingId={acceptingId}
-        />
-      )}
 
-      <RequestDetailsModal
-        visible={Boolean(requirementsModal)}
-        onClose={handleCloseModal}
-        request={requirementsModal}
-      />
-    </View>
+        <View>
+          <View className="flex-row justify-between items-center mt-4">
+            <View
+              className={`flex-1 items-center rounded-xl border  p-4 mr-2 ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+            >
+              <Text
+                className={`text-3xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+              >
+                {requests.length}
+              </Text>
+              <Text
+                className={`font-poppins  text-sm mt-1 ${isDark ? 'text-[#8AA897]' : 'text-textMuted'}`}
+              >
+                Pending
+              </Text>
+            </View>
+            <View
+              className={`flex-1 items-center rounded-xl border  p-4 ml-2 ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+            >
+              <Text
+                className={`text-3xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+              >
+                0
+              </Text>
+              <Text className="font-poppins text-textMuted text-sm mt-1">This Month</Text>
+            </View>
+          </View>
+        </View>
+
+        {loading ? (
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator size="large" color="#27B07D" />
+            <Text className="font-poppins text-sm text-textMuted mt-3">
+              Loading consultation requests...
+            </Text>
+          </View>
+        ) : (
+          <RequestList
+            requests={requests}
+            onAcceptRequest={handleAcceptRequest}
+            onViewDetails={handleViewDetails}
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            acceptingId={acceptingId}
+          />
+        )}
+
+        <RequestDetailsModal
+          visible={Boolean(requirementsModal)}
+          onClose={handleCloseModal}
+          request={requirementsModal}
+        />
+      </View>
+    </GradientBackground>
   );
 };
 

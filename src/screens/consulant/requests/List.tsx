@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, RefreshControl } from 'react-native';
-import { AppButton } from '@/common/components/Button';
 import LinearGradient from 'react-native-linear-gradient';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { AppButton } from '@/common/components/Button';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export interface RequestItem {
   id: number;
@@ -45,6 +47,7 @@ const List: React.FC<ListProps> = ({
   onRefresh,
   acceptingId,
 }) => {
+  const { isDark } = useTheme();
   return (
     <ScrollView
       className="flex-1 pt-4 px-2"
@@ -54,11 +57,15 @@ const List: React.FC<ListProps> = ({
       }
     >
       {requests.length === 0 ? (
-        <View className="flex-1 items-center justify-center py-10">
-          <Text className="font-urbanist text-lg font-semibold text-textDark mb-2">
+        <View className="flex-1 items-center justify-start pt-20">
+          <Text
+            className={`font-urbanist text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-textDark'}`}
+          >
             No pending requests
           </Text>
-          <Text className="font-poppins text-sm text-textMuted text-center px-10">
+          <Text
+            className={`font-poppins text-sm text-center px-10 ${isDark ? 'text-[#8AA897]' : 'text-textMuted'}`}
+          >
             Pull down to refresh. New consultation requests will appear here as soon as they arrive.
           </Text>
         </View>
@@ -70,7 +77,10 @@ const List: React.FC<ListProps> = ({
             acceptingId && acceptingId === request.id ? 'Accepting…' : 'Accept Request';
 
           return (
-            <View key={request.id} className="bg-white rounded-xl border border-[#DAE7E0] p-4 mb-4">
+            <View
+              key={request.id}
+              className={`rounded-xl border p-4 mb-4 ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+            >
               <View className="flex-row items-start mb-4">
                 <View className="w-14 h-14 rounded-full items-center justify-center mr-3 overflow-hidden">
                   <LinearGradient
@@ -95,25 +105,41 @@ const List: React.FC<ListProps> = ({
                       </Text>
                     </View>
                   )}
-                  <Text className="text-textDark text-xl font-urbanist font-semibold">
+                  <Text
+                    className={`text-xl font-urbanist font-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
+                  >
                     {request.customerName}
                   </Text>
-                  <Text className="text-textMuted font-poppins text-sm">{timeAgo}</Text>
+                  <Text
+                    className={`font-poppins text-sm ${isDark ? 'text-[#8AA897]' : 'text-textMuted'}`}
+                  >
+                    {timeAgo}
+                  </Text>
 
                   <TouchableOpacity
-                    className="flex flex-row items-center px-2 py-1 border border-[#DAE7E0] rounded-lg self-start mt-2"
+                    className={`flex flex-row items-center px-2 py-1 border rounded-lg self-start mt-2 ${
+                      isDark ? 'border-[#273F36]' : 'border-[#DAE7E0]'
+                    }`}
                     onPress={() => onViewDetails(request)}
                   >
-                    <Image
-                      source={require('@/assets/icons/dark-note.png')}
-                      className="w-3 h-3 mr-1"
-                      resizeMode="contain"
+                    <Ionicons
+                      name="document-text-outline"
+                      size={14}
+                      color={isDark ? 'white' : 'black'}
+                      style={{ marginRight: 4 }}
                     />
-                    <Text className="font-poppins text-black text-sm">Requirements</Text>
-                    <Image
-                      source={require('@/assets/icons/right-arrow.png')}
-                      className="w-3 h-3 ml-1"
-                      resizeMode="contain"
+
+                    <Text
+                      className={`font-poppins text-sm ${isDark ? 'text-white' : 'text-black'}`}
+                    >
+                      Requirements
+                    </Text>
+
+                    <Ionicons
+                      name="chevron-forward-outline"
+                      size={14}
+                      color={isDark ? 'white' : 'black'}
+                      style={{ marginLeft: 4 }}
                     />
                   </TouchableOpacity>
                 </View>
