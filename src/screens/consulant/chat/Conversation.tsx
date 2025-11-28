@@ -48,6 +48,7 @@ import {
 import type { ChatMessage } from '@/types/chat';
 import type { AppStackParamList } from '@/common/types';
 import GradientBackground from '@/common/components/GradientBackground';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type RouteProps = RouteProp<AppStackParamList, 'ConsultantChat'>;
 
@@ -60,6 +61,7 @@ const ConsultantChatScreen: React.FC = () => {
   const route = useRoute<RouteProps>();
   const { consultationId, asCustomer } = route.params;
   const { user } = useAuth();
+  const { isDark } = useTheme();
 
   const currentUserId = user ? String(user.id) : null;
   const currentUserName = user?.name ?? 'You';
@@ -586,7 +588,9 @@ const ConsultantChatScreen: React.FC = () => {
         />
 
         {!chatWindowOpen ? (
-          <View className="bg-[#1A1A1A] p-3 border-t border-[#152821]">
+          <View
+            className={` ${isDark ? 'bg-[#1A1A1A] border-[#152821]' : 'border-[#DADADA]'} p-2 border-t `}
+          >
             <Text className="text-[#A1A09A] text-xs text-center">
               This chat is closed for new messages.
             </Text>

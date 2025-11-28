@@ -9,6 +9,7 @@ import RequestScreen from '@/screens/consulant/requests/Request';
 import ChatScreen from '@/screens/consulant/chat/Home';
 import ConsultantProfileScreen from '@/screens/consulant/profile/Profile';
 import { ConsultantTabParamList } from '@/common/types';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator<ConsultantTabParamList>();
 
@@ -43,6 +44,7 @@ const createTabBarIcon =
 
 const ConsultantTabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const { isDark } = useTheme();
 
   const baseBottom = Platform.OS === 'ios' ? 20 : 16;
   const bottomOffset = baseBottom + Math.max(0, insets.bottom - 6);
@@ -59,10 +61,9 @@ const ConsultantTabNavigator: React.FC = () => {
           marginHorizontal: 10,
           height: 64,
           borderRadius: 36,
-          backgroundColor: 'rgba(255,255,255,0.95)',
-          borderTopWidth: 0,
+          backgroundColor: isDark ? '#0E1B16' : 'rgba(255,255,255,0.95)',
           borderWidth: 1,
-          borderColor: '#DAE7E0',
+          borderColor: isDark ? '#273F36' : '#DAE7E0',
           elevation: 8,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 4 },

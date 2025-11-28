@@ -62,7 +62,7 @@ const UserTabNavigator: React.FC = () => {
           borderRadius: 36,
           backgroundColor: isDark ? '#0E1B16' : 'rgba(255,255,255,0.95)',
           borderWidth: 1,
-          borderColor: isDark ? '#0E1B16' : '#DAE7E0',
+          borderColor: isDark ? '#273F36' : '#DAE7E0',
           elevation: 8,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 4 },
