@@ -1,25 +1,28 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, Switch, ScrollView, Pressable } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Switch, Platform } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import GradientBackground from '@/common/components/GradientBackground';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Profile: React.FC = () => {
-  const [modalVisible, setModalVisible] = useState(false);
   const { theme, setTheme, isDark } = useTheme();
+  const { logout } = useAuth();
 
   const toggleTheme = () => {
     setTheme(isDark ? 'light' : 'dark');
   };
-  const { logout } = useAuth();
+
+  const { paddingBottom } = useTabBarSafePadding();
 
   return (
     <GradientBackground>
-      <View className="flex-1 px-5 py-6">
+      <View className="flex-1 ">
         {/* Header */}
-        <View className="">
+        <View className="px-5 py-6">
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-[#162721]'}`}
           >
@@ -28,42 +31,64 @@ const Profile: React.FC = () => {
         </View>
 
         {/* Content */}
-        <ScrollView className="flex-1 pt-3">
+        <ScrollView
+          className="flex-1 pt-3"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom }} // critical: allow last items to scroll above tab bar
+        >
           {/* Profile Card */}
           <View
             className={`rounded-2xl border p-4 mb-3 shadow-sm ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
           >
             <View className="items-start mb-4">
+              {/* Avatar + Name + Badge + Theme Switch */}
               <View className="flex-row items-start">
                 {/* Avatar */}
-
-                <View className="w-14 h-14 rounded-full items-center justify-center mr-3 overflow-hidden">
+                <View className="w-14 h-14 rounded-full mr-3 overflow-hidden">
                   <LinearGradient
                     colors={['#27B07D', '#36D399']}
-                    className="w-full h-full items-center justify-center rounded-full"
+                    style={{ flex: 1, borderRadius: 9999 }}
+                    className="items-center justify-center"
                   >
                     <Text className="text-white font-urbanist-semibold text-xl">SJ</Text>
                   </LinearGradient>
                 </View>
 
-                {/* Name and Badge */}
-                <View className="flex-col justify-start">
+                {/* Name, Badge and Theme Switch */}
+                <View className="flex-1">
                   <Text
-                    className={`text-2xl font-urbanist-bold  mb-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                    className={`text-2xl font-urbanist-bold mb-2 ${
+                      isDark ? 'text-white' : 'text-[#162721]'
+                    }`}
                   >
                     John Doe
                   </Text>
+
                   <LinearGradient
                     colors={['#27B07D', '#36D399']}
-                    style={{ borderRadius: 9999 }} // <-- this is required
-                    className="px-4 py-1 mb-4"
+                    style={{ borderRadius: 9999 }}
+                    className="px-4 py-1 mb-3 self-start"
                   >
                     <Text className="text-white text-xs font-urbanist-bold">Expert Consultant</Text>
                   </LinearGradient>
+
+                  {/* Inline small row for theme toggle */}
+                  <View className="flex-row items-center gap-3">
+                    <Text className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                      {isDark ? 'Dark' : 'Light'}
+                    </Text>
+                    <Switch
+                      value={isDark}
+                      onValueChange={toggleTheme}
+                      trackColor={{ false: '#d1d5db', true: '#10b981' }}
+                      thumbColor={'#ffffff'}
+                    />
+                  </View>
                 </View>
               </View>
+
               {/* Edit Profile Button */}
-              <TouchableOpacity className="w-full bg-[#DAE7E0] py-3 rounded-xl">
+              <TouchableOpacity className="w-full bg-[#DAE7E0] py-3 rounded-xl mt-4">
                 <Text className="text-[#162721] text-center font-urbanist-bold">Edit Profile</Text>
               </TouchableOpacity>
             </View>

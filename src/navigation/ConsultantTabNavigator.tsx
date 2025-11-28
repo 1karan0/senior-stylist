@@ -13,40 +13,12 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator<ConsultantTabParamList>();
 
-type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
-
-const iconMap: Record<string, { focused: IoniconsName; outline: IoniconsName }> = {
-  DashboardTab: { focused: 'grid', outline: 'grid-outline' },
-  RequestTab: { focused: 'download', outline: 'download-outline' },
-  ChatTab: { focused: 'chatbubble', outline: 'chatbubble-outline' },
-  ProfileTab: { focused: 'person-circle', outline: 'person-circle-outline' },
-};
-
-const TabBarIcon = ({
-  routeName,
-  focused,
-  color,
-}: {
-  routeName: string;
-  focused: boolean;
-  color: string;
-}) => {
-  const cfg = iconMap[routeName] ?? { focused: 'help-circle', outline: 'help-circle-outline' };
-  const name = focused ? cfg.focused : cfg.outline;
-  return <Ionicons name={name} size={18} color={color} />;
-};
-
-const createTabBarIcon =
-  (routeName: string) =>
-  ({ focused, color }: { focused: boolean; color: string }) => (
-    <TabBarIcon routeName={routeName} focused={focused} color={color} />
-  );
-
 const ConsultantTabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
 
-  const baseBottom = Platform.OS === 'ios' ? 20 : 16;
+  // lower base bottom to bring bar closer to the bottom
+  const baseBottom = Platform.OS === 'ios' ? 4 : 2;
   const bottomOffset = baseBottom + Math.max(0, insets.bottom - 6);
 
   return (
@@ -58,8 +30,8 @@ const ConsultantTabNavigator: React.FC = () => {
         tabBarStyle: {
           position: 'absolute',
           bottom: bottomOffset,
-          marginHorizontal: 10,
-          height: 65,
+          marginHorizontal: 10, // symmetric left & right padding
+          height: 62, // slightly smaller height
           borderRadius: 40,
           backgroundColor: isDark ? '#0E1B16' : 'rgba(255,255,255,0.95)',
           borderWidth: 1,
@@ -69,25 +41,26 @@ const ConsultantTabNavigator: React.FC = () => {
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.12,
           shadowRadius: 8,
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-          alignItems: 'center',
-          justifyContent: 'center',
+          paddingHorizontal: 8,
+          paddingVertical: 6,
+          // don't set alignItems/justifyContent on the container; items handle layout
         },
 
+        // Make each tab take equal width so spacing between tabs is consistent
         tabBarItemStyle: {
+          flex: 1,
+          marginHorizontal: 6, // space between tabs
           paddingTop: 6,
           paddingBottom: 6,
           alignItems: 'center',
           justifyContent: 'center',
         },
 
-        // 🔥 Updated based on your request
         tabBarLabelStyle: {
           fontSize: 12,
           fontFamily: 'Poppins-Medium',
-          marginTop: 2,
-          marginBottom: 2,
+          marginTop: 1,
+          marginBottom: 3,
           lineHeight: 18,
         },
 
@@ -100,11 +73,7 @@ const ConsultantTabNavigator: React.FC = () => {
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons
-              name={focused ? 'grid' : 'grid-outline'}
-              size={20} // ← larger icon
-              color={color}
-            />
+            <Ionicons name={focused ? 'grid' : 'grid-outline'} size={20} color={color} />
           ),
         }}
       />
@@ -140,7 +109,7 @@ const ConsultantTabNavigator: React.FC = () => {
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? 'person-circle' : 'person-circle-outline'}
-              size={20}
+              size={21}
               color={color}
             />
           ),

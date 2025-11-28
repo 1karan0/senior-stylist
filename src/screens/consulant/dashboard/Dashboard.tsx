@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EarningsModal from './EarningsModal';
 import { AppButton } from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const Dashboard: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const { isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  // Keep these values in sync with your tab navigator
+  const { paddingBottom } = useTabBarSafePadding();
 
   return (
     <GradientBackground>
@@ -23,7 +29,12 @@ const Dashboard: React.FC = () => {
         </View>
 
         {/* Content */}
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          // critical: ensure bottom content can scroll above absolute tab bar
+          contentContainerStyle={{ paddingBottom }}
+        >
           {/* Stats Grid */}
           <View className="px-5">
             <View className="flex-row justify-between mb-4">
