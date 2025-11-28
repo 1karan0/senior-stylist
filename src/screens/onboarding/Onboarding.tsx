@@ -40,7 +40,7 @@ const OnboardingScreen = ({ navigation }: any) => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <GradientBackground>
-        <View className="flex-1 px-5">
+        <View className="flex-1 px-5 pb-3">
           {/* Pager */}
           <PagerView
             ref={pagerRef}

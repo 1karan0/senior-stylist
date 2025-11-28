@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  StatusBar,
   Text,
   TextInput,
   TouchableOpacity,
@@ -42,27 +41,10 @@ import type {
   ConsultationStackParamList,
   ConversationPreview,
 } from '@/common/types';
-import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MAX_ITEMS = 40;
 type NavParamList = AppStackParamList & ConsultationStackParamList;
-
-/**
- * IMPORTANT: Keep these literal values in sync with your tailwind.config.js
- * (colors and fonts declared there). These literals are only used for runtime
- * props that require strings (gradients, placeholderTextColor, ActivityIndicator color).
- */
-const LIGHT_BG = ['hsl(146 25% 97%)', 'hsl(158 64% 95%)'];
-const DARK_BG = ['hsl(158 32% 8%)', 'hsl(158 32% 12%)'];
-
-const TEXT_MUTED = '#658176'; // matches tailwind textMuted
-const TEXT_DARK = '#162721'; // matches tailwind textDark
-const TEXT_WHITE = '#FFFFFF'; // matches tailwind textWhite
-const BUTTON_PRIMARY = '#27B07D'; // matches tailwind buttonPrimaryBg
-const SURFACE_DARK = 'rgba(14,27,22,0.85)'; // used previously for dark surface fallback
-const BORDER_LIGHT = '#DAE7E0'; // matches earlier border for light
-const BORDER_DARK = '#273F36'; // matches earlier border for dark
 
 const CustomerChatHome: React.FC = () => {
   const { user } = useAuth();
@@ -343,7 +325,7 @@ const CustomerChatHome: React.FC = () => {
 
             {/* Search */}
             <View
-              className={`flex-row items-center border mt-3 px-3 py-2 rounded-xl ${
+              className={`flex-row items-center border mt-3 px-3 rounded-xl ${
                 isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'
               }`}
             >

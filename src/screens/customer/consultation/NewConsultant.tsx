@@ -1,6 +1,6 @@
 import GradientBackground from '@/common/components/GradientBackground';
 import React, { use, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useForm, Controller } from 'react-hook-form';
@@ -91,114 +91,116 @@ const NewConsultant = ({ navigation }: any) => {
           type={toast.type}
           onClose={() => setToast({ ...toast, visible: false })}
         />
-        {/* Header */}
-        <View className="flex-row items-center mb-5">
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Image
-              source={
-                isDark
-                  ? require('@/assets/icons/green-back.png')
-                  : require('@/assets/icons/back.png')
-              }
-              className="w-6 h-6"
-            />
-          </TouchableOpacity>
-          <Text
-            className={`text-[22px] ${isDark ? 'text-white' : 'text-textDark'} font-semibold ml-3`}
+        <ScrollView className="flex-1">
+          {/* Header */}
+          <View className="flex-row items-center mb-5">
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Image
+                source={
+                  isDark
+                    ? require('@/assets/icons/green-back.png')
+                    : require('@/assets/icons/back.png')
+                }
+                className="w-6 h-6"
+              />
+            </TouchableOpacity>
+            <Text
+              className={`text-[22px] ${isDark ? 'text-white' : 'text-textDark'} font-semibold ml-3`}
+            >
+              New Consultation
+            </Text>
+          </View>
+
+          <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} -mt-3 mb-4`}>
+            Tell us about your styling needs
+          </Text>
+
+          {/* Card */}
+          <View
+            className={` ${isDark ? 'bg-textDark border-[#273F36]' : 'bg-white border-gray-100'} rounded-md p-5 shadow border `}
           >
-            New Consultation
-          </Text>
-        </View>
+            <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
+              Describe Your Requirements
+            </Text>
 
-        <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} -mt-3 mb-4`}>
-          Tell us about your styling needs
-        </Text>
+            <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-3 mb-2`}>
+              What styling help do you need? *
+            </Text>
 
-        {/* Card */}
-        <View
-          className={` ${isDark ? 'bg-textDark border-[#273F36]' : 'bg-white border-gray-100'} rounded-md p-5 shadow border `}
-        >
-          <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
-            Describe Your Requirements
-          </Text>
+            {/* RHF Controller */}
+            <Controller
+              name="description"
+              control={control}
+              rules={{ required: true }}
+              render={({ field: { onChange, value } }) => (
+                <View
+                  className={`border rounded-xl  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'}  p-3`}
+                >
+                  <TextInput
+                    placeholder="Describe your fashion style preferences, occasion, or special requirements..."
+                    multiline
+                    numberOfLines={8}
+                    value={value}
+                    onChangeText={onChange}
+                    className={` ${isDark ? 'text-white' : 'text-black'} `}
+                    placeholderTextColor={isDark ? '#8AA897' : '#9AA0A6'}
+                  />
+                </View>
+              )}
+            />
 
-          <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-3 mb-2`}>
-            What styling help do you need? *
-          </Text>
+            {/* Upload Image */}
+            <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-5 mb-2`}>
+              Upload Photo (Optional)
+            </Text>
 
-          {/* RHF Controller */}
-          <Controller
-            name="description"
-            control={control}
-            rules={{ required: true }}
-            render={({ field: { onChange, value } }) => (
-              <View
-                className={`border rounded-xl  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'}  p-3`}
-              >
-                <TextInput
-                  placeholder="Describe your fashion style preferences, occasion, or special requirements..."
-                  multiline
-                  numberOfLines={8}
-                  value={value}
-                  onChangeText={onChange}
-                  className={` ${isDark ? 'text-white' : 'text-black'} `}
-                  placeholderTextColor={isDark ? '#8AA897' : '#9AA0A6'}
+            <TouchableOpacity
+              onPress={pickImage}
+              className="bg-[#DAE7E0] rounded-xl py-3 flex-row items-center justify-center"
+            >
+              <Image source={require('@/assets/icons/upload-2.png')} className="w-5 h-5 mr-2" />
+              <Text className="text-textDark font-semibold">Upload reference photo</Text>
+            </TouchableOpacity>
+
+            {/* Show Preview */}
+            {selectedImage && (
+              <View className="mt-4 items-center">
+                <Image
+                  source={{ uri: selectedImage.uri }}
+                  className="w-32 h-32 rounded-xl"
+                  resizeMode="cover"
                 />
               </View>
             )}
-          />
 
-          {/* Upload Image */}
-          <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-5 mb-2`}>
-            Upload Photo (Optional)
-          </Text>
+            <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-2 text-sm`}>
+              Share a photo of your current style or inspiration
+            </Text>
 
-          <TouchableOpacity
-            onPress={pickImage}
-            className="bg-[#DAE7E0] rounded-xl py-3 flex-row items-center justify-center"
-          >
-            <Image source={require('@/assets/icons/upload-2.png')} className="w-5 h-5 mr-2" />
-            <Text className="text-textDark font-semibold">Upload reference photo</Text>
-          </TouchableOpacity>
-
-          {/* Show Preview */}
-          {selectedImage && (
-            <View className="mt-4 items-center">
-              <Image
-                source={{ uri: selectedImage.uri }}
-                className="w-32 h-32 rounded-xl"
-                resizeMode="cover"
-              />
-            </View>
-          )}
-
-          <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-2 text-sm`}>
-            Share a photo of your current style or inspiration
-          </Text>
-
-          {/* CTA Button */}
-          <LinearGradient
-            colors={['#2CCB91', '#23A76F']}
-            start={{ x: 0, y: 1 }}
-            end={{ x: 1, y: 0 }}
-            style={{ borderRadius: 10 }}
-            className="h-[50px] mt-6 rounded-xl justify-center items-center"
-          >
-            <TouchableOpacity
-              onPress={handleSubmit(onSubmit)}
-              className="flex-row items-center justify-center w-full h-full"
-              disabled={loading}
+            {/* CTA Button */}
+            <LinearGradient
+              colors={['#2CCB91', '#23A76F']}
+              start={{ x: 0, y: 1 }}
+              end={{ x: 1, y: 0 }}
+              style={{ borderRadius: 10 }}
+              className="h-[50px] mt-6 rounded-xl justify-center items-center"
             >
-              <Image
-                source={require('@/assets/icons/white-search-icon.png')}
-                className="w-5 h-5 mr-2"
-              />
-              <Text className="text-white font-semibold text-base">
-                {loading ? 'Processing...' : 'Find Stylist'}
-              </Text>
-            </TouchableOpacity>
-          </LinearGradient>
-        </View>
+              <TouchableOpacity
+                onPress={handleSubmit(onSubmit)}
+                className="flex-row items-center justify-center w-full h-full"
+                disabled={loading}
+              >
+                <Image
+                  source={require('@/assets/icons/white-search-icon.png')}
+                  className="w-5 h-5 mr-2"
+                />
+                <Text className="text-white font-semibold text-base">
+                  {loading ? 'Processing...' : 'Find Stylist'}
+                </Text>
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
+        </ScrollView>
       </GradientBackground>
     </View>
   );

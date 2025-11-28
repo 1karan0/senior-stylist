@@ -383,8 +383,8 @@ const ChatHome: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <GradientBackground className="flex-1">
-        <View className="flex-1 pt-6 pb-20">
-          <View className="px-6 mb-4">
+        <View className="flex-1 pt-6 px-5 pb-20">
+          <View className=" mb-4">
             <Text
               className={`text-2xl font-urbanist-bold mb-1 ${isDark ? 'text-textWhite' : 'text-textDark'}`}
             >
@@ -393,7 +393,7 @@ const ChatHome: React.FC = () => {
             {connectionIndicator}
 
             <View
-              className={`flex-row items-center border mt-3 px-3 py-2 rounded-xl ${
+              className={`flex-row items-center border mt-3 px-3  rounded-xl ${
                 isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'
               }`}
             >
@@ -441,7 +441,7 @@ const ChatHome: React.FC = () => {
               data={filteredConversations}
               keyExtractor={(item) => String(item.id)}
               renderItem={renderConversation}
-              contentContainerStyle={{ paddingBottom: 32, paddingHorizontal: 12 }}
+              contentContainerStyle={{ paddingBottom: 32 }}
               ListEmptyComponent={renderEmpty}
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             />
