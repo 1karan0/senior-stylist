@@ -1,10 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Feather from 'react-native-vector-icons/Feather';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
+import { useAuth } from '@/contexts/AuthContext';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ProfileStackParamList } from '@/common/types';
-import { useAuth } from '@/contexts/AuthContext';
+import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useGetProfile } from '@/api/user/profile/useGetProfile';
+import LinearGradient from 'react-native-linear-gradient';
 
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
@@ -13,107 +18,277 @@ interface Props {
 }
 
 const Profile: React.FC<Props> = ({ navigation }) => {
+  const { data: profile } = useGetProfile();
   const { logout } = useAuth();
-  const { theme, setTheme, isDark } = useTheme();
+  const { isDark } = useTheme();
 
-  const toggleTheme = () => {
-    setTheme(isDark ? 'light' : 'dark');
-  };
-  const { data: profile, isLoading, error } = useGetProfile();
+  const user = profile as any;
 
   return (
-    <View className="flex-1 bg-white dark:bg-gray-900">
-      {/* Header */}
-      <View className="flex-row items-center p-4 border-b border-gray-200 dark:border-gray-700">
-        <Text className="text-xl font-bold text-gray-800 dark:text-white">Profile Home</Text>
-      </View>
+    <GradientBackground>
+      <View className="flex-1 px-5 pt-6 pb-20">
+        <ScrollView className="">
+          {/* ---------- Header ---------- */}
+          <View className="w-full flex-row justify-between items-center mb-4">
+            <Text className={` ${isDark ? 'text-white' : 'text-black'} text-2xl font-semibold`}>
+              Profile
+            </Text>
+          </View>
 
-      {/* Content */}
-      <View className="flex-1 p-6">
-        <Text className="text-2xl font-bold text-gray-800 dark:text-white mb-8 text-center">
-          Profile Home
-        </Text>
+          {/* ---------- Profile Card ---------- */}
+          <View
+            className={` ${isDark ? 'bg-[#11211c] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border`}
+          >
+            <View className="flex-row items-center gap-4">
+              {/* Avatar */}
+              <LinearGradient
+                colors={['#2CCB91', '#23A76F']}
+                start={{ x: 0, y: 1 }}
+                end={{ x: 1, y: 0 }}
+                style={{ borderRadius: 100 }}
+                className=" h-14 justify-center items-center w-14 px-3 py-1 "
+              >
+                <View>
+                  {user?.profile_picture_url ? (
+                    <Image
+                      source={{ uri: user.profile_picture_url }}
+                      className="h-14 w-14 rounded-full"
+                    />
+                  ) : (
+                    <Text className="text-white text-xl">
+                      {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
+                    </Text>
+                  )}
+                </View>
+              </LinearGradient>
 
-        {/* Theme Toggle Section */}
-        <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 shadow-sm">
-          <Text className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-            Theme Settings
-          </Text>
+              {/* Name + Role */}
+              <View className="flex-1">
+                <Text
+                  className={`text-2xl ${isDark ? 'text-white' : 'text-[#162721]'} font-urbanist-bold`}
+                >
+                  {user?.name}
+                </Text>
+                <LinearGradient
+                  colors={['#2CCB91', '#23A76F']}
+                  start={{ x: 0, y: 1 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ borderRadius: 10 }}
+                  className=" h-6 justify-center items-center text-center  mt-1 w-24 px-3 "
+                >
+                  <Text className={`text-white text-sm font-urbanist-bold `}>
+                    {user?.role || 'Member'}
+                  </Text>
+                </LinearGradient>
+              </View>
+            </View>
 
-          <View className="flex-row justify-between items-center">
-            <View className="flex-1">
-              <Text className="text-gray-700 dark:text-gray-300 font-medium">
-                {isDark ? 'Dark Mode' : 'Light Mode'}
-              </Text>
-              <Text className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                {isDark ? 'Dark theme is enabled' : 'Light theme is enabled'}
-              </Text>
-              <Text className="text-gray-400 dark:text-gray-500 text-xs mt-1">
-                Current:{' '}
-                {theme === 'system' ? 'System Default' : theme === 'dark' ? 'Dark' : 'Light'}
+            {/* Edit Button */}
+            <TouchableOpacity className={`mt-4 bg-[#DAE7E0] py-2 px-3 rounded-[10px]`}>
+              <Text className="text-black text-center font-medium">Edit Profile</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* ---------- Account Information ---------- */}
+          <View
+            className={` ${isDark ? 'bg-[#11211c] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
+          >
+            <Text
+              className={`text-[22px] ${isDark ? 'text-white' : 'text-[#162721]'} font-urbanist-semibold mb-2`}
+            >
+              Account Information
+            </Text>
+
+            {/* Email */}
+            <View className="flex-row items-start gap-3 mb-4">
+              <Image source={require('@/assets/icons/Email.png')} />
+              <Text
+                className={` font-poppins-regular text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+              >
+                {user?.email}
               </Text>
             </View>
-            <Switch
-              value={isDark}
-              onValueChange={toggleTheme}
-              trackColor={{ false: '#d1d5db', true: '#10b981' }}
-              thumbColor={isDark ? '#ffffff' : '#ffffff'}
-              ios_backgroundColor="#d1d5db"
-            />
+
+            {/* Phone */}
+            <View className="flex-row items-start gap-3 mb-4">
+              <Image source={require('@/assets/icons/Phone.png')} />
+              <Text
+                className={` font-poppins-regular text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+              >
+                {user?.phone}
+              </Text>
+            </View>
+
+            {/* Member Since */}
+            <View className="flex-row items-start gap-3">
+              <Image source={require('@/assets/icons/Calendar.png')} />
+              <Text
+                className={` font-poppins-regular text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+              >
+                Member since {user?.created_at?.split('T')[0]}
+              </Text>
+            </View>
           </View>
 
-          {/* Quick Theme Buttons */}
-          <View className="flex-row gap-2 mt-4">
-            <TouchableOpacity
-              className={`flex-1 px-3 py-2 rounded-lg ${
-                theme === 'light' ? 'bg-blue-600' : 'bg-blue-500'
-              }`}
-              onPress={() => setTheme('light')}
+          {/* ---------- Subscription ---------- */}
+          <View
+            className={` ${isDark ? 'bg-[#11211c] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
+          >
+            <Text
+              className={`text-[22px] ${isDark ? 'text-white' : 'text-[#162721]'} font-urbanist-semibold mb-2`}
             >
-              <Text className="text-white text-center text-sm font-medium">Light</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`flex-1 px-3 py-2 rounded-lg ${
-                theme === 'dark' ? 'bg-gray-800' : 'bg-gray-700'
-              }`}
-              onPress={() => setTheme('dark')}
+              Subscription
+            </Text>
+
+            <Text
+              className={` ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} font-poppins-regular mb-1`}
             >
-              <Text className="text-white text-center text-sm font-medium">Dark</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`flex-1 px-3 py-2 rounded-lg ${
-                theme === 'system' ? 'bg-green-600' : 'bg-green-500'
-              }`}
-              onPress={() => setTheme('system')}
+              Pro Plan – $19.99/month
+            </Text>
+
+            <Text
+              className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} font-poppins-regular text-sm mb-4`}
             >
-              <Text className="text-white text-center text-sm font-medium">System</Text>
+              Next billing date: 25 Dec 2025
+            </Text>
+
+            <TouchableOpacity className={`mt-4 bg-[#DAE7E0] py-2 px-3 rounded-[10px]`}>
+              <Text className="text-black text-center font-medium">Manage Subscription</Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Navigation Buttons */}
-        <TouchableOpacity
-          className="bg-blue-500 dark:bg-blue-600 px-6 py-4 rounded-lg mb-4 w-full"
-          onPress={() => navigation.navigate('EditProfile')}
-        >
-          <Text className="text-white text-center text-lg font-semibold">Go to Edit Profile</Text>
-        </TouchableOpacity>
+          {/* ---------- Rewards ---------- */}
+          <LinearGradient
+            colors={['#2CCB91', '#23A76F']}
+            start={{ x: 0, y: 1 }}
+            end={{ x: 1, y: 0 }}
+            style={{ borderRadius: 12 }}
+            className=" p-4 mt-5 "
+          >
+            <View className=" flex-col gap-3">
+              <View className="flex-row gap-2">
+                <Image source={require('@/assets/icons/Gift.png')} />
+                <Text className="text-white text-xl font-urbanist-semibold mb-4">Your Rewards</Text>
+              </View>
 
-        <TouchableOpacity
-          className="bg-green-500 dark:bg-green-600 px-6 py-4 rounded-lg mb-4 w-full"
-          onPress={() => navigation.navigate('Settings')}
-        >
-          <Text className="text-white text-center text-lg font-semibold">Go to Settings</Text>
-        </TouchableOpacity>
+              <View className="flex-row items-center mr-7 justify-center gap-12">
+                <View className="items-center">
+                  <Text className="text-white text-[40px] font-urbanist-bold">1</Text>
+                  <Text className="text-white font-poppins-medium text-center text-sm w-[70%]">
+                    Free Consultation Sessions
+                  </Text>
+                </View>
+                <View className="items-center">
+                  <Text className="text-white text-[40px] font-urbanist-bold">4</Text>
+                  <Text className="text-white font-poppins-medium text-sm">Referrals</Text>
+                </View>
+              </View>
+            </View>
+          </LinearGradient>
 
-        <TouchableOpacity
-          className="bg-red-500 dark:bg-red-600 px-6 py-4 rounded-lg w-full"
-          onPress={() => logout()}
-        >
-          <Text className="text-white text-center text-lg font-semibold">Logout</Text>
-        </TouchableOpacity>
+          {/* ---------- Referral Program ---------- */}
+          <View
+            className={` ${isDark ? 'bg-[#11211c] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
+          >
+            <View>
+              <View className="flex-row gap-2 items-baseline">
+                <Image
+                  source={
+                    isDark
+                      ? require('@/assets/icons/UsersWhite.png')
+                      : require('@/assets/icons/Users.png')
+                  }
+                  className=""
+                />
+                <Text
+                  className={`text-[22px] ${isDark ? 'text-white' : 'text-[#162721]'} font-urbanist-semibold mb-2`}
+                >
+                  Referral Program
+                </Text>
+              </View>
+              <Text
+                className={` ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} font-poppins-regular text-sm mb-2 w-[90%]`}
+              >
+                Share your code with friends and earn free sessions
+              </Text>
+            </View>
+
+            {/* Code Box */}
+            <View className="flex-row justify-between mb-3">
+              <View
+                className={` w-[80%] items-center text-center bg-[#F5F9F7] border-[#DAE7E0] border rounded-lg py-3 `}
+              >
+                <Text className="text-black text-base font-urbanist-bold">STYLE2025</Text>
+              </View>
+              <View>
+                <LinearGradient
+                  colors={['#2CCB91', '#23A76F']}
+                  start={{ x: 0, y: 1 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ borderRadius: 12 }}
+                  className=" p-3 "
+                >
+                  <TouchableOpacity>
+                    {/* <Ionicons name="copy-outline" size={20} color="white" /> */}
+                    <Image source={require('@/assets/icons/Copy.png')} className="" />
+                  </TouchableOpacity>
+                </LinearGradient>
+              </View>
+            </View>
+
+            {/* Share Button */}
+            <LinearGradient
+              colors={['#2CCB91', '#23A76F']}
+              start={{ x: 0, y: 1 }}
+              end={{ x: 1, y: 0 }}
+              style={{ borderRadius: 10 }}
+              className=" py-2 px-3 "
+            >
+              <TouchableOpacity className=" rounded-lg">
+                <Text className="text-white font-urbanist-bold text-base text-center">
+                  Share Referral Link
+                </Text>
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
+
+          {/* ---------- Settings ---------- */}
+          <View
+            className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-xl py-[8px] px-[20px] mt-5 border`}
+          >
+            <TouchableOpacity
+              className="flex-row gap-2"
+              onPress={() => navigation.navigate('Settings')}
+            >
+              <Image
+                source={
+                  isDark
+                    ? require('@/assets/icons/GearWhite.png')
+                    : require('@/assets/icons/Gear.png')
+                }
+                className=""
+                resizeMode="contain"
+              />
+              <Text
+                className={`${isDark ? 'text-white' : 'text-[#162721]'} font-urbanist-semibold text-[15px]`}
+              >
+                Settings
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* ---------- Logout Button ---------- */}
+          <View
+            className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-xl py-[8px] px-[20px] mt-5 border mb-10`}
+          >
+            <TouchableOpacity onPress={logout} className="flex-row items-center gap-2">
+              <Image source={require('@/assets/icons/SignOut.png')} />
+              <Text className="text-[#F22D2D] text-lg font-semibold">Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </View>
-    </View>
+    </GradientBackground>
   );
 };
 

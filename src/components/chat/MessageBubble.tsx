@@ -123,7 +123,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       >
         {message.message ? (
           <Text
-            className={`text-sm leading-5 ${
+            className={`text-base leading-5 ${
               isOwnMessage ? `text-white` : ` ${isDark ? 'text-white' : 'text-[#1C1C1C]'}`
             }`}
           >
