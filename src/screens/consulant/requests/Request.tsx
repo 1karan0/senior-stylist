@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Text, View, Platform } from 'react-native';
 import type { Unsubscribe } from 'firebase/firestore';
 
 import RequestDetailsModal from './DetailsModal';
 import RequestList, { RequestItem } from './List';
 import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
 import GradientBackground from '@/common/components/GradientBackground';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { initializeFirebase, listenToStylistRequests, StylistRequest } from '@/services/firebase';
@@ -50,6 +51,9 @@ const Request: React.FC = () => {
   const { user } = useAuth();
   const isConsultant = user?.role === 'consultant';
   const { isDark } = useTheme();
+
+  // <<-- CALL THE HOOK UNCONDITIONALLY AT THE TOP
+  const { paddingBottom } = useTabBarSafePadding();
 
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -211,7 +215,8 @@ const Request: React.FC = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1 px-5 py-6">
+      {/* outer container with paddingBottom so non-scroll content doesn't get hidden */}
+      <View className="flex-1 px-5 py-6" style={{ paddingBottom }}>
         <View className="flex-col items-start">
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
@@ -260,21 +265,25 @@ const Request: React.FC = () => {
         </View>
 
         {loading ? (
-          <View className="flex-1 justify-center items-center">
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <ActivityIndicator size="large" color="#27B07D" />
             <Text className="font-poppins text-sm text-textMuted mt-3">
               Loading consultation requests...
             </Text>
           </View>
         ) : (
-          <RequestList
-            requests={requests}
-            onAcceptRequest={handleAcceptRequest}
-            onViewDetails={handleViewDetails}
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            acceptingId={acceptingId}
-          />
+          // outer wrapper ensures there's always bottom spacing; also try to pass contentContainerStyle to RequestList
+          <View style={{ flex: 1 }}>
+            <RequestList
+              requests={requests}
+              onAcceptRequest={handleAcceptRequest}
+              onViewDetails={handleViewDetails}
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              acceptingId={acceptingId}
+              contentContainerStyle={{ paddingBottom }}
+            />
+          </View>
         )}
 
         <RequestDetailsModal

@@ -8,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {
@@ -21,11 +22,14 @@ import {
 } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getFirestoreInstance, initializeFirebase, waitForFirebaseUser } from '@/services/firebase';
-import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
+
 import { mapFirestoreConsultation } from '@/utils/firestoreConsultationMapper';
 import {
   getCachedConsultations,
@@ -53,6 +57,7 @@ const ChatHome: React.FC = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+  const insets = useSafeAreaInsets();
 
   const consultantKey = useMemo(() => (user?.id ? String(user.id) : null), [user?.id]);
 
@@ -380,10 +385,14 @@ const ChatHome: React.FC = () => {
     </View>
   ) : null;
 
+  // Keep these values in sync with your tab navigator
+  const { paddingBottom } = useTabBarSafePadding();
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <GradientBackground className="flex-1">
-        <View className="flex-1 pt-6 px-5 pb-20">
+        {/* apply paddingBottom so content doesn't get hidden under the absolute tab bar */}
+        <View className="flex-1 pt-6 px-5" style={{ paddingBottom }}>
           <View className=" mb-4">
             <Text
               className={`text-2xl font-urbanist-bold mb-1 ${isDark ? 'text-textWhite' : 'text-textDark'}`}
@@ -441,7 +450,7 @@ const ChatHome: React.FC = () => {
               data={filteredConversations}
               keyExtractor={(item) => String(item.id)}
               renderItem={renderConversation}
-              contentContainerStyle={{ paddingBottom: 32 }}
+              contentContainerStyle={{ paddingBottom }} // <- critical change
               ListEmptyComponent={renderEmpty}
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             />

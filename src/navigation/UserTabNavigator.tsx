@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import ConsultationStack from '@/navigation/stacks/Consultation';
@@ -45,7 +46,8 @@ const UserTabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
 
-  const baseBottom = 16;
+  // lower base bottom to bring bar closer to the bottom
+  const baseBottom = Platform.OS === 'ios' ? 4 : 2;
   const bottomOffset = baseBottom + Math.max(0, insets.bottom - 6);
 
   return (
@@ -58,8 +60,8 @@ const UserTabNavigator: React.FC = () => {
           position: 'absolute',
           bottom: bottomOffset,
           marginHorizontal: 10,
-          height: 64,
-          borderRadius: 36,
+          height: 62,
+          borderRadius: 40,
           backgroundColor: isDark ? '#0E1B16' : 'rgba(255,255,255,0.95)',
           borderWidth: 1,
           borderColor: isDark ? '#273F36' : '#DAE7E0',
@@ -70,8 +72,6 @@ const UserTabNavigator: React.FC = () => {
           shadowRadius: 8,
           paddingHorizontal: 12,
           paddingVertical: 8,
-          alignItems: 'center',
-          justifyContent: 'center',
         },
 
         tabBarItemStyle: {
@@ -84,8 +84,8 @@ const UserTabNavigator: React.FC = () => {
         tabBarLabelStyle: {
           fontSize: 12,
           fontFamily: 'Poppins-Medium', // ← applies your custom font
-          marginTop: 2,
-          marginBottom: 2,
+          marginTop: 1,
+          marginBottom: 3,
           lineHeight: 18,
         },
 

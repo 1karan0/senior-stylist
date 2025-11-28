@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  RefreshControl,
+  ViewStyle,
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { AppButton } from '@/common/components/Button';
@@ -21,6 +29,8 @@ export interface ListProps {
   refreshing: boolean;
   onRefresh: () => void;
   acceptingId: number | null;
+  // optional style passed down from screens (e.g. paddingBottom to avoid tab)
+  contentContainerStyle?: ViewStyle | ViewStyle[];
 }
 
 const formatTimeAgo = (timestamp: number) => {
@@ -46,12 +56,22 @@ const List: React.FC<ListProps> = ({
   refreshing,
   onRefresh,
   acceptingId,
+  contentContainerStyle,
 }) => {
   const { isDark } = useTheme();
+
+  // default bottom spacing — screens can override by passing contentContainerStyle
+  const defaultContainerStyle: ViewStyle = { paddingBottom: 32, flexGrow: 1 };
+
+  // merge default with any incoming style(s)
+  const mergedContentContainerStyle = Array.isArray(contentContainerStyle)
+    ? [defaultContainerStyle, ...contentContainerStyle]
+    : [defaultContainerStyle, contentContainerStyle as ViewStyle | undefined];
+
   return (
     <ScrollView
       className="flex-1 pt-4"
-      contentContainerStyle={{ paddingBottom: 32, flexGrow: 1 }}
+      contentContainerStyle={mergedContentContainerStyle}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#27B07D" />
       }
