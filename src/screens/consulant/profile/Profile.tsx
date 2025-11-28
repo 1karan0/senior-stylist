@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, Switch, ScrollView, Pressable } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
+import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -13,180 +16,201 @@ const Profile: React.FC = () => {
   const { logout } = useAuth();
 
   return (
-    <View className="flex-1 bg-white dark:bg-gray-900">
-      {/* Header with Theme Toggle */}
-      <View className="flex-row justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-        <Text className="text-xl font-bold text-gray-800 dark:text-white">Profile</Text>
-        <View className="flex-row items-center">
-          <Text className="text-gray-600 dark:text-gray-400 mr-2 text-sm">
-            {isDark ? '🌙' : '☀️'}
-          </Text>
-          <Switch
-            value={isDark}
-            onValueChange={toggleTheme}
-            trackColor={{ false: '#d1d5db', true: '#10b981' }}
-            thumbColor={isDark ? '#ffffff' : '#ffffff'}
-          />
-        </View>
-      </View>
-
-      {/* Content */}
-      <ScrollView className="flex-1 p-6">
-        <Text className="text-2xl font-bold text-gray-800 dark:text-white mb-8 text-center">
-          Consultant Profile
-        </Text>
-
-        {/* Theme Debug Info */}
-        <View className="bg-yellow-100 dark:bg-yellow-900 rounded-2xl p-4 mb-6">
-          <Text className="text-lg font-semibold text-gray-800 dark:text-yellow-200 mb-2">
-            🔧 Theme Debug Info
-          </Text>
-          <Text className="text-gray-700 dark:text-yellow-300 text-sm">
-            • Current Theme: {theme}
-          </Text>
-          <Text className="text-gray-700 dark:text-yellow-300 text-sm">
-            • isDark: {isDark.toString()}
-          </Text>
-          <Text className="text-gray-700 dark:text-yellow-300 text-sm">
-            • Switch matches:{' '}
-            {isDark === (theme === 'dark' || (theme === 'system' && isDark)) ? '✅' : '❌'}
-          </Text>
-        </View>
-
-        {/* Theme Settings Section */}
-        <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 shadow-sm">
-          <Text className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-            Appearance Settings
-          </Text>
-
-          <View className="flex-row justify-between items-center mb-4">
-            <View>
-              <Text className="text-gray-700 dark:text-gray-300 font-medium">Dark Mode</Text>
-              <Text className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                {isDark ? 'Dark theme is enabled' : 'Light theme is enabled'}
-              </Text>
-            </View>
-            <Switch
-              value={isDark}
-              onValueChange={toggleTheme}
-              trackColor={{ false: '#f1f5f9', true: '#10b981' }}
-              thumbColor={isDark ? '#ffffff' : '#ffffff'}
-            />
-          </View>
-
-          <Text className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-            Current mode:{' '}
-            {theme === 'system' ? 'System Default' : theme === 'dark' ? 'Dark' : 'Light'}
-          </Text>
-
-          {/* Quick Theme Buttons */}
-          <View className="flex-row justify-between gap-2 mt-4">
-            <TouchableOpacity
-              className={`flex-1 px-3 py-2 rounded-lg ${
-                theme === 'light' ? 'bg-blue-600' : 'bg-blue-500'
-              }`}
-              onPress={() => setTheme('light')}
-            >
-              <Text className="text-white text-center text-sm font-medium">Light</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`flex-1 px-3 py-2 rounded-lg ${
-                theme === 'dark' ? 'bg-gray-800' : 'bg-gray-700'
-              }`}
-              onPress={() => setTheme('dark')}
-            >
-              <Text className="text-white text-center text-sm font-medium">Dark</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`flex-1 px-3 py-2 rounded-lg ${
-                theme === 'system' ? 'bg-green-600' : 'bg-green-500'
-              }`}
-              onPress={() => setTheme('system')}
-            >
-              <Text className="text-white text-center text-sm font-medium">System</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Visual Test Elements */}
-        <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 shadow-sm">
-          <Text className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-            Visual Test
-          </Text>
-
-          <View className="space-y-3">
-            <Text className="text-gray-800 dark:text-white">
-              This text should be black in light mode and white in dark mode
-            </Text>
-            <View className="h-4 bg-gray-200 dark:bg-gray-600 rounded" />
-            <View className="h-4 bg-gray-300 dark:bg-gray-500 rounded" />
-            <View className="h-4 bg-gray-400 dark:bg-gray-400 rounded" />
-
-            {/* Color test blocks */}
-            <View className="flex-row gap-2 mt-4">
-              <View className="flex-1 h-8 bg-blue-500 dark:bg-blue-600 rounded" />
-              <View className="flex-1 h-8 bg-green-500 dark:bg-green-600 rounded" />
-              <View className="flex-1 h-8 bg-red-500 dark:bg-red-600 rounded" />
-            </View>
-          </View>
-        </View>
-        <View>
-          <Pressable
-            onPress={() => logout()}
-            className="bg-red-500 w-full  p-5 items-center rounded-xl"
-          >
-            <Text className="text-white font-bold">logout</Text>
-          </Pressable>
-        </View>
-
-        {/* Theme State Indicator */}
-        <View
-          className={`rounded-2xl p-4 mb-6 ${
-            isDark ? 'bg-green-100 dark:bg-green-900' : 'bg-blue-100 dark:bg-blue-900'
-          }`}
-        >
+    <GradientBackground>
+      <View className="flex-1 px-5 py-6">
+        {/* Header */}
+        <View className="">
           <Text
-            className={`text-center font-bold text-lg ${
-              isDark ? 'text-green-800 dark:text-green-200' : 'text-blue-800 dark:text-blue-200'
-            }`}
+            className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-[#162721]'}`}
           >
-            {isDark ? '🌙 DARK MODE ACTIVE' : '☀️ LIGHT MODE ACTIVE'}
+            Profile
           </Text>
         </View>
 
-        <TouchableOpacity
-          className="bg-blue-500 dark:bg-blue-600 px-6 py-4 rounded-lg w-full mb-6"
-          onPress={() => setModalVisible(true)}
-        >
-          <Text className="text-white text-center text-lg font-semibold">Open Profile Modal</Text>
-        </TouchableOpacity>
+        {/* Content */}
+        <ScrollView className="flex-1 pt-3">
+          {/* Profile Card */}
+          <View
+            className={`rounded-2xl border p-4 mb-3 shadow-sm ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+          >
+            <View className="items-start mb-4">
+              <View className="flex-row items-start">
+                {/* Avatar */}
 
-        {/* Modal */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View className="flex-1 justify-center items-center bg-black/50">
-            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 mx-4 w-80">
-              <Text className="text-xl font-bold text-gray-800 dark:text-white mb-4 text-center">
-                Profile Settings
-              </Text>
-              <Text className="text-gray-600 dark:text-gray-400 mb-6 text-center">
-                Manage your consultant profile, availability, and services.
-              </Text>
-              <TouchableOpacity
-                className="bg-blue-500 dark:bg-blue-600 px-4 py-3 rounded-lg"
-                onPress={() => setModalVisible(false)}
-              >
-                <Text className="text-white text-center font-semibold">Close Modal</Text>
+                <View className="w-14 h-14 rounded-full items-center justify-center mr-3 overflow-hidden">
+                  <LinearGradient
+                    colors={['#27B07D', '#36D399']}
+                    className="w-full h-full items-center justify-center rounded-full"
+                  >
+                    <Text className="text-white font-urbanist-semibold text-xl">SJ</Text>
+                  </LinearGradient>
+                </View>
+
+                {/* Name and Badge */}
+                <View className="flex-col justify-start">
+                  <Text
+                    className={`text-2xl font-urbanist-bold  mb-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                  >
+                    John Doe
+                  </Text>
+                  <LinearGradient
+                    colors={['#27B07D', '#36D399']}
+                    style={{ borderRadius: 9999 }} // <-- this is required
+                    className="px-4 py-1 mb-4"
+                  >
+                    <Text className="text-white text-xs font-urbanist-bold">Expert Consultant</Text>
+                  </LinearGradient>
+                </View>
+              </View>
+              {/* Edit Profile Button */}
+              <TouchableOpacity className="w-full bg-[#DAE7E0] py-3 rounded-xl">
+                <Text className="text-[#162721] text-center font-urbanist-bold">Edit Profile</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-      </ScrollView>
-    </View>
+
+          {/* Account Information */}
+          <View
+            className={`rounded-xl border p-6 mb-6 shadow-sm ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+          >
+            <Text
+              className={`text-xl font-urbanist-semibold mb-4 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+            >
+              Account Information
+            </Text>
+
+            <View className="space-y-3">
+              {/* Email */}
+              <View className="flex-row items-center mb-3">
+                <Ionicons name="mail-outline" size={20} color="#10b981" />
+                <Text
+                  className={`font-poppins-regular ml-3 ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+                >
+                  john.doe@example.com
+                </Text>
+              </View>
+
+              {/* Phone */}
+              <View className="flex-row items-center mb-3">
+                <Ionicons name="call-outline" size={20} color="#10b981" />
+                <Text
+                  className={`font-poppins-regular ml-3 ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+                >
+                  +1 (555) 123-4567
+                </Text>
+              </View>
+
+              {/* Member Since */}
+              <View className="flex-row items-center">
+                <Ionicons name="calendar-outline" size={20} color="#10b981" />
+                <Text
+                  className={`font-poppins-regular ml-3 ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+                >
+                  Member since January 2024
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Performance Overview */}
+          <View
+            className={`rounded-xl p-6 mb-6 shadow-sm ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+          >
+            <Text
+              className={`text-xl font-urbanist-semibold ${isDark ? 'text-white' : 'text-[#162721]'}`}
+            >
+              Performance Overview
+            </Text>
+            <Text
+              className={`text-sm font-poppins-regular mb-4 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+            >
+              Pro Plan - $19.99/month
+            </Text>
+
+            {/* Stats Row */}
+            <View className="flex-row justify-between mb-4">
+              {/* Total Earnings */}
+              <View
+                className={`flex-1 items-center  border  rounded-xl p-4 mr-2 ${isDark ? 'border-[#273F36] bg-transparent' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
+              >
+                <Ionicons name="trending-up-outline" size={24} color="#10b981" />
+                <Text
+                  className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                >
+                  $2,340
+                </Text>
+                <Text
+                  className={`text-xs font-poppins-regular mt-1 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                >
+                  Total Earnings
+                </Text>
+              </View>
+
+              {/* Total Sessions */}
+              <View
+                className={`flex-1 items-center border rounded-xl p-4 ml-2 ${isDark ? 'border-[#273F36] bg-transparent' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
+              >
+                <Ionicons name="chatbubble-outline" size={24} color="#10b981" />
+                <Text
+                  className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                >
+                  156
+                </Text>
+                <Text
+                  className={`text-xs font-poppins-regular mt-1 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                >
+                  Total Sessions
+                </Text>
+              </View>
+            </View>
+
+            {/* Rating */}
+            <View
+              className={`items-center  border rounded-xl p-4 ${isDark ? 'border-[#273F36]' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
+            >
+              <Ionicons name="star" size={28} color="#fbbf24" />
+              <Text
+                className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+              >
+                4.8
+              </Text>
+              <Text
+                className={`text-sm text-[#658176] font-poppins-regular mt-1 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+              >
+                Average Rating
+              </Text>
+            </View>
+          </View>
+
+          {/* Settings */}
+          <TouchableOpacity
+            className={`rounded-xl p-4 mb-4 shadow-sm flex-row items-center justify-between border ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+          >
+            <View className="flex-row items-center">
+              <Ionicons name="settings-outline" size={24} color={isDark ? '#FFFFFF' : '#162721'} />
+              <Text
+                className={`font-urbanist-semibold ml-3 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+              >
+                Settings
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={isDark ? '#FFFFFF' : '#162721'} />
+          </TouchableOpacity>
+
+          {/* Sign Out */}
+          <TouchableOpacity
+            onPress={() => logout()}
+            className={`border rounded-xl p-4 mb-8 shadow-sm flex-row items-center justify-between ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+          >
+            <View className="flex-row items-center">
+              <Ionicons name="log-out-outline" size={24} color="#F22D2D" />
+              <Text className="text-[#F22D2D] font-urbanist-semibold ml-3">Sign Out</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    </GradientBackground>
   );
 };
 

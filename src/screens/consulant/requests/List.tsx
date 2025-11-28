@@ -50,7 +50,7 @@ const List: React.FC<ListProps> = ({
   const { isDark } = useTheme();
   return (
     <ScrollView
-      className="flex-1 pt-4 px-2"
+      className="flex-1 pt-4"
       contentContainerStyle={{ paddingBottom: 32, flexGrow: 1 }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#27B07D" />
@@ -94,7 +94,7 @@ const List: React.FC<ListProps> = ({
                 </View>
                 <View className="flex-1">
                   {request.hasImage && (
-                    <View className="bg-[#DAE7E0] px-2 py-1 rounded-full self-start flex-row items-center">
+                    <View className="bg-[#DAE7E0] py-1 rounded-full self-start flex-row items-center">
                       <Image
                         source={require('@/assets/icons/photo.png')}
                         className="w-3 h-3 mr-1"
