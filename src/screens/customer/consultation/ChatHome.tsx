@@ -8,22 +8,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {
-  collection,
-  getDocs,
-  limit as firestoreLimit,
-  onSnapshot,
-  orderBy,
-  query,
-  where,
-} from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getFirestoreInstance, initializeFirebase, waitForFirebaseUser } from '@/services/firebase';
+import { initializeFirebase, waitForFirebaseUser } from '@/services/firebase';
 
 import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
 
@@ -116,17 +108,13 @@ const CustomerChatHome: React.FC = () => {
   const fetchFromFirestore = useCallback(async () => {
     if (!userKey) return [];
 
-    const fs = getFirestoreInstance();
-    if (!fs) return [];
+    const snap = await firestore()
+      .collection('consultations')
+      .where('user_id', '==', userKey)
+      .orderBy('last_message_at', 'desc')
+      .limit(MAX_ITEMS)
+      .get();
 
-    const q = query(
-      collection(fs, 'consultations'),
-      where('user_id', '==', userKey),
-      orderBy('last_message_at', 'desc'),
-      firestoreLimit(MAX_ITEMS)
-    );
-
-    const snap = await getDocs(q);
     return snap.docs.map((doc) => mapFirestoreConsultation(doc.id, doc.data()));
   }, [userKey]);
 
@@ -143,21 +131,17 @@ const CustomerChatHome: React.FC = () => {
 
   const subscribeRealtime = useCallback(async () => {
     if (!userKey) return;
-    const fs = getFirestoreInstance();
-    if (!fs) return;
 
     const firebaseUser = await waitForFirebaseUser(3000);
     if (!firebaseUser) return;
 
-    const q = query(
-      collection(fs, 'consultations'),
-      where('user_id', '==', userKey),
-      orderBy('last_message_at', 'desc'),
-      firestoreLimit(MAX_ITEMS)
-    );
+    const q = firestore()
+      .collection('consultations')
+      .where('user_id', '==', userKey)
+      .orderBy('last_message_at', 'desc')
+      .limit(MAX_ITEMS);
 
-    const unsub = onSnapshot(
-      q,
+    const unsub = q.onSnapshot(
       (snap) => {
         const docs = snap.docs.map((d) => mapFirestoreConsultation(d.id, d.data()));
 

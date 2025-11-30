@@ -1,39 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FirebaseApp, FirebaseOptions, getApp, getApps, initializeApp } from 'firebase/app';
-import {
-  Auth,
-  User,
-  getAuth,
-  initializeAuth,
-  onAuthStateChanged,
-  signInWithCustomToken,
-  signOut,
-} from 'firebase/auth';
-// @ts-ignore - the type definitions sometimes miss this helper but it exists at runtime.
-import { getReactNativePersistence } from 'firebase/auth';
-import {
-  DocumentData,
-  Firestore,
-  Unsubscribe,
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  getFirestore,
-  onSnapshot,
-  query,
-  serverTimestamp,
-  updateDoc,
-  where,
-} from 'firebase/firestore';
-import { FirebaseStorage, getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
+import { getApp } from '@react-native-firebase/app';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import storage from '@react-native-firebase/storage';
 
 import { FIREBASE_CONFIG } from '@/config/firebase';
-
-let firebaseApp: FirebaseApp | null = null;
-let firestoreInstance: Firestore | null = null;
-let authInstance: Auth | null = null;
-let storageInstance: FirebaseStorage | null = null;
 
 export interface StylistRequest {
   customer_id: string;
@@ -54,121 +24,86 @@ export interface StylistRequestListenerCallbacks {
   onError?: (error: Error) => void;
 }
 
-const buildFirebaseConfig = (): FirebaseOptions | null => {
-  const config = FIREBASE_CONFIG;
-  const isConfigured = Object.values(config).every((value) => value && value.length > 0);
-
-  if (!isConfigured) {
-    if (__DEV__) {
-      console.warn('Firebase configuration is incomplete. Please update FIREBASE_CONFIG.');
-    }
-    return null;
-  }
-
-  return config;
-};
-
-export const initializeFirebase = (): FirebaseApp | null => {
-  if (firebaseApp) {
-    return firebaseApp;
-  }
-
-  const options = buildFirebaseConfig();
-  if (!options) {
-    return null;
-  }
-
+// React Native Firebase auto-initializes from google-services.json
+// Use getApp() to ensure Firebase is initialized (new API, non-deprecated)
+export const initializeFirebase = (): boolean => {
   try {
-    if (getApps().length === 0) {
-      firebaseApp = initializeApp(options);
-    } else {
-      firebaseApp = getApp();
-    }
-
-    firestoreInstance = getFirestore(firebaseApp);
-
-    try {
-      authInstance = initializeAuth(firebaseApp, {
-        persistence: getReactNativePersistence(AsyncStorage),
-      });
-    } catch (error: any) {
-      if (error.code === 'auth/already-initialized') {
-        authInstance = getAuth(firebaseApp);
+    // Use getApp() to get the default Firebase app instance
+    // This ensures Firebase is initialized and uses the new non-deprecated API
+    const app = getApp();
+    return app !== null;
+  } catch (error: any) {
+    if (__DEV__) {
+      const errorMessage = error?.message || String(error);
+      if (errorMessage.includes('No Firebase App')) {
+        console.warn(
+          '⚠️ Firebase not initialized. This usually means:',
+          '\n1. The app needs to be rebuilt after package name change',
+          '\n2. Run: cd android && ./gradlew clean && ./gradlew :app:assembleDebug',
+          '\n3. Make sure google-services.json package_name matches: com.seniorstylist.app'
+        );
       } else {
-        authInstance = getAuth(firebaseApp);
+        console.error('Firebase initialization error:', error);
       }
     }
+    return false;
+  }
+};
 
-    storageInstance = getStorage(firebaseApp);
-    return firebaseApp;
+// Helper to get auth instance (RN Firebase)
+// Ensure Firebase app is initialized first
+export const getFirebaseAuth = () => {
+  try {
+    getApp(); // Ensure Firebase is initialized
+    return auth();
   } catch (error) {
     if (__DEV__) {
-      console.error('Failed to initialize Firebase:', error);
+      console.error('Firebase Auth not available:', error);
     }
-    return null;
+    throw error;
   }
 };
 
-export const getFirebaseAuth = (): Auth | null => {
-  if (authInstance) {
-    return authInstance;
+// Helper to get firestore instance (RN Firebase)
+// Ensure Firebase app is initialized first
+export const getFirestoreInstance = () => {
+  try {
+    getApp(); // Ensure Firebase is initialized
+    return firestore();
+  } catch (error) {
+    if (__DEV__) {
+      console.error('Firestore not available:', error);
+    }
+    throw error;
   }
-
-  const app = initializeFirebase();
-  if (!app) {
-    return null;
-  }
-
-  authInstance = getAuth(app);
-  return authInstance;
 };
 
-export const getFirestoreInstance = (): Firestore | null => {
-  if (firestoreInstance) {
-    return firestoreInstance;
+
+export const signInWithFirebaseCustomToken = async (customToken: string) => {
+  try {
+    getApp(); // Ensure Firebase is initialized
+    const userCredential = await auth().signInWithCustomToken(customToken);
+    return userCredential.user;
+  } catch (error: any) {
+    if (__DEV__) {
+      const errorMessage = error?.message || String(error);
+      if (errorMessage.includes('No Firebase App')) {
+        console.error(
+          '❌ Firebase not initialized. Please rebuild the app:',
+          '\n   cd android && ./gradlew clean && ./gradlew :app:assembleDebug',
+          '\n   Then reinstall the app on your device.'
+        );
+      } else {
+        console.error('Failed to sign in with custom token:', error);
+      }
+    }
+    throw error;
   }
-
-  const app = initializeFirebase();
-  if (!app) {
-    return null;
-  }
-
-  firestoreInstance = getFirestore(app);
-  return firestoreInstance;
-};
-
-export const getFirebaseStorage = (): FirebaseStorage | null => {
-  if (storageInstance) {
-    return storageInstance;
-  }
-
-  const app = initializeFirebase();
-  if (!app) {
-    return null;
-  }
-
-  storageInstance = getStorage(app);
-  return storageInstance;
-};
-
-export const signInWithFirebaseCustomToken = async (customToken: string): Promise<User | null> => {
-  const auth = getFirebaseAuth();
-  if (!auth) {
-    throw new Error('Firebase Auth not initialized');
-  }
-
-  const credential = await signInWithCustomToken(auth, customToken);
-  return credential.user;
 };
 
 export const signOutFirebase = async (): Promise<void> => {
-  const auth = getFirebaseAuth();
-  if (!auth) {
-    return;
-  }
-
   try {
-    await signOut(auth);
+    await auth().signOut();
   } catch (error) {
     if (__DEV__) {
       console.warn('Failed to sign out from Firebase:', error);
@@ -176,15 +111,26 @@ export const signOutFirebase = async (): Promise<void> => {
   }
 };
 
-export const waitForFirebaseUser = (timeout = 5000): Promise<User | null> =>
-  new Promise((resolve) => {
-    const auth = getFirebaseAuth();
-    if (!auth) {
+export const waitForFirebaseUser = (timeout = 5000): Promise<ReturnType<typeof auth>['currentUser']> =>
+  new Promise<ReturnType<typeof auth>['currentUser']>((resolve) => {
+    try {
+      getApp(); // Ensure Firebase is initialized
+    } catch (error) {
       resolve(null);
       return;
     }
+    
+    const authInstance = auth();
+    const currentUser = authInstance.currentUser;
+    
+    // If user is already signed in, return immediately
+    if (currentUser) {
+      resolve(currentUser);
+      return;
+    }
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    // Otherwise, wait for auth state change
+    const unsubscribe = authInstance.onAuthStateChanged((user) => {
       if (user) {
         unsubscribe();
         resolve(user);
@@ -200,19 +146,16 @@ export const waitForFirebaseUser = (timeout = 5000): Promise<User | null> =>
 export const listenToStylistRequests = (
   stylistId: number | string,
   callbacks: StylistRequestListenerCallbacks
-): Unsubscribe | null => {
-  const firestore = getFirestoreInstance();
-  if (!firestore) {
-    callbacks.onError?.(new Error('Firestore not initialized'));
-    return null;
-  }
-
+) => {
   try {
-    const requestsRef = collection(firestore, 'stylist_requests', String(stylistId), 'requests');
-    const q = query(requestsRef, where('status', '==', 'pending'));
+    getApp(); // Ensure Firebase is initialized
+    const requestsRef = firestore()
+      .collection('stylist_requests')
+      .doc(String(stylistId))
+      .collection('requests')
+      .where('status', '==', 'pending');
 
-    const unsubscribe = onSnapshot(
-      q,
+    const unsubscribe = requestsRef.onSnapshot(
       (snapshot) => {
         snapshot.docChanges().forEach((change) => {
           const requestId = change.doc.id;
@@ -246,55 +189,37 @@ export const listenToStylistRequests = (
   }
 };
 
-const uriToBlob = (uri: string): Promise<Blob> =>
-  new Promise((resolve, reject) => {
-    try {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = function () {
-        const blob = xhr.response as Blob;
-        resolve(blob);
-      };
-      xhr.onerror = function (e) {
-        if (__DEV__) {
-          console.error('[firebase] XMLHttpRequest failed while converting uri to blob', e);
-        }
-        reject(new Error('Failed to load file data'));
-      };
-      xhr.responseType = 'blob';
-      xhr.open('GET', uri, true);
-      xhr.send(null);
-    } catch (error) {
-      reject(error as Error);
-    }
-  });
-
 export const uploadImageToStorage = async (
   consultationId: number,
   imageUri: string,
   fileName?: string
 ): Promise<string> => {
-  const storage = getFirebaseStorage();
-  if (!storage) {
-    throw new Error('Firebase Storage not initialized');
-  }
-
-  let blob: Blob;
-
-  if (imageUri.startsWith('data:')) {
-    // For data URLs, fetch can reliably convert to a Blob.
-    const response = await fetch(imageUri);
-    blob = await response.blob();
-  } else {
-    // Convert the local URI (file:// or content://) to a Blob using XMLHttpRequest,
-    // which is more reliable than fetch() with React Native file URIs.
-    blob = await uriToBlob(imageUri);
-  }
-
+  getApp(); // Ensure Firebase is initialized
   const imageName = fileName || `image_${Date.now()}.jpg`;
-  const storageRef = ref(storage, `consultations/${consultationId}/images/${imageName}`);
+  const path = `consultations/${consultationId}/images/${imageName}`;
+  const storageRef = storage().ref(path);
 
-  await uploadBytes(storageRef, blob);
-  const downloadURL = await getDownloadURL(storageRef);
+  if (imageUri.startsWith('data:image')) {
+    // Extract base64 string from data URI (remove "data:image/jpeg;base64," prefix)
+    const base64String = imageUri.split(',')[1];
+    if (!base64String) {
+      throw new Error('Invalid data URI: missing base64 data');
+    }
+
+    // Upload base64 string directly using putString
+    await storageRef.putString(base64String, 'base64', {
+      contentType: 'image/jpeg',
+    });
+  } else {
+    // For file:// or content:// URIs, use putFile
+    let uploadUri = imageUri;
+    if (imageUri.startsWith('file://')) {
+      uploadUri = imageUri.replace('file://', '');
+    }
+    await storageRef.putFile(uploadUri);
+  }
+
+  const downloadURL = await storageRef.getDownloadURL();
   return downloadURL;
 };
 
@@ -306,11 +231,7 @@ export const sendMessageToFirestore = async (
   messageText?: string,
   imageUri?: string
 ): Promise<string> => {
-  const firestore = getFirestoreInstance();
-  if (!firestore) {
-    throw new Error('Firestore not initialized');
-  }
-
+  getApp(); // Ensure Firebase is initialized
   const firebaseUser = await waitForFirebaseUser(3000);
   if (!firebaseUser) {
     throw new Error('Firebase user not authenticated');
@@ -323,21 +244,29 @@ export const sendMessageToFirestore = async (
     if (__DEV__) {
       console.log('[chat] uploading image for consultation', { consultationId, imageUri });
     }
+    
+    // Upload image to Firebase Storage and get download URL
+    // uploadImageToStorage handles both data URIs and file URIs
     attachmentUrl = await uploadImageToStorage(consultationId, imageUri);
     messageType = 'image';
+    
     if (__DEV__) {
       console.log('[chat] image uploaded, got URL', attachmentUrl);
     }
   }
 
-  const messagesRef = collection(firestore, 'consultations', String(consultationId), 'messages');
+  const messagesRef = firestore()
+    .collection('consultations')
+    .doc(String(consultationId))
+    .collection('messages');
+
   const messageData: Record<string, unknown> = {
     user_id: userId,
     user_name: userName,
     message_type: messageType,
     is_read: false,
     is_system_message: false,
-    created_at: serverTimestamp(),
+    created_at: firestore.FieldValue.serverTimestamp(),
   };
 
   if (messageText?.trim()) {
@@ -348,16 +277,16 @@ export const sendMessageToFirestore = async (
     messageData.attachment_url = attachmentUrl;
   }
 
-  const docRef = await addDoc(messagesRef, messageData as DocumentData);
+  const docRef = await messagesRef.add(messageData);
 
   try {
-    const consultationRef = doc(firestore, 'consultations', String(consultationId));
-    const consultationSnap = await getDoc(consultationRef);
+    const consultationRef = firestore().collection('consultations').doc(String(consultationId));
+    const consultationSnap = await consultationRef.get();
 
     if (consultationSnap.exists()) {
       const consultationData = consultationSnap.data();
-      const currentUnreadConsultant = consultationData.unread_count_consultant || 0;
-      const currentUnreadUser = consultationData.unread_count_user || 0;
+      const currentUnreadConsultant = consultationData?.unread_count_consultant || 0;
+      const currentUnreadUser = consultationData?.unread_count_user || 0;
 
       let lastMessagePreview = '';
       if (messageText?.trim()) {
@@ -368,9 +297,9 @@ export const sendMessageToFirestore = async (
 
       const updates: Record<string, unknown> = {
         last_message: lastMessagePreview,
-        last_message_at: serverTimestamp(),
+        last_message_at: firestore.FieldValue.serverTimestamp(),
         last_message_sender_id: userId,
-        updated_at: serverTimestamp(),
+        updated_at: firestore.FieldValue.serverTimestamp(),
       };
 
       if (isConsultant) {
@@ -379,7 +308,7 @@ export const sendMessageToFirestore = async (
         updates.unread_count_consultant = currentUnreadConsultant + 1;
       }
 
-      await updateDoc(consultationRef, updates);
+      await consultationRef.update(updates);
     }
   } catch (error) {
     if (__DEV__) {
@@ -390,4 +319,10 @@ export const sendMessageToFirestore = async (
   return docRef.id;
 };
 
-export const isFirebaseAvailable = (): boolean => buildFirebaseConfig() !== null;
+export const isFirebaseAvailable = (): boolean => {
+  // React Native Firebase auto-initializes from google-services.json
+  // If the packages are installed, Firebase is available
+  // Runtime errors will occur if google-services.json is missing, but that's handled elsewhere
+  return true;
+};
+

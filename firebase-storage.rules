@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow authenticated users to upload consultation request images
+    match /consultation_requests/{userId}/{imageName} {
+      // Allow read for authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow write (upload) for authenticated users
+      // Note: When using signed URLs from Laravel backend, these rules don't apply
+      // Signed URLs bypass Firebase Storage rules as they're pre-authorized
+      allow write: if request.auth != null 
+                   && request.resource.size < 10 * 1024 * 1024  // 10MB limit
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    // Allow authenticated users to read/write consultation images (for chat)
+    match /consultations/{consultationId}/images/{imageName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null 
+                   && request.resource.size < 10 * 1024 * 1024  // 10MB limit
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    // Default: deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

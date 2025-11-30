@@ -14,13 +14,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import NetInfo from '@react-native-community/netinfo';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  collection,
-  limit as firestoreLimit,
-  onSnapshot,
-  orderBy,
-  query,
-} from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { ConsultantConsultation, consultantConsultationsApi } from '@/api/consultant/consultations';
@@ -31,7 +25,6 @@ import ChatInput from '@/components/chat/ChatInput';
 import MessageBubble from '@/components/chat/MessageBubble';
 import ImageModal from '@/components/chat/ImageModal';
 import {
-  getFirestoreInstance,
   sendMessageToFirestore,
   waitForFirebaseUser,
 } from '@/services/firebase';
@@ -211,11 +204,6 @@ const ConsultantChatScreen: React.FC = () => {
     let mounted = true;
 
     const setup = async () => {
-      const firestore = getFirestoreInstance();
-      if (!firestore) {
-        return;
-      }
-
       const firebaseUser = await waitForFirebaseUser(5000);
       if (!firebaseUser) {
         return;
@@ -225,16 +213,14 @@ const ConsultantChatScreen: React.FC = () => {
         realtimeUnsubscribeRef.current();
       }
 
-      const messagesRef = collection(
-        firestore,
-        'consultations',
-        String(consultationId),
-        'messages'
-      );
-      const q = query(messagesRef, orderBy('created_at', 'desc'), firestoreLimit(REALTIME_LIMIT));
+      const messagesRef = firestore()
+        .collection('consultations')
+        .doc(String(consultationId))
+        .collection('messages')
+        .orderBy('created_at', 'desc')
+        .limit(REALTIME_LIMIT);
 
-      const unsubscribe = onSnapshot(
-        q,
+      const unsubscribe = messagesRef.onSnapshot(
         (snapshot) => {
           if (!mounted) {
             return;

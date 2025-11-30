@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Text, View, Platform } from 'react-native';
-import type { Unsubscribe } from 'firebase/firestore';
 
 import RequestDetailsModal from './DetailsModal';
 import RequestList, { RequestItem } from './List';
