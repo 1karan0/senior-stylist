@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Text, View, Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 import RequestDetailsModal from './DetailsModal';
 import RequestList, { RequestItem } from './List';
@@ -50,6 +51,7 @@ const Request: React.FC = () => {
   const { user } = useAuth();
   const isConsultant = user?.role === 'consultant';
   const { isDark } = useTheme();
+  const navigation = useNavigation<any>();
 
   // <<-- CALL THE HOOK UNCONDITIONALLY AT THE TOP
   const { paddingBottom } = useTabBarSafePadding();
@@ -174,9 +176,34 @@ const Request: React.FC = () => {
 
     setAcceptingId(requestId);
     try {
-      await consultantConsultationsApi.accept(requestId);
+      // Accept the request first (wait for backend response)
+      // The accept API returns the consultation data, so we can use it directly
+      if (__DEV__) {
+        console.log('[requests] Accepting consultation request:', requestId);
+      }
+      const consultation = await consultantConsultationsApi.accept(requestId);
+      if (__DEV__) {
+        console.log('[requests] Accept API call completed', {
+          hasConsultation: !!consultation,
+          status: consultation?.status,
+          consultant_id: consultation?.consultant_id,
+        });
+      }
+
+      // Remove from requests list
       setRequests((prev) => prev.filter((req) => req.id !== requestId));
       setRequirementsModal(null);
+
+      // Navigate immediately after accept completes
+      // The consultation is already set up by the backend during the accept call
+      // The chat screen will handle loading the consultation data
+      if (__DEV__) {
+        console.log('[requests] Accept completed, navigating to chat immediately');
+      }
+      navigation.navigate('ConsultantChat', {
+        consultationId: requestId,
+        asCustomer: false, // Consultant view
+      });
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||
@@ -290,6 +317,35 @@ const Request: React.FC = () => {
           onClose={handleCloseModal}
           request={requirementsModal}
         />
+
+        {/* Loading overlay when accepting request */}
+        {acceptingId && (
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000,
+            }}
+          >
+            <View
+              className={`rounded-2xl p-6 items-center ${isDark ? 'bg-[#162721]' : 'bg-white'}`}
+              style={{ minWidth: 200 }}
+            >
+              <ActivityIndicator size="large" color="#27B07D" />
+              <Text
+                className={`font-poppins text-base mt-4 ${isDark ? 'text-white' : 'text-textDark'}`}
+              >
+                Starting chat...
+              </Text>
+            </View>
+          </View>
+        )}
       </View>
     </GradientBackground>
   );
