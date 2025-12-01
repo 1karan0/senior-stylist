@@ -37,13 +37,23 @@ const NewConsultant = ({ navigation }: any) => {
       const result = await launchImageLibrary({
         mediaType: 'photo',
         quality: 0.8,
-        includeBase64: false,
+        includeBase64: true,
       });
 
       if (result.didCancel) return;
 
       if (result.assets && result.assets.length > 0) {
-        setSelectedImage(result.assets[0]);
+        const asset = result.assets[0];
+        // Prefer base64 data URI like chat does
+        if (asset.base64) {
+          const mimeType = asset.type || 'image/jpeg';
+          setSelectedImage({
+            ...asset,
+            uri: `data:${mimeType};base64,${asset.base64}`,
+          });
+        } else if (asset.uri) {
+          setSelectedImage(asset);
+        }
       }
     } catch (err) {
       console.log('Image pick error:', err);

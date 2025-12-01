@@ -67,11 +67,38 @@ export const consultantConsultationsApi = {
     return response.data?.data?.consultation ?? null;
   },
 
-  accept: async (id: number): Promise<void> => {
+  accept: async (id: number): Promise<ConsultantConsultation | null> => {
+    if (__DEV__) {
+      console.log('[consultant-api] Accepting consultation:', id, 'at', new Date().toISOString());
+    }
+    const startTime = Date.now();
     const headers = await withAuthHeaders();
-    await axios.post(`${BASE_URL}/api/consultant/consultations/${id}/accept`, undefined, {
+    if (__DEV__) {
+      console.log('[consultant-api] Headers obtained, making accept request...', {
+        elapsed: Date.now() - startTime,
+        ms: 'ms',
+      });
+    }
+    const response = await axios.post<{
+      status: string;
+      code: number;
+      message: string;
+      data?: { consultation?: ConsultantConsultation };
+    }>(`${BASE_URL}/api/consultant/consultations/${id}/accept`, undefined, {
       headers,
     });
+    if (__DEV__) {
+      console.log('[consultant-api] Accept request completed:', {
+        status: response.status,
+        statusText: response.statusText,
+        elapsed: Date.now() - startTime,
+        ms: 'ms',
+        hasConsultation: !!response.data?.data?.consultation,
+        consultationStatus: response.data?.data?.consultation?.status,
+      });
+    }
+    // Return the consultation from the response (if available)
+    return response.data?.data?.consultation ?? null;
   },
 
   list: async (): Promise<ConsultantConsultation[]> => {

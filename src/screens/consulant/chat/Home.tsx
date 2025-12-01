@@ -11,15 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {
-  collection,
-  getDocs,
-  limit as firestoreLimit,
-  onSnapshot,
-  orderBy,
-  query,
-  where,
-} from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,7 +20,7 @@ import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consul
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getFirestoreInstance, initializeFirebase, waitForFirebaseUser } from '@/services/firebase';
+import { initializeFirebase, waitForFirebaseUser } from '@/services/firebase';
 
 import { mapFirestoreConsultation } from '@/utils/firestoreConsultationMapper';
 import {
@@ -127,19 +119,14 @@ const ChatHome: React.FC = () => {
     if (!consultantKey) {
       return [];
     }
-    const firestore = getFirestoreInstance();
-    if (!firestore) {
-      return [];
-    }
 
-    const baseQuery = query(
-      collection(firestore, 'consultations'),
-      where('consultant_id', '==', consultantKey),
-      orderBy('last_message_at', 'desc'),
-      firestoreLimit(MAX_ITEMS)
-    );
+    const snapshot = await firestore()
+      .collection('consultations')
+      .where('consultant_id', '==', consultantKey)
+      .orderBy('last_message_at', 'desc')
+      .limit(MAX_ITEMS)
+      .get();
 
-    const snapshot = await getDocs(baseQuery);
     return snapshot.docs.map((doc) => mapFirestoreConsultation(doc.id, doc.data()));
   }, [consultantKey]);
 
@@ -159,25 +146,19 @@ const ChatHome: React.FC = () => {
     if (!consultantKey) {
       return;
     }
-    const firestore = getFirestoreInstance();
-    if (!firestore) {
-      return;
-    }
 
     const firebaseUser = await waitForFirebaseUser(3000);
     if (!firebaseUser) {
       return;
     }
 
-    const realtimeQuery = query(
-      collection(firestore, 'consultations'),
-      where('consultant_id', '==', consultantKey),
-      orderBy('last_message_at', 'desc'),
-      firestoreLimit(MAX_ITEMS)
-    );
+    const realtimeQuery = firestore()
+      .collection('consultations')
+      .where('consultant_id', '==', consultantKey)
+      .orderBy('last_message_at', 'desc')
+      .limit(MAX_ITEMS);
 
-    const unsubscribe = onSnapshot(
-      realtimeQuery,
+    const unsubscribe = realtimeQuery.onSnapshot(
       (snapshot) => {
         const docs = snapshot.docs.map((doc) => mapFirestoreConsultation(doc.id, doc.data()));
         const realtimeIds = new Set(docs.map((doc) => doc.id));

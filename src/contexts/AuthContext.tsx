@@ -10,6 +10,8 @@ import {
   signInWithFirebaseCustomToken,
   signOutFirebase,
 } from '@/services/firebase';
+import { initializeNotifications, deleteFCMTokenFromBackend } from '@/services/notifications';
+import { clearAllActiveChats } from '@/api/chat/useActiveChat';
 
 interface AuthContextType {
   user: User | null;
@@ -71,6 +73,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token && userData) {
         setUser(userData);
         await ensureFirebaseSession();
+
+        // Request notification permissions and register FCM token after restoring session
+        initializeNotifications().catch((error) => {
+          if (__DEV__) {
+            console.warn('[auth] Failed to initialize notifications:', error);
+          }
+        });
       }
       setIsBordingCompleted(onbordingCompleted);
     } catch (error) {
@@ -99,6 +108,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         await ensureFirebaseSession();
       }
+
+      // Request notification permissions and register FCM token after successful login
+      if (__DEV__) {
+        console.log('[auth] User logged in, initializing notifications...');
+      }
+      initializeNotifications()
+        .then((token) => {
+          if (__DEV__) {
+            if (token) {
+              console.log(
+                '[auth] Notifications initialized successfully, token:',
+                token.substring(0, 20) + '...'
+              );
+            } else {
+              console.warn('[auth] Notifications initialized but no token obtained');
+            }
+          }
+        })
+        .catch((error) => {
+          if (__DEV__) {
+            console.error('[auth] Failed to initialize notifications:', error);
+            console.error('[auth] Notification error details:', {
+              message: error?.message,
+              code: error?.code,
+            });
+          }
+        });
     } catch (err) {
       throw err;
     }
@@ -131,11 +167,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setIsLoading(true);
     try {
+      // Delete FCM token from Firestore before clearing auth data
+      // This prevents notifications from being sent to the wrong user
+      // when a different user logs in on the same device
+      if (__DEV__) {
+        console.log('[auth] Logging out, cleaning up FCM token and active chats...');
+      }
+
+      // Get user data BEFORE clearing it (needed for token deletion)
+      const userData = await storage.getUserData();
+      if (__DEV__) {
+        console.log('[auth] User data retrieved for cleanup:', {
+          hasUserData: !!userData,
+          userId: userData?.id,
+        });
+      }
+
+      // Delete FCM token and clear active chats
+      const [tokenDeleted, chatsCleared] = await Promise.all([
+        deleteFCMTokenFromBackend().catch((error) => {
+          if (__DEV__) {
+            console.error('[auth] Failed to delete FCM token on logout:', error);
+            console.error('[auth] Token deletion error details:', {
+              message: error?.message,
+              code: error?.code,
+            });
+          }
+          return false;
+        }),
+        clearAllActiveChats().catch((error) => {
+          if (__DEV__) {
+            console.error('[auth] Failed to clear active chats on logout:', error);
+          }
+          return false;
+        }),
+      ]);
+
+      if (__DEV__) {
+        console.log('[auth] Cleanup results:', {
+          tokenDeleted,
+          chatsCleared,
+        });
+      }
+
+      // Now clear auth data and sign out
       await storage.clearAuthData();
       await signOutFirebase();
       setUser(null);
+
+      if (__DEV__) {
+        console.log('[auth] Logout completed');
+      }
     } catch (error) {
-      console.log('Logout error:', error);
+      console.error('[auth] Logout error:', error);
     } finally {
       setIsLoading(false);
     }

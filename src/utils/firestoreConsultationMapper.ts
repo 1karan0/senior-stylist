@@ -1,5 +1,3 @@
-import { DocumentData } from 'firebase/firestore';
-
 import { ConsultantConsultation } from '@/api/consultant/consultations';
 
 const normalizeTimestamp = (value: any): string | undefined => {
@@ -23,7 +21,7 @@ const toNumber = (value: any): number | undefined => {
 
 export const mapFirestoreConsultation = (
   docId: string,
-  data: DocumentData
+  data: Record<string, any>
 ): ConsultantConsultation => {
   const id = Number(docId);
   const userId = toNumber(data.user_id) ?? 0;

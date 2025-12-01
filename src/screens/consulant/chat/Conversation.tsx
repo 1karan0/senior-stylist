@@ -14,13 +14,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import NetInfo from '@react-native-community/netinfo';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  collection,
-  limit as firestoreLimit,
-  onSnapshot,
-  orderBy,
-  query,
-} from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { ConsultantConsultation, consultantConsultationsApi } from '@/api/consultant/consultations';
@@ -30,11 +24,8 @@ import ChatHeader from '@/components/chat/ChatHeader';
 import ChatInput from '@/components/chat/ChatInput';
 import MessageBubble from '@/components/chat/MessageBubble';
 import ImageModal from '@/components/chat/ImageModal';
-import {
-  getFirestoreInstance,
-  sendMessageToFirestore,
-  waitForFirebaseUser,
-} from '@/services/firebase';
+import { sendMessageToFirestore, waitForFirebaseUser } from '@/services/firebase';
+import { setActiveChat, clearActiveChat } from '@/api/chat/useActiveChat';
 import {
   getCachedConsultation,
   getMessages,
@@ -96,6 +87,26 @@ const ConsultantChatScreen: React.FC = () => {
     return () => unsubscribe();
   }, [offlineError]);
 
+  // Set active chat when screen opens, clear when screen closes
+  useEffect(() => {
+    setActiveChat(consultationId).catch((error) => {
+      if (__DEV__) {
+        console.warn('[chat] Failed to set active chat:', error);
+      }
+    });
+
+    // Clear active chat when screen closes/unmounts
+    return () => {
+      if (consultationId) {
+        clearActiveChat(consultationId).catch((error) => {
+          if (__DEV__) {
+            console.warn('[chat] Failed to clear active chat:', error);
+          }
+        });
+      }
+    };
+  }, [consultationId]);
+
   const loadConsultation = useCallback(async () => {
     setLoading(true);
     try {
@@ -131,16 +142,31 @@ const ConsultantChatScreen: React.FC = () => {
           setOfflineError('Unable to load consultation details.');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       if (__DEV__) {
         console.error('[chat] failed to load consultation', error);
+        console.error('[chat] Error details:', {
+          consultationId,
+          isConsultant,
+          status: error?.response?.status,
+          statusText: error?.response?.statusText,
+          message: error?.message,
+          url: error?.config?.url,
+        });
       }
       const cached = await getCachedConsultation(consultationId);
       if (cached) {
         setConsultation(cached);
         setOfflineError('Unable to refresh consultation. Showing cached data.');
       } else {
-        setOfflineError('Unable to load consultation.');
+        // Check if it's a 404 (consultation not found)
+        if (error?.response?.status === 404) {
+          setOfflineError(
+            'Consultation not found. It may have been deleted or you may not have access.'
+          );
+        } else {
+          setOfflineError('Unable to load consultation.');
+        }
       }
     } finally {
       setLoading(false);
@@ -211,11 +237,6 @@ const ConsultantChatScreen: React.FC = () => {
     let mounted = true;
 
     const setup = async () => {
-      const firestore = getFirestoreInstance();
-      if (!firestore) {
-        return;
-      }
-
       const firebaseUser = await waitForFirebaseUser(5000);
       if (!firebaseUser) {
         return;
@@ -225,16 +246,14 @@ const ConsultantChatScreen: React.FC = () => {
         realtimeUnsubscribeRef.current();
       }
 
-      const messagesRef = collection(
-        firestore,
-        'consultations',
-        String(consultationId),
-        'messages'
-      );
-      const q = query(messagesRef, orderBy('created_at', 'desc'), firestoreLimit(REALTIME_LIMIT));
+      const messagesRef = firestore()
+        .collection('consultations')
+        .doc(String(consultationId))
+        .collection('messages')
+        .orderBy('created_at', 'desc')
+        .limit(REALTIME_LIMIT);
 
-      const unsubscribe = onSnapshot(
-        q,
+      const unsubscribe = messagesRef.onSnapshot(
         (snapshot) => {
           if (!mounted) {
             return;
