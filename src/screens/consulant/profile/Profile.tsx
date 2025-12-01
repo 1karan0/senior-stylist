@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Switch, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Switch, Image } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +14,9 @@ const Profile: React.FC = () => {
   const { theme, setTheme, isDark } = useTheme();
   const { logout } = useAuth();
   const navigation = useNavigation<any>();
+  const { data: profile } = useGetProfile();
+
+  const user = profile as any;
 
   const toggleTheme = () => {
     setTheme(isDark ? 'light' : 'dark');
@@ -49,15 +53,27 @@ const Profile: React.FC = () => {
               {/* Avatar + Name + Badge + Theme Switch */}
               <View className="flex-row items-start">
                 {/* Avatar */}
-                <View className="w-14 h-14 rounded-full mr-3 overflow-hidden">
-                  <LinearGradient
-                    colors={['#27B07D', '#36D399']}
-                    style={{ flex: 1, borderRadius: 9999 }}
-                    className="items-center justify-center"
-                  >
-                    <Text className="text-white font-urbanist-semibold text-xl">SJ</Text>
-                  </LinearGradient>
-                </View>
+                {/* Avatar */}
+                <LinearGradient
+                  colors={['#2CCB91', '#23A76F']}
+                  start={{ x: 0, y: 1 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ borderRadius: 100 }}
+                  className=" h-14 justify-center items-center w-14 px-3 py-1 mr-4"
+                >
+                  <View>
+                    {user?.profile_picture_url ? (
+                      <Image
+                        source={{ uri: user.profile_picture_url }}
+                        className="h-14 w-14 rounded-full"
+                      />
+                    ) : (
+                      <Text className="text-white text-xl">
+                        {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
+                      </Text>
+                    )}
+                  </View>
+                </LinearGradient>
 
                 {/* Name, Badge and Theme Switch */}
                 <View className="flex-1">
@@ -66,7 +82,7 @@ const Profile: React.FC = () => {
                       isDark ? 'text-white' : 'text-[#162721]'
                     }`}
                   >
-                    John Doe
+                    {user?.name}
                   </Text>
 
                   <LinearGradient
@@ -78,7 +94,7 @@ const Profile: React.FC = () => {
                   </LinearGradient>
 
                   {/* Inline small row for theme toggle */}
-                  <View className="flex-row items-center gap-3">
+                  {/* <View className="flex-row items-center gap-3">
                     <Text className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
                       {isDark ? 'Dark' : 'Light'}
                     </Text>
@@ -88,7 +104,7 @@ const Profile: React.FC = () => {
                       trackColor={{ false: '#d1d5db', true: '#10b981' }}
                       thumbColor={'#ffffff'}
                     />
-                  </View>
+                  </View> */}
                 </View>
               </View>
 
@@ -120,7 +136,7 @@ const Profile: React.FC = () => {
                 <Text
                   className={`font-poppins-regular ml-3 ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
                 >
-                  john.doe@example.com
+                  {user?.email}
                 </Text>
               </View>
 
@@ -130,7 +146,7 @@ const Profile: React.FC = () => {
                 <Text
                   className={`font-poppins-regular ml-3 ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
                 >
-                  +1 (555) 123-4567
+                  Member since {user?.created_at?.split('T')[0]}
                 </Text>
               </View>
 
