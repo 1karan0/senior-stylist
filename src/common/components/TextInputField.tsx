@@ -48,7 +48,7 @@ const TextInputField: React.FC<TextInputFieldProps> = ({
 
   const defaultInputClassName = `flex-1 font-normal ${isDark ? 'text-white' : 'text-black'}`;
 
-  const defaultLabelClassName = `font-medium text-[14px] ${
+  const defaultLabelClassName = `font-poppins-medium text-sm ${
     isDark ? 'text-white' : 'text-black'
   } mb-2`;
 

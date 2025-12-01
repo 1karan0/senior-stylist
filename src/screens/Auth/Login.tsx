@@ -26,7 +26,6 @@ export default function LoginScreen({ navigation }: any) {
     formState: { errors },
   } = useForm();
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState({
     visible: false,
     message: '',

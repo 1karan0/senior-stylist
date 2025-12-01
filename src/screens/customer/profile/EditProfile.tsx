@@ -21,6 +21,8 @@ import TextInputField from '@/common/components/TextInputField';
 
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';
 import { useEditProfile } from '@/api/user/profile/useEditProfile';
+import { AppButton } from '@/common/components/Button';
+import LinearGradient from 'react-native-linear-gradient';
 
 const EditProfile = () => {
   const navigation = useNavigation();
@@ -32,17 +34,12 @@ const EditProfile = () => {
   const uploadMutation = useUploadProfilePicture();
   const editMutation = useEditProfile();
 
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm({
+  const { control, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
       name: profile.name,
       phone: profile.phone,
       address: profile.address || '',
-      email: profile.email, // read-only field
+      email: profile.email,
     },
   });
 
@@ -52,15 +49,24 @@ const EditProfile = () => {
     ImagePicker.launchImageLibrary({ mediaType: 'photo' }, async (response) => {
       if (response.didCancel || !response.assets) return;
 
+      const asset = response.assets[0];
+
+      const uri = asset.uri;
+      const fileName = asset.fileName ?? `photo_${Date.now()}.jpg`;
+      const mimeType = asset.type ?? 'image/jpeg';
+
       const file = {
-        uri: response.assets[0].uri,
-        name: response.assets[0].fileName,
-        type: response.assets[0].type,
+        uri,
+        name: fileName,
+        type: mimeType,
       };
 
-      uploadMutation.mutate(file as any, {
+      uploadMutation.mutate(file, {
         onSuccess: (res) => {
           setProfilePic(res.data.profile_picture_url);
+        },
+        onError: (err) => {
+          console.log('UPLOAD FAILED:', err.message);
         },
       });
     });
@@ -80,9 +86,9 @@ const EditProfile = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1 px-5 pt-6">
+      <View className="flex-1 px-5 pt-6 pb-20">
         {/* Header */}
-        <View className={` pb-4 border-b ${isDark ? 'border-[#273F36]' : 'border-[#DAE7E0]'}`}>
+        <View className={`mb-4 pb-4 border-b ${isDark ? 'border-[#273F36]' : 'border-[#DAE7E0]'}`}>
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => navigation.goBack()} className="mr-1">
               <Image
@@ -116,16 +122,23 @@ const EditProfile = () => {
                 )}
 
                 {/* Avatar */}
-                {profilePic ? (
-                  <Image
-                    source={{ uri: profilePic }}
-                    className="w-32 h-32 rounded-full bg-green-600 border-4 border-green-600/20"
-                  />
-                ) : (
-                  <View className="w-32 h-32 rounded-full bg-green-600 items-center justify-center border-4 border-green-600/20">
-                    <Text className="text-white text-4xl font-bold">{profile.name.charAt(0)}</Text>
+                <LinearGradient
+                  colors={['#27B07D', '#36D399']}
+                  style={{ borderRadius: 100 }} // your app’s gradient
+                  className="w-32 h-32  items-center justify-center"
+                >
+                  <View className="w-32 h-32 rounded-full overflow-hidden">
+                    {profilePic ? (
+                      <Image source={{ uri: profilePic }} className="w-full h-full" />
+                    ) : (
+                      <View className="flex-1 items-center justify-center">
+                        <Text className="text-white text-4xl font-bold">
+                          {profile.name.charAt(0)}
+                        </Text>
+                      </View>
+                    )}
                   </View>
-                )}
+                </LinearGradient>
 
                 {/* Plus icon */}
                 <View className="absolute bottom-0 right-0 bg-green-600 w-10 h-10 rounded-full items-center justify-center border-4 border-white dark:border-[#11211c]">
@@ -145,27 +158,27 @@ const EditProfile = () => {
           >
             {/* FULL NAME */}
             <TextInputField
-              label="FULL NAME"
-              value={profile.name}
+              label="full name"
+              value={watch('name')}
               onChangeText={(t) => setValue('name', t)}
             />
 
             {/* PHONE */}
             <TextInputField
-              label="PHONE NUMBER"
+              label="phone number"
               keyboardType="phone-pad"
-              value={profile.phone}
+              value={watch('phone')}
               onChangeText={(t) => setValue('phone', t)}
             />
 
             {/* EMAIL INPUT (simple TextInput, readonly) */}
             <View className="mb-4">
               <Text
-                className={`text-xs mb-2 font-urbanist-semibold ${
-                  isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+                className={`text-sm mb-2 font-poppins-medium ${
+                  isDark ? 'text-white' : 'text-black'
                 }`}
               >
-                EMAIL
+                email
               </Text>
 
               <TextInput
@@ -179,28 +192,20 @@ const EditProfile = () => {
 
             {/* ADDRESS */}
             <TextInputField
-              label="ADDRESS"
+              label="address"
               multiline
-              value={profile?.address || ''}
+              value={watch('address')}
               onChangeText={(t) => setValue('address', t)}
             />
           </View>
           {/* SAVE BUTTON */}
-          <TouchableOpacity
-            onPress={handleSubmit(onSave)}
-            disabled={editMutation.isPending}
-            className={`mt-8 bg-green-600 p-3 rounded-2xl ${
-              editMutation.isPending ? 'opacity-60' : ''
-            }`}
-          >
+          <View className="mt-8">
             {editMutation.isPending ? (
-              <ActivityIndicator color="#fff" />
+              <AppButton text="Saving..." disabled={true} variant="gradient" />
             ) : (
-              <Text className="text-center text-white text-lg font-urbanist-bold">
-                Save Changes
-              </Text>
+              <AppButton text="Save Changes" onPress={handleSubmit(onSave)} variant="gradient" />
             )}
-          </TouchableOpacity>
+          </View>
 
           {/* CANCEL */}
           <TouchableOpacity onPress={() => navigation.goBack()} className="mt-4 p-4">
