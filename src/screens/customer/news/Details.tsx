@@ -81,27 +81,6 @@ const Details: React.FC = () => {
                 }
               />
             </TouchableOpacity>
-
-            <View className="flex-row gap-3">
-              <TouchableOpacity>
-                <Image
-                  source={
-                    isDark
-                      ? require('@/assets/icons/white-share.png')
-                      : require('@/assets/icons/share.png')
-                  }
-                />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Image
-                  source={
-                    isDark
-                      ? require('@/assets/icons/white-save.png')
-                      : require('@/assets/icons/save.png')
-                  }
-                />
-              </TouchableOpacity>
-            </View>
           </View>
 
           <ScrollView
@@ -112,9 +91,9 @@ const Details: React.FC = () => {
           >
             {/* Title */}
             <Text
-              className={`text-xl font-semibold  ${isDark ? 'text-white' : 'text-textDark'} mb-2 leading-snug`}
+              className={`text-xl font-poppins-semibold mt-4  ${isDark ? 'text-white' : 'text-textDark'} mb-2 leading-snug`}
             >
-              {}
+              {article.title}
             </Text>
 
             {/* Info Row */}

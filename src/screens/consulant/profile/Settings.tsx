@@ -3,11 +3,10 @@ import { View, Text, TouchableOpacity, ScrollView, Switch } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
 import GradientBackground from '@/common/components/GradientBackground';
-import { ModalWrapper } from '@/common/components/ModalWrapper';
-import { AppButton } from '@/common/components/Button';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import DeleteAccountModal from '@/common/components/modals/DeleteAccountModal';
 
 const Settings: React.FC = () => {
   const { isDark, setTheme } = useTheme();
@@ -216,58 +215,12 @@ const Settings: React.FC = () => {
         </ScrollView>
 
         {/* Delete Account Confirmation Modal */}
-        <ModalWrapper
+        <DeleteAccountModal
           visible={showDeleteModal}
-          onClose={cancelDelete}
-          dismissOnBackdropPress={false}
-          containerClassName={isDark ? 'bg-[#162721]' : 'bg-white'}
-        >
-          <View className="items-center">
-            {/* Warning Icon */}
-            <View className="w-16 h-16 bg-red-500/10 rounded-full items-center justify-center mb-4">
-              <Ionicons name="warning" size={32} color="#F22D2D" />
-            </View>
-
-            {/* Title */}
-            <Text
-              className={`text-xl font-urbanist-bold mb-3 text-center ${
-                isDark ? 'text-white' : 'text-[#162721]'
-              }`}
-            >
-              Delete Account?
-            </Text>
-
-            {/* Description */}
-            <Text
-              className={`text-center font-poppins-regular mb-6 ${
-                isDark ? 'text-[#8AA897]' : 'text-[#658176]'
-              }`}
-            >
-              Are you sure you want to delete your account? This action cannot be undone and all
-              your data will be permanently removed.
-            </Text>
-
-            {/* Buttons */}
-            <View className="w-full space-y-3">
-              {/* Delete Button */}
-              <View className="mb-3">
-                <AppButton
-                  text="Yes, Delete Account"
-                  variant="gradient"
-                  onPress={confirmDeleteAccount}
-                />
-              </View>
-
-              {/* Cancel Button */}
-              <AppButton
-                text="Cancel"
-                variant="light"
-                textClassName={'text-[#162721]'}
-                onPress={cancelDelete}
-              />
-            </View>
-          </View>
-        </ModalWrapper>
+          isDark={isDark}
+          onConfirm={confirmDeleteAccount}
+          onCancel={cancelDelete}
+        />
       </View>
     </GradientBackground>
   );

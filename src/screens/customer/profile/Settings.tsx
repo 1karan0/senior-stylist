@@ -1,13 +1,20 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Switch, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Switch } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useNavigation } from '@react-navigation/native';
 import GradientBackground from '@/common/components/GradientBackground';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import DeleteAccountModal from '@/common/components/modals/DeleteAccountModal';
 
 const Settings: React.FC = () => {
+  const { isDark, setTheme } = useTheme();
+  const { paddingBottom } = useTabBarSafePadding();
   const navigation = useNavigation();
-  const { theme, setTheme, isDark } = useTheme();
+  const { logout } = useAuth();
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const toggleTheme = () => {
     setTheme(isDark ? 'light' : 'dark');
@@ -17,82 +24,203 @@ const Settings: React.FC = () => {
     navigation.goBack();
   };
 
+  const handleDeleteAccount = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteAccount = () => {
+    // Implement delete account logic here
+    setShowDeleteModal(false);
+    // After deletion, logout and navigate to auth screen
+    logout();
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+
   return (
     <GradientBackground>
-      <View className="flex-1 px-5 pt-6 ">
-        {/* Header with Back Button */}
-        <View className="flex-row items-center p-4 ">
-          <TouchableOpacity onPress={handleBack} className="p-2 mr-3">
-            <Image
-              source={
-                isDark
-                  ? require('@/assets/icons/green-back.png')
-                  : require('@/assets/icons/back.png')
-              }
-            />
-          </TouchableOpacity>
-          <Text className={` ${isDark ? 'text-white' : 'text-gray-800'} text-xl font-bold `}>
-            Settings
-          </Text>
+      <View className="flex-1">
+        {/* Header */}
+        <View className="px-5 py-6">
+          <View className="flex-row items-center">
+            <TouchableOpacity onPress={handleBack} className="mr-3">
+              <Ionicons name="arrow-back" size={24} color={isDark ? '#FFFFFF' : '#162721'} />
+            </TouchableOpacity>
+            <Text
+              className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-[#162721]'}`}
+            >
+              Settings
+            </Text>
+          </View>
         </View>
 
-        <View
-          className={`${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl border p-6 mb-6 shadow-sm`}
+        {/* Content */}
+        <ScrollView
+          className="flex-1 px-5"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom }}
         >
-          <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-black'} mb-4`}>
-            Theme Settings
-          </Text>
+          {/* Theme Section */}
+          <View
+            className={`rounded-xl border p-5 mb-4 shadow-sm ${
+              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+            }`}
+          >
+            <Text
+              className={`text-lg font-urbanist-semibold mb-4 ${
+                isDark ? 'text-white' : 'text-[#162721]'
+              }`}
+            >
+              Appearance
+            </Text>
 
-          <View className="flex-row justify-between items-center">
-            <View className="flex-1">
-              <Text className={`${isDark ? 'text-white' : 'text-black'} font-medium`}>
-                {isDark ? 'Dark Mode' : 'Light Mode'}
-              </Text>
-              <Text className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                {isDark ? 'Dark theme is enabled' : 'Light theme is enabled'}
-              </Text>
-              <Text className="text-gray-400 dark:text-gray-500 text-xs mt-1">
-                Current:{' '}
-                {theme === 'system' ? 'System Default' : theme === 'dark' ? 'Dark' : 'Light'}
-              </Text>
+            {/* Theme Toggle */}
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center flex-1">
+                <View
+                  className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                    isDark ? 'bg-[#273F36]' : 'bg-[#F5F9F7]'
+                  }`}
+                >
+                  <Ionicons name={isDark ? 'moon' : 'sunny'} size={20} color="#27B07D" />
+                </View>
+                <View className="flex-1">
+                  <Text
+                    className={`font-urbanist-semibold text-base ${
+                      isDark ? 'text-white' : 'text-[#162721]'
+                    }`}
+                  >
+                    Dark Mode
+                  </Text>
+                  <Text
+                    className={`text-sm font-poppins-regular mt-1 ${
+                      isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+                    }`}
+                  >
+                    {isDark ? 'Dark theme enabled' : 'Light theme enabled'}
+                  </Text>
+                </View>
+              </View>
+
+              <Switch
+                value={isDark}
+                onValueChange={toggleTheme}
+                trackColor={{ false: '#d1d5db', true: '#10b981' }}
+                thumbColor={'#ffffff'}
+              />
             </View>
-            <Switch
-              value={isDark}
-              onValueChange={toggleTheme}
-              trackColor={{ false: '#d1d5db', true: '#10b981' }}
-              thumbColor={isDark ? '#ffffff' : '#ffffff'}
-              ios_backgroundColor="#d1d5db"
-            />
           </View>
 
-          {/* Quick Theme Buttons */}
-          <View className="flex-row gap-2 mt-4">
-            <TouchableOpacity
-              className={`flex-1 px-3 py-2 rounded-lg ${
-                theme === 'light' ? 'bg-blue-600' : 'bg-blue-500'
+          {/* Account Section */}
+          <View
+            className={`rounded-xl border p-5 mb-4 shadow-sm ${
+              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+            }`}
+          >
+            <Text
+              className={`text-lg font-urbanist-semibold mb-4 ${
+                isDark ? 'text-white' : 'text-[#162721]'
               }`}
-              onPress={() => setTheme('light')}
             >
-              <Text className="text-white text-center text-sm font-medium">Light</Text>
-            </TouchableOpacity>
+              Account
+            </Text>
+
+            {/* Delete Account */}
             <TouchableOpacity
-              className={`flex-1 px-3 py-2 rounded-lg ${
-                theme === 'dark' ? 'bg-gray-800' : 'bg-gray-700'
+              onPress={handleDeleteAccount}
+              className={`flex-row items-center justify-between p-4 rounded-xl ${
+                isDark ? 'bg-[#0F1F1A]' : 'bg-[#F5F9F7]'
               }`}
-              onPress={() => setTheme('dark')}
+              activeOpacity={0.7}
             >
-              <Text className="text-white text-center text-sm font-medium">Dark</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`flex-1 px-3 py-2 rounded-lg ${
-                theme === 'system' ? 'bg-green-600' : 'bg-green-500'
-              }`}
-              onPress={() => setTheme('system')}
-            >
-              <Text className="text-white text-center text-sm font-medium">System</Text>
+              <View className="flex-row items-center flex-1">
+                <View className="w-10 h-10 bg-red-500/10 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="trash-outline" size={20} color="#F22D2D" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-[#F22D2D] font-urbanist-semibold text-base">
+                    Delete Account
+                  </Text>
+                  <Text
+                    className={`text-sm font-poppins-regular mt-1 ${
+                      isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+                    }`}
+                  >
+                    Permanently delete your account
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
             </TouchableOpacity>
           </View>
-        </View>
+
+          {/* App Info */}
+          <View
+            className={`rounded-xl border p-5 mb-8 shadow-sm ${
+              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+            }`}
+          >
+            <Text
+              className={`text-lg font-urbanist-semibold mb-4 ${
+                isDark ? 'text-white' : 'text-[#162721]'
+              }`}
+            >
+              About
+            </Text>
+
+            <View className="space-y-3">
+              {/* Version */}
+              <View className="flex-row items-center justify-between mb-3">
+                <Text
+                  className={`font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                >
+                  Version
+                </Text>
+                <Text
+                  className={`font-urbanist-semibold ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                >
+                  1.0.0
+                </Text>
+              </View>
+
+              {/* Terms & Conditions */}
+              <TouchableOpacity
+                className="flex-row items-center justify-between"
+                activeOpacity={0.7}
+              >
+                <Text
+                  className={`font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                >
+                  Terms & Conditions
+                </Text>
+                <Ionicons name="chevron-forward" size={18} color={isDark ? '#8AA897' : '#658176'} />
+              </TouchableOpacity>
+
+              {/* Privacy Policy */}
+              <TouchableOpacity
+                className="flex-row items-center justify-between mt-3"
+                activeOpacity={0.7}
+              >
+                <Text
+                  className={`font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                >
+                  Privacy Policy
+                </Text>
+                <Ionicons name="chevron-forward" size={18} color={isDark ? '#8AA897' : '#658176'} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Delete Account Confirmation Modal */}
+        <DeleteAccountModal
+          visible={showDeleteModal}
+          isDark={isDark}
+          onConfirm={confirmDeleteAccount}
+          onCancel={cancelDelete}
+        />
       </View>
     </GradientBackground>
   );
