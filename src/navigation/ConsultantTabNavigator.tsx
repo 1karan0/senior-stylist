@@ -1,6 +1,7 @@
 import React from 'react';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,10 +9,28 @@ import DashboardScreen from '@/screens/consulant/dashboard/Dashboard';
 import RequestScreen from '@/screens/consulant/requests/Request';
 import ChatScreen from '@/screens/consulant/chat/Home';
 import ConsultantProfileScreen from '@/screens/consulant/profile/Profile';
+import EditProfileScreen from '@/screens/consulant/profile/EditProfile';
+import SettingsScreen from '@/screens/consulant/profile/Settings';
 import { ConsultantTabParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator<ConsultantTabParamList>();
+const ProfileStack = createNativeStackNavigator();
+
+const ProfileStackNavigator: React.FC = () => {
+  return (
+    <ProfileStack.Navigator
+      initialRouteName="ProfileMain"
+      screenOptions={{
+        headerShown: false, // hide native header for profile stack
+      }}
+    >
+      <ProfileStack.Screen name="ProfileMain" component={ConsultantProfileScreen} />
+      <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <ProfileStack.Screen name="Settings" component={SettingsScreen} />
+    </ProfileStack.Navigator>
+  );
+};
 
 const ConsultantTabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -30,8 +49,8 @@ const ConsultantTabNavigator: React.FC = () => {
         tabBarStyle: {
           position: 'absolute',
           bottom: bottomOffset,
-          marginHorizontal: 10, // symmetric left & right padding
-          height: 62, // slightly smaller height
+          marginHorizontal: 10,
+          height: 62,
           borderRadius: 40,
           backgroundColor: isDark ? '#0E1B16' : 'rgba(255,255,255,0.95)',
           borderWidth: 1,
@@ -43,13 +62,11 @@ const ConsultantTabNavigator: React.FC = () => {
           shadowRadius: 8,
           paddingHorizontal: 8,
           paddingVertical: 6,
-          // don't set alignItems/justifyContent on the container; items handle layout
         },
 
-        // Make each tab take equal width so spacing between tabs is consistent
         tabBarItemStyle: {
           flex: 1,
-          marginHorizontal: 6, // space between tabs
+          marginHorizontal: 6,
           paddingTop: 6,
           paddingBottom: 6,
           alignItems: 'center',
@@ -103,9 +120,10 @@ const ConsultantTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="ProfileTab"
-        component={ConsultantProfileScreen}
+        component={ProfileStackNavigator}
         options={{
           title: 'Profile',
+          // profile tab will be active whenever any screen in ProfileStack is focused
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? 'person-circle' : 'person-circle-outline'}
