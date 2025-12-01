@@ -25,18 +25,38 @@ export const AppButton: React.FC<AppButtonProps> = ({
 }) => {
   const isGradient = variant === 'gradient';
   const gradientColors = ['#27B07D', '#36D399'];
-  const disabledColors = ['#DADADA', '#DADADA'];
 
-  const labelClass = disabled ? 'text-textMuted' : isGradient ? 'text-white' : 'text-primary';
+  // Default visual tokens
+  const disabledBgClass = 'bg-disabled';
+  const lightDefaultBgClass = 'bg-white border-[#DAE7E0]';
+  const lightDefaultTextClass = 'text-[#162721]';
+  const gradientDefaultTextClass = 'text-white';
+  const disabledTextClass = 'text-textMuted';
+
+  // Determine label color
+  const defaultLabelClass = isGradient ? gradientDefaultTextClass : lightDefaultTextClass;
+  const labelClass = disabled ? disabledTextClass : defaultLabelClass;
+
+  // Determine container defaults for non-gradient (light) when not disabled.
+  // Caller `className` is appended afterwards and will override these if present.
+  const nonGradientDefaultContainer = !isGradient && !disabled ? lightDefaultBgClass : '';
+  const nonGradientDisabledContainer = disabled ? disabledBgClass : '';
+
+  console.log(isGradient, variant, text);
 
   return (
-    <TouchableOpacity disabled={disabled} onPress={onPress} activeOpacity={0.8}>
-      {/* Gradient Variant (when NOT disabled) */}
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      disabled={disabled}
+      // Order: defaults first, then caller className so overrides work.
+      className={`${isGradient ? '' : nonGradientDefaultContainer} ${disabled ? nonGradientDisabledContainer : ''} ${className}`}
+    >
       {isGradient && !disabled ? (
         <LinearGradient
           colors={gradientColors}
-          className={`py-3 px-4 !rounded-[10px] ${className}`}
-          style={{ borderRadius: 10 }} // Fallback
+          className={`py-3 px-4 rounded-[10px] ${className}`}
+          style={{ borderRadius: 10 }}
         >
           <View className="flex-row items-center justify-center gap-2">
             {icon}
@@ -48,19 +68,17 @@ export const AppButton: React.FC<AppButtonProps> = ({
           </View>
         </LinearGradient>
       ) : (
-        // Light variant OR Disabled (solid background)
+        // Light variant OR Disabled (render using TouchableOpacity wrapper above)
         <View
-          className={`
-            py-3 px-4 !rounded-[10px]
-            ${disabled ? 'bg-disabled' : 'bg-white'}
-            ${className}
-          `}
-          style={{ borderRadius: 10 }} // Fallback
+          className={`py-3 px-4  bg-white  ${className} border border-[#DAE7E0] rounded-xl`}
+          style={{ borderRadius: 10 }}
         >
           <View className="flex-row items-center justify-center gap-2">
             {icon}
             {text && (
-              <Text className={`text-base font-semibold ${labelClass} ${textClassName}`}>
+              <Text
+                className={`text-base font-urbanist-semibold text-[#162721] ${labelClass} ${textClassName}`}
+              >
                 {text}
               </Text>
             )}

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, Switch, Platform } from 'reac
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,12 +12,16 @@ import { useTheme } from '@/contexts/ThemeContext';
 const Profile: React.FC = () => {
   const { theme, setTheme, isDark } = useTheme();
   const { logout } = useAuth();
+  const navigation = useNavigation<any>();
 
   const toggleTheme = () => {
     setTheme(isDark ? 'light' : 'dark');
   };
 
   const { paddingBottom } = useTabBarSafePadding();
+
+  const goToEditProfile = () => navigation.navigate('EditProfile');
+  const goToSettings = () => navigation.navigate('Settings');
 
   return (
     <GradientBackground>
@@ -32,9 +37,9 @@ const Profile: React.FC = () => {
 
         {/* Content */}
         <ScrollView
-          className="flex-1 pt-3"
+          className="flex-1 px-5"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom }} // critical: allow last items to scroll above tab bar
+          contentContainerStyle={{ paddingBottom }} // allow last items to scroll above tab bar
         >
           {/* Profile Card */}
           <View
@@ -88,7 +93,11 @@ const Profile: React.FC = () => {
               </View>
 
               {/* Edit Profile Button */}
-              <TouchableOpacity className="w-full bg-[#DAE7E0] py-3 rounded-xl mt-4">
+              <TouchableOpacity
+                onPress={goToEditProfile}
+                className="w-full bg-[#DAE7E0] py-3 rounded-xl mt-4"
+                activeOpacity={0.8}
+              >
                 <Text className="text-[#162721] text-center font-urbanist-bold">Edit Profile</Text>
               </TouchableOpacity>
             </View>
@@ -209,7 +218,9 @@ const Profile: React.FC = () => {
 
           {/* Settings */}
           <TouchableOpacity
+            onPress={goToSettings}
             className={`rounded-xl p-4 mb-4 shadow-sm flex-row items-center justify-between border ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+            activeOpacity={0.8}
           >
             <View className="flex-row items-center">
               <Ionicons name="settings-outline" size={24} color={isDark ? '#FFFFFF' : '#162721'} />
