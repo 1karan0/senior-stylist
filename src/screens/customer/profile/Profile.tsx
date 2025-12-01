@@ -1,8 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Feather from 'react-native-vector-icons/Feather';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -84,7 +81,14 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             </View>
 
             {/* Edit Button */}
-            <TouchableOpacity className={`mt-4 bg-[#DAE7E0] py-2 px-3 rounded-[10px]`}>
+            <TouchableOpacity
+              onPress={() => {
+                if (profile) {
+                  navigation.navigate('EditProfile', { profile });
+                }
+              }}
+              className={`mt-4 bg-[#DAE7E0] py-2 px-3 rounded-[10px]`}
+            >
               <Text className="text-black text-center font-medium">Edit Profile</Text>
             </TouchableOpacity>
           </View>
@@ -171,14 +175,14 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 <Text className="text-white text-xl font-urbanist-semibold mb-4">Your Rewards</Text>
               </View>
 
-              <View className="flex-row items-center mr-7 justify-center gap-12">
-                <View className="items-center">
+              <View className="flex-row items-center justify-center ">
+                <View className="items-center  w-[50%]">
                   <Text className="text-white text-[40px] font-urbanist-bold">1</Text>
                   <Text className="text-white font-poppins-medium text-center text-sm w-[70%]">
                     Free Consultation Sessions
                   </Text>
                 </View>
-                <View className="items-center">
+                <View className="items-center  w-[50%] h-full">
                   <Text className="text-white text-[40px] font-urbanist-bold">4</Text>
                   <Text className="text-white font-poppins-medium text-sm">Referrals</Text>
                 </View>

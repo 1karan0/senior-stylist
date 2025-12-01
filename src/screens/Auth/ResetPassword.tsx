@@ -19,6 +19,7 @@ import { useResetPassword } from '@/api/auth/useResetPassword';
 import { useTheme } from '@/contexts/ThemeContext';
 import GradientBackground from '@/common/components/GradientBackground';
 import Toast from '@/common/components/Toast';
+import TextInputField from '@/common/components/TextInputField';
 
 const ResetPassword = () => {
   const {
@@ -51,6 +52,7 @@ const ResetPassword = () => {
   };
 
   const onSubmit = async (data: any) => {
+    console.log('button pressed ');
     if (data.password !== data.confirmPassword) {
       return; // Handled by validation below
     }
@@ -107,7 +109,7 @@ const ResetPassword = () => {
               <Text
                 className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}
               >
-                Welcome Back
+                Reset Password
               </Text>
 
               <Text
@@ -115,134 +117,56 @@ const ResetPassword = () => {
                   isDark ? 'text-textSecondary' : 'text-textMuted'
                 } mt-1`}
               >
-                Reset your StyleHub password
+                Set a new password for your account
               </Text>
             </View>
-
-            {/* Title */}
-            <Text
-              className={`text-[22px] font-bold ${isDark ? 'text-white' : 'text-textDark'} mb-2`}
-            >
-              Reset Password
-            </Text>
-
-            <Text
-              className={`text-[14px] ${isDark ? 'text-textSecondary' : 'text-textMuted'} mb-6`}
-            >
-              Set a new password for your account
-            </Text>
 
             {/* New Password */}
-            <Text
-              className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
-            >
-              New Password
-            </Text>
 
-            <View
-              className={`flex-row items-center border ${
-                errors.password
-                  ? 'border-red-500'
-                  : isDark
-                    ? 'bg-[#0E1B16] border-[#273F36]'
-                    : 'bg-[#F5F9F7] border-[#DADADA]'
-              } rounded-xl px-4 h-[52px] mb-1`}
-            >
-              <Image source={require('../../assets/icons/lock.png')} className="w-5 h-5 mr-3" />
-
-              <Controller
-                control={control}
-                name="password"
-                rules={{
-                  required: 'Password is required',
-                  minLength: {
-                    value: 6,
-                    message: 'Password must be at least 6 characters',
-                  },
-                }}
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    placeholder="Enter new password"
-                    placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
-                    secureTextEntry={!showPassword}
-                    className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'}`}
-                    value={value}
-                    onChangeText={onChange}
-                  />
-                )}
-              />
-              <Pressable onPress={() => setShowPassword(!showPassword)}>
-                <Image
-                  source={
-                    showPassword
-                      ? require('../../assets/icons/eye-open.png')
-                      : require('../../assets/icons/eye-closed.png')
-                  }
-                  className="w-5 h-5 ml-2"
+            <Controller
+              control={control}
+              name="password"
+              rules={{
+                required: 'Password is required',
+                minLength: {
+                  value: 6,
+                  message: 'Password must be at least 6 characters',
+                },
+              }}
+              render={({ field: { onChange, value } }) => (
+                <TextInputField
+                  label="New Password"
+                  placeholder="Enter new password"
+                  icon={require('../../assets/icons/lock.png')}
+                  value={value}
+                  onChangeText={onChange}
+                  isPassword={true}
+                  error={errors.password?.message as string}
                 />
-              </Pressable>
-            </View>
-            {errors.password && (
-              <Text className="text-red-500 text-[12px] mb-3 ml-1">
-                {errors.password.message as string}
-              </Text>
-            )}
+              )}
+            />
 
             {/* Confirm Password */}
-            <Text
-              className={`font-medium text-[14px] ${
-                isDark ? 'text-[#ffff]' : 'text-black'
-              } mb-2 mt-2`}
-            >
-              Confirm Password
-            </Text>
-
-            <View
-              className={`flex-row items-center border ${
-                errors.confirmPassword
-                  ? 'border-red-500'
-                  : isDark
-                    ? 'bg-[#0E1B16] border-[#273F36]'
-                    : 'bg-[#F5F9F7] border-[#DADADA]'
-              } rounded-xl px-4 h-[52px] mb-1`}
-            >
-              <Image source={require('../../assets/icons/lock.png')} className="w-5 h-5 mr-3" />
-
-              <Controller
-                control={control}
-                name="confirmPassword"
-                rules={{
-                  required: 'Please confirm your password',
-                  validate: (value, formValues) =>
-                    value === formValues.password || 'Passwords do not match',
-                }}
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    placeholder="Confirm new password"
-                    placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
-                    secureTextEntry={!showConfirmPassword}
-                    className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'}`}
-                    value={value}
-                    onChangeText={onChange}
-                  />
-                )}
-              />
-              <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                <Image
-                  source={
-                    showConfirmPassword
-                      ? require('../../assets/icons/eye-open.png')
-                      : require('../../assets/icons/eye-closed.png')
-                  }
-                  className="w-5 h-5 ml-2"
+            <Controller
+              control={control}
+              name="confirmPassword"
+              rules={{
+                required: 'Please confirm your password',
+                validate: (value, formValues) =>
+                  value === formValues.password || 'Passwords do not match',
+              }}
+              render={({ field: { onChange, value } }) => (
+                <TextInputField
+                  label="Confirm Password"
+                  placeholder="Confirm new password"
+                  icon={require('../../assets/icons/lock.png')}
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.confirmPassword?.message as string}
+                  isPassword={true}
                 />
-              </Pressable>
-            </View>
-            {errors.confirmPassword && (
-              <Text className="text-red-500 text-[12px] mb-3 ml-1">
-                {errors.confirmPassword.message as string}
-              </Text>
-            )}
+              )}
+            />
 
             {/* Submit Button */}
             <Pressable

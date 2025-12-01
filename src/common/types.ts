@@ -35,7 +35,7 @@ export type StoreStackParamList = {
 
 export type ProfileStackParamList = {
   ProfileHome: undefined;
-  EditProfile: undefined;
+  EditProfile: { profile: ProfileUser };
   Settings: undefined;
 };
 

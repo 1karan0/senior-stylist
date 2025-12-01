@@ -7,6 +7,7 @@ import Toast from '@/common/components/Toast';
 
 import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import TextInputField from '@/common/components/TextInputField';
 
 export default function ForgetPassword({ navigation }: any) {
   const {
@@ -84,52 +85,30 @@ export default function ForgetPassword({ navigation }: any) {
           </Text>
         </View>
 
-        <Text className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}>
-          Email Address
-        </Text>
-
-        <View
-          className={`flex-row items-center border ${
-            errors.email
-              ? 'border-red-500'
-              : isDark
-                ? 'bg-[#0E1B16] border-[#273F36]'
-                : 'bg-[#F5F9F7] border-[#DADADA]'
-          } rounded-xl px-4 h-[52px] mb-1`}
-        >
-          <Image source={require('../../assets/icons/email.png')} className="w-5 h-5 mr-3" />
-
-          <Controller
-            control={control}
-            name="email"
-            defaultValue=""
-            rules={{
-              required: 'Email is required',
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: 'Please enter a valid email address',
-              },
-            }}
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                placeholder="Enter your email"
-                placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
-                className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'}`}
-                value={value}
-                onChangeText={onChange}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            )}
-          />
-        </View>
-
-        {/* Field Error Message */}
-        {errors.email && (
-          <Text className="text-red-500 text-[12px] mb-4 ml-1">
-            {errors.email.message as string}
-          </Text>
-        )}
+        <Controller
+          control={control}
+          name="email"
+          defaultValue=""
+          rules={{
+            required: 'Email is required',
+            pattern: {
+              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+              message: 'Please enter a valid email address',
+            },
+          }}
+          render={({ field: { onChange, value } }) => (
+            <TextInputField
+              label="Email Adress"
+              placeholder="Enter your email"
+              value={value}
+              onChangeText={onChange}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              icon={require('../../assets/icons/email.png')}
+              error={errors.email?.message as string}
+            />
+          )}
+        />
 
         {!errors.email && <View className="mb-5" />}
 
@@ -148,7 +127,7 @@ export default function ForgetPassword({ navigation }: any) {
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-white font-bold text-[16px]">Send Reset Link</Text>
+              <Text className="text-white font-bold text-[16px]">Send Reset Code</Text>
             )}
           </LinearGradient>
         </Pressable>

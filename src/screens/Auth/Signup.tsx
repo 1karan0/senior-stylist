@@ -19,6 +19,7 @@ import { BASE_URL } from '@/config';
 import { useTheme } from '@/contexts/ThemeContext';
 import GradientBackground from '@/common/components/GradientBackground';
 import Toast from '@/common/components/Toast';
+import TextInputField from '@/common/components/TextInputField';
 
 export default function SignupScreen({ navigation, route }: any) {
   const {
@@ -28,6 +29,7 @@ export default function SignupScreen({ navigation, route }: any) {
   } = useForm();
   const [loading, setLoading] = useState(false);
   const [cvFile, setCvFile] = useState<any>(null);
+  const [cvError, setCvError] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState({
     visible: false,
@@ -56,6 +58,7 @@ export default function SignupScreen({ navigation, route }: any) {
 
       if (pickerResult && pickerResult.length > 0) {
         setCvFile(pickerResult[0]);
+        setCvError('');
         showToast('CV uploaded successfully', 'success');
       }
     } catch (err: any) {
@@ -71,6 +74,7 @@ export default function SignupScreen({ navigation, route }: any) {
   const handleSignup = async (form: any) => {
     // Check if CV is required for consultant
     if (user === 'consultant' && !cvFile) {
+      setCvError('CV is required to register as a consultant');
       showToast('Please upload your CV to continue', 'warning');
       return;
     }
@@ -175,205 +179,101 @@ export default function SignupScreen({ navigation, route }: any) {
               </View>
 
               {/* Name Field */}
-              <Text
-                className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
-              >
-                Full Name
-              </Text>
-
-              <View
-                className={`flex-row items-center border ${
-                  errors.name
-                    ? 'border-red-500'
-                    : isDark
-                      ? 'bg-[#0E1B16] border-[#273F36]'
-                      : 'bg-[#F5F9F7] border-[#DADADA]'
-                } rounded-xl px-4 h-[52px] mb-1`}
-              >
-                <Image source={require('../../assets/icons/user.png')} className="w-5 h-5 mr-3" />
-
-                <Controller
-                  control={control}
-                  name="name"
-                  rules={{
-                    required: 'Full name is required',
-                    minLength: {
-                      value: 2,
-                      message: 'Name must be at least 2 characters',
-                    },
-                  }}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      placeholder="Enter your Name"
-                      placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
-                      className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
-                      value={value}
-                      onChangeText={onChange}
-                    />
-                  )}
-                />
-              </View>
-              {errors.name && (
-                <Text className="text-red-500 text-[12px] mb-3 ml-1">
-                  {errors.name.message as string}
-                </Text>
-              )}
+              <Controller
+                control={control}
+                name="name"
+                rules={{
+                  required: 'Full name is required',
+                  minLength: {
+                    value: 2,
+                    message: 'Name must be at least 2 characters',
+                  },
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <TextInputField
+                    label="Full Name"
+                    placeholder="Enter your Name"
+                    icon={require('../../assets/icons/user.png')}
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.name?.message as string}
+                  />
+                )}
+              />
 
               {/* Email Field */}
-              <Text
-                className={`font-medium text-[14px] ${
-                  isDark ? 'text-[#ffff]' : 'text-black'
-                } mb-2 mt-2`}
-              >
-                Email Address
-              </Text>
-
-              <View
-                className={`flex-row items-center border ${
-                  errors.email
-                    ? 'border-red-500'
-                    : isDark
-                      ? 'bg-[#0E1B16] border-[#273F36]'
-                      : 'bg-[#F5F9F7] border-[#DADADA]'
-                } rounded-xl px-4 h-[52px] mb-1`}
-              >
-                <Image source={require('../../assets/icons/email.png')} className="w-5 h-5 mr-3" />
-
-                <Controller
-                  control={control}
-                  name="email"
-                  rules={{
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Please enter a valid email address',
-                    },
-                  }}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      placeholder="Enter your email"
-                      placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
-                      className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
-                      value={value}
-                      onChangeText={onChange}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
-                  )}
-                />
-              </View>
-              {errors.email && (
-                <Text className="text-red-500 text-[12px] mb-3 ml-1">
-                  {errors.email.message as string}
-                </Text>
-              )}
+              <Controller
+                control={control}
+                name="email"
+                rules={{
+                  required: 'Email is required',
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: 'Please enter a valid email address',
+                  },
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <TextInputField
+                    label="Email Address"
+                    placeholder="Enter your email"
+                    icon={require('../../assets/icons/email.png')}
+                    value={value}
+                    onChangeText={onChange}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    error={errors.email?.message as string}
+                  />
+                )}
+              />
 
               {/* Phone Field */}
-              <Text
-                className={`font-medium text-[14px] ${
-                  isDark ? 'text-[#ffff]' : 'text-black'
-                } mb-2 mt-2`}
-              >
-                Phone Number
-              </Text>
 
-              <View
-                className={`flex-row items-center border ${
-                  errors.phone
-                    ? 'border-red-500'
-                    : isDark
-                      ? 'bg-[#0E1B16] border-[#273F36]'
-                      : 'bg-[#F5F9F7] border-[#DADADA]'
-                } rounded-xl px-4 h-[52px] mb-1`}
-              >
-                <Image source={require('../../assets/icons/phone.png')} className="w-5 h-5 mr-3" />
-
-                <Controller
-                  control={control}
-                  name="phone"
-                  rules={{
-                    required: 'Phone number is required',
-                    pattern: {
-                      value: /^[0-9]{10,15}$/,
-                      message: 'Please enter a valid phone number (10-15 digits)',
-                    },
-                  }}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      placeholder="Enter your phone number"
-                      placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
-                      keyboardType="number-pad"
-                      className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
-                      value={value}
-                      onChangeText={onChange}
-                    />
-                  )}
-                />
-              </View>
-              {errors.phone && (
-                <Text className="text-red-500 text-[12px] mb-3 ml-1">
-                  {errors.phone.message as string}
-                </Text>
-              )}
+              <Controller
+                control={control}
+                name="phone"
+                rules={{
+                  required: 'Phone number is required',
+                  pattern: {
+                    value: /^[0-9]{10,15}$/,
+                    message: 'Please enter a valid phone number (10-15 digits)',
+                  },
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <TextInputField
+                    label="Phone Number"
+                    placeholder="Enter your phone number"
+                    icon={require('../../assets/icons/phone.png')}
+                    keyboardType="number-pad"
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.phone?.message as string}
+                  />
+                )}
+              />
 
               {/* Password Field */}
-              <Text
-                className={`font-medium text-[14px] ${
-                  isDark ? 'text-[#ffff]' : 'text-black'
-                } mb-2 mt-2`}
-              >
-                Password
-              </Text>
-
-              <View
-                className={`flex-row items-center border mb-5 ${
-                  errors.password
-                    ? 'border-red-500'
-                    : isDark
-                      ? 'bg-[#0E1B16] border-[#273F36]'
-                      : 'bg-[#F5F9F7] border-[#DADADA]'
-                } rounded-xl px-4 h-[52px] mb-1`}
-              >
-                <Image source={require('../../assets/icons/lock.png')} className="w-5 h-5 mr-3" />
-
-                <Controller
-                  control={control}
-                  name="password"
-                  rules={{
-                    required: 'Password is required',
-                    minLength: {
-                      value: 6,
-                      message: 'Password must be at least 6 characters',
-                    },
-                  }}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      placeholder="Enter your password"
-                      placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
-                      secureTextEntry={!showPassword}
-                      className={`flex-1 font-normal ${isDark ? 'text-white' : 'text-black'} `}
-                      value={value}
-                      onChangeText={onChange}
-                    />
-                  )}
-                />
-                {/* Toggle eye button */}
-                <Pressable onPress={() => setShowPassword(!showPassword)}>
-                  <Image
-                    source={
-                      showPassword
-                        ? require('../../assets/icons/eye-open.png')
-                        : require('../../assets/icons/eye-closed.png')
-                    }
-                    className="w-5 h-5 ml-2"
+              <Controller
+                control={control}
+                name="password"
+                rules={{
+                  required: 'Password is required',
+                  minLength: {
+                    value: 6,
+                    message: 'Password must be at least 6 characters',
+                  },
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <TextInputField
+                    label="Password"
+                    placeholder="Enter your password"
+                    icon={require('../../assets/icons/lock.png')}
+                    value={value}
+                    isPassword={true}
+                    onChangeText={onChange}
+                    error={errors.password?.message as string}
                   />
-                </Pressable>
-              </View>
-              {errors.password && (
-                <Text className="text-red-500 text-[12px] mb-3 ml-1">
-                  {errors.password.message as string}
-                </Text>
-              )}
+                )}
+              />
 
               {user === 'consultant' && (
                 <View className="mb-5 mt-2">
@@ -382,13 +282,17 @@ export default function SignupScreen({ navigation, route }: any) {
                       isDark ? 'text-[#ffff]' : 'text-black'
                     } mb-2`}
                   >
-                    Upload CV
+                    Upload CV <Text className="text-red-500">*</Text>
                   </Text>
 
                   <Pressable
                     onPress={pickDocument}
                     className={`border border-dashed ${
-                      isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-textPrimary'
+                      cvError
+                        ? 'border-red-500 bg-red-50'
+                        : isDark
+                          ? 'bg-[#0E1B16] border-[#273F36]'
+                          : 'bg-[#F5F9F7] border-textPrimary'
                     } rounded-lg h-[120px] justify-center items-center`}
                   >
                     <Image
@@ -404,13 +308,15 @@ export default function SignupScreen({ navigation, route }: any) {
 
                     <Text className="text-textMuted text-[12px] mt-1">.pdf , .docx , .doc</Text>
                   </Pressable>
+
+                  {cvError && <Text className="text-red-500 text-[12px] mt-2 ml-1">{cvError}</Text>}
                 </View>
               )}
 
               {/* Sign Up Button — gradient */}
               <Pressable
                 onPress={handleSubmit(handleSignup)}
-                className="rounded-lg overflow-hidden mb-6"
+                className="rounded-lg overflow-hidden mb-6 mt-3"
                 disabled={loading}
               >
                 <LinearGradient

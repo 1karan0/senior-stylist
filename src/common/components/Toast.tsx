@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -25,6 +26,7 @@ export default function Toast({
   duration = 3000,
   onClose,
 }: ToastProps) {
+  const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(-40)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const hideTimer = useRef<number | null>(null);
@@ -73,7 +75,11 @@ export default function Toast({
   if (!visible) return null;
 
   return (
-    <View className="absolute top-10 left-4 right-4 z-[9999] items-center" pointerEvents="auto">
+    <View
+      className="absolute left-4 right-4 z-[9999] items-center"
+      pointerEvents="auto"
+      style={{ top: insets.top + 16 }}
+    >
       <Animated.View
         style={{ transform: [{ translateY }], opacity, backgroundColor: COLORS[type] }}
         className="w-full px-4 py-3 rounded-xl flex-row items-center justify-between shadow-md"
