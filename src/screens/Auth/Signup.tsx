@@ -117,7 +117,7 @@ export default function SignupScreen({ navigation, route }: any) {
       }
 
       console.log('Signup success:', response.data);
-      showToast('Account created successfully! Redirecting...', 'success');
+      showToast('Account created successfully!', 'success');
       setTimeout(() => {
         navigation.navigate('OtpVerification', { email: form.email, screen: 'signup' });
       }, 1500);

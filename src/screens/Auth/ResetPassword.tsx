@@ -65,7 +65,7 @@ const ResetPassword = () => {
     try {
       setLoading(true);
       await mutation.mutateAsync({ token, password: data.password });
-      showToast('Password reset successful! Redirecting to login...', 'success');
+      showToast('Password reset successful!', 'success');
       setTimeout(() => {
         navigation.navigate('Login' as never);
       }, 1500);

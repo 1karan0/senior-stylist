@@ -127,7 +127,7 @@ export default function ForgetPassword({ navigation }: any) {
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-white font-bold text-[16px]">Send Reset Code</Text>
+              <Text className="text-white font-bold text-[16px]">Send Verification Code</Text>
             )}
           </LinearGradient>
         </Pressable>

@@ -99,7 +99,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
       const resetToken = resp?.data?.token ?? resp?.token ?? resp?.reset_token;
 
       if (resetToken) {
-        showToast('Code verified! Redirecting to reset password...', 'success');
+        showToast('Code verified', 'success');
         setTimeout(() => {
           navigation.navigate('ResetPassword', { token: resetToken });
         }, 1500);

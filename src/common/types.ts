@@ -231,6 +231,7 @@ export interface ProfileUser {
   address: string | null;
   profile_picture_url: string | null;
   role: string;
+  referral_code: string;
   created_at: string;
   is_away: boolean;
   away_since: string | null;

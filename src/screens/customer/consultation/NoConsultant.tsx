@@ -63,7 +63,7 @@ const NoConsultant = () => {
               source={require('@/assets/icons/white-search-icon.png')}
               className="w-5 h-5 mr-2"
             />
-            <Text className="text-white font-semibold text-base">Find an expert</Text>
+            <Text className="text-white font-semibold text-base">Find an Consultant</Text>
           </TouchableOpacity>
         </View>
       </GradientBackground>

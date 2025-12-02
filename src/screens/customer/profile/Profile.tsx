@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { ProfileStackParamList } from '@/common/types';
+import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 import LinearGradient from 'react-native-linear-gradient';
@@ -19,7 +19,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const { logout } = useAuth();
   const { isDark } = useTheme();
 
-  const user = profile as any;
+  const user = profile as ProfileUser;
 
   return (
     <GradientBackground>
@@ -223,7 +223,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 className={` w-[80%] items-center text-center bg-[#F5F9F7] border-[#DAE7E0] border rounded-lg py-3 `}
               >
                 <Text className="text-black text-base font-urbanist-bold">
-                  {user.referral_code}
+                  {user?.referral_code ?? '------'}
                 </Text>
               </View>
               <View>
@@ -235,6 +235,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   className=" p-3 "
                 >
                   <TouchableOpacity>
+                    {/* <Ionicons name="copy-outline" size={20} color="white" /> */}
                     <Image source={require('@/assets/icons/Copy.png')} className="" />
                   </TouchableOpacity>
                 </LinearGradient>
