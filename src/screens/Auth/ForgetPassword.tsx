@@ -104,7 +104,7 @@ export default function ForgetPassword({ navigation }: any) {
               onChangeText={onChange}
               keyboardType="email-address"
               autoCapitalize="none"
-              icon={require('../../assets/icons/email.png')}
+              icon={require('@/assets/icons/email.png')}
               error={errors.email?.message as string}
             />
           )}

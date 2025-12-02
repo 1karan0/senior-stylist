@@ -105,7 +105,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
             {/* Email */}
             <View className="flex-row items-start gap-3 mb-4">
-              <Image source={require('@/assets/icons/Email.png')} />
+              <Image source={require('@/assets/icons/email.png')} />
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >
@@ -115,7 +115,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
             {/* Phone */}
             <View className="flex-row items-start gap-3 mb-4">
-              <Image source={require('@/assets/icons/Phone.png')} />
+              <Image source={require('@/assets/icons/phone.png')} />
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >
@@ -125,7 +125,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
             {/* Member Since */}
             <View className="flex-row items-start gap-3">
-              <Image source={require('@/assets/icons/Calendar.png')} />
+              <Image source={require('@/assets/icons/calendar.png')} />
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >
@@ -171,7 +171,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           >
             <View className=" flex-col gap-3">
               <View className="flex-row gap-2">
-                <Image source={require('@/assets/icons/Gift.png')} />
+                <Image source={require('@/assets/icons/gift.png')} />
                 <Text className="text-white text-xl font-urbanist-semibold mb-4">Your Rewards</Text>
               </View>
 
@@ -199,8 +199,8 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 <Image
                   source={
                     isDark
-                      ? require('@/assets/icons/UsersWhite.png')
-                      : require('@/assets/icons/Users.png')
+                      ? require('@/assets/icons/users-white.png')
+                      : require('@/assets/icons/users.png')
                   }
                   className=""
                 />
@@ -269,8 +269,8 @@ const Profile: React.FC<Props> = ({ navigation }) => {
               <Image
                 source={
                   isDark
-                    ? require('@/assets/icons/GearWhite.png')
-                    : require('@/assets/icons/Gear.png')
+                    ? require('@/assets/icons/gear-white.png')
+                    : require('@/assets/icons/gear.png')
                 }
                 className=""
                 resizeMode="contain"
@@ -288,7 +288,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl py-[8px] px-[20px] mt-5 border mb-10`}
           >
             <TouchableOpacity onPress={logout} className="flex-row items-center gap-2">
-              <Image source={require('@/assets/icons/SignOut.png')} />
+              <Image source={require('@/assets/icons/sign-out.png')} />
               <Text className="text-error text-lg font-semibold">Sign Out</Text>
             </TouchableOpacity>
           </View>
