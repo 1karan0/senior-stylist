@@ -29,7 +29,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
   // Default visual tokens
   const disabledBgClass = 'bg-disabled';
   const lightDefaultBgClass = 'bg-white border-[#DAE7E0]';
-  const lightDefaultTextClass = 'text-[#162721]';
+  const lightDefaultTextClass = 'text-textDark';
   const gradientDefaultTextClass = 'text-white';
   const disabledTextClass = 'text-textMuted';
 
@@ -77,7 +77,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
             {icon}
             {text && (
               <Text
-                className={`text-base font-urbanist-semibold text-[#162721] ${labelClass} ${textClassName}`}
+                className={`text-base font-urbanist-semibold text-textDark ${labelClass} ${textClassName}`}
               >
                 {text}
               </Text>

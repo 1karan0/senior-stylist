@@ -42,8 +42,8 @@ const TextInputField: React.FC<TextInputFieldProps> = ({
     error
       ? 'border-red-500'
       : isDark
-        ? 'bg-[#0E1B16] border-[#273F36]'
-        : 'bg-[#F5F9F7] border-[#DADADA]'
+        ? 'bg-commonGradientStop6 border-commonGradientStop7'
+        : 'bg-[#F5F9F7] border-commonGradientStop11'
   } rounded-xl px-4 h-[52px] mb-1`;
 
   const defaultInputClassName = `flex-1 font-normal ${isDark ? 'text-white' : 'text-black'}`;

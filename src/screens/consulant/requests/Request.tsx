@@ -253,7 +253,7 @@ const Request: React.FC = () => {
             <View className="flex-row items-center mt-2">
               <View className="w-2 h-2 rounded-full bg-textPrimary mr-2" />
               <Text
-                className={`font-poppins text-xs  ${isDark ? 'text-[#8AA897]' : 'text-textMuted'}`}
+                className={`font-poppins text-xs  ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
               >
                 Real-time updates enabled
               </Text>
@@ -264,7 +264,7 @@ const Request: React.FC = () => {
         <View>
           <View className="flex-row justify-between items-center mt-4">
             <View
-              className={`flex-1 items-center rounded-xl border  p-4 mr-2 ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+              className={`flex-1 items-center rounded-xl border  p-4 mr-2 ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
             >
               <Text
                 className={`text-3xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
@@ -272,13 +272,13 @@ const Request: React.FC = () => {
                 {requests.length}
               </Text>
               <Text
-                className={`font-poppins  text-sm mt-1 ${isDark ? 'text-[#8AA897]' : 'text-textMuted'}`}
+                className={`font-poppins  text-sm mt-1 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
               >
                 Pending
               </Text>
             </View>
             <View
-              className={`flex-1 items-center rounded-xl border  p-4 ml-2 ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+              className={`flex-1 items-center rounded-xl border  p-4 ml-2 ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
             >
               <Text
                 className={`text-3xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
@@ -334,7 +334,7 @@ const Request: React.FC = () => {
             }}
           >
             <View
-              className={`rounded-2xl p-6 items-center ${isDark ? 'bg-[#162721]' : 'bg-white'}`}
+              className={`rounded-2xl p-6 items-center ${isDark ? 'bg-buttonSecondaryText' : 'bg-white'}`}
               style={{ minWidth: 200 }}
             >
               <ActivityIndicator size="large" color="#27B07D" />

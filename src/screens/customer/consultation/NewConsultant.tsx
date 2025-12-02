@@ -127,7 +127,7 @@ const NewConsultant = ({ navigation }: any) => {
 
           {/* Card */}
           <View
-            className={` ${isDark ? 'bg-textDark border-[#273F36]' : 'bg-white border-gray-100'} rounded-md p-5 shadow border `}
+            className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-gray-100'} rounded-md p-5 shadow border `}
           >
             <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
               Describe Your Requirements
@@ -144,7 +144,7 @@ const NewConsultant = ({ navigation }: any) => {
               rules={{ required: true }}
               render={({ field: { onChange, value } }) => (
                 <View
-                  className={`border rounded-xl  ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'}  p-3`}
+                  className={`border rounded-xl  ${isDark ? 'bg-commonGradientStop6 border-commonGradientStop7' : 'bg-[#FAFAFA] border-[#E6E6E6]'}  p-3`}
                 >
                   <TextInput
                     placeholder="Describe your fashion style preferences, occasion, or special requirements..."

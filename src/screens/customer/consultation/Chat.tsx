@@ -40,7 +40,7 @@ const Chat: React.FC<ChatProps> = ({ navigation, data, isLoading }) => {
 
     return (
       <TouchableOpacity
-        className={`${isDark ? 'bg-textDark border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
+        className={`${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
       >
         {/* Avatar */}
         <View className="mr-4">
@@ -116,7 +116,7 @@ const Chat: React.FC<ChatProps> = ({ navigation, data, isLoading }) => {
 
             {/* Search */}
             <View
-              className={`flex-row items-center border border-[#DADADA] bg-white rounded-xl px-3 py-2 mb-5`}
+              className={`flex-row items-center border border-commonGradientStop11 bg-white rounded-xl px-3 py-2 mb-5`}
             >
               <Image
                 source={require('../../../assets/icons/search-icon.png')}

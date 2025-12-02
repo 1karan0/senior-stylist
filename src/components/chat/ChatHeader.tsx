@@ -40,7 +40,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   return (
     <View>
       <StatusBar translucent backgroundColor="#36D399" barStyle="light-content" />
-      <View className="bg-[#36D399] pt-16 pb-7 px-4 rounded-b-3xl">
+      <View className="bg-commonGradientStop2 pt-16 pb-7 px-4 rounded-b-3xl">
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={onBack}
@@ -66,7 +66,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             <View className="flex-1 items-center">
               <Text className="text-base  font-semibold text-white">{otherPersonName}</Text>
               {specialization ? (
-                <View className="px-2 py-1 bg-[#658176] rounded-xl">
+                <View className="px-2 py-1 bg-textMuted rounded-xl">
                   <Text className="text-xs font-bold text-white ">{specialization ?? ''}</Text>
                 </View>
               ) : null}
@@ -110,7 +110,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               <>
                 <View>
                   <ActivityIndicator size={14} color="#ffffff" style={{ marginRight: 6 }} />
-                  <Text className="text-[#ffffff] text-xs font-medium">Loading messages…</Text>
+                  <Text className="text-textWhite text-xs font-medium">Loading messages…</Text>
                 </View>
               </>
             )}

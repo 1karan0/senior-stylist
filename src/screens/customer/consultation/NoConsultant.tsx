@@ -28,7 +28,7 @@ const NoConsultant = () => {
 
         {/* Card */}
         <View
-          className={` ${isDark ? 'bg-textDark border-[#273F36]' : 'bg-white border-gray-100'} rounded-2xl shadow-md mt-10 p-6 items-center border `}
+          className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-gray-100'} rounded-2xl shadow-md mt-10 p-6 items-center border `}
         >
           {/* Chat Icon */}
           <View className="w-14 h-14 rounded-full border border-green-500 flex items-center justify-center mb-4">

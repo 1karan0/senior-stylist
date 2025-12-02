@@ -517,7 +517,7 @@ const ConsultantChatScreen: React.FC = () => {
         <View className="flex-1 justify-center items-center p-10">
           <Text className="text-[#FF4433] text-base text-center mb-4">{offlineError}</Text>
           <TouchableOpacity
-            className="bg-[#27B07D] px-6 py-3 rounded-lg"
+            className="bg-buttonPrimaryBg px-6 py-3 rounded-lg"
             onPress={() => {
               if (!realtimeEnabled) {
                 loadMessages(true);
@@ -544,7 +544,7 @@ const ConsultantChatScreen: React.FC = () => {
   if (!consultation) {
     return (
       <LinearGradient colors={['#0E1B16', '#152821']} className="flex-1">
-        <View className="bg-[#27B07D] pt-[50px] pb-4 px-4 flex-row items-center">
+        <View className="bg-buttonPrimaryBg pt-[50px] pb-4 px-4 flex-row items-center">
           <TouchableOpacity onPress={() => navigation.goBack()} className=" p-1">
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
@@ -608,7 +608,7 @@ const ConsultantChatScreen: React.FC = () => {
 
         {!chatWindowOpen ? (
           <View
-            className={` ${isDark ? 'bg-[#1A1A1A] border-[#152821]' : 'border-[#DADADA]'} p-2 border-t `}
+            className={` ${isDark ? 'bg-[#1A1A1A] border-[#152821]' : 'border-commonGradientStop11'} p-2 border-t `}
           >
             <Text className="text-[#A1A09A] text-xs text-center">
               This chat is closed for new messages.

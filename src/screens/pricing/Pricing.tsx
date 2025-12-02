@@ -69,7 +69,7 @@ export default function PricingScreen() {
 
         {/* OFFER BADGE */}
         <View className="mt-6 items-center">
-          <View className="bg-[#E7B008] rounded-xl py-2 px-4 w-60">
+          <View className="bg-commonGradientStop10 rounded-xl py-2 px-4 w-60">
             <Text className="text-center text-base font-bold text-textDark">
               50% OFF - First 6 Months
             </Text>

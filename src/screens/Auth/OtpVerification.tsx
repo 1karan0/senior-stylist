@@ -188,7 +188,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
             maxLength={1}
             keyboardType="number-pad"
             className={`w-12 h-12 border border-textPrimary ${
-              isDark ? 'bg-[#0E1B16] text-white' : 'bg-white text-black'
+              isDark ? 'bg-commonGradientStop6 text-white' : 'bg-white text-black'
             } rounded-md mx-1 text-center text-[20px]  `}
           />
         ))}
@@ -231,7 +231,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
         ) : (
           <View
             className={`h-[50px] rounded-xl justify-center items-center  ${
-              isDark ? 'bg-textSecondary' : 'bg-[#DADADA]'
+              isDark ? 'bg-textSecondary' : 'bg-commonGradientStop11'
             }`}
           >
             <Text className="text-white font-bold text-[16px]">Verify</Text>
@@ -243,7 +243,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
       <Pressable
         onPress={() => navigation.goBack()}
         className={`w-full h-[50px] rounded-xl border  ${
-          isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+          isDark ? 'bg-commonGradientStop6 border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'
         } justify-center items-center`}
       >
         <Text className={`text-[15px]  ${isDark ? 'text-white' : 'text-textDark'} font-bold`}>

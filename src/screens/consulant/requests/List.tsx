@@ -84,7 +84,7 @@ const List: React.FC<ListProps> = ({
             No pending requests
           </Text>
           <Text
-            className={`font-poppins text-sm text-center px-10 ${isDark ? 'text-[#8AA897]' : 'text-textMuted'}`}
+            className={`font-poppins text-sm text-center px-10 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
           >
             Pull down to refresh. New consultation requests will appear here as soon as they arrive.
           </Text>
@@ -99,7 +99,7 @@ const List: React.FC<ListProps> = ({
           return (
             <View
               key={request.id}
-              className={`rounded-xl border p-4 mb-4 ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+              className={`rounded-xl border p-4 mb-4 ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
             >
               <View className="flex-row items-start mb-4">
                 <View className="w-14 h-14 rounded-full items-center justify-center mr-3 overflow-hidden">
@@ -131,14 +131,14 @@ const List: React.FC<ListProps> = ({
                     {request.customerName}
                   </Text>
                   <Text
-                    className={`font-poppins text-sm ${isDark ? 'text-[#8AA897]' : 'text-textMuted'}`}
+                    className={`font-poppins text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                   >
                     {timeAgo}
                   </Text>
 
                   <TouchableOpacity
                     className={`flex flex-row items-center px-2 py-1 border rounded-lg self-start mt-2 ${
-                      isDark ? 'border-[#273F36]' : 'border-[#DAE7E0]'
+                      isDark ? 'border-commonGradientStop7' : 'border-[#DAE7E0]'
                     }`}
                     onPress={() => onViewDetails(request)}
                   >

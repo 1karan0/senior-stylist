@@ -22,7 +22,7 @@ const Dashboard: React.FC = () => {
         {/* Header */}
         <View className="px-5 py-6">
           <Text
-            className={`text-2xl font-urbanist-bold  ${isDark ? 'text-white' : 'text-[#162721]'}`}
+            className={`text-2xl font-urbanist-bold  ${isDark ? 'text-white' : 'text-textDark'}`}
           >
             Dashboard
           </Text>
@@ -40,7 +40,7 @@ const Dashboard: React.FC = () => {
             <View className="flex-row justify-between mb-4">
               {/* Total Sessions */}
               <View
-                className={`rounded-xl p-4 flex-1 mr-2 shadow-sm border ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+                className={`rounded-xl p-4 flex-1 mr-2 shadow-sm border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
               >
                 <View className="flex-col items-center">
                   <View className="flex-row items-center justify-between w-full mb-1">
@@ -48,15 +48,15 @@ const Dashboard: React.FC = () => {
                     <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
                       <Ionicons name="chatbubble-outline" size={20} color="#14B8A6" />
                     </View>
-                    <Text className="text-[#27B07D] text-sm font-poppins-medium">+12%</Text>
+                    <Text className="text-textPrimary text-sm font-poppins-medium">+12%</Text>
                   </View>
                   <Text
-                    className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                    className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
                   >
                     156
                   </Text>
                   <Text
-                    className={`font-poppins-regular  text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                    className={`font-poppins-regular  text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                   >
                     Total Sessions
                   </Text>
@@ -65,7 +65,7 @@ const Dashboard: React.FC = () => {
 
               {/* Active Clients */}
               <View
-                className={`rounded-xl p-4 flex-1 mr-2 shadow-sm border ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+                className={`rounded-xl p-4 flex-1 mr-2 shadow-sm border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
               >
                 <View className="flex-col items-center">
                   <View className="flex-row items-center justify-between w-full mb-1">
@@ -73,15 +73,15 @@ const Dashboard: React.FC = () => {
                     <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
                       <Ionicons name="people-outline" size={20} color="#14B8A6" />
                     </View>
-                    <Text className="text-[#27B07D] text-sm font-poppins-medium">+5%</Text>
+                    <Text className="text-textPrimary text-sm font-poppins-medium">+5%</Text>
                   </View>
                   <Text
-                    className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                    className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
                   >
                     23
                   </Text>
                   <Text
-                    className={`font-poppins-regular  text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                    className={`font-poppins-regular  text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                   >
                     Active Clients
                   </Text>
@@ -92,7 +92,7 @@ const Dashboard: React.FC = () => {
             <View className="flex-row justify-between mb-5">
               {/* Avg Rating */}
               <View
-                className={`rounded-xl p-4 flex-1 mr-2 shadow-sm border ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+                className={`rounded-xl p-4 flex-1 mr-2 shadow-sm border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
               >
                 <View className="flex-col items-center">
                   <View className="flex-row items-center justify-between w-full mb-1">
@@ -100,15 +100,15 @@ const Dashboard: React.FC = () => {
                     <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
                       <Ionicons name="star-outline" size={20} color="#14B8A6" />
                     </View>
-                    <Text className="text-[#27B07D] text-sm font-poppins-medium">+0.2</Text>
+                    <Text className="text-textPrimary text-sm font-poppins-medium">+0.2</Text>
                   </View>
                   <Text
-                    className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                    className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
                   >
                     4.8
                   </Text>
                   <Text
-                    className={`font-poppins-regular  text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                    className={`font-poppins-regular  text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                   >
                     Avg Rating
                   </Text>
@@ -117,7 +117,7 @@ const Dashboard: React.FC = () => {
 
               {/* This Month */}
               <View
-                className={`rounded-xl p-4 flex-1 mr-2 shadow-sm border ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+                className={`rounded-xl p-4 flex-1 mr-2 shadow-sm border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
               >
                 <View className="flex-col items-center">
                   <View className="flex-row items-center justify-between w-full mb-1">
@@ -125,15 +125,15 @@ const Dashboard: React.FC = () => {
                     <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
                       <Ionicons name="trending-up-outline" size={20} color="#14B8A6" />
                     </View>
-                    <Text className="text-[#27B07D] text-sm font-poppins-medium">+18%</Text>
+                    <Text className="text-textPrimary text-sm font-poppins-medium">+18%</Text>
                   </View>
                   <Text
-                    className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                    className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
                   >
                     $2,340
                   </Text>
                   <Text
-                    className={`font-poppins-regular  text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                    className={`font-poppins-regular  text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                   >
                     This Month
                   </Text>
@@ -155,15 +155,15 @@ const Dashboard: React.FC = () => {
 
           {/* Recent Activity Section */}
           <View
-            className={` border  p-4 mb-8 mx-5 rounded-xl ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+            className={` border  p-4 mb-8 mx-5 rounded-xl ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
           >
             <Text
-              className={`text-xl font-urbanist-semibold ${isDark ? 'text-white' : 'text-[#162721] '}`}
+              className={`text-xl font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark '}`}
             >
               Recent Activity
             </Text>
             <Text
-              className={`font-poppins-regular mb-4 text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+              className={`font-poppins-regular mb-4 text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
             >
               Your latest consultations
             </Text>
@@ -184,12 +184,12 @@ const Dashboard: React.FC = () => {
                 <View className="flex-row justify-between items-center">
                   <View className="flex-1">
                     <Text
-                      className={`font-urbanist-semibold text-base ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                      className={`font-urbanist-semibold text-base ${isDark ? 'text-white' : 'text-textDark'}`}
                     >
                       {item.name}
                     </Text>
                     <Text
-                      className={`font-poppins-regular text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                      className={`font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                     >
                       {item.service}
                     </Text>
@@ -204,7 +204,7 @@ const Dashboard: React.FC = () => {
                       </Text>
                     </View>
                     <Text
-                      className={`font-poppins-regular text-xs ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                      className={`font-poppins-regular text-xs ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                     >
                       {item.time}
                     </Text>

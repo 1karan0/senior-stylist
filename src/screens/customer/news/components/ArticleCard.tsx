@@ -11,7 +11,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ item }) => {
   const { isDark } = useTheme();
   return (
     <View
-      className={`${isDark ? 'bg-textDark border-[#273F36]' : 'bg-white border-[#DADADA]'}  rounded-xl  mb-4 shadow-sm border `}
+      className={`${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-commonGradientStop11'}  rounded-xl  mb-4 shadow-sm border `}
     >
       {/* Category Chip */}
       <View>

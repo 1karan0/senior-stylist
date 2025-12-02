@@ -53,11 +53,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       {preview.image ? (
         <Image
           source={{ uri: preview.image }}
-          className="w-full h-40 bg-[#0E1B16]"
+          className="w-full h-40 bg-commonGradientStop6"
           resizeMode="cover"
         />
       ) : null}
-      <View className={`p-3 ${isOwnMessage ? 'bg-white/10' : 'bg-[#0E1B16]'}`}>
+      <View className={`p-3 ${isOwnMessage ? 'bg-white/10' : 'bg-commonGradientStop6'}`}>
         {preview.site_name ? (
           <Text
             className={`text-[10px] tracking-widest mb-1 ${
@@ -85,12 +85,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         ) : null}
         {preview.show_buy_now_button ? (
           <TouchableOpacity
-            className={`py-2 px-4 rounded-lg mt-1 ${isOwnMessage ? 'bg-white' : 'bg-[#27B07D]'}`}
+            className={`py-2 px-4 rounded-lg mt-1 ${isOwnMessage ? 'bg-white' : 'bg-buttonPrimaryBg'}`}
             onPress={() => Linking.openURL(preview.url)}
           >
             <Text
               className={`text-sm font-semibold text-center ${
-                isOwnMessage ? 'text-[#27B07D]' : 'text-white'
+                isOwnMessage ? 'text-textPrimary' : 'text-white'
               }`}
             >
               Buy Now
@@ -117,8 +117,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       <View
         className={`max-w-[75%] p-3 rounded-2xl ${
           isOwnMessage
-            ? `bg-[#36D399] ${isDark ? 'border-[#27B07D]' : 'border-[#DAE7E0]'} border rounded-br-sm`
-            : ` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} border rounded-bl-sm`
+            ? `bg-commonGradientStop2 ${isDark ? 'border-commonGradientStop5' : 'border-[#DAE7E0]'} border rounded-br-sm`
+            : ` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} border rounded-bl-sm`
         }`}
       >
         {message.message ? (
@@ -149,7 +149,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             ) : (
               <TouchableOpacity onPress={() => Linking.openURL(message.attachment_url!)}>
                 <Text
-                  className={`text-sm underline ${isOwnMessage ? 'text-white' : 'text-[#27B07D]'}`}
+                  className={`text-sm underline ${isOwnMessage ? 'text-white' : 'text-textPrimary'}`}
                 >
                   View attachment
                 </Text>

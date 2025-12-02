@@ -178,7 +178,7 @@ const EditProfile: React.FC = () => {
               <Ionicons name="arrow-back" size={24} color={isDark ? '#FFFFFF' : '#162721'} />
             </TouchableOpacity>
             <Text
-              className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-[#162721]'}`}
+              className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
             >
               Edit Profile
             </Text>
@@ -219,7 +219,7 @@ const EditProfile: React.FC = () => {
               </View>
 
               {/* Plus Button */}
-              <View className="absolute bottom-0 right-0 w-10 h-10 bg-[#27B07D] rounded-full items-center justify-center border-4 border-white shadow-lg">
+              <View className="absolute bottom-0 right-0 w-10 h-10 bg-buttonPrimaryBg rounded-full items-center justify-center border-4 border-white shadow-lg">
                 {isUploading ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
@@ -229,7 +229,7 @@ const EditProfile: React.FC = () => {
             </TouchableOpacity>
 
             <Text
-              className={`mt-3 text-sm font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+              className={`mt-3 text-sm font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
             >
               Tap to change profile picture
             </Text>
@@ -238,13 +238,15 @@ const EditProfile: React.FC = () => {
           {/* Form Card */}
           <View
             className={`rounded-2xl border p-6 mb-6 shadow-sm ${
-              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+              isDark
+                ? 'bg-buttonSecondaryText border-commonGradientStop7'
+                : 'bg-white border-[#DAE7E0]'
             }`}
           >
             {/* Full Name */}
             <View className="mb-5">
               <Text
-                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
               >
                 Full Name
               </Text>
@@ -253,8 +255,8 @@ const EditProfile: React.FC = () => {
                 onChangeText={(text) => setFormData({ ...formData, name: text })}
                 className={`border rounded-xl px-4 py-3 font-poppins-regular ${
                   isDark
-                    ? 'bg-[#0F1F1A] border-[#273F36] text-white'
-                    : 'bg-white border-[#DAE7E0] text-[#162721]'
+                    ? 'bg-[#0F1F1A] border-commonGradientStop7 text-white'
+                    : 'bg-white border-[#DAE7E0] text-textDark'
                 }`}
                 placeholderTextColor={isDark ? '#8AA897' : '#658176'}
                 editable={!isSaving}
@@ -264,7 +266,7 @@ const EditProfile: React.FC = () => {
             {/* Phone Number */}
             <View className="mb-5">
               <Text
-                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
               >
                 Phone Number
               </Text>
@@ -274,8 +276,8 @@ const EditProfile: React.FC = () => {
                 keyboardType="phone-pad"
                 className={`border rounded-xl px-4 py-3 font-poppins-regular ${
                   isDark
-                    ? 'bg-[#0F1F1A] border-[#273F36] text-white'
-                    : 'bg-white border-[#DAE7E0] text-[#162721]'
+                    ? 'bg-[#0F1F1A] border-commonGradientStop7 text-white'
+                    : 'bg-white border-[#DAE7E0] text-textDark'
                 }`}
                 placeholderTextColor={isDark ? '#8AA897' : '#658176'}
                 editable={!isSaving}
@@ -285,15 +287,15 @@ const EditProfile: React.FC = () => {
             {/* Email (Disabled) */}
             <View className="mb-5">
               <Text
-                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
               >
                 Email
               </Text>
               <View
-                className={`border rounded-xl px-4 py-3 ${isDark ? 'bg-[#0A1410] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'}`}
+                className={`border rounded-xl px-4 py-3 ${isDark ? 'bg-[#0A1410] border-commonGradientStop7' : 'bg-[#F5F9F7] border-[#DAE7E0]'}`}
               >
                 <Text
-                  className={`font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                  className={`font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                 >
                   {formData.email}
                 </Text>
@@ -303,7 +305,7 @@ const EditProfile: React.FC = () => {
             {/* Change Password */}
             <View className="mb-2">
               <Text
-                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
               >
                 Change Password
               </Text>
@@ -314,8 +316,8 @@ const EditProfile: React.FC = () => {
                 placeholder="Enter new password"
                 className={`border rounded-xl px-4 py-3 font-poppins-regular ${
                   isDark
-                    ? 'bg-[#0F1F1A] border-[#273F36] text-white'
-                    : 'bg-white border-[#DAE7E0] text-[#162721]'
+                    ? 'bg-[#0F1F1A] border-commonGradientStop7 text-white'
+                    : 'bg-white border-[#DAE7E0] text-textDark'
                 }`}
                 placeholderTextColor={isDark ? '#8AA897' : '#658176'}
                 editable={!isSaving}
@@ -325,7 +327,7 @@ const EditProfile: React.FC = () => {
             {/* Address (optional) */}
             <View className="mt-4">
               <Text
-                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
               >
                 Address
               </Text>
@@ -335,8 +337,8 @@ const EditProfile: React.FC = () => {
                 multiline
                 className={`border rounded-xl px-4 py-3 font-poppins-regular ${
                   isDark
-                    ? 'bg-[#0F1F1A] border-[#273F36] text-white'
-                    : 'bg-white border-[#DAE7E0] text-[#162721]'
+                    ? 'bg-[#0F1F1A] border-commonGradientStop7 text-white'
+                    : 'bg-white border-[#DAE7E0] text-textDark'
                 }`}
                 placeholderTextColor={isDark ? '#8AA897' : '#658176'}
                 editable={!isSaving}
@@ -364,12 +366,12 @@ const EditProfile: React.FC = () => {
           {/* Cancel Button */}
           <TouchableOpacity
             onPress={handleCancel}
-            className={`border rounded-xl py-4 mb-8 ${isDark ? 'border-[#273F36] bg-transparent' : 'border-[#DAE7E0] bg-white'}`}
+            className={`border rounded-xl py-4 mb-8 ${isDark ? 'border-commonGradientStop7 bg-transparent' : 'border-[#DAE7E0] bg-white'}`}
             activeOpacity={0.7}
             disabled={isUploading || isSaving}
           >
             <Text
-              className={`text-center font-urbanist-bold text-base ${isDark ? 'text-white' : 'text-[#162721]'}`}
+              className={`text-center font-urbanist-bold text-base ${isDark ? 'text-white' : 'text-textDark'}`}
             >
               Cancel
             </Text>
@@ -387,11 +389,13 @@ const EditProfile: React.FC = () => {
             className="flex-1 bg-black/50 justify-end"
             onPress={() => setShowImageModal(false)}
           >
-            <Pressable className={`rounded-t-3xl p-6 ${isDark ? 'bg-[#162721]' : 'bg-white'}`}>
+            <Pressable
+              className={`rounded-t-3xl p-6 ${isDark ? 'bg-buttonSecondaryText' : 'bg-white'}`}
+            >
               <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-6" />
 
               <Text
-                className={`text-xl font-urbanist-bold mb-6 text-center ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                className={`text-xl font-urbanist-bold mb-6 text-center ${isDark ? 'text-white' : 'text-textDark'}`}
               >
                 Choose Profile Photo
               </Text>
@@ -401,11 +405,11 @@ const EditProfile: React.FC = () => {
                 onPress={() => handleImagePicker('camera')}
                 className={`flex-row items-center p-4 rounded-xl mb-3 ${isDark ? 'bg-[#0F1F1A]' : 'bg-[#F5F9F7]'}`}
               >
-                <View className="w-12 h-12 bg-[#27B07D] rounded-full items-center justify-center mr-4">
+                <View className="w-12 h-12 bg-buttonPrimaryBg rounded-full items-center justify-center mr-4">
                   <Ionicons name="camera" size={24} color="#FFFFFF" />
                 </View>
                 <Text
-                  className={`text-base font-urbanist-semibold ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                  className={`text-base font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
                 >
                   Take Photo
                 </Text>
@@ -416,11 +420,11 @@ const EditProfile: React.FC = () => {
                 onPress={() => handleImagePicker('gallery')}
                 className={`flex-row items-center p-4 rounded-xl mb-3 ${isDark ? 'bg-[#0F1F1A]' : 'bg-[#F5F9F7]'}`}
               >
-                <View className="w-12 h-12 bg-[#27B07D] rounded-full items-center justify-center mr-4">
+                <View className="w-12 h-12 bg-buttonPrimaryBg rounded-full items-center justify-center mr-4">
                   <Ionicons name="images" size={24} color="#FFFFFF" />
                 </View>
                 <Text
-                  className={`text-base font-urbanist-semibold ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                  className={`text-base font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
                 >
                   Choose from Gallery
                 </Text>
@@ -429,7 +433,7 @@ const EditProfile: React.FC = () => {
               {/* Cancel */}
               <TouchableOpacity onPress={() => setShowImageModal(false)} className="mt-4 p-4">
                 <Text
-                  className={`text-center font-urbanist-semibold ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                  className={`text-center font-urbanist-semibold ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                 >
                   Cancel
                 </Text>

@@ -297,12 +297,12 @@ const ChatHome: React.FC = () => {
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={() => handleConversationPress(item)}
-      className={`${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
+      className={`${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
     >
       {item.avatarUrl ? (
         <Image source={{ uri: item.avatarUrl }} className="w-12 h-12 rounded-full mr-4" />
       ) : (
-        <View className="w-12 h-12 rounded-full bg-[#27B07D] items-center justify-center mr-4">
+        <View className="w-12 h-12 rounded-full bg-buttonPrimaryBg items-center justify-center mr-4">
           <Text className="text-white text-lg font-semibold">{getInitials(item.customerName)}</Text>
         </View>
       )}
@@ -310,23 +310,27 @@ const ChatHome: React.FC = () => {
       <View className="flex-1">
         <View className="flex-row justify-between items-center mb-1">
           <Text
-            className={`font-semibold text-base ${isDark ? 'text-white' : 'text-[#162721]'}  capitalize`}
+            className={`font-semibold text-base ${isDark ? 'text-white' : 'text-textDark'}  capitalize`}
             numberOfLines={1}
           >
             {item.customerName}
           </Text>
         </View>
-        <Text className={` ${isDark ? 'text-[#658176]' : 'text-[#8AA897]'}`} numberOfLines={1}>
+        <Text className={` ${isDark ? 'text-textMuted' : 'text-textSecondary'}`} numberOfLines={1}>
           {item.lastMessage}
         </Text>
       </View>
 
       <View className="items-end ml-2">
-        <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-[#9EA3AE]'} font-medium text-xs`}>
+        <Text
+          className={` ${isDark ? 'text-textSecondary' : 'text-[#9EA3AE]'} font-medium text-xs`}
+        >
           {formatRelativeTime(item.lastMessageAt)}
         </Text>
         {item.unreadCount > 0 && (
-          <View className={`bg-[#27B07D] w-6 h-6 rounded-full justify-center items-center mt-2`}>
+          <View
+            className={`bg-buttonPrimaryBg w-6 h-6 rounded-full justify-center items-center mt-2`}
+          >
             <Text className="text-white text-xs font-semibold">
               {item.unreadCount > 99 ? '99+' : item.unreadCount}
             </Text>
@@ -384,7 +388,9 @@ const ChatHome: React.FC = () => {
 
             <View
               className={`flex-row items-center border mt-3 px-3  rounded-xl ${
-                isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'
+                isDark
+                  ? 'bg-commonGradientStop6 border-commonGradientStop7'
+                  : 'bg-[#FAFAFA] border-[#E6E6E6]'
               }`}
             >
               <Image
@@ -408,7 +414,7 @@ const ChatHome: React.FC = () => {
                   <TouchableOpacity
                     key={filter}
                     onPress={() => setActiveFilter(filter)}
-                    className={`px-4 py-2  rounded-full border ${isDark ? 'border-[#273F36]' : 'border-[#DADADA]'} ${isActive && 'bg-[#27B07D]'}`}
+                    className={`px-4 py-2  rounded-full border ${isDark ? 'border-commonGradientStop7' : 'border-commonGradientStop11'} ${isActive && 'bg-buttonPrimaryBg'}`}
                   >
                     <Text
                       className={`text-sm font-urbanist-semibold ${isActive && 'text-white'} ${isDark ? 'text-white' : ''}`}

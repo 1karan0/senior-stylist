@@ -133,7 +133,9 @@ const EditProfile = () => {
     <GradientBackground>
       <View className="flex-1 px-5 pt-6 pb-20">
         {/* Header */}
-        <View className={`mb-4 pb-4 border-b ${isDark ? 'border-[#273F36]' : 'border-[#DAE7E0]'}`}>
+        <View
+          className={`mb-4 pb-4 border-b ${isDark ? 'border-commonGradientStop7' : 'border-[#DAE7E0]'}`}
+        >
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Image
@@ -195,7 +197,7 @@ const EditProfile = () => {
               </TouchableOpacity>
             </View>
 
-            <Text className={`mt-4 text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}>
+            <Text className={`mt-4 text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
               Tap to change profile picture
             </Text>
           </View>
@@ -203,7 +205,7 @@ const EditProfile = () => {
           {/* FORM */}
           <View
             className={`${
-              isDark ? 'bg-[#11211c] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+              isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'
             } rounded-2xl p-4 border`}
           >
             <TextInputField
@@ -256,7 +258,7 @@ const EditProfile = () => {
           <TouchableOpacity onPress={() => navigation.goBack()} className="mt-4 p-4">
             <Text
               className={`text-center text-base font-urbanist-semibold ${
-                isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+                isDark ? 'text-textSecondary' : 'text-textMuted'
               }`}
             >
               Cancel

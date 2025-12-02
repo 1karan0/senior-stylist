@@ -70,7 +70,9 @@ const NewsScreen = () => {
         {/* Search */}
         <View
           className={`flex-row items-center border mt-3 px-3 py-2 rounded-xl ${
-            isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'
+            isDark
+              ? 'bg-commonGradientStop6 border-commonGradientStop7'
+              : 'bg-[#FAFAFA] border-[#E6E6E6]'
           }`}
         >
           <Image
@@ -98,7 +100,7 @@ const NewsScreen = () => {
               className={`px-3 py-1 rounded-xl mr-2 ${
                 selectedCategory === item.name
                   ? 'bg-[#00C896]'
-                  : `${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-white border-gray-300'} border`
+                  : `${isDark ? 'bg-commonGradientStop6 border-commonGradientStop7' : 'bg-white border-gray-300'} border`
               }`}
             >
               <Text

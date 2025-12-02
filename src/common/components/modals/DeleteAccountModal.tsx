@@ -22,7 +22,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
       visible={visible}
       onClose={onCancel}
       dismissOnBackdropPress={false}
-      containerClassName={isDark ? 'bg-[#162721]' : 'bg-white'}
+      containerClassName={isDark ? 'bg-buttonSecondaryText' : 'bg-white'}
     >
       <View className="items-center">
         {/* Warning Icon */}
@@ -33,7 +33,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
         {/* Title */}
         <Text
           className={`text-xl font-urbanist-bold mb-3 text-center ${
-            isDark ? 'text-white' : 'text-[#162721]'
+            isDark ? 'text-white' : 'text-textDark'
           }`}
         >
           Delete Account?
@@ -42,7 +42,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
         {/* Description */}
         <Text
           className={`text-center font-poppins-regular mb-6 ${
-            isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+            isDark ? 'text-textSecondary' : 'text-textMuted'
           }`}
         >
           Are you sure you want to delete your account? This action cannot be undone and all your
@@ -60,7 +60,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
           <AppButton
             text="Cancel"
             variant="light"
-            textClassName={'text-[#162721]'}
+            textClassName={'text-textDark'}
             onPress={onCancel}
           />
         </View>

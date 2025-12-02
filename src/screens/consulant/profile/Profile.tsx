@@ -33,7 +33,7 @@ const Profile: React.FC = () => {
         {/* Header */}
         <View className="px-5 py-6">
           <Text
-            className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-[#162721]'}`}
+            className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
           >
             Profile
           </Text>
@@ -47,7 +47,7 @@ const Profile: React.FC = () => {
         >
           {/* Profile Card */}
           <View
-            className={`rounded-2xl border p-4 mb-3 shadow-sm ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+            className={`rounded-2xl border p-4 mb-3 shadow-sm ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
           >
             <View className="items-start mb-4">
               {/* Avatar + Name + Badge + Theme Switch */}
@@ -79,7 +79,7 @@ const Profile: React.FC = () => {
                 <View className="flex-1">
                   <Text
                     className={`text-2xl font-urbanist-bold mb-2 ${
-                      isDark ? 'text-white' : 'text-[#162721]'
+                      isDark ? 'text-white' : 'text-textDark'
                     }`}
                   >
                     {user?.name}
@@ -114,17 +114,17 @@ const Profile: React.FC = () => {
                 className="w-full bg-[#DAE7E0] py-3 rounded-xl mt-4"
                 activeOpacity={0.8}
               >
-                <Text className="text-[#162721] text-center font-urbanist-bold">Edit Profile</Text>
+                <Text className="text-textDark text-center font-urbanist-bold">Edit Profile</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Account Information */}
           <View
-            className={`rounded-xl border p-6 mb-6 shadow-sm ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+            className={`rounded-xl border p-6 mb-6 shadow-sm ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
           >
             <Text
-              className={`text-xl font-urbanist-semibold mb-4 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+              className={`text-xl font-urbanist-semibold mb-4 ${isDark ? 'text-white' : 'text-textDark'}`}
             >
               Account Information
             </Text>
@@ -134,7 +134,7 @@ const Profile: React.FC = () => {
               <View className="flex-row items-center mb-3">
                 <Ionicons name="mail-outline" size={20} color="#10b981" />
                 <Text
-                  className={`font-poppins-regular ml-3 ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+                  className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
                 >
                   {user?.email}
                 </Text>
@@ -144,7 +144,7 @@ const Profile: React.FC = () => {
               <View className="flex-row items-center mb-3">
                 <Ionicons name="call-outline" size={20} color="#10b981" />
                 <Text
-                  className={`font-poppins-regular ml-3 ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+                  className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
                 >
                   Member since {user?.created_at?.split('T')[0]}
                 </Text>
@@ -154,7 +154,7 @@ const Profile: React.FC = () => {
               <View className="flex-row items-center">
                 <Ionicons name="calendar-outline" size={20} color="#10b981" />
                 <Text
-                  className={`font-poppins-regular ml-3 ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+                  className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
                 >
                   Member since January 2024
                 </Text>
@@ -164,15 +164,15 @@ const Profile: React.FC = () => {
 
           {/* Performance Overview */}
           <View
-            className={`rounded-xl p-6 mb-6 shadow-sm ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+            className={`rounded-xl p-6 mb-6 shadow-sm ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
           >
             <Text
-              className={`text-xl font-urbanist-semibold ${isDark ? 'text-white' : 'text-[#162721]'}`}
+              className={`text-xl font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
             >
               Performance Overview
             </Text>
             <Text
-              className={`text-sm font-poppins-regular mb-4 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+              className={`text-sm font-poppins-regular mb-4 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
             >
               Pro Plan - $19.99/month
             </Text>
@@ -181,16 +181,16 @@ const Profile: React.FC = () => {
             <View className="flex-row justify-between mb-4">
               {/* Total Earnings */}
               <View
-                className={`flex-1 items-center  border  rounded-xl p-4 mr-2 ${isDark ? 'border-[#273F36] bg-transparent' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
+                className={`flex-1 items-center  border  rounded-xl p-4 mr-2 ${isDark ? 'border-commonGradientStop7 bg-transparent' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
               >
                 <Ionicons name="trending-up-outline" size={24} color="#10b981" />
                 <Text
-                  className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                  className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
                 >
                   $2,340
                 </Text>
                 <Text
-                  className={`text-xs font-poppins-regular mt-1 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                  className={`text-xs font-poppins-regular mt-1 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                 >
                   Total Earnings
                 </Text>
@@ -198,16 +198,16 @@ const Profile: React.FC = () => {
 
               {/* Total Sessions */}
               <View
-                className={`flex-1 items-center border rounded-xl p-4 ml-2 ${isDark ? 'border-[#273F36] bg-transparent' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
+                className={`flex-1 items-center border rounded-xl p-4 ml-2 ${isDark ? 'border-commonGradientStop7 bg-transparent' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
               >
                 <Ionicons name="chatbubble-outline" size={24} color="#10b981" />
                 <Text
-                  className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                  className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
                 >
                   156
                 </Text>
                 <Text
-                  className={`text-xs font-poppins-regular mt-1 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                  className={`text-xs font-poppins-regular mt-1 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                 >
                   Total Sessions
                 </Text>
@@ -216,16 +216,16 @@ const Profile: React.FC = () => {
 
             {/* Rating */}
             <View
-              className={`items-center  border rounded-xl p-4 ${isDark ? 'border-[#273F36]' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
+              className={`items-center  border rounded-xl p-4 ${isDark ? 'border-commonGradientStop7' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
             >
               <Ionicons name="star" size={28} color="#fbbf24" />
               <Text
-                className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
               >
                 4.8
               </Text>
               <Text
-                className={`text-sm text-[#658176] font-poppins-regular mt-1 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                className={`text-sm text-textMuted font-poppins-regular mt-1 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
               >
                 Average Rating
               </Text>
@@ -235,13 +235,13 @@ const Profile: React.FC = () => {
           {/* Settings */}
           <TouchableOpacity
             onPress={goToSettings}
-            className={`rounded-xl p-4 mb-4 shadow-sm flex-row items-center justify-between border ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+            className={`rounded-xl p-4 mb-4 shadow-sm flex-row items-center justify-between border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
             activeOpacity={0.8}
           >
             <View className="flex-row items-center">
               <Ionicons name="settings-outline" size={24} color={isDark ? '#FFFFFF' : '#162721'} />
               <Text
-                className={`font-urbanist-semibold ml-3 ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                className={`font-urbanist-semibold ml-3 ${isDark ? 'text-white' : 'text-textDark'}`}
               >
                 Settings
               </Text>
@@ -252,11 +252,11 @@ const Profile: React.FC = () => {
           {/* Sign Out */}
           <TouchableOpacity
             onPress={() => logout()}
-            className={`border rounded-xl p-4 mb-8 shadow-sm flex-row items-center justify-between ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
+            className={`border rounded-xl p-4 mb-8 shadow-sm flex-row items-center justify-between ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
           >
             <View className="flex-row items-center">
               <Ionicons name="log-out-outline" size={24} color="#F22D2D" />
-              <Text className="text-[#F22D2D] font-urbanist-semibold ml-3">Sign Out</Text>
+              <Text className="text-error font-urbanist-semibold ml-3">Sign Out</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
           </TouchableOpacity>

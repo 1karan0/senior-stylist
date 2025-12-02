@@ -13,7 +13,7 @@ const Itemcard: React.FC<ItemProps> = ({ item, onPress }) => {
 
   return (
     <View
-      className={`rounded-xl mb-5 ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-white border-gray-200'} shadow-sm border `}
+      className={`rounded-xl mb-5 ${isDark ? 'bg-commonGradientStop6 border-commonGradientStop7' : 'bg-white border-gray-200'} shadow-sm border `}
     >
       <View className="absolute top-3 left-3 z-10">
         <LinearGradient

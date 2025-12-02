@@ -132,17 +132,17 @@ const FindingStylist: React.FC = () => {
       <View className={` justify-center items-center mb-4`}>
         <Image source={require('@/assets/icons/animation.png')} className="w-16 h-16" />
       </View>
-      <Text className="text-[21px] font-semibold text-[#162721] text-center mb-2">
+      <Text className="text-[21px] font-semibold text-textDark text-center mb-2">
         Finding your Stylist...
       </Text>
-      <Text className="text-[15px] text-[#658176] text-center mb-5">
+      <Text className="text-[15px] text-textMuted text-center mb-5">
         We&apos;re matching you with the best stylist for your needs.
       </Text>
 
       <View className="w-full h-2 rounded bg-[#ECECEC] overflow-hidden mb-3">
-        <View className="h-full rounded bg-[#27B07D]" style={{ width: `${progress}%` }} />
+        <View className="h-full rounded bg-buttonPrimaryBg" style={{ width: `${progress}%` }} />
       </View>
-      <Text className="text-[13px] text-[#658176] mb-5 text-center">
+      <Text className="text-[13px] text-textMuted mb-5 text-center">
         {loading ? 'This usually takes just a few seconds.' : 'Hang tight, we are still looking...'}
       </Text>
     </>
@@ -153,16 +153,16 @@ const FindingStylist: React.FC = () => {
       <View className="w-22 h-22 rounded-full bg-[#FEECEC] justify-center items-center mb-4">
         <Ionicons name="alert-circle" size={36} color="#E05959" />
       </View>
-      <Text className="text-[21px] font-semibold text-[#162721] text-center mb-2">
+      <Text className="text-[21px] font-semibold text-textDark text-center mb-2">
         No stylists available right now
       </Text>
-      <Text className="text-[15px] text-[#658176] text-center mb-5">
+      <Text className="text-[15px] text-textMuted text-center mb-5">
         {searchFailedMessage ||
           'This is a very busy period for our stylists. Please try again in a few minutes.'}
       </Text>
 
       <TouchableOpacity
-        className="mt-4 w-full rounded-xl bg-[#27B07D] py-3.5 items-center"
+        className="mt-4 w-full rounded-xl bg-buttonPrimaryBg py-3.5 items-center"
         onPress={handleTryAgain}
       >
         <Text className="text-white text-[15px] font-bold">Try again</Text>
@@ -171,7 +171,9 @@ const FindingStylist: React.FC = () => {
         className="mt-2.5 w-full rounded-xl border border-[#DAE7E0] py-3.5 items-center"
         onPress={handleViewConsultations}
       >
-        <Text className="text-[#0E1B16] text-[15px] font-semibold">View my consultations</Text>
+        <Text className="text-commonGradientStop6 text-[15px] font-semibold">
+          View my consultations
+        </Text>
       </TouchableOpacity>
     </>
   );

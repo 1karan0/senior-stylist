@@ -298,7 +298,7 @@ export default function SignupScreen({ navigation, route }: any) {
                       cvError
                         ? 'border-red-500 bg-red-50'
                         : isDark
-                          ? 'bg-[#0E1B16] border-[#273F36]'
+                          ? 'bg-commonGradientStop6 border-commonGradientStop7'
                           : 'bg-[#F5F9F7] border-textPrimary'
                     } rounded-lg h-[120px] justify-center items-center`}
                   >

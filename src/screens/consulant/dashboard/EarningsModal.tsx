@@ -32,8 +32,8 @@ const EarningsModal: React.FC<EarningsModalProps> = ({ visible, onClose }) => {
       <ScrollView showsVerticalScrollIndicator={false} className="-mx-6 px-6">
         {/* Content below */}
         <View className="flex-1 mb-3">
-          <Text className="text-xl font-poppins-semibold text-[#162721]">Earnings</Text>
-          <Text className="font-poppins-regular text-[#658176] text-sm">
+          <Text className="text-xl font-poppins-semibold text-textDark">Earnings</Text>
+          <Text className="font-poppins-regular text-textMuted text-sm">
             Track your consultation revenue
           </Text>
         </View>
@@ -64,18 +64,18 @@ const EarningsModal: React.FC<EarningsModalProps> = ({ visible, onClose }) => {
         <View className="flex-row justify-between mb-6">
           <View className="flex-1 mr-2 bg-white border border-[#DAE7E0] rounded-xl items-center justify-center py-4 shadow-sm">
             <Text className="text-2xl font-urbanist-bold mb-1">$2,340</Text>
-            <Text className="text-[#658176] text-sm font-poppins-regular">This Month</Text>
+            <Text className="text-textMuted text-sm font-poppins-regular">This Month</Text>
           </View>
           <View className="flex-1 ml-2 items-center justify-center bg-white border border-[#DAE7E0] rounded-xl py-4 shadow-sm">
             <Text className="text-2xl font-urbanist-bold mb-1">$1,200</Text>
-            <Text className="text-[#658176] text-sm font-poppins-regular">Pending</Text>
+            <Text className="text-textMuted text-sm font-poppins-regular">Pending</Text>
           </View>
         </View>
 
         {/* Recent Transactions */}
         <View className="mb-2">
-          <Text className="text-xl font-urbanist-semibold text-[#162721]">Recent Transactions</Text>
-          <Text className="font-poppins-regular text-[#658176] mb-3 text-sm">
+          <Text className="text-xl font-urbanist-semibold text-textDark">Recent Transactions</Text>
+          <Text className="font-poppins-regular text-textMuted mb-3 text-sm">
             Your latest payouts
           </Text>
 
@@ -95,15 +95,15 @@ const EarningsModal: React.FC<EarningsModalProps> = ({ visible, onClose }) => {
                     <Ionicons name="calendar-outline" size={20} color="#27B07D" />
                   </View>
                   <View>
-                    <Text className="font-urbanist-semibold text-[#162721] text-base">
+                    <Text className="font-urbanist-semibold text-textDark text-base">
                       {transaction.date}
                     </Text>
-                    <Text className="text-[#658176] text-sm font-poppins-regular">
+                    <Text className="text-textMuted text-sm font-poppins-regular">
                       {transaction.status}
                     </Text>
                   </View>
                 </View>
-                <Text className="text-[#27B07D] font-poppins-semibold text-base">
+                <Text className="text-textPrimary font-poppins-semibold text-base">
                   {transaction.amount}
                 </Text>
               </View>

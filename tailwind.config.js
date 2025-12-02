@@ -36,6 +36,7 @@ module.exports = {
         textWhite: '#FFFFFF',
         textPrimary: '#27B07D',
         textSecondary: '#8AA897',
+        error: '#F22D2D',
 
         // Light and dark background gradient stops
         bgLight0: 'hsl(146 25% 97%)',

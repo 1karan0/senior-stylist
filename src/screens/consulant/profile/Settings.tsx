@@ -49,7 +49,7 @@ const Settings: React.FC = () => {
               <Ionicons name="arrow-back" size={24} color={isDark ? '#FFFFFF' : '#162721'} />
             </TouchableOpacity>
             <Text
-              className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-[#162721]'}`}
+              className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
             >
               Settings
             </Text>
@@ -65,12 +65,14 @@ const Settings: React.FC = () => {
           {/* Theme Section */}
           <View
             className={`rounded-xl border p-5 mb-4 shadow-sm ${
-              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+              isDark
+                ? 'bg-buttonSecondaryText border-commonGradientStop7'
+                : 'bg-white border-[#DAE7E0]'
             }`}
           >
             <Text
               className={`text-lg font-urbanist-semibold mb-4 ${
-                isDark ? 'text-white' : 'text-[#162721]'
+                isDark ? 'text-white' : 'text-textDark'
               }`}
             >
               Appearance
@@ -81,7 +83,7 @@ const Settings: React.FC = () => {
               <View className="flex-row items-center flex-1">
                 <View
                   className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                    isDark ? 'bg-[#273F36]' : 'bg-[#F5F9F7]'
+                    isDark ? 'bg-commonGradientStop7' : 'bg-[#F5F9F7]'
                   }`}
                 >
                   <Ionicons name={isDark ? 'moon' : 'sunny'} size={20} color="#27B07D" />
@@ -89,14 +91,14 @@ const Settings: React.FC = () => {
                 <View className="flex-1">
                   <Text
                     className={`font-urbanist-semibold text-base ${
-                      isDark ? 'text-white' : 'text-[#162721]'
+                      isDark ? 'text-white' : 'text-textDark'
                     }`}
                   >
                     Dark Mode
                   </Text>
                   <Text
                     className={`text-sm font-poppins-regular mt-1 ${
-                      isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+                      isDark ? 'text-textSecondary' : 'text-textMuted'
                     }`}
                   >
                     {isDark ? 'Dark theme enabled' : 'Light theme enabled'}
@@ -116,12 +118,14 @@ const Settings: React.FC = () => {
           {/* Account Section */}
           <View
             className={`rounded-xl border p-5 mb-4 shadow-sm ${
-              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+              isDark
+                ? 'bg-buttonSecondaryText border-commonGradientStop7'
+                : 'bg-white border-[#DAE7E0]'
             }`}
           >
             <Text
               className={`text-lg font-urbanist-semibold mb-4 ${
-                isDark ? 'text-white' : 'text-[#162721]'
+                isDark ? 'text-white' : 'text-textDark'
               }`}
             >
               Account
@@ -140,12 +144,12 @@ const Settings: React.FC = () => {
                   <Ionicons name="trash-outline" size={20} color="#F22D2D" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-[#F22D2D] font-urbanist-semibold text-base">
+                  <Text className="text-error font-urbanist-semibold text-base">
                     Delete Account
                   </Text>
                   <Text
                     className={`text-sm font-poppins-regular mt-1 ${
-                      isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+                      isDark ? 'text-textSecondary' : 'text-textMuted'
                     }`}
                   >
                     Permanently delete your account
@@ -159,12 +163,14 @@ const Settings: React.FC = () => {
           {/* App Info */}
           <View
             className={`rounded-xl border p-5 mb-8 shadow-sm ${
-              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+              isDark
+                ? 'bg-buttonSecondaryText border-commonGradientStop7'
+                : 'bg-white border-[#DAE7E0]'
             }`}
           >
             <Text
               className={`text-lg font-urbanist-semibold mb-4 ${
-                isDark ? 'text-white' : 'text-[#162721]'
+                isDark ? 'text-white' : 'text-textDark'
               }`}
             >
               About
@@ -174,12 +180,12 @@ const Settings: React.FC = () => {
               {/* Version */}
               <View className="flex-row items-center justify-between mb-3">
                 <Text
-                  className={`font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                  className={`font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                 >
                   Version
                 </Text>
                 <Text
-                  className={`font-urbanist-semibold ${isDark ? 'text-white' : 'text-[#162721]'}`}
+                  className={`font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
                 >
                   1.0.0
                 </Text>
@@ -191,7 +197,7 @@ const Settings: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <Text
-                  className={`font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                  className={`font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                 >
                   Terms & Conditions
                 </Text>
@@ -204,7 +210,7 @@ const Settings: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <Text
-                  className={`font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                  className={`font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                 >
                   Privacy Policy
                 </Text>

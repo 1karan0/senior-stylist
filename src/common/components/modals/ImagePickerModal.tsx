@@ -46,7 +46,7 @@ const ImagePickerModal = ({ visible, onClose, onCamera, onGallery }: Props) => {
                 isDark ? 'bg-[#1A4738]' : 'bg-[#C6EEDD]'
               }`}
             >
-              <View className="w-12 h-12 bg-[#27B07D] rounded-full items-center justify-center mr-4">
+              <View className="w-12 h-12 bg-buttonPrimaryBg rounded-full items-center justify-center mr-4">
                 <Ionicons name="camera" size={24} color="#FFFFFF" />
               </View>
             </View>
@@ -70,7 +70,7 @@ const ImagePickerModal = ({ visible, onClose, onCamera, onGallery }: Props) => {
                 isDark ? 'bg-[#1E3A33]' : 'bg-[#DDEFE6]'
               }`}
             >
-              <View className="w-12 h-12 bg-[#27B07D] rounded-full items-center justify-center mr-4">
+              <View className="w-12 h-12 bg-buttonPrimaryBg rounded-full items-center justify-center mr-4">
                 <Ionicons name="images" size={24} color="#FFFFFF" />
               </View>
             </View>
@@ -85,7 +85,7 @@ const ImagePickerModal = ({ visible, onClose, onCamera, onGallery }: Props) => {
           <TouchableOpacity onPress={onClose}>
             <Text
               className={`text-center text-base font-urbanist-semibold mt-2 ${
-                isDark ? 'text-[#8AA897]' : 'text-[#658176]'
+                isDark ? 'text-textSecondary' : 'text-textMuted'
               }`}
             >
               Cancel

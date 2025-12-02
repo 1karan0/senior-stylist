@@ -127,7 +127,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
       {/* MAIN INPUT BOX */}
       <View
-        className={`flex-row items-center  ${isDark ? 'bg-[#0E1B16]' : 'bg-white'} rounded-[28px] px-4 min-h-[50px]`}
+        className={`flex-row items-center  ${isDark ? 'bg-commonGradientStop6' : 'bg-white'} rounded-[28px] px-4 min-h-[50px]`}
         style={{
           shadowColor: '#000',
           shadowOpacity: 0.08,

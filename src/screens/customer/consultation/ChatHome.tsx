@@ -243,12 +243,12 @@ const CustomerChatHome: React.FC = () => {
           asCustomer: true,
         })
       }
-      className={`${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
+      className={`${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
     >
       {item.avatarUrl ? (
         <Image source={{ uri: item.avatarUrl }} className="w-12 h-12 rounded-full mr-4" />
       ) : (
-        <View className="w-12 h-12 rounded-full bg-[#27B07D] items-center justify-center mr-4">
+        <View className="w-12 h-12 rounded-full bg-buttonPrimaryBg items-center justify-center mr-4">
           <Text className="text-white text-lg font-semibold">{getInitials(item.title)}</Text>
         </View>
       )}
@@ -256,23 +256,27 @@ const CustomerChatHome: React.FC = () => {
       <View className="flex-1">
         <View className="flex-row justify-between items-center mb-1">
           <Text
-            className={`font-semibold text-base ${isDark ? 'text-white' : 'text-[#162721]'}  capitalize`}
+            className={`font-semibold text-base ${isDark ? 'text-white' : 'text-textDark'}  capitalize`}
             numberOfLines={1}
           >
             {item.title}
           </Text>
         </View>
-        <Text className={` ${isDark ? 'text-[#658176]' : 'text-[#8AA897]'}`} numberOfLines={1}>
+        <Text className={` ${isDark ? 'text-textMuted' : 'text-textSecondary'}`} numberOfLines={1}>
           {item.lastMessage}
         </Text>
       </View>
 
       <View className="items-end ml-2">
-        <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-[#9EA3AE]'} font-medium text-xs`}>
+        <Text
+          className={` ${isDark ? 'text-textSecondary' : 'text-[#9EA3AE]'} font-medium text-xs`}
+        >
           {getRelative(item.lastMessageAt)}
         </Text>
         {item.unreadCount > 0 && (
-          <View className={`bg-[#27B07D] w-6 h-6 rounded-full justify-center items-center mt-2`}>
+          <View
+            className={`bg-buttonPrimaryBg w-6 h-6 rounded-full justify-center items-center mt-2`}
+          >
             <Text className="text-white text-xs font-semibold">
               {item.unreadCount > 99 ? '99+' : item.unreadCount}
             </Text>
@@ -290,7 +294,7 @@ const CustomerChatHome: React.FC = () => {
           <View className="px-5 pt-6">
             <View className="flex-row justify-between items-center ">
               <Text
-                className={` ${isDark ? 'text-white' : 'text-[#162721]'} text-2xl font-urbanist font-bold`}
+                className={` ${isDark ? 'text-white' : 'text-textDark'} text-2xl font-urbanist font-bold`}
               >
                 Consultations
               </Text>
@@ -303,14 +307,18 @@ const CustomerChatHome: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            <Text className={` ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} opacity-90 mb-4`}>
+            <Text
+              className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} opacity-90 mb-4`}
+            >
               Manage your styling sessions
             </Text>
 
             {/* Search */}
             <View
               className={`flex-row items-center border mt-3 px-3 rounded-xl ${
-                isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#FAFAFA] border-[#E6E6E6]'
+                isDark
+                  ? 'bg-commonGradientStop6 border-commonGradientStop7'
+                  : 'bg-[#FAFAFA] border-[#E6E6E6]'
               }`}
             >
               <Image
@@ -325,7 +333,9 @@ const CustomerChatHome: React.FC = () => {
                 className={`ml-2 flex-1 ${isDark ? 'text-white' : 'text-black'}`}
               />
             </View>
-            <Text className={` mt-2 text-[11px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}>
+            <Text
+              className={` mt-2 text-[11px] ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+            >
               {isRealtimeConnected
                 ? 'Connected to live updates'
                 : 'Showing last synced conversations'}
@@ -353,11 +363,11 @@ const CustomerChatHome: React.FC = () => {
                 }}
                 ListEmptyComponent={() => (
                   <View className="flex-1 items-center justify-center mt-14 px-10">
-                    <Text className={` ${isDark ? 'text-white' : 'text-[#658176]'} text-base mb-1`}>
+                    <Text className={` ${isDark ? 'text-white' : 'text-textMuted'} text-base mb-1`}>
                       No consultations yet
                     </Text>
                     <Text
-                      className={`${isDark ? 'text-white' : 'text-[#658176]'} text-xs text-center`}
+                      className={`${isDark ? 'text-white' : 'text-textMuted'} text-xs text-center`}
                     >
                       Start a new consultation to begin chatting with a stylist.
                     </Text>

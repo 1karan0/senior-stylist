@@ -34,7 +34,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
           {/* ---------- Profile Card ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border`}
+            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border`}
           >
             <View className="flex-row items-center gap-4">
               {/* Avatar */}
@@ -62,7 +62,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
               {/* Name + Role */}
               <View className="flex-1">
                 <Text
-                  className={`text-2xl ${isDark ? 'text-white' : 'text-[#162721]'} font-urbanist-bold`}
+                  className={`text-2xl ${isDark ? 'text-white' : 'text-textDark'} font-urbanist-bold`}
                 >
                   {user?.name}
                 </Text>
@@ -95,10 +95,10 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
           {/* ---------- Account Information ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
+            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
           >
             <Text
-              className={`text-[22px] ${isDark ? 'text-white' : 'text-[#162721]'} font-urbanist-semibold mb-2`}
+              className={`text-[22px] ${isDark ? 'text-white' : 'text-textDark'} font-urbanist-semibold mb-2`}
             >
               Account Information
             </Text>
@@ -107,7 +107,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             <View className="flex-row items-start gap-3 mb-4">
               <Image source={require('@/assets/icons/Email.png')} />
               <Text
-                className={` font-poppins-regular text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+                className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >
                 {user?.email}
               </Text>
@@ -117,7 +117,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             <View className="flex-row items-start gap-3 mb-4">
               <Image source={require('@/assets/icons/Phone.png')} />
               <Text
-                className={` font-poppins-regular text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+                className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >
                 {user?.phone}
               </Text>
@@ -127,7 +127,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             <View className="flex-row items-start gap-3">
               <Image source={require('@/assets/icons/Calendar.png')} />
               <Text
-                className={` font-poppins-regular text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#6A6B6E]'}`}
+                className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >
                 Member since {user?.created_at?.split('T')[0]}
               </Text>
@@ -136,22 +136,22 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
           {/* ---------- Subscription ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
+            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
           >
             <Text
-              className={`text-[22px] ${isDark ? 'text-white' : 'text-[#162721]'} font-urbanist-semibold mb-2`}
+              className={`text-[22px] ${isDark ? 'text-white' : 'text-textDark'} font-urbanist-semibold mb-2`}
             >
               Subscription
             </Text>
 
             <Text
-              className={` ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} font-poppins-regular mb-1`}
+              className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular mb-1`}
             >
               Pro Plan – $19.99/month
             </Text>
 
             <Text
-              className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} font-poppins-regular text-sm mb-4`}
+              className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-4`}
             >
               Next billing date: 25 Dec 2025
             </Text>
@@ -192,7 +192,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
           {/* ---------- Referral Program ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
+            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
           >
             <View>
               <View className="flex-row gap-2 items-baseline">
@@ -205,13 +205,13 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   className=""
                 />
                 <Text
-                  className={`text-[22px] ${isDark ? 'text-white' : 'text-[#162721]'} font-urbanist-semibold mb-2`}
+                  className={`text-[22px] ${isDark ? 'text-white' : 'text-textDark'} font-urbanist-semibold mb-2`}
                 >
                   Referral Program
                 </Text>
               </View>
               <Text
-                className={` ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} font-poppins-regular text-sm mb-2 w-[90%]`}
+                className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-2 w-[90%]`}
               >
                 Share your code with friends and earn free sessions
               </Text>
@@ -260,7 +260,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
           {/* ---------- Settings ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-xl py-[8px] px-[20px] mt-5 border`}
+            className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl py-[8px] px-[20px] mt-5 border`}
           >
             <TouchableOpacity
               className="flex-row gap-2"
@@ -276,7 +276,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 resizeMode="contain"
               />
               <Text
-                className={`${isDark ? 'text-white' : 'text-[#162721]'} font-urbanist-semibold text-[15px]`}
+                className={`${isDark ? 'text-white' : 'text-textDark'} font-urbanist-semibold text-[15px]`}
               >
                 Settings
               </Text>
@@ -285,11 +285,11 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
           {/* ---------- Logout Button ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-xl py-[8px] px-[20px] mt-5 border mb-10`}
+            className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl py-[8px] px-[20px] mt-5 border mb-10`}
           >
             <TouchableOpacity onPress={logout} className="flex-row items-center gap-2">
               <Image source={require('@/assets/icons/SignOut.png')} />
-              <Text className="text-[#F22D2D] text-lg font-semibold">Sign Out</Text>
+              <Text className="text-error text-lg font-semibold">Sign Out</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

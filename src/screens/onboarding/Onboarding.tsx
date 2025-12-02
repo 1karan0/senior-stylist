@@ -78,7 +78,9 @@ const OnboardingScreen = ({ navigation }: any) => {
             <TouchableOpacity
               onPress={() => navigation.replace('Login')}
               className={`px-5 py-2 w-44 rounded-2xl items-center border ${
-                isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'
+                isDark
+                  ? 'bg-commonGradientStop6 border-commonGradientStop7'
+                  : 'bg-[#F5F9F7] border-[#DAE7E0]'
               }`}
             >
               <Text
