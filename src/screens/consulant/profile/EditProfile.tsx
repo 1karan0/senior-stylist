@@ -10,12 +10,14 @@ import {
   Modal,
   Pressable,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
+import ImageResizer from 'react-native-image-resizer';
 
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
@@ -64,9 +66,44 @@ const EditProfile: React.FC = () => {
     }
   }, [user]);
 
+  // helper: resize + re-encode image for consistent upload
+  const prepareImageForUpload = async (uri: string, origType?: string) => {
+    // choose format: WEBP on Android for smaller size, JPEG on iOS
+    const format = Platform.OS === 'android' ? 'WEBP' : 'JPEG';
+    const quality = 80; // 0-100
+    const maxDim = 800; // max width/height — change to 400 if you want smaller avatars
+
+    try {
+      const resized = await ImageResizer.createResizedImage(
+        uri,
+        maxDim,
+        maxDim,
+        format,
+        quality,
+        0 // rotation
+      );
+
+      // resized.uri is the local file path to the resized image
+      // create a file-like object compatible with your uploadMutation
+      const fileName = resized.name ?? `avatar_${Date.now()}.${format.toLowerCase()}`;
+      // mime type
+      const mime = format === 'WEBP' ? 'image/webp' : 'image/jpeg';
+
+      return {
+        uri: resized.uri,
+        name: fileName,
+        type: mime,
+      } as any;
+    } catch (err) {
+      console.error('Image resize failed', err);
+      throw err;
+    }
+  };
+
   const handleImagePicker = (type: 'camera' | 'gallery') => {
     setShowImageModal(false);
 
+    // let native picker do a quick downscale; we will reprocess it with ImageResizer for consistency
     const options = {
       mediaType: 'photo' as const,
       quality: 0.8 as const,
@@ -74,7 +111,7 @@ const EditProfile: React.FC = () => {
       maxHeight: 1200,
     };
 
-    const callback = (response: any) => {
+    const callback = async (response: any) => {
       if (response.didCancel) return;
       if (response.errorCode) {
         Alert.alert('Error', response.errorMessage || 'Failed to pick image');
@@ -83,28 +120,39 @@ const EditProfile: React.FC = () => {
       if (response.assets && response.assets[0]) {
         const asset = response.assets[0];
         const uri = asset.uri;
-        const fileName = asset.fileName ?? `photo_${Date.now()}.jpg`;
-        const mimeType = asset.type ?? 'image/jpeg';
+        if (!uri) {
+          Alert.alert('Error', 'Selected image has no URI.');
+          return;
+        }
 
-        // temporary preview
-        setProfileImage(uri ?? null);
+        // show a temporary preview immediately
+        setProfileImage(uri);
 
-        const file = { uri, name: fileName, type: mimeType } as any;
+        try {
+          // Prepare (resize + convert) the image for upload
+          const fileObj = await prepareImageForUpload(uri, asset.type);
 
-        uploadMutation.mutate(file, {
-          onSuccess: (res) => {
-            const hostedUrl = res?.data?.profile_picture_url ?? res?.profile_picture_url;
-            if (hostedUrl) {
-              setProfileImage(hostedUrl);
-            } else {
-              Alert.alert('Upload', 'Image uploaded but server did not return URL.');
-            }
-          },
-          onError: (err: any) => {
-            console.error('Upload failed', err);
-            Alert.alert('Upload failed', err?.message ?? 'Please try again');
-          },
-        });
+          // Now upload using your existing mutation (it expects {uri, name, type})
+          uploadMutation.mutate(fileObj, {
+            onSuccess: (res) => {
+              const hostedUrl = res?.data?.profile_picture_url ?? res?.profile_picture_url;
+              if (hostedUrl) {
+                setProfileImage(hostedUrl);
+              } else {
+                Alert.alert('Upload', 'Image uploaded but server did not return URL.');
+              }
+            },
+            onError: (err: any) => {
+              console.error('Upload failed', err);
+              Alert.alert('Upload failed', err?.message ?? 'Please try again');
+            },
+          });
+        } catch (err: any) {
+          console.error('Prepare/upload failed', err);
+          Alert.alert('Error', err?.message ?? 'Failed to prepare image for upload.');
+          // optionally reset preview to previous image if preparation failed
+          setProfileImage(user?.profile_picture_url ?? null);
+        }
       }
     };
 
@@ -236,6 +284,7 @@ const EditProfile: React.FC = () => {
           </View>
 
           {/* Form Card */}
+          {/* ... rest of component unchanged ... */}
           <View
             className={`rounded-2xl border p-6 mb-6 shadow-sm ${
               isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'

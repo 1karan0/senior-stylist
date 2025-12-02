@@ -222,7 +222,9 @@ const Profile: React.FC<Props> = ({ navigation }) => {
               <View
                 className={` w-[80%] items-center text-center bg-[#F5F9F7] border-[#DAE7E0] border rounded-lg py-3 `}
               >
-                <Text className="text-black text-base font-urbanist-bold">STYLE2025</Text>
+                <Text className="text-black text-base font-urbanist-bold">
+                  {user?.referral_code}
+                </Text>
               </View>
               <View>
                 <LinearGradient

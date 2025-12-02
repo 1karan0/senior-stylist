@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   Image,
   ActivityIndicator,
@@ -30,7 +29,6 @@ export default function SignupScreen({ navigation, route }: any) {
   const [loading, setLoading] = useState(false);
   const [cvFile, setCvFile] = useState<any>(null);
   const [cvError, setCvError] = useState<string>('');
-  const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState({
     visible: false,
     message: '',
@@ -38,8 +36,7 @@ export default function SignupScreen({ navigation, route }: any) {
   });
 
   const { isDark } = useTheme();
-
-  const user = route.params.user;
+  const user = route.params.user; // expects 'consultant' or other
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     setToast({
@@ -72,7 +69,7 @@ export default function SignupScreen({ navigation, route }: any) {
   };
 
   const handleSignup = async (form: any) => {
-    // Check if CV is required for consultant
+    // CV required only for consultant
     if (user === 'consultant' && !cvFile) {
       setCvError('CV is required to register as a consultant');
       showToast('Please upload your CV to continue', 'warning');
@@ -81,12 +78,11 @@ export default function SignupScreen({ navigation, route }: any) {
 
     try {
       setLoading(true);
-
       let response;
 
       if (user === 'consultant') {
+        // Consultant signup: NO referral_code appended
         const data = new FormData();
-
         data.append('name', form.name);
         data.append('email', form.email);
         data.append('phone', form.phone);
@@ -98,7 +94,6 @@ export default function SignupScreen({ navigation, route }: any) {
             name: cvFile.name,
             type: cvFile.type,
           };
-
           data.append('cv', fileToUpload);
         }
 
@@ -106,13 +101,19 @@ export default function SignupScreen({ navigation, route }: any) {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       } else {
-        // normal customer
-        response = await axios.post(`${BASE_URL}/api/register`, {
+        // Normal customer signup: include referral_code only if provided
+        const payload: any = {
           name: form.name,
           email: form.email,
           phone: form.phone,
           password: form.password,
-        });
+        };
+
+        if (form.referral) {
+          payload.referral_code = form.referral;
+        }
+
+        response = await axios.post(`${BASE_URL}/api/register`, payload);
       }
 
       console.log('Signup success:', response.data);
@@ -135,11 +136,7 @@ export default function SignupScreen({ navigation, route }: any) {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-          }}
-        >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <GradientBackground>
             <Toast
               visible={toast.visible}
@@ -162,32 +159,25 @@ export default function SignupScreen({ navigation, route }: any) {
                 />
 
                 <Text
-                  className={`font-bold text-[24px] ${
-                    isDark ? 'text-white' : 'text-textDark'
-                  } mt-4`}
+                  className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}
                 >
                   Create Account
                 </Text>
 
                 <Text
-                  className={`font-normal text-[14px] ${
-                    isDark ? 'text-textSecondary' : 'text-textMuted'
-                  }  mt-1`}
+                  className={`font-normal text-[14px] ${isDark ? 'text-textSecondary' : 'text-textMuted'}  mt-1`}
                 >
                   Join us today
                 </Text>
               </View>
 
-              {/* Name Field */}
+              {/* Name */}
               <Controller
                 control={control}
                 name="name"
                 rules={{
                   required: 'Full name is required',
-                  minLength: {
-                    value: 2,
-                    message: 'Name must be at least 2 characters',
-                  },
+                  minLength: { value: 2, message: 'Name must be at least 2 characters' },
                 }}
                 render={({ field: { onChange, value } }) => (
                   <TextInputField
@@ -201,7 +191,7 @@ export default function SignupScreen({ navigation, route }: any) {
                 )}
               />
 
-              {/* Email Field */}
+              {/* Email */}
               <Controller
                 control={control}
                 name="email"
@@ -226,8 +216,7 @@ export default function SignupScreen({ navigation, route }: any) {
                 )}
               />
 
-              {/* Phone Field */}
-
+              {/* Phone */}
               <Controller
                 control={control}
                 name="phone"
@@ -251,16 +240,13 @@ export default function SignupScreen({ navigation, route }: any) {
                 )}
               />
 
-              {/* Password Field */}
+              {/* Password */}
               <Controller
                 control={control}
                 name="password"
                 rules={{
                   required: 'Password is required',
-                  minLength: {
-                    value: 6,
-                    message: 'Password must be at least 6 characters',
-                  },
+                  minLength: { value: 6, message: 'Password must be at least 6 characters' },
                 }}
                 render={({ field: { onChange, value } }) => (
                   <TextInputField
@@ -275,12 +261,30 @@ export default function SignupScreen({ navigation, route }: any) {
                 )}
               />
 
+              {/* Referral: SHOW ONLY WHEN NOT A CONSULTANT */}
+              {user !== 'consultant' && (
+                <Controller
+                  control={control}
+                  name="referral"
+                  rules={{}}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInputField
+                      label="Referral Code (optional)"
+                      placeholder="Enter referral code (optional)"
+                      // icon={require('../../assets/icons/tag.png')}
+                      value={value}
+                      onChangeText={onChange}
+                      error={errors.referral?.message as string}
+                    />
+                  )}
+                />
+              )}
+
+              {/* CV upload: only for consultant */}
               {user === 'consultant' && (
                 <View className="mb-5 mt-2">
                   <Text
-                    className={`font-medium text-[14px] ${
-                      isDark ? 'text-[#ffff]' : 'text-black'
-                    } mb-2`}
+                    className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
                   >
                     Upload CV <Text className="text-red-500">*</Text>
                   </Text>
@@ -301,7 +305,7 @@ export default function SignupScreen({ navigation, route }: any) {
                     />
 
                     <Text
-                      className={` ${isDark ? 'text-white' : 'text-textDark'} font-medium text-center px-4`}
+                      className={`${isDark ? 'text-white' : 'text-textDark'} font-medium text-center px-4`}
                     >
                       {cvFile ? cvFile.name : 'Upload your CV'}
                     </Text>
@@ -313,7 +317,7 @@ export default function SignupScreen({ navigation, route }: any) {
                 </View>
               )}
 
-              {/* Sign Up Button — gradient */}
+              {/* Sign Up Button */}
               <Pressable
                 onPress={handleSubmit(handleSignup)}
                 className="rounded-lg overflow-hidden mb-6 mt-3"
@@ -336,9 +340,7 @@ export default function SignupScreen({ navigation, route }: any) {
               {/* Sign in link */}
               <View className="text-center mb-5 flex flex-row justify-center">
                 <Text
-                  className={`text-center ${
-                    isDark ? 'text-textSecondary' : 'text-[#64748B]'
-                  } font-normal text-[14px]`}
+                  className={`text-center ${isDark ? 'text-textSecondary' : 'text-[#64748B]'} font-normal text-[14px]`}
                 >
                   Already have an account?{' '}
                 </Text>
