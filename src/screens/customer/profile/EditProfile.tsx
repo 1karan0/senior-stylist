@@ -12,6 +12,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'react-native-image-picker';
+import LinearGradient from 'react-native-linear-gradient';
 
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -22,15 +23,16 @@ import TextInputField from '@/common/components/TextInputField';
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';
 import { useEditProfile } from '@/api/user/profile/useEditProfile';
 import { AppButton } from '@/common/components/Button';
-import LinearGradient from 'react-native-linear-gradient';
+
+import ImagePickerModal from '@/common/components/modals/ImagePickerModal';
 
 const EditProfile = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { profile } = route.params as { profile: ProfileUser };
   const { isDark } = useTheme();
-  const queryClient = useQueryClient();
 
+  const queryClient = useQueryClient();
   const uploadMutation = useUploadProfilePicture();
   const editMutation = useEditProfile();
 
@@ -38,43 +40,86 @@ const EditProfile = () => {
     defaultValues: {
       name: profile.name,
       phone: profile.phone,
-      address: profile.address || '',
+      address: profile.address ?? '',
       email: profile.email,
     },
   });
 
   const [profilePic, setProfilePic] = React.useState(profile.profile_picture_url);
+  const [showModal, setShowModal] = React.useState(false);
 
-  const handleImagePick = () => {
-    ImagePicker.launchImageLibrary({ mediaType: 'photo' }, async (response) => {
-      if (response.didCancel || !response.assets) return;
+  // Optimize Image
+  const optimizeImage = (asset: ImagePicker.Asset) => {
+    if (!asset) return null;
 
-      const asset = response.assets[0];
-
-      const uri = asset.uri;
-      const fileName = asset.fileName ?? `photo_${Date.now()}.jpg`;
-      const mimeType = asset.type ?? 'image/jpeg';
-
-      const file = {
-        uri,
-        name: fileName,
-        type: mimeType,
+    if (asset.base64) {
+      return {
+        uri: `data:${asset.type || 'image/jpeg'};base64,${asset.base64}`,
+        name: asset.fileName ?? `photo_${Date.now()}.jpg`,
+        type: asset.type ?? 'image/jpeg',
       };
+    }
 
-      uploadMutation.mutate(file, {
-        onSuccess: (res) => {
-          setProfilePic(res.data.profile_picture_url);
-        },
-        onError: (err) => {
-          console.log('UPLOAD FAILED:', err.message);
-        },
-      });
+    return {
+      uri: asset.uri!,
+      name: asset.fileName ?? `photo_${Date.now()}.jpg`,
+      type: asset.type ?? 'image/jpeg',
+    };
+  };
+
+  // Gallery
+  const pickFromGallery = async () => {
+    const res = await ImagePicker.launchImageLibrary({
+      mediaType: 'photo',
+      includeBase64: true,
+      quality: 0.8,
+      maxWidth: 400,
+      maxHeight: 400,
+      selectionLimit: 1,
+    });
+
+    if (res.didCancel || !res.assets) return;
+
+    const file = optimizeImage(res.assets[0]);
+    if (!file) return;
+
+    uploadMutation.mutate(file, {
+      onSuccess: (res) => {
+        setProfilePic(res.data.profile_picture_url);
+        setShowModal(false);
+      },
+    });
+  };
+
+  // Camera
+  const takePhoto = async () => {
+    const res = await ImagePicker.launchCamera({
+      mediaType: 'photo',
+      includeBase64: true,
+      quality: 0.8,
+      maxWidth: 400,
+      maxHeight: 400,
+      saveToPhotos: false,
+    });
+
+    if (res.didCancel || !res.assets) return;
+
+    const file = optimizeImage(res.assets[0]);
+    if (!file) return;
+
+    uploadMutation.mutate(file, {
+      onSuccess: (res) => {
+        setProfilePic(res.data.profile_picture_url);
+        setShowModal(false);
+      },
     });
   };
 
   const onSave = (values: any) => {
-    const payload: any = { ...values };
-    payload.profile_picture_url = profilePic;
+    const payload = {
+      ...values,
+      profile_picture_url: profilePic,
+    };
 
     editMutation.mutate(payload, {
       onSuccess: () => {
@@ -90,7 +135,7 @@ const EditProfile = () => {
         {/* Header */}
         <View className={`mb-4 pb-4 border-b ${isDark ? 'border-[#273F36]' : 'border-[#DAE7E0]'}`}>
           <View className="flex-row items-center gap-3">
-            <TouchableOpacity onPress={() => navigation.goBack()} className="mr-1">
+            <TouchableOpacity onPress={() => navigation.goBack()}>
               <Image
                 source={
                   isDark
@@ -106,26 +151,21 @@ const EditProfile = () => {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* PROFILE PIC */}
+          {/* Profile Pic */}
           <View className="items-center mb-10">
-            <TouchableOpacity
-              onPress={handleImagePick}
-              activeOpacity={0.8}
-              disabled={uploadMutation.isPending}
-            >
-              <View>
-                {/* Loader overlay */}
-                {uploadMutation.isPending && (
-                  <View className="absolute inset-0 bg-black/50 rounded-full z-10 items-center justify-center">
-                    <ActivityIndicator color="#fff" size="large" />
-                  </View>
-                )}
-
-                {/* Avatar */}
+            <View>
+              {/* Profile Pic Container */}
+              <TouchableOpacity
+                onPress={() => {
+                  console.log('pressed!');
+                  setShowModal(true);
+                }}
+                activeOpacity={0.8}
+              >
                 <LinearGradient
                   colors={['#27B07D', '#36D399']}
-                  style={{ borderRadius: 100 }} // your app’s gradient
-                  className="w-32 h-32  items-center justify-center"
+                  style={{ borderRadius: 100 }}
+                  className="w-32 h-32 items-center justify-center"
                 >
                   <View className="w-32 h-32 rounded-full overflow-hidden">
                     {profilePic ? (
@@ -139,31 +179,39 @@ const EditProfile = () => {
                     )}
                   </View>
                 </LinearGradient>
+              </TouchableOpacity>
 
-                {/* Plus icon */}
-                <View className="absolute bottom-0 right-0 bg-green-600 w-10 h-10 rounded-full items-center justify-center border-4 border-white dark:border-[#11211c]">
-                  <Text className="text-white text-xl">+</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
+              {/* The PLUS button - make it a real touchable */}
+              <TouchableOpacity
+                onPress={() => {
+                  console.log('pressed!', showModal);
+                  setShowModal(true);
+                }}
+                activeOpacity={0.7}
+                className="absolute bottom-0 right-0 bg-green-600 w-10 h-10 rounded-full 
+                items-center justify-center border-4 border-white dark:border-[#11211c]"
+              >
+                <Text className="text-white text-xl">+</Text>
+              </TouchableOpacity>
+            </View>
 
             <Text className={`mt-4 text-sm ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}>
               Tap to change profile picture
             </Text>
           </View>
 
-          {/* FORM CARD (rounded container like image) */}
+          {/* FORM */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border`}
+            className={`${
+              isDark ? 'bg-[#11211c] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+            } rounded-2xl p-4 border`}
           >
-            {/* FULL NAME */}
             <TextInputField
               label="full name"
               value={watch('name')}
               onChangeText={(t) => setValue('name', t)}
             />
 
-            {/* PHONE */}
             <TextInputField
               label="phone number"
               keyboardType="phone-pad"
@@ -171,7 +219,7 @@ const EditProfile = () => {
               onChangeText={(t) => setValue('phone', t)}
             />
 
-            {/* EMAIL INPUT (simple TextInput, readonly) */}
+            {/* Email */}
             <View className="mb-4">
               <Text
                 className={`text-sm mb-2 font-poppins-medium ${
@@ -180,7 +228,6 @@ const EditProfile = () => {
               >
                 email
               </Text>
-
               <TextInput
                 value={profile.email}
                 editable={false}
@@ -190,7 +237,6 @@ const EditProfile = () => {
               />
             </View>
 
-            {/* ADDRESS */}
             <TextInputField
               label="address"
               multiline
@@ -198,16 +244,15 @@ const EditProfile = () => {
               onChangeText={(t) => setValue('address', t)}
             />
           </View>
-          {/* SAVE BUTTON */}
+
           <View className="mt-8">
             {editMutation.isPending ? (
-              <AppButton text="Saving..." disabled={true} variant="gradient" />
+              <AppButton text="Saving..." disabled variant="gradient" />
             ) : (
               <AppButton text="Save Changes" onPress={handleSubmit(onSave)} variant="gradient" />
             )}
           </View>
 
-          {/* CANCEL */}
           <TouchableOpacity onPress={() => navigation.goBack()} className="mt-4 p-4">
             <Text
               className={`text-center text-base font-urbanist-semibold ${
@@ -218,6 +263,13 @@ const EditProfile = () => {
             </Text>
           </TouchableOpacity>
         </ScrollView>
+        {/* The new modal */}
+        <ImagePickerModal
+          visible={showModal}
+          onClose={() => setShowModal(false)}
+          onCamera={takePhoto}
+          onGallery={pickFromGallery}
+        />
       </View>
     </GradientBackground>
   );
