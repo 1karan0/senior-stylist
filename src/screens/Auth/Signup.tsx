@@ -113,7 +113,10 @@ export default function SignupScreen({ navigation, route }: any) {
           payload.referral_code = form.referral;
         }
 
+        console.log(payload, 'payload');
+
         response = await axios.post(`${BASE_URL}/api/register`, payload);
+        console.log(response, 'response');
       }
 
       console.log('Signup success:', response.data);
