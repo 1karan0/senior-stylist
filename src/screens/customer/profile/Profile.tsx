@@ -236,7 +236,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 >
                   <TouchableOpacity>
                     {/* <Ionicons name="copy-outline" size={20} color="white" /> */}
-                    <Image source={require('@/assets/icons/Copy.png')} className="" />
+                    <Image source={require('@/assets/icons/copy.png')} className="" />
                   </TouchableOpacity>
                 </LinearGradient>
               </View>

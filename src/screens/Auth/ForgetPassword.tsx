@@ -8,6 +8,7 @@ import Toast from '@/common/components/Toast';
 import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import TextInputField from '@/common/components/TextInputField';
+import Button from '@/common/components/Button';
 
 export default function ForgetPassword({ navigation }: any) {
   const {
@@ -113,24 +114,14 @@ export default function ForgetPassword({ navigation }: any) {
         {!errors.email && <View className="mb-5" />}
 
         {/* Send Reset Link Button */}
-        <Pressable
+        <Button
+          text="Send Verification Code"
           onPress={handleSubmit(onSubmit)}
-          className="rounded-2xl overflow-hidden mb-6"
+          loading={loading}
           disabled={loading}
-        >
-          <LinearGradient
-            colors={loading ? ['#94A3B8', '#64748B'] : ['#2CCB91', '#23A76F']}
-            start={{ x: 0, y: 1 }}
-            end={{ x: 1, y: 0 }}
-            className="h-[50px] rounded-xl justify-center items-center"
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text className="text-white font-bold text-[16px]">Send Verification Code</Text>
-            )}
-          </LinearGradient>
-        </Pressable>
+          className="rounded-2xl mb-6 h-[50px] justify-center items-center"
+          textClassName="text-[16px] font-bold"
+        />
 
         <Pressable onPress={() => navigation.navigate('Login')} className="self-center">
           <Text className="font-normal text-[13px] text-textPrimary">Back to Login</Text>

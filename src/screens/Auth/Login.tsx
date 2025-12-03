@@ -1,23 +1,14 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  Image,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  ScrollView,
-} from 'react-native';
+import { View, Text, Pressable, Image, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
-import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
+import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import Toast from '@/common/components/Toast';
 import TextInputField from '@/common/components/TextInputField';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function LoginScreen({ navigation }: any) {
   const {
@@ -164,24 +155,15 @@ export default function LoginScreen({ navigation }: any) {
             </Pressable>
 
             {/* Sign In Button */}
-            <Pressable
-              className="rounded-2xl overflow-hidden mb-6"
+            <Button
+              text="Sign In"
               onPress={handleSubmit(handleLogin)}
+              loading={loading}
               disabled={loading}
-            >
-              <LinearGradient
-                colors={loading ? ['#94A3B8', '#64748B'] : ['#2CCB91', '#23A76F']}
-                start={{ x: 0, y: 1 }}
-                end={{ x: 1, y: 0 }}
-                className="h-[50px] rounded-xl justify-center items-center"
-              >
-                {loading ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="text-white font-bold text-[16px]">Sign In</Text>
-                )}
-              </LinearGradient>
-            </Pressable>
+              variant="gradient"
+              className="h-[50px] rounded-xl w-full mb-6"
+              textClassName="text-[16px] font-bold"
+            />
 
             {/* Sign Up */}
             <View className="flex-row justify-center">

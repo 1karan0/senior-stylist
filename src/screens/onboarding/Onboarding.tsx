@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
 import PagerView from 'react-native-pager-view';
-import LinearGradient from 'react-native-linear-gradient';
+import Button from '@/common/components/Button';
 import OnboardItem from './components/OnboardItem';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -75,36 +75,23 @@ const OnboardingScreen = ({ navigation }: any) => {
 
           {/* Buttons */}
           <View className="flex-row items-center justify-center gap-4 px-6 mb-10">
-            <TouchableOpacity
+            {/* Skip button (light variant) */}
+            <Button
+              text="Skip"
+              variant="light"
               onPress={() => navigation.replace('Login')}
-              className={`px-5 py-2 w-44 rounded-2xl items-center border ${
-                isDark
-                  ? 'bg-commonGradientStop6 border-commonGradientStop7'
-                  : 'bg-[#F5F9F7] border-[#DAE7E0]'
-              }`}
-            >
-              <Text
-                className={`text-base font-urbanist-bold ${isDark ? 'text-white' : 'text-gray-800'}`}
-              >
-                Skip
-              </Text>
-            </TouchableOpacity>
+              className={`px-5 py-2 w-44 rounded-2xl items-center`}
+              textClassName={`text-base font-urbanist-bold`}
+            />
 
-            <LinearGradient
-              colors={['#2CCB91', '#23A76F']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ borderRadius: 14 }}
-            >
-              <TouchableOpacity
-                onPress={goNext}
-                className="px-5 py-2 w-44 rounded-2xl items-center"
-              >
-                <Text className="text-white text-base font-bold">
-                  {page === onboardData.length - 1 ? 'Get Started' : 'Next'}
-                </Text>
-              </TouchableOpacity>
-            </LinearGradient>
+            {/* Next / Get Started (gradient variant) */}
+            <Button
+              text={page === onboardData.length - 1 ? 'Get Started' : 'Next'}
+              variant="gradient"
+              onPress={goNext}
+              className="px-5 py-2 w-44 rounded-2xl items-center"
+              textClassName="text-base font-bold"
+            />
           </View>
         </View>
       </GradientBackground>

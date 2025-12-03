@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { TouchableOpacity, Text, View } from 'react-native';
+import { TouchableOpacity, Text, View, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
 export type ButtonVariant = 'gradient' | 'light';
@@ -9,16 +9,18 @@ export interface AppButtonProps {
   icon?: ReactNode;
   onPress?: () => void;
   disabled?: boolean;
+  loading?: boolean; // new
   variant?: ButtonVariant;
   className?: string;
   textClassName?: string;
 }
 
-export const AppButton: React.FC<AppButtonProps> = ({
+export const Button: React.FC<AppButtonProps> = ({
   text,
   icon,
   onPress,
   disabled = false,
+  loading = false,
   variant = 'gradient',
   className = '',
   textClassName = '',
@@ -28,7 +30,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
 
   // Default visual tokens
   const disabledBgClass = 'bg-disabled';
-  const lightDefaultBgClass = 'bg-white border-[#DAE7E0]';
+  const lightDefaultBgClass = 'border-[#DAE7E0]';
   const lightDefaultTextClass = 'text-textDark';
   const gradientDefaultTextClass = 'text-white';
   const disabledTextClass = 'text-textMuted';
@@ -38,49 +40,62 @@ export const AppButton: React.FC<AppButtonProps> = ({
   const labelClass = disabled ? disabledTextClass : defaultLabelClass;
 
   // Determine container defaults for non-gradient (light) when not disabled.
-  // Caller `className` is appended afterwards and will override these if present.
   const nonGradientDefaultContainer = !isGradient && !disabled ? lightDefaultBgClass : '';
   const nonGradientDisabledContainer = disabled ? disabledBgClass : '';
 
-  console.log(isGradient, variant, text);
+  // If loading, treat button as disabled for interaction
+  const effectiveDisabled = disabled || loading;
 
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={onPress}
-      disabled={disabled}
-      // Order: defaults first, then caller className so overrides work.
-      className={`${isGradient ? '' : nonGradientDefaultContainer} ${disabled ? nonGradientDisabledContainer : ''} ${className}`}
+      disabled={effectiveDisabled}
+      className={`${isGradient ? '' : nonGradientDefaultContainer} ${effectiveDisabled ? nonGradientDisabledContainer : ''} ${className}`}
     >
-      {isGradient && !disabled ? (
+      {isGradient && !effectiveDisabled ? (
         <LinearGradient
           colors={gradientColors}
           className={`py-3 px-4 rounded-[10px] ${className}`}
           style={{ borderRadius: 10 }}
         >
           <View className="flex-row items-center justify-center gap-2">
-            {icon}
-            {text && (
-              <Text className={`text-base font-urbanist font-bold ${labelClass} ${textClassName}`}>
-                {text}
-              </Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <>
+                {icon}
+                {text && (
+                  <Text
+                    className={`text-base font-urbanist font-bold ${labelClass} ${textClassName}`}
+                  >
+                    {text}
+                  </Text>
+                )}
+              </>
             )}
           </View>
         </LinearGradient>
       ) : (
         // Light variant OR Disabled (render using TouchableOpacity wrapper above)
         <View
-          className={`py-3 px-4  bg-white  ${className} border border-[#DAE7E0] rounded-xl`}
+          className={`py-3 px-4 ${className} border border-[#DAE7E0] rounded-xl`}
           style={{ borderRadius: 10 }}
         >
           <View className="flex-row items-center justify-center gap-2">
-            {icon}
-            {text && (
-              <Text
-                className={`text-base font-urbanist-semibold text-textDark ${labelClass} ${textClassName}`}
-              >
-                {text}
-              </Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#000000" />
+            ) : (
+              <>
+                {icon}
+                {text && (
+                  <Text
+                    className={`text-base font-urbanist-semibold text-textDark ${labelClass} ${textClassName}`}
+                  >
+                    {text}
+                  </Text>
+                )}
+              </>
             )}
           </View>
         </View>
@@ -88,3 +103,5 @@ export const AppButton: React.FC<AppButtonProps> = ({
     </TouchableOpacity>
   );
 };
+
+export default Button;

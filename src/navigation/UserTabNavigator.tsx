@@ -101,14 +101,6 @@ const UserTabNavigator: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="NewsTab"
-        component={NewsStack}
-        options={{
-          title: 'News',
-          tabBarIcon: createTabBarIcon('NewsTab'),
-        }}
-      />
-      <Tab.Screen
         name="StoreTab"
         component={StoreStack}
         options={{
@@ -116,6 +108,15 @@ const UserTabNavigator: React.FC = () => {
           tabBarIcon: createTabBarIcon('StoreTab'),
         }}
       />
+      <Tab.Screen
+        name="NewsTab"
+        component={NewsStack}
+        options={{
+          title: 'News',
+          tabBarIcon: createTabBarIcon('NewsTab'),
+        }}
+      />
+
       <Tab.Screen
         name="ProfileTab"
         component={ProfileStack}
