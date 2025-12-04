@@ -22,7 +22,7 @@ import TextInputField from '@/common/components/TextInputField';
 
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';
 import { useEditProfile } from '@/api/user/profile/useEditProfile';
-import { AppButton } from '@/common/components/Button';
+import { Button } from '@/common/components/Button';
 
 import ImagePickerModal from '@/common/components/modals/ImagePickerModal';
 
@@ -249,9 +249,9 @@ const EditProfile = () => {
 
           <View className="mt-8">
             {editMutation.isPending ? (
-              <AppButton text="Saving..." disabled variant="gradient" />
+              <Button text="Saving..." disabled variant="gradient" />
             ) : (
-              <AppButton text="Save Changes" onPress={handleSubmit(onSave)} variant="gradient" />
+              <Button text="Save Changes" onPress={handleSubmit(onSave)} variant="gradient" />
             )}
           </View>
 

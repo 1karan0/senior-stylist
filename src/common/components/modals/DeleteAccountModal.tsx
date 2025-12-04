@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { ModalWrapper } from '@/common/components/ModalWrapper';
-import { AppButton } from '@/common/components/Button';
+import { Button } from '@/common/components/Button';
 
 interface DeleteAccountModalProps {
   visible: boolean;
@@ -53,11 +53,11 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
         <View className="w-full space-y-3">
           {/* Delete Button */}
           <View className="mb-3">
-            <AppButton text="Yes, Delete Account" variant="gradient" onPress={onConfirm} />
+            <Button text="Yes, Delete Account" variant="gradient" onPress={onConfirm} />
           </View>
 
           {/* Cancel Button */}
-          <AppButton
+          <Button
             text="Cancel"
             variant="light"
             textClassName={'text-textDark'}

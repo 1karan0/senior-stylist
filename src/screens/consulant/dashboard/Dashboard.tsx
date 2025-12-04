@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EarningsModal from './EarningsModal';
-import { AppButton } from '@/common/components/Button';
+import { Button } from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -144,7 +144,7 @@ const Dashboard: React.FC = () => {
 
           {/* About Earnings Button */}
           <View className="px-5 mb-5">
-            <AppButton
+            <Button
               text="About Earnings"
               icon={<Text className="text-white text-xl font-bold">$</Text>}
               onPress={() => setModalVisible(true)}

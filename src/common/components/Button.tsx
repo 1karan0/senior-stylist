@@ -4,7 +4,7 @@ import LinearGradient from 'react-native-linear-gradient';
 
 export type ButtonVariant = 'gradient' | 'light';
 
-export interface AppButtonProps {
+export interface ButtonProps {
   text?: string;
   icon?: ReactNode;
   onPress?: () => void;
@@ -15,7 +15,7 @@ export interface AppButtonProps {
   textClassName?: string;
 }
 
-export const Button: React.FC<AppButtonProps> = ({
+export const Button: React.FC<ButtonProps> = ({
   text,
   icon,
   onPress,

@@ -105,7 +105,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
             {/* Email */}
             <View className="flex-row items-start gap-3 mb-4">
-              <Image source={require('@/assets/icons/email.png')} />
+              <Image source={require('@/assets/icons/green-email.png')} />
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >
@@ -115,7 +115,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
             {/* Phone */}
             <View className="flex-row items-start gap-3 mb-4">
-              <Image source={require('@/assets/icons/phone.png')} />
+              <Image source={require('@/assets/icons/green-phone.png')} />
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >

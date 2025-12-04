@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { ModalWrapper } from '@/common/components/ModalWrapper';
-import { AppButton } from '@/common/components/Button';
+import { Button } from '@/common/components/Button';
 
 interface EarningsModalProps {
   visible: boolean;
@@ -113,7 +113,7 @@ const EarningsModal: React.FC<EarningsModalProps> = ({ visible, onClose }) => {
 
         {/* Download Statement Button with Download Icon */}
         <View className="mb-4">
-          <AppButton
+          <Button
             text="Download Statement"
             icon={<Ionicons name="download-outline" size={20} color="white" />}
             variant="gradient"

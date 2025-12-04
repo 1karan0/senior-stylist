@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { AppButton } from '@/common/components/Button';
+import { Button } from '@/common/components/Button';
 import { useTheme } from '@/contexts/ThemeContext';
 
 export interface RequestItem {
@@ -165,7 +165,7 @@ const List: React.FC<ListProps> = ({
                 </View>
               </View>
 
-              <AppButton
+              <Button
                 text={buttonLabel}
                 onPress={() => onAcceptRequest(request.id)}
                 variant="gradient"
