@@ -42,7 +42,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         console.error('🔧 ThemeProvider - Failed to load theme:', error);
       } finally {
         setIsLoaded(true);
-        console.log('🔧 ThemeProvider - Theme loading complete');
       }
     };
     loadSavedTheme();
@@ -52,13 +51,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   useEffect(() => {
     const saveTheme = async () => {
       if (!isLoaded) {
-        console.log('🔧 ThemeProvider - Skipping save (initial load)');
         return; // Don't save on initial load
       }
       try {
-        console.log('🔧 ThemeProvider - Saving theme to storage:', theme);
         await AsyncStorage.setItem('user-theme', theme);
-        console.log('🔧 ThemeProvider - Theme saved successfully');
       } catch (error) {
         console.error('🔧 ThemeProvider - Failed to save theme:', error);
       }
@@ -67,14 +63,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   }, [theme, isLoaded]);
 
   const isDark = theme === 'system' ? systemColorScheme === 'dark' : theme === 'dark';
-
-  console.log('🔧 ThemeProvider - Calculated isDark:', isDark);
-  console.log('🔧 ThemeProvider - Final values:', {
-    theme,
-    systemColorScheme,
-    isDark,
-    isLoaded,
-  });
 
   const value: ThemeContextType = {
     theme,

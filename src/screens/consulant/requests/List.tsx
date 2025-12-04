@@ -20,6 +20,7 @@ export interface RequestItem {
   hasImage: boolean;
   requestedAt: number;
   expiresAt?: number;
+  imageUrl?: string;
 }
 
 export interface ListProps {
@@ -59,6 +60,7 @@ const List: React.FC<ListProps> = ({
   contentContainerStyle,
 }) => {
   const { isDark } = useTheme();
+  console.log(requests, 'requests');
 
   // default bottom spacing — screens can override by passing contentContainerStyle
   const defaultContainerStyle: ViewStyle = { paddingBottom: 32, flexGrow: 1 };

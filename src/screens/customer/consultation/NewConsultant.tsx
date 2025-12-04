@@ -1,12 +1,16 @@
-import GradientBackground from '@/common/components/GradientBackground';
 import React, { use, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useForm, Controller } from 'react-hook-form';
 import { createConsultation } from '@/api/user/consultation/useCreateConsultation';
+import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 import Toast from '@/common/components/Toast';
+import { storage } from '@/services/storage';
+
+const NEW_CONSULTATION_DRAFT_KEY = 'NEW_CONSULTATION_DRAFT';
 
 const NewConsultant = ({ navigation }: any) => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
@@ -66,10 +70,20 @@ const NewConsultant = ({ navigation }: any) => {
       return;
     }
 
+    const draft = {
+      description: data.description.trim(),
+      selectedImage,
+      savedAt: Date.now(),
+    };
+
     try {
       setLoading(true);
 
-      const response = await createConsultation(data.description, selectedImage);
+      // Save draft using your new helper
+      await storage.setConsultationDraft(draft);
+
+      // Proceed with API call
+      const response = await createConsultation(draft.description, draft.selectedImage);
 
       const newId =
         response?.data?.consultation?.id ??
@@ -84,9 +98,8 @@ const NewConsultant = ({ navigation }: any) => {
 
       navigation.replace('FindingStylist', { consultationId: Number(newId) });
     } catch (err: any) {
-      console.log('Submit error:', err?.response ?? err);
-
       showToast(err?.message || 'Something went wrong', 'error');
+      // Draft stays in storage for retry
     } finally {
       setLoading(false);
     }

@@ -69,7 +69,15 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ visible, onClose, request }
             </Text>
           </View>
         )}
-
+        {request.imageUrl && ( // <-- ADD THIS BLOCK (after line 71)
+          <View className="mt-4">
+            <Image
+              source={{ uri: request.imageUrl }}
+              className="w-full h-64 rounded-xl"
+              resizeMode="cover"
+            />
+          </View>
+        )}
         <View className="mt-6">
           <Text className="text-lg font-poppins font-bold text-textDark mb-2">Requirements</Text>
           <Text className="text-textMuted font-poppins leading-6">

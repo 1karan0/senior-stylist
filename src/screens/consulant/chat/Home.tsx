@@ -293,52 +293,60 @@ const ChatHome: React.FC = () => {
     navigation.navigate('ConsultantChat', { consultationId: conversation.id });
   };
 
-  const renderConversation = ({ item }: { item: ConversationPreview }) => (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={() => handleConversationPress(item)}
-      className={`${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
-    >
-      {item.avatarUrl ? (
-        <Image source={{ uri: item.avatarUrl }} className="w-12 h-12 rounded-full mr-4" />
-      ) : (
-        <View className="w-12 h-12 rounded-full bg-buttonPrimaryBg items-center justify-center mr-4">
-          <Text className="text-white text-lg font-semibold">{getInitials(item.customerName)}</Text>
-        </View>
-      )}
-
-      <View className="flex-1">
-        <View className="flex-row justify-between items-center mb-1">
-          <Text
-            className={`font-semibold text-base ${isDark ? 'text-white' : 'text-textDark'}  capitalize`}
-            numberOfLines={1}
-          >
-            {item.customerName}
-          </Text>
-        </View>
-        <Text className={` ${isDark ? 'text-textMuted' : 'text-textSecondary'}`} numberOfLines={1}>
-          {item.lastMessage}
-        </Text>
-      </View>
-
-      <View className="items-end ml-2">
-        <Text
-          className={` ${isDark ? 'text-textSecondary' : 'text-[#9EA3AE]'} font-medium text-xs`}
-        >
-          {formatRelativeTime(item.lastMessageAt)}
-        </Text>
-        {item.unreadCount > 0 && (
-          <View
-            className={`bg-buttonPrimaryBg w-6 h-6 rounded-full justify-center items-center mt-2`}
-          >
-            <Text className="text-white text-xs font-semibold">
-              {item.unreadCount > 99 ? '99+' : item.unreadCount}
+  const renderConversation = ({ item }: { item: ConversationPreview }) => {
+    console.log(item, 'conversation item');
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => handleConversationPress(item)}
+        className={`${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}  shadow-sm border  rounded-xl px-4 py-4 mb-2 flex-row items-center`}
+      >
+        {item.avatarUrl ? (
+          <Image source={{ uri: item.avatarUrl }} className="w-12 h-12 rounded-full mr-4" />
+        ) : (
+          <View className="w-12 h-12 rounded-full bg-buttonPrimaryBg items-center justify-center mr-4">
+            <Text className="text-white text-lg font-semibold">
+              {getInitials(item.customerName)}
             </Text>
           </View>
         )}
-      </View>
-    </TouchableOpacity>
-  );
+
+        <View className="flex-1">
+          <View className="flex-row justify-between items-center mb-1">
+            <Text
+              className={`font-semibold text-base ${isDark ? 'text-white' : 'text-textDark'}  capitalize`}
+              numberOfLines={1}
+            >
+              {item.customerName}
+            </Text>
+          </View>
+          <Text
+            className={` ${isDark ? 'text-textMuted' : 'text-textSecondary'}`}
+            numberOfLines={1}
+          >
+            {item.lastMessage}
+          </Text>
+        </View>
+
+        <View className="items-end ml-2">
+          <Text
+            className={` ${isDark ? 'text-textSecondary' : 'text-[#9EA3AE]'} font-medium text-xs`}
+          >
+            {formatRelativeTime(item.lastMessageAt)}
+          </Text>
+          {item.unreadCount > 0 && (
+            <View
+              className={`bg-buttonPrimaryBg w-6 h-6 rounded-full justify-center items-center mt-2`}
+            >
+              <Text className="text-white text-xs font-semibold">
+                {item.unreadCount > 99 ? '99+' : item.unreadCount}
+              </Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderEmpty = () => {
     if (loading) {
@@ -372,6 +380,8 @@ const ChatHome: React.FC = () => {
 
   // Keep these values in sync with your tab navigator
   const { paddingBottom } = useTabBarSafePadding();
+
+  console.log(filteredConversations, 'filteredConversations');
 
   return (
     <SafeAreaView style={{ flex: 1 }}>

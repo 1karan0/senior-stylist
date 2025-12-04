@@ -15,6 +15,7 @@ export interface StylistRequest {
   sent_at: number;
   expires_at: number;
   status: string;
+  image_url?: string;
 }
 
 export interface StylistRequestListenerCallbacks {
@@ -78,7 +79,6 @@ export const getFirestoreInstance = () => {
   }
 };
 
-
 export const signInWithFirebaseCustomToken = async (customToken: string) => {
   try {
     getApp(); // Ensure Firebase is initialized
@@ -111,7 +111,9 @@ export const signOutFirebase = async (): Promise<void> => {
   }
 };
 
-export const waitForFirebaseUser = (timeout = 5000): Promise<ReturnType<typeof auth>['currentUser']> =>
+export const waitForFirebaseUser = (
+  timeout = 5000
+): Promise<ReturnType<typeof auth>['currentUser']> =>
   new Promise<ReturnType<typeof auth>['currentUser']>((resolve) => {
     try {
       getApp(); // Ensure Firebase is initialized
@@ -119,10 +121,10 @@ export const waitForFirebaseUser = (timeout = 5000): Promise<ReturnType<typeof a
       resolve(null);
       return;
     }
-    
+
     const authInstance = auth();
     const currentUser = authInstance.currentUser;
-    
+
     // If user is already signed in, return immediately
     if (currentUser) {
       resolve(currentUser);
@@ -244,12 +246,12 @@ export const sendMessageToFirestore = async (
     if (__DEV__) {
       console.log('[chat] uploading image for consultation', { consultationId, imageUri });
     }
-    
+
     // Upload image to Firebase Storage and get download URL
     // uploadImageToStorage handles both data URIs and file URIs
     attachmentUrl = await uploadImageToStorage(consultationId, imageUri);
     messageType = 'image';
-    
+
     if (__DEV__) {
       console.log('[chat] image uploaded, got URL', attachmentUrl);
     }
@@ -325,4 +327,3 @@ export const isFirebaseAvailable = (): boolean => {
   // Runtime errors will occur if google-services.json is missing, but that's handled elsewhere
   return true;
 };
-

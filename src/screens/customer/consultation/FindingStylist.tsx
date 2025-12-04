@@ -1,13 +1,16 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { createConsultation } from '@/api/user/consultation/useCreateConsultation';
 import { customerConsultationsApi } from '@/api/customer/consultations';
 import type { AppStackParamList, ConsultationStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
+import { storage } from '@/services/storage';
 
 type CombinedStackParamList = AppStackParamList & ConsultationStackParamList;
 type FindingRoute = RouteProp<CombinedStackParamList, 'FindingStylist'>;
@@ -23,10 +26,24 @@ const FindingStylist: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [searchFailedMessage, setSearchFailedMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'error' as any,
+  });
+
   const { isDark } = useTheme();
 
   const statusIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
+    setToast({
+      visible: true,
+      message,
+      type,
+    });
+  };
 
   const stopAllTimers = useCallback(() => {
     if (statusIntervalRef.current) {
@@ -114,9 +131,57 @@ const FindingStylist: React.FC = () => {
     };
   }, [checkConsultationStatus, stopAllTimers]);
 
-  const handleTryAgain = () => {
+  // handleTryAgain: stop timers, load saved draft, and re-run the same submission flow
+  const handleTryAgain = async () => {
     stopAllTimers();
-    navigation.replace('NewConsultant');
+
+    setLoading(true);
+    try {
+      const draft = await storage.getConsultationDraft();
+
+      if (!draft) {
+        showToast('No saved consultation to retry. Please enter details again.', 'warning');
+        navigation.replace('NewConsultant');
+        return;
+      }
+
+      // Validate draft shape
+      if (!draft.description || !draft.description.trim()) {
+        // corrupted or incomplete draft — clear and ask user to re-enter
+        await storage.removeConsultationDraft();
+        showToast('Saved consultation is incomplete. Please re-enter your details.', 'error');
+        navigation.replace('NewConsultant');
+        return;
+      }
+
+      // Use draft.selectedImage if present; fallback to current selectedImage (if your component keeps it)
+      // Only use image if it exists in the draft
+      const imageToUse = draft.selectedImage ? draft.selectedImage : null;
+
+      // Re-run the createConsultation call (same shape as onSubmit)
+      const response = await createConsultation(draft.description, imageToUse);
+
+      const newId =
+        response?.data?.consultation?.id ??
+        response?.consultation?.id ??
+        response?.data?.id ??
+        response?.id;
+
+      if (!newId) {
+        showToast('Retry failed to open chat automatically. Please try again.', 'warning');
+        // keep draft for further retries
+        return;
+      }
+
+      // Success: clear draft and navigate
+      await storage.removeConsultationDraft();
+      navigation.replace('FindingStylist', { consultationId: Number(newId) });
+    } catch (err: any) {
+      showToast(err?.message || 'Retry failed. Please try again.', 'error');
+      // keep draft so user can retry again
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleViewConsultations = () => {

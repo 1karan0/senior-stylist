@@ -41,6 +41,7 @@ const mapFirebaseRequestToItem = (
     hasImage: Boolean(firebaseRequest.short_meta?.has_image),
     requestedAt,
     expiresAt,
+    imageUrl: firebaseRequest.image_url, // <-- ADD THIS LINE (after line 43)
   };
 };
 
@@ -150,6 +151,7 @@ const Request: React.FC = () => {
           return sortRequests([normalized, ...prev]);
         });
       },
+
       onRequestRemoved: (requestId) => {
         const id = Number(requestId);
         setRequests((prev) => prev.filter((req) => req.id !== id));
