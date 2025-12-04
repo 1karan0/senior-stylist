@@ -2,27 +2,27 @@ export interface OnboardItemType {
   id: number;
   title: string;
   description: string;
-  icon: any; // ImageRequireSource
+  image: any; // ImageRequireSource
 }
 
-const onboardData: OnboardItemType[] = [
+const onboardData = [
   {
     id: 1,
-    title: 'Connect with Experts',
-    description: 'Hair SoS Emergency? Connect with a real Senior Stylist in real time.',
-    icon: require('../assets/icons/icon1.png'),
+    title: 'Connect with a Senior Stylist',
+    description: 'If you have an SOS hair emergency? Connect with a Senior Stylist now.',
+    image: require('@/assets/images/first-screen.jpg'),
   },
   {
     id: 2,
-    title: 'Shop with Ease ',
-    description: 'Browse thousands of products and get them delivered to your doorstep',
-    icon: require('../assets/icons/icon2.png'),
+    title: 'Professional Consultation',
+    description: 'Connect with a Senior Stylist, from various fields within the beauty sector.',
+    image: require('@/assets/images/second-screen.jpg'),
   },
   {
     id: 3,
-    title: 'Expert Consultants',
-    description: 'Get professional advice from verified consultants in various fields.',
-    icon: require('../assets/icons/icon3.png'),
+    title: 'Shop with Ease',
+    description: 'Browse thousands of products and get them delivered to your doorstep.',
+    image: require('@/assets/images/third-screen.jpg'),
   },
 ];
 

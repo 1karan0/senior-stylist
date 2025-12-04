@@ -1,45 +1,53 @@
 import React from 'react';
-import { View, Text, Image, ImageSourcePropType } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, Text, Image, ImageSourcePropType, StatusBar } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import LinearGradient from 'react-native-linear-gradient';
 
 interface Props {
   item: {
     id: number;
     title: string;
     description: string;
-    icon: ImageSourcePropType;
+    image: ImageSourcePropType;
   };
 }
 
 const OnboardItem: React.FC<Props> = ({ item }) => {
   const { isDark } = useTheme();
+
   return (
-    <View className="flex-1 items-center justify-center px-8">
-      {/* Icon Container */}
+    <View className="flex-1">
+      {/* FULLSCREEN IMAGE */}
+      <Image source={item.image} className="w-full h-full absolute bottom-40" />
+
+      {/* TEXT SECTION */}
       <LinearGradient
-        colors={['#2CCB91', '#23A76F']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ borderRadius: 24 }}
-        className="w-32 h-32 rounded-3xl items-center justify-center shadow-lg mb-8"
+        colors={
+          isDark
+            ? ['hsl(158, 32%, 12%)', 'hsl(158, 32%, 8%)'] // Reverse of DARK_BG for bottom-up
+            : ['hsl(158, 64%, 95%)', 'hsl(146, 25%, 97%)'] // Reverse of LIGHT_BG
+        }
+        className="absolute bottom-0 w-full h-[30%] px-5 pb-5 pt-8 "
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0, y: 0 }}
+        style={{ borderTopLeftRadius: 30, borderTopRightRadius: 30 }}
       >
-        <Image source={item.icon} className="w-16 h-16" resizeMode="contain" />
+        <Text
+          className={`text-2xl font-urbanist-bold text-center mb-3 ${
+            isDark ? 'text-white' : 'text-textDark'
+          }`}
+        >
+          {item.title}
+        </Text>
+
+        <Text
+          className={`text-base font-poppins-regular text-center px-6 leading-6 ${
+            isDark ? 'text-textMuted' : 'text-[#8AA897]'
+          }`}
+        >
+          {item.description}
+        </Text>
       </LinearGradient>
-
-      {/* Title */}
-      <Text
-        className={`text-2xl font-bold text-center  mb-3 ${isDark ? 'text-white' : 'text-textDark'}`}
-      >
-        {item.title}
-      </Text>
-
-      {/* Description */}
-      <Text
-        className={`text-center text-base px-6 ${isDark ? 'text-textSecondary' : 'text-gray-600'}`}
-      >
-        {item.description}
-      </Text>
     </View>
   );
 };

@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Button from '@/common/components/Button';
-import OnboardItem from './components/OnboardItem';
 import GradientBackground from '@/common/components/GradientBackground';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import onboardData from '@/lib/onboardData';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import LinearGradient from 'react-native-linear-gradient';
+import OnboardItem from './components/OnboardItem';
 
 const OnboardingScreen = ({ navigation }: any) => {
   const pagerRef = useRef<PagerView>(null);
@@ -21,6 +22,7 @@ const OnboardingScreen = ({ navigation }: any) => {
     }
   };
 
+  // Auto-slide
   useEffect(() => {
     const interval = setInterval(() => {
       setPage((prev) => {
@@ -28,20 +30,19 @@ const OnboardingScreen = ({ navigation }: any) => {
           pagerRef.current?.setPage(prev + 1);
           return prev + 1;
         } else {
-          clearInterval(interval); // stop sliding at last screen
+          clearInterval(interval);
           return prev;
         }
       });
-    }, 3500); // 1.5s for softer vibes
+    }, 3500);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <GradientBackground>
-        <View className="flex-1 px-5 pb-3">
-          {/* Pager */}
+      <View className="flex-1">
+        <GradientBackground>
           <PagerView
             ref={pagerRef}
             style={{ flex: 1 }}
@@ -49,14 +50,12 @@ const OnboardingScreen = ({ navigation }: any) => {
             onPageSelected={(e) => setPage(e.nativeEvent.position)}
           >
             {onboardData.map((item) => (
-              <View key={item.id} className="flex-1">
-                <OnboardItem item={item} />
-              </View>
+              <OnboardItem key={item.id} item={item} />
             ))}
           </PagerView>
 
-          {/* Page Indicators — now directly under Pager with tighter spacing */}
-          <View className="flex-row justify-center mt-3 mb-6">
+          {/* DOTS */}
+          <View className="flex-row justify-center mb-6 -mt-[20px]">
             {onboardData.map((_, i) => (
               <View
                 key={i}
@@ -64,7 +63,7 @@ const OnboardingScreen = ({ navigation }: any) => {
                   i === page
                     ? isDark
                       ? 'bg-green-400 w-6'
-                      : 'bg-green-500 w-6'
+                      : 'bg-green-600 w-6'
                     : isDark
                       ? 'bg-gray-600 w-2'
                       : 'bg-gray-300 w-2'
@@ -73,28 +72,26 @@ const OnboardingScreen = ({ navigation }: any) => {
             ))}
           </View>
 
-          {/* Buttons */}
-          <View className="flex-row items-center justify-center gap-4 px-6 mb-10">
-            {/* Skip button (light variant) */}
+          {/* BUTTONS */}
+          <View className="flex-row items-center justify-center gap-4 px-6 pb-10">
             <Button
               text="Skip"
               variant="light"
               onPress={() => navigation.replace('Login')}
-              className={`px-5 py-2 w-44 rounded-2xl items-center`}
-              textClassName={`text-base font-urbanist-bold`}
+              className={`w-40 rounded-2xl border border-[#DAE7E0] ${page === onboardData.length - 1 ? 'hidden' : ''}`}
+              textClassName="text-base font-urbanist-bold"
             />
 
-            {/* Next / Get Started (gradient variant) */}
             <Button
               text={page === onboardData.length - 1 ? 'Get Started' : 'Next'}
               variant="gradient"
               onPress={goNext}
-              className="px-5 py-2 w-44 rounded-2xl items-center"
+              className={` ${page === onboardData.length - 1 ? 'w-80' : 'w-40'} rounded-2xl`}
               textClassName="text-base font-bold"
             />
           </View>
-        </View>
-      </GradientBackground>
+        </GradientBackground>
+      </View>
     </SafeAreaView>
   );
 };

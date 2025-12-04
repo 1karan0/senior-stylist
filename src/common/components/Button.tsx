@@ -30,7 +30,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   // Default visual tokens
   const disabledBgClass = 'bg-disabled';
-  const lightDefaultBgClass = 'border-[#DAE7E0]';
+  const lightDefaultBgClass = 'bg-[#DAE7E0]';
   const lightDefaultTextClass = 'text-textDark';
   const gradientDefaultTextClass = 'text-white';
   const disabledTextClass = 'text-textMuted';
@@ -79,7 +79,7 @@ export const Button: React.FC<ButtonProps> = ({
       ) : (
         // Light variant OR Disabled (render using TouchableOpacity wrapper above)
         <View
-          className={`py-3 px-4 ${className} border border-[#DAE7E0] rounded-xl`}
+          className={`py-2.5 px-4 ${className} border border-[#DAE7E0] rounded-[10px]`}
           style={{ borderRadius: 10 }}
         >
           <View className="flex-row items-center justify-center gap-2">
