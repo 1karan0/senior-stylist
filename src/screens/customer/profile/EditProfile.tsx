@@ -86,8 +86,8 @@ const EditProfile = () => {
     uploadMutation.mutate(file, {
       onSuccess: (res) => {
         setProfilePic(res.data.profile_picture_url);
-        setShowModal(false);
       },
+      onSettled: () => setShowModal(false),
     });
   };
 
@@ -110,8 +110,8 @@ const EditProfile = () => {
     uploadMutation.mutate(file, {
       onSuccess: (res) => {
         setProfilePic(res.data.profile_picture_url);
-        setShowModal(false);
       },
+      onSettled: () => setShowModal(false),
     });
   };
 
@@ -190,8 +190,8 @@ const EditProfile = () => {
                   setShowModal(true);
                 }}
                 activeOpacity={0.7}
-                className="absolute bottom-0 right-0 bg-green-600 w-10 h-10 rounded-full 
-                items-center justify-center border-4 border-white dark:border-[#11211c]"
+                className={`absolute bottom-0 right-0 bg-green-600 w-10 h-10 rounded-full 
+                items-center justify-center border-4 ${isDark ? 'dark:border-[#11211c]' : 'border-white'}  `}
               >
                 <Text className="text-white text-xl">+</Text>
               </TouchableOpacity>
@@ -206,7 +206,7 @@ const EditProfile = () => {
           <View
             className={`${
               isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'
-            } rounded-2xl p-4 border`}
+            } rounded-2xl p-4 border flex-col gap-4`}
           >
             <TextInputField
               label="full name"
@@ -222,7 +222,7 @@ const EditProfile = () => {
             />
 
             {/* Email */}
-            <View className="mb-4">
+            <View className="">
               <Text
                 className={`text-sm mb-2 font-poppins-medium ${
                   isDark ? 'text-white' : 'text-black'
@@ -230,40 +230,35 @@ const EditProfile = () => {
               >
                 email
               </Text>
-              <TextInput
-                value={profile.email}
-                editable={false}
-                className={`rounded-xl py-4 px-4 text-base font-urbanist-medium ${
-                  isDark ? 'text-white bg-[#0E1915]' : 'text-black bg-[#F2F7F4]'
-                }`}
-              />
+              <View
+                className={`border rounded-xl px-4 py-3 ${isDark ? 'bg-[#0A1410] border-commonGradientStop7' : 'bg-[#e4e4e4] border-[#DAE7E0]'}`}
+              >
+                <Text
+                  className={`font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                >
+                  {profile.email}
+                </Text>
+              </View>
             </View>
-
-            <TextInputField
-              label="address"
-              multiline
-              value={watch('address')}
-              onChangeText={(t) => setValue('address', t)}
-            />
           </View>
 
           <View className="mt-8">
-            {editMutation.isPending ? (
-              <Button text="Saving..." disabled variant="gradient" />
-            ) : (
-              <Button text="Save Changes" onPress={handleSubmit(onSave)} variant="gradient" />
-            )}
+            <Button
+              loading={editMutation.isPending}
+              text="Save Changes"
+              onPress={handleSubmit(onSave)}
+              variant="gradient"
+            />
           </View>
 
-          <TouchableOpacity onPress={() => navigation.goBack()} className="mt-4 p-4">
-            <Text
-              className={`text-center text-base font-urbanist-semibold ${
-                isDark ? 'text-textSecondary' : 'text-textMuted'
-              }`}
-            >
-              Cancel
-            </Text>
-          </TouchableOpacity>
+          <View className="mt-5">
+            <Button
+              text="Cancel"
+              variant="light"
+              onPress={() => navigation.goBack()}
+              className="rounded-[10px]"
+            />
+          </View>
         </ScrollView>
         {/* The new modal */}
         <ImagePickerModal
@@ -271,6 +266,7 @@ const EditProfile = () => {
           onClose={() => setShowModal(false)}
           onCamera={takePhoto}
           onGallery={pickFromGallery}
+          loading={uploadMutation.isPending}
         />
       </View>
     </GradientBackground>

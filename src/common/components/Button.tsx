@@ -53,7 +53,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={effectiveDisabled}
       className={`${isGradient ? '' : nonGradientDefaultContainer} ${effectiveDisabled ? nonGradientDisabledContainer : ''} ${className}`}
     >
-      {isGradient && !effectiveDisabled ? (
+      {isGradient ? (
         <LinearGradient
           colors={gradientColors}
           className={`py-3 px-4 rounded-[10px] ${className}`}
@@ -66,9 +66,7 @@ export const Button: React.FC<ButtonProps> = ({
               <>
                 {icon}
                 {text && (
-                  <Text
-                    className={`text-base font-urbanist font-bold ${labelClass} ${textClassName}`}
-                  >
+                  <Text className={`text-base font-urbanist-bold ${labelClass} ${textClassName}`}>
                     {text}
                   </Text>
                 )}

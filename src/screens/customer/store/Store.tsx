@@ -63,15 +63,9 @@ const StoreScreen = () => {
           Partner Store
         </Text>
 
-        <Text
-          className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} mt-1 text-sm w-[75%]`}
-        >
-          Recommended products and services.
-        </Text>
-
         {/* Search */}
         <View
-          className={`flex-row items-center border mt-4 px-3 py-2 rounded-xl ${
+          className={`flex-row items-center border mt-5 px-3 rounded-xl ${
             isDark
               ? 'bg-commonGradientStop6 border-commonGradientStop7'
               : 'bg-[#FAFAFA] border-[#E6E6E6]'

@@ -161,8 +161,7 @@ export default function LoginScreen({ navigation }: any) {
               loading={loading}
               disabled={loading}
               variant="gradient"
-              className="h-[50px] rounded-xl w-full mb-6"
-              textClassName="text-[16px] font-bold"
+              className="mb-6"
             />
 
             {/* Sign Up */}

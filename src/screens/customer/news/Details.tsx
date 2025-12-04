@@ -71,7 +71,7 @@ const Details: React.FC = () => {
       <GradientBackground style={{ flex: 1 }}>
         <View className="flex-1 px-5 pt-6">
           {/* Top Bar */}
-          <View className="flex-row justify-between items-center ">
+          <View className="flex-row justify-between items-center mb-5 ">
             <TouchableOpacity onPress={() => navigation.goBack()} className="">
               <Image
                 source={
@@ -91,7 +91,7 @@ const Details: React.FC = () => {
           >
             {/* Title */}
             <Text
-              className={`text-xl font-poppins-semibold mt-4  ${isDark ? 'text-white' : 'text-textDark'} mb-2 leading-snug`}
+              className={`text-xl font-poppins-semibold  ${isDark ? 'text-white' : 'text-textDark'} mb-2 leading-snug`}
             >
               {article.title}
             </Text>

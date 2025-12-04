@@ -1,10 +1,11 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Image, ScrollView, Animated } from 'react-native';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import GradientBackground from '@/common/components/GradientBackground';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { useTheme } from '@/contexts/ThemeContext';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -19,14 +20,59 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const { logout } = useAuth();
   const { isDark } = useTheme();
 
+  const [isCopied, setIsCopied] = useState(false);
+  const scaleAnim = useState(new Animated.Value(1))[0];
+  const fadeAnim = useState(new Animated.Value(0))[0];
+
   const user = profile as ProfileUser;
+
+  const handleCopyCode = () => {
+    const code = user?.referral_code;
+    if (code) {
+      Clipboard.setString(code);
+      setIsCopied(true);
+
+      // Scale animation for button
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 0.9,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Fade in/out animation for "Copied!" text
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.delay(1500),
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setIsCopied(false));
+    }
+  };
 
   return (
     <GradientBackground>
       <View className="flex-1 px-5 pt-6 pb-20">
-        <ScrollView className="">
+        <ScrollView
+          className=""
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+        >
           {/* ---------- Header ---------- */}
-          <View className="w-full flex-row justify-between items-center mb-4">
+          <View className="w-full flex-row justify-between items-center ">
             <Text className={` ${isDark ? 'text-white' : 'text-black'} text-2xl font-semibold`}>
               Profile
             </Text>
@@ -34,7 +80,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
           {/* ---------- Profile Card ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border`}
+            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} mt-5 rounded-2xl p-4 border`}
           >
             <View className="flex-row items-center gap-4">
               {/* Avatar */}
@@ -218,7 +264,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             </View>
 
             {/* Code Box */}
-            <View className="flex-row justify-between mb-3">
+            <View className="flex-row justify-between mb-3 relative">
               <View
                 className={` w-[80%] items-center text-center bg-[#F5F9F7] border-[#DAE7E0] border rounded-lg py-3 `}
               >
@@ -227,40 +273,33 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 </Text>
               </View>
               <View>
-                <LinearGradient
-                  colors={['#2CCB91', '#23A76F']}
-                  start={{ x: 0, y: 1 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ borderRadius: 12 }}
-                  className=" p-3 "
-                >
-                  <TouchableOpacity>
-                    {/* <Ionicons name="copy-outline" size={20} color="white" /> */}
-                    <Image source={require('@/assets/icons/copy.png')} className="" />
-                  </TouchableOpacity>
-                </LinearGradient>
+                <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                  <LinearGradient
+                    colors={['#2CCB91', '#23A76F']}
+                    start={{ x: 0, y: 1 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ borderRadius: 12 }}
+                    className=" p-3 "
+                  >
+                    <TouchableOpacity onPress={handleCopyCode}>
+                      <Image
+                        source={
+                          isCopied
+                            ? require('@/assets/icons/white-check.png')
+                            : require('@/assets/icons/copy.png')
+                        }
+                        className=""
+                      />
+                    </TouchableOpacity>
+                  </LinearGradient>
+                </Animated.View>
               </View>
             </View>
-
-            {/* Share Button */}
-            <LinearGradient
-              colors={['#2CCB91', '#23A76F']}
-              start={{ x: 0, y: 1 }}
-              end={{ x: 1, y: 0 }}
-              style={{ borderRadius: 10 }}
-              className=" py-2 px-3 "
-            >
-              <TouchableOpacity className=" rounded-lg">
-                <Text className="text-white font-urbanist-bold text-base text-center">
-                  Share Referral Link
-                </Text>
-              </TouchableOpacity>
-            </LinearGradient>
           </View>
 
           {/* ---------- Settings ---------- */}
           <View
-            className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl py-[8px] px-[20px] mt-5 border`}
+            className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl p-4 mt-5 border`}
           >
             <TouchableOpacity
               className="flex-row gap-2"
@@ -285,7 +324,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
           {/* ---------- Logout Button ---------- */}
           <View
-            className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl py-[8px] px-[20px] mt-5 border mb-10`}
+            className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl p-4 mt-5 border `}
           >
             <TouchableOpacity onPress={logout} className="flex-row items-center gap-2">
               <Image source={require('@/assets/icons/sign-out.png')} />

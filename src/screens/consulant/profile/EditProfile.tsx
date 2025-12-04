@@ -352,7 +352,11 @@ const EditProfile: React.FC = () => {
             activeOpacity={0.8}
             disabled={isUploading || isSaving}
           >
-            <LinearGradient colors={['#27B07D', '#36D399']} className="rounded-xl py-4 mb-4">
+            <LinearGradient
+              colors={['#27B07D', '#36D399']}
+              style={{ borderRadius: 10 }}
+              className="rounded-xl py-4 mb-4"
+            >
               {isSaving ? (
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : (

@@ -50,7 +50,7 @@ const TextInputField: React.FC<TextInputFieldProps> = ({
 
   const defaultLabelClassName = `font-poppins-medium text-sm ${
     isDark ? 'text-white' : 'text-black'
-  } mb-1`;
+  } mb-2`;
 
   return (
     <View>

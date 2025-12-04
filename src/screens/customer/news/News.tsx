@@ -61,15 +61,10 @@ const NewsScreen = () => {
         <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
           News Feed
         </Text>
-        <Text
-          className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} mt-1 text-sm w-[70%]`}
-        >
-          Stay updated with the latest news and announcements
-        </Text>
 
         {/* Search */}
         <View
-          className={`flex-row items-center border mt-3 px-3 py-2 rounded-xl ${
+          className={`flex-row items-center border mt-5 px-3 rounded-xl ${
             isDark
               ? 'bg-commonGradientStop6 border-commonGradientStop7'
               : 'bg-[#FAFAFA] border-[#E6E6E6]'

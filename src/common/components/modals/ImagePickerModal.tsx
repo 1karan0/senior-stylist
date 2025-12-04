@@ -1,5 +1,12 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  ActivityIndicator,
+} from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
@@ -8,9 +15,10 @@ interface Props {
   onClose: () => void;
   onCamera: () => void;
   onGallery: () => void;
+  loading?: boolean;
 }
 
-const ImagePickerModal = ({ visible, onClose, onCamera, onGallery }: Props) => {
+const ImagePickerModal = ({ visible, onClose, onCamera, onGallery, loading = false }: Props) => {
   const { isDark } = useTheme();
 
   return (
@@ -37,9 +45,10 @@ const ImagePickerModal = ({ visible, onClose, onCamera, onGallery }: Props) => {
           <TouchableOpacity
             onPress={onCamera}
             activeOpacity={0.8}
+            disabled={loading}
             className={`flex-row items-center px-6 py-4 mb-3 rounded-xl ${
               isDark ? 'bg-[#123427]' : 'bg-[#E4F6ED]'
-            }`}
+            } ${loading ? 'opacity-60' : ''}`}
           >
             <View
               className={`w-10 h-10 rounded-full items-center justify-center mr-4 ${
@@ -61,9 +70,10 @@ const ImagePickerModal = ({ visible, onClose, onCamera, onGallery }: Props) => {
           <TouchableOpacity
             onPress={onGallery}
             activeOpacity={0.8}
+            disabled={loading}
             className={`flex-row items-center px-6 py-4 rounded-xl mb-4 ${
               isDark ? 'bg-[#123427]' : 'bg-[#F2F7F4]'
-            }`}
+            } ${loading ? 'opacity-60' : ''}`}
           >
             <View
               className={`w-10 h-10 rounded-full items-center justify-center mr-4 ${
@@ -82,7 +92,7 @@ const ImagePickerModal = ({ visible, onClose, onCamera, onGallery }: Props) => {
           </TouchableOpacity>
 
           {/* Cancel */}
-          <TouchableOpacity onPress={onClose}>
+          <TouchableOpacity onPress={onClose} disabled={loading}>
             <Text
               className={`text-center text-base font-urbanist-semibold mt-2 ${
                 isDark ? 'text-textSecondary' : 'text-textMuted'
@@ -91,6 +101,12 @@ const ImagePickerModal = ({ visible, onClose, onCamera, onGallery }: Props) => {
               Cancel
             </Text>
           </TouchableOpacity>
+          {loading && (
+            <View className="absolute inset-0 items-center justify-center">
+              <View className="absolute inset-0 bg-black/30" />
+              <ActivityIndicator size="large" color="#27B07D" />
+            </View>
+          )}
         </View>
       </View>
     </Modal>

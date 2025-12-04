@@ -307,15 +307,9 @@ const CustomerChatHome: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            <Text
-              className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} opacity-90 mb-4`}
-            >
-              Manage your styling sessions
-            </Text>
-
             {/* Search */}
             <View
-              className={`flex-row items-center border mt-3 px-3 rounded-xl ${
+              className={`flex-row items-center border mt-5 px-3 rounded-xl ${
                 isDark
                   ? 'bg-commonGradientStop6 border-commonGradientStop7'
                   : 'bg-[#FAFAFA] border-[#E6E6E6]'
