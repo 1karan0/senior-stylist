@@ -9,23 +9,48 @@ import { useAuth } from '@/contexts/AuthContext';
 import DeleteAccountModal from '@/common/components/modals/DeleteAccountModal';
 
 const Settings: React.FC = () => {
-  const { theme, isDark, setTheme } = useTheme(); // ← now we use "theme" + "isDark"
+  const { theme, isDark, setTheme } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
   const navigation = useNavigation();
   const { logout } = useAuth();
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const handleBack = () => navigation.goBack();
+  // ---- THEME LOGIC FIXED ---- //
 
+  // DARK MODE SWITCH
+  const toggleDarkMode = () => {
+    if (theme === 'system') {
+      // override system → go dark
+      setTheme('dark');
+    } else {
+      setTheme(isDark ? 'light' : 'dark');
+    }
+  };
+
+  // SYSTEM MODE SWITCH
+  const toggleSystemMode = (value: boolean) => {
+    if (value) {
+      setTheme('system');
+    } else {
+      // fallback to current applied theme
+      setTheme(isDark ? 'dark' : 'light');
+    }
+  };
+
+  // SYSTEM SWITCH VALUE
+  const systemSwitchValue = theme === 'system';
+
+  // DARK SWITCH VALUE
+  const darkSwitchValue = isDark; // reflects actual applied theme
+
+  const handleBack = () => navigation.goBack();
   const handleDeleteAccount = () => setShowDeleteModal(true);
 
   const confirmDeleteAccount = () => {
     setShowDeleteModal(false);
     logout();
   };
-
-  const cancelDelete = () => setShowDeleteModal(false);
 
   return (
     <GradientBackground>
@@ -50,7 +75,7 @@ const Settings: React.FC = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}
         >
-          {/* Appearance Section */}
+          {/* Theme Section */}
           <View
             className={`rounded-xl border p-5 mb-4 shadow-sm ${
               isDark
@@ -66,95 +91,87 @@ const Settings: React.FC = () => {
               Appearance
             </Text>
 
-            {/* THEME OPTIONS */}
-            <View className="space-y-4">
-              {/* Light Mode */}
-              <TouchableOpacity
-                onPress={() => setTheme('light')}
-                className={`flex-row items-center justify-between p-4 rounded-xl ${
-                  isDark ? 'bg-[#0F1F1A]' : 'bg-[#F5F9F7]'
-                }`}
-                activeOpacity={0.7}
-              >
-                <View className="flex-row items-center">
-                  <View
-                    className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                      isDark ? 'bg-commonGradientStop7' : 'bg-[#F5F9F7]'
-                    }`}
-                  >
-                    <Ionicons name="sunny" size={20} color="#27B07D" />
-                  </View>
+            {/* Dark Mode Toggle */}
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center flex-1">
+                <View
+                  className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                    isDark ? 'bg-commonGradientStop7' : 'bg-[#F5F9F7]'
+                  }`}
+                >
+                  <Ionicons name={isDark ? 'moon' : 'sunny'} size={20} color="#27B07D" />
+                </View>
+
+                <View className="flex-1">
                   <Text
                     className={`font-urbanist-semibold text-base ${
                       isDark ? 'text-white' : 'text-textDark'
                     }`}
                   >
-                    Light
+                    Dark Mode
                   </Text>
-                </View>
 
-                {theme === 'light' && (
-                  <Ionicons name="checkmark-circle" size={22} color="#27B07D" />
-                )}
-              </TouchableOpacity>
-
-              {/* Dark Mode */}
-              <TouchableOpacity
-                onPress={() => setTheme('dark')}
-                className={`flex-row items-center justify-between p-4 rounded-xl ${
-                  isDark ? 'bg-[#0F1F1A]' : 'bg-[#F5F9F7]'
-                }`}
-                activeOpacity={0.7}
-              >
-                <View className="flex-row items-center">
-                  <View
-                    className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                      isDark ? 'bg-commonGradientStop7' : 'bg-[#F5F9F7]'
+                  <Text
+                    className={`text-sm font-poppins-regular mt-1 ${
+                      isDark ? 'text-textSecondary' : 'text-textMuted'
                     }`}
                   >
-                    <Ionicons name="moon" size={20} color="#27B07D" />
-                  </View>
+                    {theme === 'system'
+                      ? 'Managed by system'
+                      : isDark
+                        ? 'Dark theme enabled'
+                        : 'Light theme enabled'}
+                  </Text>
+                </View>
+              </View>
+
+              <Switch
+                value={darkSwitchValue}
+                disabled={theme === 'system'} // disable when system mode is on
+                onValueChange={toggleDarkMode}
+                trackColor={{
+                  false: '#d1d5db',
+                  true: `${theme === 'system' ? '#ffffff' : '#10b981'}`,
+                }}
+                thumbColor={theme === 'system' ? '#9ca3af' : '#ffffff'}
+              />
+            </View>
+
+            {/* System Mode Toggle */}
+            <View className="flex-row mt-5 items-center justify-between">
+              <View className="flex-row items-center flex-1">
+                <View
+                  className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                    isDark ? 'bg-commonGradientStop7' : 'bg-[#F5F9F7]'
+                  }`}
+                >
+                  <Ionicons name="phone-portrait-outline" size={20} color="#27B07D" />
+                </View>
+
+                <View className="flex-1">
                   <Text
                     className={`font-urbanist-semibold text-base ${
                       isDark ? 'text-white' : 'text-textDark'
                     }`}
                   >
-                    Dark
+                    System Mode
                   </Text>
-                </View>
-
-                {theme === 'dark' && <Ionicons name="checkmark-circle" size={22} color="#27B07D" />}
-              </TouchableOpacity>
-
-              {/* System Mode */}
-              <TouchableOpacity
-                onPress={() => setTheme('system')}
-                className={`flex-row items-center justify-between p-4 rounded-xl ${
-                  isDark ? 'bg-[#0F1F1A]' : 'bg-[#F5F9F7]'
-                }`}
-                activeOpacity={0.7}
-              >
-                <View className="flex-row items-center">
-                  <View
-                    className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                      isDark ? 'bg-commonGradientStop7' : 'bg-[#F5F9F7]'
-                    }`}
-                  >
-                    <Ionicons name="phone-portrait-outline" size={20} color="#27B07D" />
-                  </View>
                   <Text
-                    className={`font-urbanist-semibold text-base ${
-                      isDark ? 'text-white' : 'text-textDark'
+                    className={`text-sm font-poppins-regular mt-1 ${
+                      isDark ? 'text-textSecondary' : 'text-textMuted'
                     }`}
                   >
-                    System
+                    {theme === 'system' ? 'Following device theme' : 'Using manual theme'}
                   </Text>
                 </View>
+              </View>
 
-                {theme === 'system' && (
-                  <Ionicons name="checkmark-circle" size={22} color="#27B07D" />
-                )}
-              </TouchableOpacity>
+              <Switch
+                value={systemSwitchValue}
+                onValueChange={toggleSystemMode}
+                trackColor={{ false: '#d1d5db', true: '#10b981' }}
+                thumbColor={'#ffffff'}
+              />
             </View>
           </View>
 
@@ -185,6 +202,7 @@ const Settings: React.FC = () => {
                 <View className="w-10 h-10 bg-red-500/10 rounded-full items-center justify-center mr-3">
                   <Ionicons name="trash-outline" size={20} color="#F22D2D" />
                 </View>
+
                 <View className="flex-1">
                   <Text className="text-error font-urbanist-semibold text-base">
                     Delete Account
@@ -198,6 +216,7 @@ const Settings: React.FC = () => {
                   </Text>
                 </View>
               </View>
+
               <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
             </TouchableOpacity>
           </View>
@@ -221,7 +240,9 @@ const Settings: React.FC = () => {
             <View className="space-y-3">
               <View className="flex-row items-center justify-between mb-3">
                 <Text
-                  className={`font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                  className={`font-poppins-regular ${
+                    isDark ? 'text-textSecondary' : 'text-textMuted'
+                  }`}
                 >
                   Version
                 </Text>
@@ -237,7 +258,9 @@ const Settings: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <Text
-                  className={`font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                  className={`font-poppins-regular ${
+                    isDark ? 'text-textSecondary' : 'text-textMuted'
+                  }`}
                 >
                   Terms & Conditions
                 </Text>
@@ -249,7 +272,9 @@ const Settings: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <Text
-                  className={`font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                  className={`font-poppins-regular ${
+                    isDark ? 'text-textSecondary' : 'text-textMuted'
+                  }`}
                 >
                   Privacy Policy
                 </Text>
@@ -259,12 +284,12 @@ const Settings: React.FC = () => {
           </View>
         </ScrollView>
 
-        {/* Delete Account Modal */}
+        {/* Delete Modal */}
         <DeleteAccountModal
           visible={showDeleteModal}
           isDark={isDark}
           onConfirm={confirmDeleteAccount}
-          onCancel={cancelDelete}
+          onCancel={() => setShowDeleteModal(false)}
         />
       </View>
     </GradientBackground>

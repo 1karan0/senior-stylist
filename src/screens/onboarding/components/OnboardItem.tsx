@@ -17,9 +17,9 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
 
   return (
     <View className="flex-1">
+      <StatusBar hidden />
       {/* FULLSCREEN IMAGE */}
       <Image source={item.image} className="w-full h-full absolute bottom-40" />
-
       {/* TEXT SECTION */}
       <LinearGradient
         colors={
