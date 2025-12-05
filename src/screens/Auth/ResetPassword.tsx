@@ -91,7 +91,7 @@ const ResetPassword = () => {
             paddingBottom: insets.bottom + 20,
             flexGrow: 1,
           }}
-          className="px-6"
+          className="px-5"
         >
           {/* Logo & Header */}
           <View className="items-center mt-14 mb-10">

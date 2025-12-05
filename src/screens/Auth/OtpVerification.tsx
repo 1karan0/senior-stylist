@@ -135,98 +135,102 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
   };
 
   return (
-    <GradientBackground className="flex-1 px-6 items-center">
-      <Toast
-        visible={toast.visible}
-        message={toast.message}
-        type={toast.type}
-        onClose={() => setToast({ ...toast, visible: false })}
-      />
+    <GradientBackground className="flex-1 px-5 ">
+      <View className="flex-1 items-center">
+        <Toast
+          visible={toast.visible}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, visible: false })}
+        />
 
-      {/* Logo */}
-      <Image
-        source={
-          isDark
-            ? require('../../assets/icons/dark-logo.png')
-            : require('../../assets/icons/colored_logo.png')
-        }
-        className="w-[90px] h-[90px] mt-14 mb-6"
-        resizeMode="contain"
-      />
+        {/* Logo */}
+        <Image
+          source={
+            isDark
+              ? require('../../assets/icons/dark-logo.png')
+              : require('../../assets/icons/colored_logo.png')
+          }
+          className="w-[90px] h-[90px] mt-14 mb-6"
+          resizeMode="contain"
+        />
 
-      <Text className={`text-[22px] font-bold ${isDark ? 'text-white' : 'text-textDark'} `}>
-        Enter OTP Verification Code
-      </Text>
-
-      <Text className={`text-[13px] ${isDark ? 'text-textSecondary' : 'text-textMuted'}  mt-2`}>
-        Verification code has been sent to
-      </Text>
-
-      <Text
-        className={`text-[14px] font-semibold ${isDark ? 'text-[#2CCB91]' : 'text-textPrimary'} mt-1`}
-      >
-        {email}
-      </Text>
-
-      {/* OTP BOXES */}
-      <View className="flex-row justify-center gap-2 mt-6 mb-4">
-        {otp.map((digit, i) => (
-          <TextInput
-            key={i}
-            ref={(el) => {
-              inputRefs.current[i] = el;
-            }}
-            value={digit}
-            onChangeText={(t) => handleChange(t, i)}
-            onKeyPress={({ nativeEvent }) => {
-              if (nativeEvent.key === 'Backspace' && otp[i] === '' && i > 0) {
-                inputRefs.current[i - 1]?.focus();
-                const updated = [...otp];
-                updated[i - 1] = '';
-                setOtp(updated);
-              }
-            }}
-            maxLength={1}
-            keyboardType="number-pad"
-            className={`w-12 h-12 border border-textPrimary ${
-              isDark ? 'bg-commonGradientStop6 text-white' : 'bg-white text-black'
-            } rounded-md mx-1 text-center text-[20px]  `}
-          />
-        ))}
-      </View>
-
-      {/* Resend */}
-      <View className="flex-row mb-6">
-        <Text className={` ${isDark ? 'text-textSecondary' : 'text-[#6B6B6B]'} text-[13px]`}>
-          Didn't receive the code?{' '}
+        <Text className={`text-[22px] font-bold ${isDark ? 'text-white' : 'text-textDark'} `}>
+          Enter OTP Verification Code
         </Text>
 
-        {isTimerActive ? (
-          <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend in {timer}s</Text>
-        ) : (
-          <Pressable onPress={handleResend}>
-            <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend</Text>
-          </Pressable>
-        )}
-      </View>
+        <Text className={`text-[13px] ${isDark ? 'text-textSecondary' : 'text-textMuted'}  mt-2`}>
+          Verification code has been sent to
+        </Text>
 
-      {/* Verify */}
-      <Button
-        text="Verify"
-        onPress={handleVerify}
-        disabled={!isOtpComplete}
-        loading={loading}
-        variant="gradient"
-      />
+        <Text
+          className={`text-[14px] font-semibold ${isDark ? 'text-[#2CCB91]' : 'text-textPrimary'} mt-1`}
+        >
+          {email}
+        </Text>
 
-      {/* Go Back */}
-      <View>
-        <Button
-          text="Go Back"
-          onPress={() => navigation.goBack()}
-          variant="light"
-          className="rounded-[10px]"
-        />
+        {/* OTP BOXES */}
+        <View className="flex-row justify-center gap-2 mt-6 mb-4">
+          {otp.map((digit, i) => (
+            <TextInput
+              key={i}
+              ref={(el) => {
+                inputRefs.current[i] = el;
+              }}
+              value={digit}
+              onChangeText={(t) => handleChange(t, i)}
+              onKeyPress={({ nativeEvent }) => {
+                if (nativeEvent.key === 'Backspace' && otp[i] === '' && i > 0) {
+                  inputRefs.current[i - 1]?.focus();
+                  const updated = [...otp];
+                  updated[i - 1] = '';
+                  setOtp(updated);
+                }
+              }}
+              maxLength={1}
+              keyboardType="number-pad"
+              className={`w-12 h-12 border border-textPrimary ${
+                isDark ? 'bg-commonGradientStop6 text-white' : 'bg-white text-black'
+              } rounded-md mx-1 text-center text-[20px]  `}
+            />
+          ))}
+        </View>
+
+        {/* Resend */}
+        <View className="flex-row mb-6">
+          <Text className={` ${isDark ? 'text-textSecondary' : 'text-[#6B6B6B]'} text-[13px]`}>
+            Didn't receive the code?{' '}
+          </Text>
+
+          {isTimerActive ? (
+            <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend in {timer}s</Text>
+          ) : (
+            <Pressable onPress={handleResend}>
+              <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend</Text>
+            </Pressable>
+          )}
+        </View>
+
+        {/* Verify */}
+        <View className="w-full">
+          <Button
+            text="Verify"
+            onPress={handleVerify}
+            disabled={!isOtpComplete}
+            loading={loading}
+            variant="gradient"
+          />
+          <View className="mt-5">
+            {/* Go Back */}
+            <Button
+              text="Go Back"
+              onPress={() => navigation.goBack()}
+              variant="light"
+              className={`rounded-[10px] ${isDark ? 'bg-[#0E1B17] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'} border`}
+              textClassName={`${isDark ? 'text-[#ffffff]' : 'text-[#162721]'} text-base font-urbanist-bold`}
+            />
+          </View>
+        </View>
       </View>
     </GradientBackground>
   );
