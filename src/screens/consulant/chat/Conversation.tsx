@@ -26,6 +26,8 @@ import MessageBubble from '@/components/chat/MessageBubble';
 import ImageModal from '@/components/chat/ImageModal';
 import { sendMessageToFirestore, waitForFirebaseUser } from '@/services/firebase';
 import { setActiveChat, clearActiveChat } from '@/api/chat/useActiveChat';
+import { useFinishConsultation } from '@/api/user/consultation/useFinishConsultation';
+import { useRatingConsultation } from '@/api/user/consultation/useRatingConsultation';
 import {
   getCachedConsultation,
   getMessages,
@@ -39,6 +41,9 @@ import {
 import type { ChatMessage } from '@/types/chat';
 import type { AppStackParamList } from '@/common/types';
 import GradientBackground from '@/common/components/GradientBackground';
+import MessageListSkeleton from '@/common/components/skeletons/MessageSkeleton';
+import FinishConsultationModal from '@/common/components/modals/FinishConsultationModal';
+import RatingModal from '@/common/components/modals/RatingModal';
 import { useTheme } from '@/contexts/ThemeContext';
 
 type RouteProps = RouteProp<AppStackParamList, 'ConsultantChat'>;
@@ -68,6 +73,11 @@ const ConsultantChatScreen: React.FC = () => {
   const [offlineError, setOfflineError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [showFinishModal, setShowFinishModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+
+  const finishMutation = useFinishConsultation();
+  const ratingMutation = useRatingConsultation();
 
   const flashListRef = useRef<FlashListRef<ChatMessage>>(null);
   const realtimeUnsubscribeRef = useRef<(() => void) | null>(null);
@@ -485,6 +495,54 @@ const ConsultantChatScreen: React.FC = () => {
     [consultationId, messages]
   );
 
+  const handleFinishConsultation = useCallback(async () => {
+    if (!consultation) return;
+
+    finishMutation.mutate(String(consultation.id), {
+      onSuccess: () => {
+        setShowFinishModal(false);
+        setShowRatingModal(true);
+      },
+      onError: (error) => {
+        Alert.alert('Error', (error as any)?.message || 'Failed to finish consultation');
+        console.error('errr ====', error.message);
+      },
+    });
+  }, [consultation, finishMutation, navigation]);
+
+  const handleSubmitRating = useCallback(
+    (rating: number, feedback: string) => {
+      if (!consultation) return;
+
+      ratingMutation.mutate(
+        {
+          consultationId: String(consultation.id),
+          rating: rating,
+          user_feedback: feedback,
+        },
+        {
+          onSuccess: (data) => {
+            setShowRatingModal(false);
+            Alert.alert(
+              'Thank you!',
+              `Thank you for rating this consultation with ${rating} stars!`,
+              [
+                {
+                  text: 'OK',
+                  onPress: () => navigation.goBack(),
+                },
+              ]
+            );
+          },
+          onError: (error) => {
+            Alert.alert('Error', (error as any)?.message || 'Failed to submit rating');
+          },
+        }
+      );
+    },
+    [consultation, ratingMutation, navigation]
+  );
+
   const renderMessage = useCallback(
     ({ item }: { item: ChatMessage }) => {
       const isOwn = currentUserId === item.user_id;
@@ -570,41 +628,38 @@ const ConsultantChatScreen: React.FC = () => {
         <ChatHeader
           consultation={consultation}
           onBack={() => navigation.goBack()}
+          onFinish={() => setShowFinishModal(true)}
           isConsultant={!!isConsultant}
           isConnecting={!isOnline}
           isLoading={loading && messages.length === 0}
+          isFinishing={finishMutation.isPending}
         />
 
         {loading && messages.length === 0 ? (
-          <View className="absolute top-[110px] left-0 right-0 items-center z-10 pointer-events-none">
-            <View className="flex-row items-center bg-white/25 rounded-full px-3 py-1.5 gap-2">
-              <ActivityIndicator size="small" color="#1C1C1C" />
-              <Text className="text-[#1C1C1C] text-xs font-medium">Loading messages…</Text>
-            </View>
-          </View>
-        ) : null}
-
-        <FlashList
-          ref={flashListRef}
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingVertical: 16, paddingBottom: 20 }}
-          ListHeaderComponent={renderHeader}
-          ListEmptyComponent={renderEmpty}
-          maintainVisibleContentPosition={{
-            autoscrollToBottomThreshold: 0.2,
-            startRenderingFromBottom: true,
-          }}
-          onStartReached={loadOlderMessages}
-          onStartReachedThreshold={0.4}
-          onScroll={(event) => {
-            const offsetY = event.nativeEvent.contentOffset.y;
-            scrollOffsetRef.current = offsetY;
-            setShowScrollToBottom(offsetY > 100);
-          }}
-          scrollEventThrottle={16}
-        />
+          <MessageListSkeleton />
+        ) : (
+          <FlashList
+            ref={flashListRef}
+            data={messages}
+            renderItem={renderMessage}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingVertical: 16, paddingBottom: 20 }}
+            ListHeaderComponent={renderHeader}
+            ListEmptyComponent={renderEmpty}
+            maintainVisibleContentPosition={{
+              autoscrollToBottomThreshold: 0.2,
+              startRenderingFromBottom: true,
+            }}
+            onStartReached={loadOlderMessages}
+            onStartReachedThreshold={0.4}
+            onScroll={(event) => {
+              const offsetY = event.nativeEvent.contentOffset.y;
+              scrollOffsetRef.current = offsetY;
+              setShowScrollToBottom(offsetY > 100);
+            }}
+            scrollEventThrottle={16}
+          />
+        )}
 
         {!chatWindowOpen ? (
           <View
@@ -642,6 +697,25 @@ const ConsultantChatScreen: React.FC = () => {
         visible={!!selectedImage}
         imageUri={selectedImage}
         onClose={() => setSelectedImage(null)}
+      />
+
+      <FinishConsultationModal
+        visible={showFinishModal}
+        onClose={() => setShowFinishModal(false)}
+        onConfirm={handleFinishConsultation}
+        isLoading={finishMutation.isPending}
+      />
+
+      <RatingModal
+        visible={showRatingModal}
+        consultantName={
+          isConsultant
+            ? consultation.user?.name || 'Client'
+            : consultation.consultant?.name || 'Stylist'
+        }
+        onClose={() => setShowRatingModal(false)}
+        onSubmit={handleSubmitRating}
+        isLoading={ratingMutation.isPending}
       />
     </GradientBackground>
   );

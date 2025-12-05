@@ -88,7 +88,7 @@ export const Button: React.FC<ButtonProps> = ({
                 {icon}
                 {text && (
                   <Text
-                    className={`text-base font-urbanist-semibold text-textDark ${labelClass} ${textClassName}`}
+                    className={`text-base font-urbanist-bold text-textDark ${labelClass} ${textClassName}`}
                   >
                     {text}
                   </Text>

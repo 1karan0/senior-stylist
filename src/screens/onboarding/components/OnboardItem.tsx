@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, ImageSourcePropType, StatusBar } from 'react-native';
+import { View, Text, Image, ImageSourcePropType } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -17,7 +17,6 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
 
   return (
     <View className="flex-1">
-      <StatusBar hidden />
       {/* FULLSCREEN IMAGE */}
       <Image source={item.image} className="w-full h-full absolute bottom-40" />
       {/* TEXT SECTION */}
@@ -27,7 +26,7 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
             ? ['hsl(158, 32%, 12%)', 'hsl(158, 32%, 8%)'] // Reverse of DARK_BG for bottom-up
             : ['hsl(158, 64%, 95%)', 'hsl(146, 25%, 97%)'] // Reverse of LIGHT_BG
         }
-        className="absolute bottom-0 w-full h-[30%] px-5 pb-5 pt-8 "
+        className="absolute bottom-0 w-full h-[30%] px-5  pt-10 "
         start={{ x: 0, y: 1 }}
         end={{ x: 0, y: 0 }}
         style={{ borderTopLeftRadius: 30, borderTopRightRadius: 30 }}

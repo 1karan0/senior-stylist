@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, StatusBar } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
@@ -41,6 +41,7 @@ const OnboardingScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      <StatusBar hidden />
       <View className="flex-1">
         <GradientBackground>
           <PagerView
@@ -74,13 +75,15 @@ const OnboardingScreen = ({ navigation }: any) => {
 
           {/* BUTTONS */}
           <View className="flex-row items-center justify-center gap-4 px-6 pb-10">
-            <Button
-              text="Skip"
-              variant="light"
-              onPress={() => navigation.replace('Login')}
-              className={`w-40 rounded-2xl border border-[#DAE7E0] ${page === onboardData.length - 1 ? 'hidden' : ''}`}
-              textClassName="text-base font-urbanist-bold"
-            />
+            {page !== onboardData.length - 1 && (
+              <Button
+                text="Skip"
+                variant="light"
+                onPress={() => navigation.replace('Login')}
+                className={`w-40 ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'} rounded-2xl border`}
+                textClassName={`${isDark ? 'text-white' : 'text-[#162721]'} text-base font-urbanist-bold`}
+              />
+            )}
 
             <Button
               text={page === onboardData.length - 1 ? 'Get Started' : 'Next'}

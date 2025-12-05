@@ -16,6 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { initializeFirebase, waitForFirebaseUser } from '@/services/firebase';
 
 import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
@@ -29,6 +30,7 @@ import {
 } from '@/services/chatDatabase';
 
 import GradientBackground from '@/common/components/GradientBackground';
+import ConversationSkeleton from '@/common/components/skeletons/ConversationSkeleton';
 import type {
   AppStackParamList,
   ConsultationStackParamList,
@@ -41,6 +43,7 @@ type NavParamList = AppStackParamList & ConsultationStackParamList;
 const CustomerChatHome: React.FC = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
+  const { paddingBottom } = useTabBarSafePadding();
   const navigation = useNavigation<NativeStackNavigationProp<NavParamList>>();
 
   const userKey = useMemo(() => (user?.id ? String(user.id) : null), [user?.id]);

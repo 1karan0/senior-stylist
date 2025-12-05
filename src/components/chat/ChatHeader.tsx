@@ -3,14 +3,16 @@ import { View, Text, TouchableOpacity, ActivityIndicator, Image, StatusBar } fro
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 import type { ConsultantConsultation } from '@/api/consultant/consultations';
+import ChatHeaderSkeleton from '@/common/components/skeletons/ChatHeaderSkeleton';
 
 interface ChatHeaderProps {
-  consultation: ConsultantConsultation;
+  consultation: ConsultantConsultation | null;
   onBack: () => void;
   onFinish?: () => void;
   isConsultant?: boolean;
   isConnecting?: boolean;
   isLoading?: boolean;
+  isFinishing?: boolean;
 }
 
 const getInitials = (name: string) =>
@@ -28,7 +30,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   isConsultant = true,
   isConnecting = false,
   isLoading = false,
+  isFinishing = false,
 }) => {
+  if (isLoading || !consultation) {
+    return <ChatHeaderSkeleton />;
+  }
+
   const otherPerson = isConsultant ? consultation.user : consultation.consultant;
   const otherPersonName = otherPerson?.name || (isConsultant ? 'Client' : 'Stylist');
   const consultantDetails = consultation.consultant?.consultant_details as
@@ -76,10 +83,19 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           {consultation.status !== 'completed' && (
             <TouchableOpacity
               onPress={onFinish}
-              className="flex-row absolute right-1 items-center bg-white px-3 py-1.5 rounded-xl gap-1.5"
+              disabled={isFinishing}
+              className={`flex-row absolute right-1 items-center bg-white px-3 py-1.5 rounded-xl gap-1.5 ${
+                isFinishing ? 'opacity-60' : ''
+              }`}
             >
-              <Image source={require('@/assets/icons/finish.png')} />
-              <Text className=" text-sm font-semibold">Finish</Text>
+              {isFinishing ? (
+                <ActivityIndicator size="small" color="#000000" />
+              ) : (
+                <>
+                  <Image source={require('@/assets/icons/finish.png')} />
+                  <Text className=" text-sm font-semibold">Finish</Text>
+                </>
+              )}
             </TouchableOpacity>
           )}
 
@@ -108,9 +124,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               </>
             ) : (
               <>
-                <View>
+                <View className="w-20 ">
                   <ActivityIndicator size={14} color="#ffffff" style={{ marginRight: 6 }} />
-                  <Text className="text-textWhite text-xs font-medium">Loading messages…</Text>
                 </View>
               </>
             )}

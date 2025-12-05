@@ -72,12 +72,12 @@ const ImagePickerModal = ({ visible, onClose, onCamera, onGallery, loading = fal
             activeOpacity={0.8}
             disabled={loading}
             className={`flex-row items-center px-6 py-4 rounded-xl mb-4 ${
-              isDark ? 'bg-[#123427]' : 'bg-[#F2F7F4]'
+              isDark ? 'bg-[#123427]' : 'bg-[#E4F6ED]'
             } ${loading ? 'opacity-60' : ''}`}
           >
             <View
               className={`w-10 h-10 rounded-full items-center justify-center mr-4 ${
-                isDark ? 'bg-[#1E3A33]' : 'bg-[#DDEFE6]'
+                isDark ? 'bg-[#1A4738]' : 'bg-[#C6EEDD]'
               }`}
             >
               <View className="w-12 h-12 bg-buttonPrimaryBg rounded-full items-center justify-center mr-4">
