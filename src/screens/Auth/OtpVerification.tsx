@@ -217,18 +217,17 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
         disabled={!isOtpComplete}
         loading={loading}
         variant="gradient"
-        className="w-full h-[50px] justify-center items-center mb-4"
-        textClassName="text-[16px]"
       />
 
       {/* Go Back */}
-      <Button
-        text="Go Back"
-        onPress={() => navigation.goBack()}
-        variant="light"
-        className="w-full h-[50px] justify-center items-center"
-        textClassName="text-[15px]"
-      />
+      <View>
+        <Button
+          text="Go Back"
+          onPress={() => navigation.goBack()}
+          variant="light"
+          className="rounded-[10px]"
+        />
+      </View>
     </GradientBackground>
   );
 }
