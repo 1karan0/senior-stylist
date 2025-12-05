@@ -30,7 +30,6 @@ import {
 } from '@/services/chatDatabase';
 import type { AppStackParamList } from '@/common/types';
 import GradientBackground from '@/common/components/GradientBackground';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ConversationPreview = {
   id: number;
@@ -384,77 +383,85 @@ const ChatHome: React.FC = () => {
   console.log(filteredConversations, 'filteredConversations');
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <GradientBackground className="flex-1">
-        {/* apply paddingBottom so content doesn't get hidden under the absolute tab bar */}
-        <View className="flex-1 pt-6 px-5" style={{ paddingBottom }}>
-          <View className=" mb-4">
-            <Text
-              className={`text-2xl font-urbanist-bold mb-1 ${isDark ? 'text-textWhite' : 'text-textDark'}`}
-            >
-              Client Consultations
-            </Text>
-            {connectionIndicator}
+    <GradientBackground className="flex-1">
+      {/* apply paddingBottom so content doesn't get hidden under the absolute tab bar */}
+      <View className="flex-1 pt-6 px-5" style={{ paddingBottom }}>
+        <View className=" mb-4">
+          <Text
+            className={`text-2xl font-urbanist-bold mb-1 ${isDark ? 'text-textWhite' : 'text-textDark'}`}
+          >
+            Client Consultations
+          </Text>
+          {connectionIndicator}
 
-            <View
-              className={`flex-row items-center border mt-3 px-3  rounded-xl ${
-                isDark
-                  ? 'bg-commonGradientStop6 border-commonGradientStop7'
-                  : 'bg-[#FAFAFA] border-[#E6E6E6]'
-              }`}
-            >
-              <Image
-                source={require('../../../assets/icons/search-icon.png')}
-                className="w-5 h-5 mr-3"
-              />
+          <View
+            className={`flex-row items-center border mt-3 rounded-xl ${
+              isDark
+                ? 'bg-commonGradientStop6 border-commonGradientStop7'
+                : 'bg-[#FAFAFA] border-[#E6E6E6]'
+            }`}
+            style={{
+              paddingHorizontal: 12,
+              minHeight: Platform.OS === 'ios' ? 32 : undefined,
+              paddingVertical: Platform.OS === 'ios' ? 8 : 0,
+            }}
+          >
+            <Image
+              source={require('../../../assets/icons/search-icon.png')}
+              className="w-5 h-5 mr-3"
+            />
 
-              <TextInput
-                placeholder="Search clients or topics..."
-                value={searchQuery}
-                placeholderTextColor="#6D837A"
-                onChangeText={setSearchQuery}
-                className={`ml-2 flex-1 ${isDark ? 'text-white' : 'text-black'}`}
-              />
-            </View>
-
-            <View className="flex-row gap-3 mt-4">
-              {(['all', 'unread'] as FilterKey[]).map((filter) => {
-                const isActive = activeFilter === filter;
-                return (
-                  <TouchableOpacity
-                    key={filter}
-                    onPress={() => setActiveFilter(filter)}
-                    className={`px-4 py-2  rounded-full border ${isDark ? 'border-commonGradientStop7' : 'border-commonGradientStop11'} ${isActive && 'bg-buttonPrimaryBg'}`}
-                  >
-                    <Text
-                      className={`text-sm font-urbanist-semibold ${isActive && 'text-white'} ${isDark ? 'text-white' : ''}`}
-                    >
-                      {filter === 'all' ? 'All' : 'Unread'}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            <TextInput
+              placeholder="Search clients or topics..."
+              value={searchQuery}
+              placeholderTextColor="#6D837A"
+              onChangeText={setSearchQuery}
+              className={`ml-2 flex-1 ${isDark ? 'text-white' : 'text-black'}`}
+              style={{
+                paddingVertical: Platform.OS === 'ios' ? 8 : 0,
+                fontSize: 15,
+                includeFontPadding: false,
+              }}
+            />
           </View>
 
-          {loading && consultations.length === 0 ? (
-            <View className="flex-1 justify-center items-center">
-              <ActivityIndicator size="large" />
-              <Text className="mt-3 font-poppins text-sm">Loading your conversations...</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={filteredConversations}
-              keyExtractor={(item) => String(item.id)}
-              renderItem={renderConversation}
-              contentContainerStyle={{ paddingBottom }} // <- critical change
-              ListEmptyComponent={renderEmpty}
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            />
-          )}
+          <View className="flex-row gap-3 mt-4">
+            {(['all', 'unread'] as FilterKey[]).map((filter) => {
+              const isActive = activeFilter === filter;
+              return (
+                <TouchableOpacity
+                  key={filter}
+                  onPress={() => setActiveFilter(filter)}
+                  className={`px-4 py-2  rounded-full border ${isDark ? 'border-commonGradientStop7' : 'border-commonGradientStop11'} ${isActive && 'bg-buttonPrimaryBg'}`}
+                >
+                  <Text
+                    className={`text-sm font-urbanist-semibold ${isActive && 'text-white'} ${isDark ? 'text-white' : ''}`}
+                  >
+                    {filter === 'all' ? 'All' : 'Unread'}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
-      </GradientBackground>
-    </SafeAreaView>
+
+        {loading && consultations.length === 0 ? (
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator size="large" />
+            <Text className="mt-3 font-poppins text-sm">Loading your conversations...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredConversations}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={renderConversation}
+            contentContainerStyle={{ paddingBottom }} // <- critical change
+            ListEmptyComponent={renderEmpty}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          />
+        )}
+      </View>
+    </GradientBackground>
   );
 };
 

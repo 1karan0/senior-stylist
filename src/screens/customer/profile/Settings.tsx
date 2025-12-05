@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Switch, Platform } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
 import GradientBackground from '@/common/components/GradientBackground';
@@ -125,16 +125,18 @@ const Settings: React.FC = () => {
                 </View>
               </View>
 
-              <Switch
-                value={darkSwitchValue}
-                disabled={theme === 'system'} // disable when system mode is on
-                onValueChange={toggleDarkMode}
-                trackColor={{
-                  false: '#d1d5db',
-                  true: `${theme === 'system' ? '#ffffff' : '#10b981'}`,
-                }}
-                thumbColor={theme === 'system' ? '#9ca3af' : '#ffffff'}
-              />
+              <View style={{ width: Platform.OS === 'ios' ? 51 : undefined }}>
+                <Switch
+                  value={darkSwitchValue}
+                  disabled={theme === 'system'} // disable when system mode is on
+                  onValueChange={toggleDarkMode}
+                  trackColor={{
+                    false: '#d1d5db',
+                    true: `${theme === 'system' ? '#ffffff' : '#10b981'}`,
+                  }}
+                  thumbColor={theme === 'system' ? '#9ca3af' : '#ffffff'}
+                />
+              </View>
             </View>
 
             {/* System Mode Toggle */}
@@ -166,12 +168,14 @@ const Settings: React.FC = () => {
                 </View>
               </View>
 
-              <Switch
-                value={systemSwitchValue}
-                onValueChange={toggleSystemMode}
-                trackColor={{ false: '#d1d5db', true: '#10b981' }}
-                thumbColor={'#ffffff'}
-              />
+              <View style={{ width: Platform.OS === 'ios' ? 51 : undefined }}>
+                <Switch
+                  value={systemSwitchValue}
+                  onValueChange={toggleSystemMode}
+                  trackColor={{ false: '#d1d5db', true: '#10b981' }}
+                  thumbColor={'#ffffff'}
+                />
+              </View>
             </View>
           </View>
 
