@@ -39,6 +39,7 @@
 	<true/>
 	<key>UIAppFonts</key>
 	<array>
+		<string>Ionicons.ttf</string>
 		<string>Poppins-Bold.ttf</string>
 		<string>Poppins-Medium.ttf</string>
 		<string>Poppins-Regular.ttf</string>
