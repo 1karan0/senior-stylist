@@ -232,7 +232,7 @@ const EditProfile = () => {
             </View>
           </View>
 
-          <View className="mt-5">
+          <View className="mt-6">
             <Button
               loading={editMutation.isPending}
               text="Save Changes"
@@ -241,7 +241,7 @@ const EditProfile = () => {
             />
           </View>
 
-          <View className="mt-3">
+          <View className="mt-4">
             <Button
               text="Cancel"
               variant="light"

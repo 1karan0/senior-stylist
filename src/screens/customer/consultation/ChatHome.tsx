@@ -315,7 +315,7 @@ const CustomerChatHome: React.FC = () => {
             }`}
             style={{
               paddingHorizontal: 12,
-              minHeight: Platform.OS === 'ios' ? 32 : undefined,
+              minHeight: Platform.OS === 'ios' ? 32 : 48,
               paddingVertical: Platform.OS === 'ios' ? 8 : 0,
             }}
           >
