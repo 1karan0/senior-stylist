@@ -70,11 +70,13 @@ const UserTabNavigator: React.FC = () => {
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.12,
           shadowRadius: 8,
-          paddingHorizontal: 12,
-          paddingVertical: 8,
+          paddingHorizontal: 8,
+          paddingVertical: 6,
         },
 
         tabBarItemStyle: {
+          flex: 1,
+          marginHorizontal: 6,
           paddingTop: 6,
           paddingBottom: 6,
           alignItems: 'center',
@@ -83,7 +85,7 @@ const UserTabNavigator: React.FC = () => {
 
         tabBarLabelStyle: {
           fontSize: 12,
-          fontFamily: 'Poppins-Medium', // ← applies your custom font
+          fontFamily: 'Poppins-Medium',
           marginTop: 1,
           marginBottom: 3,
           lineHeight: 18,

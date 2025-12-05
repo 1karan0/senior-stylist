@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import GradientBackground from '@/common/components/GradientBackground';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 
 import { useGetStoreProducts } from '@/api/user/store/useGetStoreProducts';
@@ -26,6 +27,7 @@ const StoreScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const { isDark } = useTheme();
+  const { paddingBottom } = useTabBarSafePadding();
 
   const { mutateAsync: getProducts, isPending } = useGetStoreProducts();
   const { data: categories = [] } = useGetStoreCategories();
@@ -58,14 +60,14 @@ const StoreScreen = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1 px-5 pt-6 pb-20">
+      <View className="flex-1 px-5 pt-6 mb-5 ">
         <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
           Partner Store
         </Text>
 
         {/* Search */}
         <View
-          className={`flex-row items-center border mt-5 px-3 rounded-xl ${
+          className={`flex-row items-center border mt-4 px-3 rounded-xl ${
             isDark
               ? 'bg-commonGradientStop6 border-commonGradientStop7'
               : 'bg-[#FAFAFA] border-[#E6E6E6]'
@@ -123,7 +125,7 @@ const StoreScreen = () => {
           data={products}
           renderItem={renderProduct}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingTop: 20 }}
+          contentContainerStyle={{ paddingTop: 20, paddingVertical: 4, paddingBottom }}
           onEndReached={() => loadProducts(false)}
           onEndReachedThreshold={0.2}
           refreshControl={

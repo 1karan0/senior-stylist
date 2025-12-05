@@ -1,13 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import firestore from '@react-native-firebase/firestore';
 
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +8,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { initializeFirebase, waitForFirebaseUser } from '@/services/firebase';
 
 import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
@@ -28,6 +22,7 @@ import {
 } from '@/services/chatDatabase';
 
 import GradientBackground from '@/common/components/GradientBackground';
+import ConversationSkeleton from '@/common/components/skeletons/ConversationSkeleton';
 import type {
   AppStackParamList,
   ConsultationStackParamList,
@@ -41,6 +36,7 @@ type NavParamList = AppStackParamList & ConsultationStackParamList;
 const CustomerChatHome: React.FC = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
+  const { paddingBottom } = useTabBarSafePadding();
   const navigation = useNavigation<NativeStackNavigationProp<NavParamList>>();
 
   const userKey = useMemo(() => (user?.id ? String(user.id) : null), [user?.id]);
@@ -294,7 +290,7 @@ const CustomerChatHome: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <GradientBackground className="flex-1">
-        <View className="flex-1 pb-20">
+        <View className="flex-1 ">
           {/* HEADER */}
           <View className="px-5 pt-6">
             <View className="flex-row justify-between items-center ">
@@ -314,7 +310,7 @@ const CustomerChatHome: React.FC = () => {
 
             {/* Search */}
             <View
-              className={`flex-row items-center border mt-5 px-3 rounded-xl ${
+              className={`flex-row items-center border mt-4 px-3 rounded-xl ${
                 isDark
                   ? 'bg-commonGradientStop6 border-commonGradientStop7'
                   : 'bg-[#FAFAFA] border-[#E6E6E6]'
@@ -343,23 +339,26 @@ const CustomerChatHome: React.FC = () => {
 
           {/* LIST */}
           {loading && consultations.length === 0 ? (
-            <View className="flex-1 justify-center items-center">
-              <ActivityIndicator size="large" color="#27B07D" />
-              <Text className="mt-3 text-sm text-white/80">Loading your conversations...</Text>
+            <View className="flex-1 px-5 mb-8 mt-4">
+              <View>
+                {[...Array(8)].map((_, i) => (
+                  <ConversationSkeleton key={i} />
+                ))}
+              </View>
             </View>
           ) : (
-            <View className="flex-1 px-5 mb-4 mt-4 ">
-              <FlatList
+            <View className="flex-1 px-5 mb-8 mt-4 ">
+              <FlashList
                 data={filteredConvos}
-                keyExtractor={(i) => i.id.toString()}
+                keyExtractor={(item: ConversationPreview) => item.id.toString()}
                 renderItem={renderItem}
                 showsVerticalScrollIndicator={false}
-                refreshing={refreshing}
                 onRefresh={async () => {
                   setRefreshing(true);
                   await loadConversations(false);
                   setRefreshing(false);
                 }}
+                refreshing={refreshing}
                 ListEmptyComponent={() => (
                   <View className="flex-1 items-center justify-center mt-14 px-10">
                     <Text className={` ${isDark ? 'text-white' : 'text-textMuted'} text-base mb-1`}>
@@ -372,6 +371,7 @@ const CustomerChatHome: React.FC = () => {
                     </Text>
                   </View>
                 )}
+                contentContainerStyle={{ paddingVertical: 4, paddingBottom }}
               />
             </View>
           )}

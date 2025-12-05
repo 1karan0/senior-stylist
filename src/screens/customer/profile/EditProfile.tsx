@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  TextInput,
-} from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
@@ -133,9 +125,7 @@ const EditProfile = () => {
     <GradientBackground>
       <View className="flex-1 px-5 pt-6 pb-20">
         {/* Header */}
-        <View
-          className={`mb-4 pb-4 border-b ${isDark ? 'border-commonGradientStop7' : 'border-[#DAE7E0]'}`}
-        >
+        <View className={`mb-4 pb-4`}>
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Image
@@ -191,7 +181,7 @@ const EditProfile = () => {
                 }}
                 activeOpacity={0.7}
                 className={`absolute bottom-0 right-0 bg-green-600 w-10 h-10 rounded-full 
-                items-center justify-center border-4 ${isDark ? 'dark:border-[#11211c]' : 'border-white'}  `}
+                items-center justify-center border-2 ${isDark ? 'dark:border-[#11211c]' : 'border-white'}  `}
               >
                 <Text className="text-white text-xl">+</Text>
               </TouchableOpacity>
@@ -206,16 +196,16 @@ const EditProfile = () => {
           <View
             className={`${
               isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'
-            } rounded-2xl p-4 border flex-col gap-4`}
+            } rounded-2xl p-4 border flex-col gap-3`}
           >
             <TextInputField
-              label="full name"
+              label="FULL NAME"
               value={watch('name')}
               onChangeText={(t) => setValue('name', t)}
             />
 
             <TextInputField
-              label="phone number"
+              label="PHONE NUMBER"
               keyboardType="phone-pad"
               value={watch('phone')}
               onChangeText={(t) => setValue('phone', t)}
@@ -228,7 +218,7 @@ const EditProfile = () => {
                   isDark ? 'text-white' : 'text-black'
                 }`}
               >
-                email
+                EMAIL
               </Text>
               <View
                 className={`border rounded-xl px-4 py-3 ${isDark ? 'bg-[#0A1410] border-commonGradientStop7' : 'bg-[#e4e4e4] border-[#DAE7E0]'}`}
@@ -242,7 +232,7 @@ const EditProfile = () => {
             </View>
           </View>
 
-          <View className="mt-8">
+          <View className="mt-5">
             <Button
               loading={editMutation.isPending}
               text="Save Changes"
@@ -251,7 +241,7 @@ const EditProfile = () => {
             />
           </View>
 
-          <View className="mt-5">
+          <View className="mt-3">
             <Button
               text="Cancel"
               variant="light"

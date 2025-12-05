@@ -5,9 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import GradientBackground from '@/common/components/GradientBackground';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { useTheme } from '@/contexts/ThemeContext';
 import LinearGradient from 'react-native-linear-gradient';
+import Button from '@/common/components/Button';
 
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
@@ -19,6 +21,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const { data: profile } = useGetProfile();
   const { logout } = useAuth();
   const { isDark } = useTheme();
+  const { paddingBottom } = useTabBarSafePadding();
 
   const [isCopied, setIsCopied] = useState(false);
   const scaleAnim = useState(new Animated.Value(1))[0];
@@ -62,27 +65,34 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       ]).start(() => setIsCopied(false));
     }
   };
+  const handleEditProfile = () => {
+    if (user) {
+      navigation.navigate('EditProfile', { profile: user });
+    }
+  };
 
   return (
     <GradientBackground>
-      <View className="flex-1 px-5 pt-6 pb-20">
+      <View className="flex-1 pb-10 ">
+        {/* Header */}
+        <View className="px-5 py-5">
+          <Text
+            className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+          >
+            Profile
+          </Text>
+        </View>
         <ScrollView
-          className=""
+          className="flex-1 px-5"
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom }}
         >
-          {/* ---------- Header ---------- */}
-          <View className="w-full flex-row justify-between items-center ">
-            <Text className={` ${isDark ? 'text-white' : 'text-black'} text-2xl font-semibold`}>
-              Profile
-            </Text>
-          </View>
-
           {/* ---------- Profile Card ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} mt-5 rounded-2xl p-4 border`}
+            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}  rounded-2xl p-4 border`}
           >
-            <View className="flex-row items-center gap-4">
+            <View className="flex-row items-center gap-4 mb-4">
               {/* Avatar */}
               <LinearGradient
                 colors={['#2CCB91', '#23A76F']}
@@ -125,18 +135,12 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 </LinearGradient>
               </View>
             </View>
-
-            {/* Edit Button */}
-            <TouchableOpacity
-              onPress={() => {
-                if (profile) {
-                  navigation.navigate('EditProfile', { profile });
-                }
-              }}
-              className={`mt-4 bg-[#DAE7E0] py-2 px-3 rounded-[10px]`}
-            >
-              <Text className="text-black text-center font-medium">Edit Profile</Text>
-            </TouchableOpacity>
+            <Button
+              text="Edit Profile"
+              variant="light"
+              onPress={handleEditProfile}
+              className={` bg-[#DAE7E0] rounded-[10px]`}
+            />
           </View>
 
           {/* ---------- Account Information ---------- */}
@@ -150,7 +154,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             </Text>
 
             {/* Email */}
-            <View className="flex-row items-start gap-3 mb-4">
+            <View className="flex-row items-start gap-3 mb-3">
               <Image source={require('@/assets/icons/green-email.png')} />
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
@@ -160,7 +164,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             </View>
 
             {/* Phone */}
-            <View className="flex-row items-start gap-3 mb-4">
+            <View className="flex-row items-start gap-3 mb-3">
               <Image source={require('@/assets/icons/green-phone.png')} />
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
@@ -202,9 +206,11 @@ const Profile: React.FC<Props> = ({ navigation }) => {
               Next billing date: 25 Dec 2025
             </Text>
 
-            <TouchableOpacity className={`mt-4 bg-[#DAE7E0] py-2 px-3 rounded-[10px]`}>
-              <Text className="text-black text-center font-medium">Manage Subscription</Text>
-            </TouchableOpacity>
+            <Button
+              text="Manage Subscription"
+              variant="light"
+              className={` bg-[#DAE7E0] rounded-[10px]`}
+            />
           </View>
 
           {/* ---------- Rewards ---------- */}

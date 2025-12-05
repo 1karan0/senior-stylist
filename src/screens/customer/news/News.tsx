@@ -14,6 +14,7 @@ import { useGetNewsArticles } from '@/api/user/news/useGetNewsArticles';
 import { useGetNewsCategories } from '@/api/user/news/useGetNewsCategories';
 import ArticleCard from './components/ArticleCard';
 import GradientBackground from '@/common/components/GradientBackground';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const NewsScreen = () => {
@@ -25,6 +26,7 @@ const NewsScreen = () => {
 
   const navigation = useNavigation<any>();
   const { isDark } = useTheme();
+  const { paddingBottom } = useTabBarSafePadding();
 
   const { mutateAsync: getArticles, isPending } = useGetNewsArticles();
   const { data: rawCategories = [] } = useGetNewsCategories();
@@ -56,7 +58,7 @@ const NewsScreen = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1 px-5 pt-6 pb-20">
+      <View className="flex-1 px-5 pt-6 mb-5">
         {/* Header */}
         <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
           News Feed
@@ -64,7 +66,7 @@ const NewsScreen = () => {
 
         {/* Search */}
         <View
-          className={`flex-row items-center border mt-5 px-3 rounded-xl ${
+          className={`flex-row items-center border mt-4 px-3 rounded-xl ${
             isDark
               ? 'bg-commonGradientStop6 border-commonGradientStop7'
               : 'bg-[#FAFAFA] border-[#E6E6E6]'
@@ -117,7 +119,7 @@ const NewsScreen = () => {
         <FlashList
           data={filtered}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingTop: 16 }}
+          contentContainerStyle={{ paddingTop: 20, paddingVertical: 4, paddingBottom }}
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => navigation.navigate('NewsDetail', { slug: item.slug })}
