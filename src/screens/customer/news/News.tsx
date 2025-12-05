@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
@@ -64,11 +65,16 @@ const NewsScreen = () => {
 
         {/* Search */}
         <View
-          className={`flex-row items-center border mt-5 px-3 rounded-xl ${
+          className={`flex-row items-center border mt-5 rounded-xl ${
             isDark
               ? 'bg-commonGradientStop6 border-commonGradientStop7'
               : 'bg-[#FAFAFA] border-[#E6E6E6]'
           }`}
+          style={{
+            paddingHorizontal: 12,
+            minHeight: Platform.OS === 'ios' ? 32 : undefined,
+            paddingVertical: Platform.OS === 'ios' ? 8 : 0,
+          }}
         >
           <Image
             source={require('../../../assets/icons/search-icon.png')}
@@ -80,6 +86,11 @@ const NewsScreen = () => {
             value={search}
             onChangeText={setSearch}
             className={`ml-2 flex-1 ${isDark ? 'text-white' : 'text-black'}`}
+            style={{
+              paddingVertical: Platform.OS === 'ios' ? 8 : 0,
+              fontSize: 15,
+              includeFontPadding: false,
+            }}
           />
         </View>
 

@@ -1,6 +1,7 @@
 // src/common/components/GradientBackground.tsx
 import React, { ReactNode } from 'react';
 import LinearGradient, { LinearGradientProps } from 'react-native-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface GradientBackgroundProps extends Omit<LinearGradientProps, 'colors'> {
@@ -33,7 +34,7 @@ const GradientBackground: React.FC<GradientBackgroundProps> = ({
 
   return (
     <LinearGradient colors={colors} style={[{ flex: 1 }, style]} {...rest}>
-      {children}
+      <SafeAreaView style={{ flex: 1 }}>{children}</SafeAreaView>
     </LinearGradient>
   );
 };

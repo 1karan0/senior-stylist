@@ -20,12 +20,16 @@ const Itemcard: React.FC<ItemProps> = ({ item, onPress }) => {
           colors={['#2CCB91', '#23A76F']}
           start={{ x: 0, y: 1 }}
           end={{ x: 1, y: 0 }}
-          style={{ borderRadius: 10 }}
-          className=" py-2 px-3"
+          style={{
+            borderRadius: 10,
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'row',
+          }}
         >
-          <Text className=" rounded-lg text-white text-xs font-semibold">
-            {item.category?.name}
-          </Text>
+          <Text className="text-white text-xs font-semibold">{item.category?.name}</Text>
         </LinearGradient>
       </View>
 
