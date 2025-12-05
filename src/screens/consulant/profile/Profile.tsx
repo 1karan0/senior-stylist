@@ -49,65 +49,72 @@ const Profile: React.FC = () => {
               {/* Avatar + Name + Badge + Theme Switch */}
               <View className="flex-row items-start">
                 {/* Avatar */}
-                {/* Avatar */}
                 <LinearGradient
                   colors={['#2CCB91', '#23A76F']}
                   start={{ x: 0, y: 1 }}
                   end={{ x: 1, y: 0 }}
                   style={{
-                    borderRadius: 100,
+                    borderRadius: 28,
                     height: 56,
                     width: 56,
-                    paddingHorizontal: 12,
-                    paddingVertical: 4,
                     justifyContent: 'center',
                     alignItems: 'center',
+                    overflow: 'hidden',
                   }}
                 >
-                  <View>
-                    {user?.profile_picture_url ? (
-                      <Image
-                        source={{ uri: user.profile_picture_url }}
-                        style={{
-                          height: 56,
-                          width: 56,
-                          borderRadius: 28,
-                        }}
-                      />
-                    ) : (
-                      <Text className="text-white text-xl">
-                        {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
-                      </Text>
-                    )}
-                  </View>
+                  {user?.profile_picture_url ? (
+                    <Image
+                      source={{ uri: user.profile_picture_url }}
+                      style={{
+                        height: 56,
+                        width: 56,
+                        borderRadius: 28,
+                      }}
+                    />
+                  ) : (
+                    <Text className="text-white text-xl font-urbanist-bold">
+                      {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
+                    </Text>
+                  )}
                 </LinearGradient>
 
                 {/* Name, Badge and Theme Switch */}
                 <View className="flex-1 ml-3">
                   <Text
-                    className={`text-2xl ml-1 font-urbanist-bold mb-2 ${
+                    className={`text-2xl font-urbanist-bold mb-2 ${
                       isDark ? 'text-white' : 'text-textDark'
                     }`}
                   >
                     {user?.name}
                   </Text>
 
-                  <LinearGradient
-                    colors={['#2CCB91', '#23A76F']}
-                    start={{ x: 0, y: 1 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      borderRadius: 10,
-                      height: 24,
-                      width: 96,
-                      paddingHorizontal: 12,
-                      marginTop: 4,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text className="text-white text-xs font-urbanist-bold">{user.role}</Text>
-                  </LinearGradient>
+                  <View style={{ alignSelf: 'flex-start' }}>
+                    <LinearGradient
+                      colors={['#2CCB91', '#23A76F']}
+                      start={{ x: 0, y: 1 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{
+                        borderRadius: 10,
+                        paddingVertical: 10,
+                        paddingHorizontal: 14,
+                        marginTop: 4,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: 28,
+                      }}
+                    >
+                      <Text
+                        className="text-white text-xs font-urbanist-bold"
+                        style={{
+                          textAlignVertical: 'center',
+                          includeFontPadding: false,
+                          lineHeight: 14,
+                        }}
+                      >
+                        {user?.role}
+                      </Text>
+                    </LinearGradient>
+                  </View>
                 </View>
               </View>
 

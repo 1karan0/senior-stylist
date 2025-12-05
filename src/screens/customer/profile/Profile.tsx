@@ -99,31 +99,28 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 start={{ x: 0, y: 1 }}
                 end={{ x: 1, y: 0 }}
                 style={{
-                  borderRadius: 100,
+                  borderRadius: 28,
                   height: 56,
                   width: 56,
-                  paddingHorizontal: 12,
-                  paddingVertical: 4,
                   justifyContent: 'center',
                   alignItems: 'center',
+                  overflow: 'hidden',
                 }}
               >
-                <View>
-                  {user?.profile_picture_url ? (
-                    <Image
-                      source={{ uri: user.profile_picture_url }}
-                      style={{
-                        height: 56,
-                        width: 56,
-                        borderRadius: 28,
-                      }}
-                    />
-                  ) : (
-                    <Text className="text-white text-xl">
-                      {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
-                    </Text>
-                  )}
-                </View>
+                {user?.profile_picture_url ? (
+                  <Image
+                    source={{ uri: user.profile_picture_url }}
+                    style={{
+                      height: 56,
+                      width: 56,
+                      borderRadius: 28,
+                    }}
+                  />
+                ) : (
+                  <Text className="text-white text-xl font-urbanist-bold">
+                    {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
+                  </Text>
+                )}
               </LinearGradient>
 
               {/* Name + Role */}
@@ -133,24 +130,33 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 >
                   {user?.name}
                 </Text>
-                <LinearGradient
-                  colors={['#2CCB91', '#23A76F']}
-                  start={{ x: 0, y: 1 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{
-                    borderRadius: 10,
-                    height: 24,
-                    width: 96,
-                    paddingHorizontal: 12,
-                    marginTop: 4,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text className={`text-white text-sm font-urbanist-bold `}>
-                    {user?.role || 'Member'}
-                  </Text>
-                </LinearGradient>
+                <View style={{ alignSelf: 'flex-start', marginTop: 4 }}>
+                  <LinearGradient
+                    colors={['#2CCB91', '#23A76F']}
+                    start={{ x: 0, y: 1 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      borderRadius: 10,
+                      paddingVertical: 10,
+                      paddingHorizontal: 14,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      minHeight: 28,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <Text
+                      className="text-white text-xs font-urbanist-bold"
+                      style={{
+                        textAlignVertical: 'center',
+                        includeFontPadding: false,
+                        lineHeight: 14,
+                      }}
+                    >
+                      {user?.role || 'Member'}
+                    </Text>
+                  </LinearGradient>
+                </View>
               </View>
             </View>
             <Button
@@ -238,8 +244,13 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             end={{ x: 1, y: 0 }}
             style={{
               borderRadius: 12,
-              padding: 16,
+              paddingTop: 16,
+              paddingBottom: 16,
+              paddingHorizontal: 16,
               marginTop: 20,
+              marginLeft: -20,
+              marginRight: -20,
+              width: '100%',
             }}
           >
             <View className=" flex-col gap-3">
@@ -307,17 +318,32 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                     end={{ x: 1, y: 0 }}
                     style={{
                       borderRadius: 12,
-                      padding: 12,
+                      width: 48,
+                      height: 48,
+                      justifyContent: 'center',
+                      alignItems: 'center',
                     }}
                   >
-                    <TouchableOpacity onPress={handleCopyCode}>
+                    <TouchableOpacity
+                      onPress={handleCopyCode}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}
+                    >
                       <Image
                         source={
                           isCopied
                             ? require('@/assets/icons/white-check.png')
                             : require('@/assets/icons/copy.png')
                         }
-                        className=""
+                        style={{
+                          width: 24,
+                          height: 24,
+                        }}
+                        resizeMode="contain"
                       />
                     </TouchableOpacity>
                   </LinearGradient>

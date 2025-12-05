@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import firestore from '@react-native-firebase/firestore';
 
@@ -308,11 +308,16 @@ const CustomerChatHome: React.FC = () => {
 
           {/* Search */}
           <View
-            className={`flex-row items-center border mt-4 px-3 rounded-xl ${
+            className={`flex-row items-center border mt-4 rounded-xl ${
               isDark
                 ? 'bg-commonGradientStop6 border-commonGradientStop7'
                 : 'bg-[#FAFAFA] border-[#E6E6E6]'
             }`}
+            style={{
+              paddingHorizontal: 12,
+              minHeight: Platform.OS === 'ios' ? 32 : undefined,
+              paddingVertical: Platform.OS === 'ios' ? 8 : 0,
+            }}
           >
             <Image
               source={require('../../../assets/icons/search-icon.png')}
@@ -324,6 +329,11 @@ const CustomerChatHome: React.FC = () => {
               value={searchQuery}
               onChangeText={setSearchQuery}
               className={`ml-2 flex-1 ${isDark ? 'text-white' : 'text-black'}`}
+              style={{
+                paddingVertical: Platform.OS === 'ios' ? 8 : 0,
+                fontSize: 15,
+                includeFontPadding: false,
+              }}
             />
           </View>
           <Text className={` mt-2 text-[11px] ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
