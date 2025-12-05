@@ -12,7 +12,6 @@ import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
 import LinearGradient from 'react-native-linear-gradient';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BASE_URL } from '@/config';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -137,224 +136,222 @@ export default function SignupScreen({ navigation, route }: any) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <GradientBackground>
-            <Toast
-              visible={toast.visible}
-              message={toast.message}
-              type={toast.type}
-              onClose={() => setToast({ ...toast, visible: false })}
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <GradientBackground>
+          <Toast
+            visible={toast.visible}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast({ ...toast, visible: false })}
+          />
+
+          <View className="flex-1 px-6">
+            {/* Logo + Headings */}
+            <View className="items-center mt-14 mb-10">
+              <Image
+                source={
+                  isDark
+                    ? require('../../assets/icons/dark-logo.png')
+                    : require('../../assets/icons/colored_logo.png')
+                }
+                className="w-[90px] h-[90px]"
+                resizeMode="contain"
+              />
+
+              <Text
+                className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}
+              >
+                Create Account
+              </Text>
+
+              <Text
+                className={`font-normal text-[14px] ${isDark ? 'text-textSecondary' : 'text-textMuted'}  mt-1`}
+              >
+                Join us today
+              </Text>
+            </View>
+
+            {/* Name */}
+            <Controller
+              control={control}
+              name="name"
+              rules={{
+                required: 'Full name is required',
+                minLength: { value: 2, message: 'Name must be at least 2 characters' },
+              }}
+              render={({ field: { onChange, value } }) => (
+                <TextInputField
+                  label="Full Name"
+                  placeholder="Enter your Name"
+                  icon={require('../../assets/icons/user.png')}
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.name?.message as string}
+                />
+              )}
             />
 
-            <View className="flex-1 px-6">
-              {/* Logo + Headings */}
-              <View className="items-center mt-14 mb-10">
-                <Image
-                  source={
-                    isDark
-                      ? require('../../assets/icons/dark-logo.png')
-                      : require('../../assets/icons/colored_logo.png')
-                  }
-                  className="w-[90px] h-[90px]"
-                  resizeMode="contain"
-                />
-
-                <Text
-                  className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}
-                >
-                  Create Account
-                </Text>
-
-                <Text
-                  className={`font-normal text-[14px] ${isDark ? 'text-textSecondary' : 'text-textMuted'}  mt-1`}
-                >
-                  Join us today
-                </Text>
-              </View>
-
-              {/* Name */}
-              <Controller
-                control={control}
-                name="name"
-                rules={{
-                  required: 'Full name is required',
-                  minLength: { value: 2, message: 'Name must be at least 2 characters' },
-                }}
-                render={({ field: { onChange, value } }) => (
-                  <TextInputField
-                    label="Full Name"
-                    placeholder="Enter your Name"
-                    icon={require('../../assets/icons/user.png')}
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.name?.message as string}
-                  />
-                )}
-              />
-
-              {/* Email */}
-              <Controller
-                control={control}
-                name="email"
-                rules={{
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Please enter a valid email address',
-                  },
-                }}
-                render={({ field: { onChange, value } }) => (
-                  <TextInputField
-                    label="Email Address"
-                    placeholder="Enter your email"
-                    icon={require('../../assets/icons/email.png')}
-                    value={value}
-                    onChangeText={onChange}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    error={errors.email?.message as string}
-                  />
-                )}
-              />
-
-              {/* Phone */}
-              <Controller
-                control={control}
-                name="phone"
-                rules={{
-                  required: 'Phone number is required',
-                  pattern: {
-                    value: /^[0-9]{10,15}$/,
-                    message: 'Please enter a valid phone number (10-15 digits)',
-                  },
-                }}
-                render={({ field: { onChange, value } }) => (
-                  <TextInputField
-                    label="Phone Number"
-                    placeholder="Enter your phone number"
-                    icon={require('../../assets/icons/phone.png')}
-                    keyboardType="number-pad"
-                    value={value}
-                    onChangeText={onChange}
-                    error={errors.phone?.message as string}
-                  />
-                )}
-              />
-
-              {/* Password */}
-              <Controller
-                control={control}
-                name="password"
-                rules={{
-                  required: 'Password is required',
-                  minLength: { value: 6, message: 'Password must be at least 6 characters' },
-                }}
-                render={({ field: { onChange, value } }) => (
-                  <TextInputField
-                    label="Password"
-                    placeholder="Enter your password"
-                    icon={require('../../assets/icons/lock.png')}
-                    value={value}
-                    isPassword={true}
-                    onChangeText={onChange}
-                    error={errors.password?.message as string}
-                  />
-                )}
-              />
-
-              {/* Referral: SHOW ONLY WHEN NOT A CONSULTANT */}
-              {user !== 'consultant' && (
-                <Controller
-                  control={control}
-                  name="referral"
-                  rules={{}}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInputField
-                      label="Referral Code (optional)"
-                      placeholder="Enter referral code (optional)"
-                      // icon={require('../../assets/icons/tag.png')}
-                      value={value}
-                      onChangeText={onChange}
-                      error={errors.referral?.message as string}
-                    />
-                  )}
+            {/* Email */}
+            <Controller
+              control={control}
+              name="email"
+              rules={{
+                required: 'Email is required',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Please enter a valid email address',
+                },
+              }}
+              render={({ field: { onChange, value } }) => (
+                <TextInputField
+                  label="Email Address"
+                  placeholder="Enter your email"
+                  icon={require('../../assets/icons/email.png')}
+                  value={value}
+                  onChangeText={onChange}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  error={errors.email?.message as string}
                 />
               )}
+            />
 
-              {/* CV upload: only for consultant */}
-              {user === 'consultant' && (
-                <View className="mb-5 mt-2">
+            {/* Phone */}
+            <Controller
+              control={control}
+              name="phone"
+              rules={{
+                required: 'Phone number is required',
+                pattern: {
+                  value: /^[0-9]{10,15}$/,
+                  message: 'Please enter a valid phone number (10-15 digits)',
+                },
+              }}
+              render={({ field: { onChange, value } }) => (
+                <TextInputField
+                  label="Phone Number"
+                  placeholder="Enter your phone number"
+                  icon={require('../../assets/icons/phone.png')}
+                  keyboardType="number-pad"
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.phone?.message as string}
+                />
+              )}
+            />
+
+            {/* Password */}
+            <Controller
+              control={control}
+              name="password"
+              rules={{
+                required: 'Password is required',
+                minLength: { value: 6, message: 'Password must be at least 6 characters' },
+              }}
+              render={({ field: { onChange, value } }) => (
+                <TextInputField
+                  label="Password"
+                  placeholder="Enter your password"
+                  icon={require('../../assets/icons/lock.png')}
+                  value={value}
+                  isPassword={true}
+                  onChangeText={onChange}
+                  error={errors.password?.message as string}
+                />
+              )}
+            />
+
+            {/* Referral: SHOW ONLY WHEN NOT A CONSULTANT */}
+            {user !== 'consultant' && (
+              <Controller
+                control={control}
+                name="referral"
+                rules={{}}
+                render={({ field: { onChange, value } }) => (
+                  <TextInputField
+                    label="Referral Code (optional)"
+                    placeholder="Enter referral code (optional)"
+                    // icon={require('../../assets/icons/tag.png')}
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.referral?.message as string}
+                  />
+                )}
+              />
+            )}
+
+            {/* CV upload: only for consultant */}
+            {user === 'consultant' && (
+              <View className="mb-5 mt-2">
+                <Text
+                  className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                >
+                  Upload CV <Text className="text-red-500">*</Text>
+                </Text>
+
+                <Pressable
+                  onPress={pickDocument}
+                  className={`border border-dashed ${
+                    cvError
+                      ? 'border-red-500 bg-red-50'
+                      : isDark
+                        ? 'bg-commonGradientStop6 border-commonGradientStop7'
+                        : 'bg-[#F5F9F7] border-textPrimary'
+                  } rounded-lg h-[120px] justify-center items-center`}
+                >
+                  <Image
+                    source={require('../../assets/icons/upload.png')}
+                    className="w-10 h-10 mb-2"
+                  />
+
                   <Text
-                    className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                    className={`${isDark ? 'text-white' : 'text-textDark'} font-medium text-center px-4`}
                   >
-                    Upload CV <Text className="text-red-500">*</Text>
+                    {cvFile ? cvFile.name : 'Upload your CV'}
                   </Text>
 
-                  <Pressable
-                    onPress={pickDocument}
-                    className={`border border-dashed ${
-                      cvError
-                        ? 'border-red-500 bg-red-50'
-                        : isDark
-                          ? 'bg-commonGradientStop6 border-commonGradientStop7'
-                          : 'bg-[#F5F9F7] border-textPrimary'
-                    } rounded-lg h-[120px] justify-center items-center`}
-                  >
-                    <Image
-                      source={require('../../assets/icons/upload.png')}
-                      className="w-10 h-10 mb-2"
-                    />
-
-                    <Text
-                      className={`${isDark ? 'text-white' : 'text-textDark'} font-medium text-center px-4`}
-                    >
-                      {cvFile ? cvFile.name : 'Upload your CV'}
-                    </Text>
-
-                    <Text className="text-textMuted text-[12px] mt-1">.pdf , .docx , .doc</Text>
-                  </Pressable>
-
-                  {cvError && <Text className="text-red-500 text-[12px] mt-2 ml-1">{cvError}</Text>}
-                </View>
-              )}
-
-              {/* Sign Up Button */}
-              <Pressable
-                onPress={handleSubmit(handleSignup)}
-                className="rounded-lg overflow-hidden mb-6 mt-3"
-                disabled={loading}
-              >
-                <LinearGradient
-                  colors={loading ? ['#94A3B8', '#64748B'] : ['#2CCB91', '#23A76F']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  className="h-[50px] justify-center items-center"
-                >
-                  {loading ? (
-                    <ActivityIndicator color="white" />
-                  ) : (
-                    <Text className="text-white font-bold text-[16px]">Create Account</Text>
-                  )}
-                </LinearGradient>
-              </Pressable>
-
-              {/* Sign in link */}
-              <View className="text-center mb-5 flex flex-row justify-center">
-                <Text
-                  className={`text-center ${isDark ? 'text-textSecondary' : 'text-[#64748B]'} font-normal text-[14px]`}
-                >
-                  Already have an account?{' '}
-                </Text>
-                <Pressable onPress={() => navigation.navigate('Login')}>
-                  <Text className="text-textPrimary font-semibold">Sign In</Text>
+                  <Text className="text-textMuted text-[12px] mt-1">.pdf , .docx , .doc</Text>
                 </Pressable>
+
+                {cvError && <Text className="text-red-500 text-[12px] mt-2 ml-1">{cvError}</Text>}
               </View>
+            )}
+
+            {/* Sign Up Button */}
+            <Pressable
+              onPress={handleSubmit(handleSignup)}
+              className="rounded-lg overflow-hidden mb-6 mt-3"
+              disabled={loading}
+            >
+              <LinearGradient
+                colors={loading ? ['#94A3B8', '#64748B'] : ['#2CCB91', '#23A76F']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                className="h-[50px] justify-center items-center"
+              >
+                {loading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="text-white font-bold text-[16px]">Create Account</Text>
+                )}
+              </LinearGradient>
+            </Pressable>
+
+            {/* Sign in link */}
+            <View className="text-center mb-5 flex flex-row justify-center">
+              <Text
+                className={`text-center ${isDark ? 'text-textSecondary' : 'text-[#64748B]'} font-normal text-[14px]`}
+              >
+                Already have an account?{' '}
+              </Text>
+              <Pressable onPress={() => navigation.navigate('Login')}>
+                <Text className="text-textPrimary font-semibold">Sign In</Text>
+              </Pressable>
             </View>
-          </GradientBackground>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </View>
+        </GradientBackground>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

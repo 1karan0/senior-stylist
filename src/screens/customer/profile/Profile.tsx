@@ -98,14 +98,25 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 colors={['#2CCB91', '#23A76F']}
                 start={{ x: 0, y: 1 }}
                 end={{ x: 1, y: 0 }}
-                style={{ borderRadius: 100 }}
-                className=" h-14 justify-center items-center w-14 px-3 py-1 "
+                style={{
+                  borderRadius: 100,
+                  height: 56,
+                  width: 56,
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
               >
                 <View>
                   {user?.profile_picture_url ? (
                     <Image
                       source={{ uri: user.profile_picture_url }}
-                      className="h-14 w-14 rounded-full"
+                      style={{
+                        height: 56,
+                        width: 56,
+                        borderRadius: 28,
+                      }}
                     />
                   ) : (
                     <Text className="text-white text-xl">
@@ -126,8 +137,15 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   colors={['#2CCB91', '#23A76F']}
                   start={{ x: 0, y: 1 }}
                   end={{ x: 1, y: 0 }}
-                  style={{ borderRadius: 10 }}
-                  className=" h-6 justify-center items-center text-center  mt-1 w-24 px-3 "
+                  style={{
+                    borderRadius: 10,
+                    height: 24,
+                    width: 96,
+                    paddingHorizontal: 12,
+                    marginTop: 4,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
                 >
                   <Text className={`text-white text-sm font-urbanist-bold `}>
                     {user?.role || 'Member'}
@@ -218,8 +236,11 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             colors={['#2CCB91', '#23A76F']}
             start={{ x: 0, y: 1 }}
             end={{ x: 1, y: 0 }}
-            style={{ borderRadius: 12 }}
-            className=" p-4 mt-5 "
+            style={{
+              borderRadius: 12,
+              padding: 16,
+              marginTop: 20,
+            }}
           >
             <View className=" flex-col gap-3">
               <View className="flex-row gap-2">
@@ -284,8 +305,10 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                     colors={['#2CCB91', '#23A76F']}
                     start={{ x: 0, y: 1 }}
                     end={{ x: 1, y: 0 }}
-                    style={{ borderRadius: 12 }}
-                    className=" p-3 "
+                    style={{
+                      borderRadius: 12,
+                      padding: 12,
+                    }}
                   >
                     <TouchableOpacity onPress={handleCopyCode}>
                       <Image

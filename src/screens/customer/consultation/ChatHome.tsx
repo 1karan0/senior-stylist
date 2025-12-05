@@ -1,14 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import firestore from '@react-native-firebase/firestore';
 
 import { useNavigation } from '@react-navigation/native';
@@ -296,7 +288,7 @@ const CustomerChatHome: React.FC = () => {
 
   return (
     <GradientBackground className="flex-1">
-      <View className="flex-1 pb-20">
+      <View className="flex-1 ">
         {/* HEADER */}
         <View className="px-5 pt-6">
           <View className="flex-row justify-between items-center ">
@@ -316,16 +308,11 @@ const CustomerChatHome: React.FC = () => {
 
           {/* Search */}
           <View
-            className={`flex-row items-center border mt-5 rounded-xl ${
+            className={`flex-row items-center border mt-4 px-3 rounded-xl ${
               isDark
                 ? 'bg-commonGradientStop6 border-commonGradientStop7'
                 : 'bg-[#FAFAFA] border-[#E6E6E6]'
             }`}
-            style={{
-              paddingHorizontal: 12,
-              minHeight: Platform.OS === 'ios' ? 36 : undefined,
-              paddingVertical: Platform.OS === 'ios' ? 8 : 0,
-            }}
           >
             <Image
               source={require('../../../assets/icons/search-icon.png')}
@@ -337,11 +324,6 @@ const CustomerChatHome: React.FC = () => {
               value={searchQuery}
               onChangeText={setSearchQuery}
               className={`ml-2 flex-1 ${isDark ? 'text-white' : 'text-black'}`}
-              style={{
-                paddingVertical: Platform.OS === 'ios' ? 8 : 0,
-                fontSize: 15,
-                includeFontPadding: false,
-              }}
             />
           </View>
           <Text className={` mt-2 text-[11px] ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
@@ -353,23 +335,26 @@ const CustomerChatHome: React.FC = () => {
 
         {/* LIST */}
         {loading && consultations.length === 0 ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#27B07D" />
-            <Text className="mt-3 text-sm text-white/80">Loading your conversations...</Text>
+          <View className="flex-1 px-5 mb-8 mt-4">
+            <View>
+              {[...Array(8)].map((_, i) => (
+                <ConversationSkeleton key={i} />
+              ))}
+            </View>
           </View>
         ) : (
-          <View className="flex-1 px-5 mb-4 mt-4 ">
-            <FlatList
+          <View className="flex-1 px-5 mb-8 mt-4 ">
+            <FlashList
               data={filteredConvos}
-              keyExtractor={(i) => i.id.toString()}
+              keyExtractor={(item: ConversationPreview) => item.id.toString()}
               renderItem={renderItem}
               showsVerticalScrollIndicator={false}
-              refreshing={refreshing}
               onRefresh={async () => {
                 setRefreshing(true);
                 await loadConversations(false);
                 setRefreshing(false);
               }}
+              refreshing={refreshing}
               ListEmptyComponent={() => (
                 <View className="flex-1 items-center justify-center mt-14 px-10">
                   <Text className={` ${isDark ? 'text-white' : 'text-textMuted'} text-base mb-1`}>
@@ -382,6 +367,7 @@ const CustomerChatHome: React.FC = () => {
                   </Text>
                 </View>
               )}
+              contentContainerStyle={{ paddingVertical: 4, paddingBottom }}
             />
           </View>
         )}

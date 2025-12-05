@@ -80,7 +80,7 @@ const OnboardingScreen = ({ navigation }: any) => {
                 text="Skip"
                 variant="light"
                 onPress={() => navigation.replace('Login')}
-                className={`w-40 ${isDark ? 'bg-[#0E1B16] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'} rounded-2xl border`}
+                className={`w-40 ${isDark ? 'bg-[#0E1B16] border-[#273F37]' : 'bg-[#F5F9F7] border-[#DAE7E0]'} rounded-2xl border`}
                 textClassName={`${isDark ? 'text-white' : 'text-[#162721]'} text-base font-urbanist-bold`}
               />
             )}
@@ -90,7 +90,6 @@ const OnboardingScreen = ({ navigation }: any) => {
               variant="gradient"
               onPress={goNext}
               className={` ${page === onboardData.length - 1 ? 'w-80' : 'w-40'} rounded-2xl`}
-              textClassName="text-base font-bold"
             />
           </View>
         </GradientBackground>
