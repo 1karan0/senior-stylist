@@ -51,15 +51,18 @@ export const Button: React.FC<ButtonProps> = ({
       activeOpacity={0.8}
       onPress={onPress}
       disabled={effectiveDisabled}
-      className={`${isGradient ? '' : nonGradientDefaultContainer} ${effectiveDisabled ? nonGradientDisabledContainer : ''} ${className}`}
+      className={`${isGradient ? className : `${nonGradientDefaultContainer} ${className}`.trim()} ${effectiveDisabled ? nonGradientDisabledContainer : ''}`.trim()}
     >
       {isGradient ? (
         <LinearGradient
           colors={gradientColors}
-          className={`py-3 px-4 rounded-[10px] ${className}`}
+          className="py-3 px-4 rounded-[10px]"
           style={{ borderRadius: 10 }}
         >
-          <View className="flex-row items-center justify-center gap-2">
+          <View
+            className="flex-row items-center justify-center gap-2 py-2"
+            style={{ paddingVertical: 12 }}
+          >
             {loading ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
@@ -76,10 +79,7 @@ export const Button: React.FC<ButtonProps> = ({
         </LinearGradient>
       ) : (
         // Light variant OR Disabled (render using TouchableOpacity wrapper above)
-        <View
-          className={`py-2.5 px-4 ${className} border border-[#DAE7E0] rounded-[10px]`}
-          style={{ borderRadius: 10 }}
-        >
+        <View className={`py-2.5 px-4 border border-[#DAE7E0]`} style={{ borderRadius: 12 }}>
           <View className="flex-row items-center justify-center gap-2">
             {loading ? (
               <ActivityIndicator size="small" color="#000000" />

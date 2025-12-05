@@ -45,12 +45,13 @@ const ConsultantTabNavigator: React.FC = () => {
       screenOptions={{
         tabBarActiveTintColor: '#27B07D',
         tabBarInactiveTintColor: '#658176',
+        tabBarShowLabel: true,
 
         tabBarStyle: {
           position: 'absolute',
           bottom: bottomOffset,
           marginHorizontal: 10,
-          height: 62,
+          height: Platform.OS === 'ios' ? 70 : 62,
           borderRadius: 40,
           backgroundColor: isDark ? '#0E1B16' : 'rgba(255,255,255,0.95)',
           borderWidth: 1,
@@ -61,24 +62,25 @@ const ConsultantTabNavigator: React.FC = () => {
           shadowOpacity: 0.12,
           shadowRadius: 8,
           paddingHorizontal: 8,
-          paddingVertical: 6,
+          paddingTop: Platform.OS === 'ios' ? 6 : 6,
+          paddingBottom: Platform.OS === 'ios' ? 8 : 6,
         },
 
         tabBarItemStyle: {
-          flex: 1,
-          marginHorizontal: 6,
-          paddingTop: 6,
-          paddingBottom: 6,
           alignItems: 'center',
           justifyContent: 'center',
+          paddingHorizontal: Platform.OS === 'ios' ? 4 : 0,
+          paddingTop: Platform.OS === 'ios' ? 2 : 6,
+          paddingBottom: Platform.OS === 'ios' ? 4 : 6,
         },
 
         tabBarLabelStyle: {
           fontSize: 12,
           fontFamily: 'Poppins-Medium',
-          marginTop: 1,
-          marginBottom: 3,
-          lineHeight: 18,
+          marginTop: Platform.OS === 'ios' ? 4 : 1,
+          marginBottom: Platform.OS === 'ios' ? 0 : 3,
+          lineHeight: Platform.OS === 'ios' ? 16 : 18,
+          includeFontPadding: false,
         },
 
         headerShown: false,

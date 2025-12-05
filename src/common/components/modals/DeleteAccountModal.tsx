@@ -52,9 +52,12 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
         {/* Buttons */}
         <View className="w-full space-y-3">
           {/* Delete Button */}
-          <View className="mb-3">
-            <Button text="Yes, Delete Account" variant="gradient" onPress={onConfirm} />
-          </View>
+          <Button
+            text="Yes, Delete Account"
+            variant="gradient"
+            onPress={onConfirm}
+            className="mb-3"
+          />
 
           {/* Cancel Button */}
           <Button
