@@ -7,6 +7,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useVerifyForgotPassOtp } from '@/api/auth/useverifyForgotPassOtp';
 import Toast from '@/common/components/Toast';
+import { Button } from '@/common/components/Button';
 
 export default function OtpVerificationScreen({ navigation, route }: any) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -210,46 +211,24 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
       </View>
 
       {/* Verify */}
-      <Pressable
-        disabled={!isOtpComplete || loading}
+      <Button
+        text="Verify"
         onPress={handleVerify}
-        className="w-full rounded-xl overflow-hidden mb-4"
-      >
-        {isOtpComplete ? (
-          <LinearGradient
-            colors={loading ? ['#94A3B8', '#64748B'] : ['#2CCB91', '#23A76F']}
-            start={{ x: 0, y: 1 }}
-            end={{ x: 1, y: 0 }}
-            className="h-[50px] rounded-xl justify-center items-center"
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text className="text-white font-bold text-[16px]">Verify</Text>
-            )}
-          </LinearGradient>
-        ) : (
-          <View
-            className={`h-[50px] rounded-xl justify-center items-center  ${
-              isDark ? 'bg-textSecondary' : 'bg-commonGradientStop11'
-            }`}
-          >
-            <Text className="text-white font-bold text-[16px]">Verify</Text>
-          </View>
-        )}
-      </Pressable>
+        disabled={!isOtpComplete}
+        loading={loading}
+        variant="gradient"
+        className="w-full h-[50px] justify-center items-center mb-4"
+        textClassName="text-[16px]"
+      />
 
       {/* Go Back */}
-      <Pressable
+      <Button
+        text="Go Back"
         onPress={() => navigation.goBack()}
-        className={`w-full h-[50px] rounded-xl border  ${
-          isDark ? 'bg-commonGradientStop6 border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'
-        } justify-center items-center`}
-      >
-        <Text className={`text-[15px]  ${isDark ? 'text-white' : 'text-textDark'} font-bold`}>
-          Go Back
-        </Text>
-      </Pressable>
+        variant="light"
+        className="w-full h-[50px] justify-center items-center"
+        textClassName="text-[15px]"
+      />
     </GradientBackground>
   );
 }

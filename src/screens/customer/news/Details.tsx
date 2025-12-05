@@ -67,107 +67,105 @@ const Details: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <GradientBackground style={{ flex: 1 }}>
-        <View className="flex-1 px-5 pt-6">
-          {/* Top Bar */}
-          <View className="flex-row justify-between items-center mb-5 ">
-            <TouchableOpacity onPress={() => navigation.goBack()} className="">
-              <Image
-                source={
-                  isDark
-                    ? require('@/assets/icons/green-back.png')
-                    : require('@/assets/icons/back.png')
-                }
-              />
-            </TouchableOpacity>
+    <GradientBackground style={{ flex: 1 }}>
+      <View className="flex-1 px-5 pt-6">
+        {/* Top Bar */}
+        <View className="flex-row justify-between items-center mb-5 ">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="">
+            <Image
+              source={
+                isDark
+                  ? require('@/assets/icons/green-back.png')
+                  : require('@/assets/icons/back.png')
+              }
+            />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={{
+            paddingBottom: 120,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Title */}
+          <Text
+            className={`text-xl font-poppins-semibold  ${isDark ? 'text-white' : 'text-textDark'} mb-2 leading-snug`}
+          >
+            {article.title}
+          </Text>
+
+          {/* Info Row */}
+          <View className="flex-row items-center gap-2 mb-1">
+            <Image source={require('@/assets/icons/green-user.png')} className="w-5 h-5" />
+            <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} `}>
+              {article.author}
+            </Text>
           </View>
 
-          <ScrollView
-            contentContainerStyle={{
-              paddingBottom: 120,
-            }}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Title */}
-            <Text
-              className={`text-xl font-poppins-semibold  ${isDark ? 'text-white' : 'text-textDark'} mb-2 leading-snug`}
-            >
-              {article.title}
-            </Text>
-
-            {/* Info Row */}
-            <View className="flex-row items-center gap-2 mb-1">
-              <Image source={require('@/assets/icons/green-user.png')} className="w-5 h-5" />
+          <View className="flex-row gap-4">
+            <View className="flex-row items-center gap-2 mb-4">
+              <Image source={require('@/assets/icons/calendar.png')} className="w-5 h-5" />
               <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} `}>
-                {article.author}
+                {article.published_date}
               </Text>
             </View>
-
-            <View className="flex-row gap-4">
-              <View className="flex-row items-center gap-2 mb-4">
-                <Image source={require('@/assets/icons/calendar.png')} className="w-5 h-5" />
-                <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} `}>
-                  {article.published_date}
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-2 mb-4">
-                <Image source={require('@/assets/icons/clock.png')} className="w-5 h-5" />
-                <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} `}>
-                  {formatRelativeTime(article.created_at)}
-                </Text>
-              </View>
+            <View className="flex-row items-center gap-2 mb-4">
+              <Image source={require('@/assets/icons/clock.png')} className="w-5 h-5" />
+              <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} `}>
+                {formatRelativeTime(article.created_at)}
+              </Text>
             </View>
+          </View>
 
-            {/* Image + Tag */}
-            <View className="relative mb-6">
-              <Image source={{ uri: article.image_url }} className="w-full h-48 rounded-md" />
+          {/* Image + Tag */}
+          <View className="relative mb-6">
+            <Image source={{ uri: article.image_url }} className="w-full h-48 rounded-md" />
 
-              <View className="absolute top-3 left-3">
-                <LinearGradient
-                  colors={['#2CCB91', '#23A76F']}
-                  start={{ x: 0, y: 1 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ borderRadius: 10 }}
-                  className="px-4 py-1"
-                >
-                  <Text className="text-white text-sm font-bold">{article.category?.name}</Text>
-                </LinearGradient>
-              </View>
+            <View className="absolute top-3 left-3">
+              <LinearGradient
+                colors={['#2CCB91', '#23A76F']}
+                start={{ x: 0, y: 1 }}
+                end={{ x: 1, y: 0 }}
+                style={{ borderRadius: 10 }}
+                className="px-4 py-1"
+              >
+                <Text className="text-white text-sm font-bold">{article.category?.name}</Text>
+              </LinearGradient>
             </View>
+          </View>
 
-            {/* Excerpt */}
-            <Text
-              className={`text-base ${isDark ? 'text-textSecondary' : 'text-gray-700'}  leading-relaxed mb-4`}
-            >
-              {article.excerpt}
-            </Text>
+          {/* Excerpt */}
+          <Text
+            className={`text-base ${isDark ? 'text-textSecondary' : 'text-gray-700'}  leading-relaxed mb-4`}
+          >
+            {article.excerpt}
+          </Text>
 
-            {/* 🔥 Render Full HTML Body */}
-            <View className="mb-10">
-              <RenderHTML
-                contentWidth={width}
-                source={{ html: article.body }}
-                baseStyle={{
-                  color: isDark ? '#8AA897' : '#162721',
-                  fontSize: 16,
-                  lineHeight: 22,
-                }}
-                tagsStyles={{
-                  h2: {
-                    fontSize: 20,
-                    fontWeight: '700',
-                    color: isDark ? '#FFFFFF' : '#162721',
-                    marginTop: 16,
-                    marginBottom: 2,
-                  },
-                }}
-              />
-            </View>
-          </ScrollView>
-        </View>
-      </GradientBackground>
-    </SafeAreaView>
+          {/* 🔥 Render Full HTML Body */}
+          <View className="mb-10">
+            <RenderHTML
+              contentWidth={width}
+              source={{ html: article.body }}
+              baseStyle={{
+                color: isDark ? '#8AA897' : '#162721',
+                fontSize: 16,
+                lineHeight: 22,
+              }}
+              tagsStyles={{
+                h2: {
+                  fontSize: 20,
+                  fontWeight: '700',
+                  color: isDark ? '#FFFFFF' : '#162721',
+                  marginTop: 16,
+                  marginBottom: 2,
+                },
+              }}
+            />
+          </View>
+        </ScrollView>
+      </View>
+    </GradientBackground>
   );
 };
 

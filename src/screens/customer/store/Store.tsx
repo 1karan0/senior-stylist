@@ -75,7 +75,7 @@ const StoreScreen = () => {
           }`}
           style={{
             paddingHorizontal: 12,
-            minHeight: Platform.OS === 'ios' ? 36 : undefined,
+            minHeight: Platform.OS === 'ios' ? 36 : 48,
             paddingVertical: Platform.OS === 'ios' ? 8 : 0,
           }}
         >

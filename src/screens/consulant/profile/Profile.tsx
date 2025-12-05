@@ -11,16 +11,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const Profile: React.FC = () => {
-  const { theme, setTheme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { logout } = useAuth();
   const navigation = useNavigation<any>();
   const { data: profile } = useGetProfile();
 
   const user = profile as any;
-
-  const toggleTheme = () => {
-    setTheme(isDark ? 'light' : 'dark');
-  };
 
   const { paddingBottom } = useTabBarSafePadding();
 
@@ -58,14 +54,25 @@ const Profile: React.FC = () => {
                   colors={['#2CCB91', '#23A76F']}
                   start={{ x: 0, y: 1 }}
                   end={{ x: 1, y: 0 }}
-                  style={{ borderRadius: 100 }}
-                  className=" h-14 justify-center items-center w-14 px-3 py-1 mr-4"
+                  style={{
+                    borderRadius: 100,
+                    height: 56,
+                    width: 56,
+                    paddingHorizontal: 12,
+                    paddingVertical: 4,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
                 >
                   <View>
                     {user?.profile_picture_url ? (
                       <Image
                         source={{ uri: user.profile_picture_url }}
-                        className="h-14 w-14 rounded-full"
+                        style={{
+                          height: 56,
+                          width: 56,
+                          borderRadius: 28,
+                        }}
                       />
                     ) : (
                       <Text className="text-white text-xl">
@@ -76,9 +83,9 @@ const Profile: React.FC = () => {
                 </LinearGradient>
 
                 {/* Name, Badge and Theme Switch */}
-                <View className="flex-1">
+                <View className="flex-1 ml-3">
                   <Text
-                    className={`text-2xl font-urbanist-bold mb-2 ${
+                    className={`text-2xl ml-1 font-urbanist-bold mb-2 ${
                       isDark ? 'text-white' : 'text-textDark'
                     }`}
                   >
@@ -86,25 +93,21 @@ const Profile: React.FC = () => {
                   </Text>
 
                   <LinearGradient
-                    colors={['#27B07D', '#36D399']}
-                    style={{ borderRadius: 9999 }}
-                    className="px-4 py-1 mb-3 self-start"
+                    colors={['#2CCB91', '#23A76F']}
+                    start={{ x: 0, y: 1 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      borderRadius: 10,
+                      height: 24,
+                      width: 96,
+                      paddingHorizontal: 12,
+                      marginTop: 4,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
                   >
-                    <Text className="text-white text-xs font-urbanist-bold">Expert Consultant</Text>
+                    <Text className="text-white text-xs font-urbanist-bold">{user.role}</Text>
                   </LinearGradient>
-
-                  {/* Inline small row for theme toggle */}
-                  {/* <View className="flex-row items-center gap-3">
-                    <Text className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                      {isDark ? 'Dark' : 'Light'}
-                    </Text>
-                    <Switch
-                      value={isDark}
-                      onValueChange={toggleTheme}
-                      trackColor={{ false: '#d1d5db', true: '#10b981' }}
-                      thumbColor={'#ffffff'}
-                    />
-                  </View> */}
                 </View>
               </View>
 
@@ -146,7 +149,7 @@ const Profile: React.FC = () => {
                 <Text
                   className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
                 >
-                  Member since {user?.created_at?.split('T')[0]}
+                  {user?.phone}
                 </Text>
               </View>
 
@@ -156,7 +159,7 @@ const Profile: React.FC = () => {
                 <Text
                   className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
                 >
-                  Member since January 2024
+                  Member since {user?.created_at?.split('T')[0]}
                 </Text>
               </View>
             </View>
