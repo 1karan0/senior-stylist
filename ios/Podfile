@@ -8,10 +8,14 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
+# Use static frameworks for better compatibility with Firebase and gRPC
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
   use_frameworks! :linkage => linkage.to_sym
+else
+  # Default to static frameworks for React Native + Firebase
+  use_frameworks! :linkage => :static
 end
 
 target 'Senior_stylist' do
@@ -30,5 +34,14 @@ target 'Senior_stylist' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+    
+    # Fix for Firebase Swift pods module maps
+    installer.pods_project.targets.each do |target|
+      if ['FirebaseAuth', 'FirebaseFirestore', 'FirebaseStorage', 'FirebaseCoreInternal'].include?(target.name)
+        target.build_configurations.each do |config|
+          config.build_settings['DEFINES_MODULE'] = 'YES'
+        end
+      end
+    end
   end
 end
