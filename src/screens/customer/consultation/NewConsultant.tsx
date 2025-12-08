@@ -91,12 +91,18 @@ const NewConsultant = ({ navigation }: any) => {
         response?.data?.id ??
         response?.id;
 
-      if (!newId) {
+      if (!newId || !Number.isFinite(Number(newId))) {
         showToast('We could not open the chat automatically.', 'warning');
         return;
       }
 
-      navigation.replace('FindingStylist', { consultationId: Number(newId) });
+      const consultationId = Number(newId);
+      if (consultationId <= 0) {
+        showToast('Invalid consultation ID. Please try again.', 'error');
+        return;
+      }
+
+      navigation.replace('FindingStylist', { consultationId });
     } catch (err: any) {
       showToast(err?.message || 'Something went wrong', 'error');
       // Draft stays in storage for retry

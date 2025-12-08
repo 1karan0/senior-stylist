@@ -211,6 +211,8 @@ const CustomerChatHome: React.FC = () => {
     );
   }, [previews, searchQuery]);
 
+  console.log(filteredConvos, 'filteredConvos');
+
   const getInitials = (name: string) =>
     name
       .split(' ')
@@ -230,6 +232,7 @@ const CustomerChatHome: React.FC = () => {
   };
 
   const renderItem = ({ item }: { item: ConversationPreview }) => {
+    console.log(item, 'item');
     return (
       <TouchableOpacity
         activeOpacity={0.85}

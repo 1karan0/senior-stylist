@@ -8,7 +8,6 @@ import {
   RefreshControl,
   ViewStyle,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Button } from '@/common/components/Button';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -104,19 +103,15 @@ const List: React.FC<ListProps> = ({
               className={`rounded-xl border p-4 mb-4 ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
             >
               <View className="flex-row items-start mb-4">
-                <View className="w-14 h-14 rounded-full items-center justify-center mr-3 overflow-hidden">
-                  <LinearGradient
-                    colors={['#27B07D', '#36D399']}
-                    className="w-full h-full items-center justify-center"
-                  >
-                    <Text className="text-white font-urbanist font-semibold text-xl">
-                      {initials}
-                    </Text>
-                  </LinearGradient>
+                <View
+                  className="w-14 h-14 rounded-full items-center justify-center mr-3 overflow-hidden"
+                  style={{ backgroundColor: '#27B07D' }}
+                >
+                  <Text className="text-white font-urbanist font-semibold text-xl">{initials}</Text>
                 </View>
                 <View className="flex-1">
                   {request.hasImage && (
-                    <View className="bg-[#DAE7E0] py-1 rounded-full self-start flex-row items-center">
+                    <View className="bg-[#DAE7E0] px-2 py-1 rounded-full self-start flex-row items-center">
                       <Image
                         source={require('@/assets/icons/photo.png')}
                         className="w-3 h-3 mr-1"

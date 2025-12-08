@@ -173,24 +173,80 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 };
 
 // Get FCM token
-export const getFCMToken = async (): Promise<string | null> => {
+export const getFCMToken = async (retryCount = 0): Promise<string | null> => {
+  const MAX_RETRIES = 2;
+  const RETRY_DELAY = 500; // milliseconds
+
   try {
     getApp(); // Ensure Firebase is initialized
 
-    // On iOS, we must register for remote messages before getting the token
+    // On iOS, we must check permissions and register for remote messages before getting the token
     if (Platform.OS === 'ios') {
+      // First, check if notification permissions are granted
+      const hasPermission = await checkNotificationPermission();
+      if (!hasPermission) {
+        if (__DEV__) {
+          console.warn(
+            '[notifications] iOS notification permission not granted, cannot get FCM token'
+          );
+        }
+        return null;
+      }
+
+      // Register for remote messages (required on iOS before getting token)
+      let registrationSuccessful = false;
       try {
         await messaging().registerDeviceForRemoteMessages();
+        registrationSuccessful = true;
         if (__DEV__) {
           console.log('[notifications] iOS device registered for remote messages');
         }
+        // Increased delay to ensure registration completes on the native side
+        await new Promise<void>((resolve) => setTimeout(() => resolve(), 500));
       } catch (registerError: any) {
-        // If already registered, this will throw an error - that's okay
-        if (__DEV__) {
-          if (registerError?.code !== 'messaging/already-registered') {
-            console.warn('[notifications] iOS registration warning:', registerError?.message);
+        // If already registered, that's fine - we can proceed
+        if (registerError?.code === 'messaging/already-registered') {
+          registrationSuccessful = true;
+          if (__DEV__) {
+            console.log('[notifications] iOS device already registered for remote messages');
           }
+          // Still add a delay to ensure everything is ready
+          await new Promise<void>((resolve) => setTimeout(() => resolve(), 300));
+        } else if (
+          registerError?.code === 'messaging/unknown' &&
+          registerError?.message?.includes('aps-environment')
+        ) {
+          // Missing entitlements - this is a configuration issue, not a runtime error
+          // Log a helpful message but don't crash
+          if (__DEV__) {
+            console.warn(
+              '[notifications] iOS push notification entitlements not configured. Please add "aps-environment" entitlement in Xcode.'
+            );
+            console.warn(
+              '[notifications] To fix: In Xcode, go to Signing & Capabilities, enable Push Notifications, or manually add aps-environment to your entitlements file.'
+            );
+          }
+          // Return null gracefully - app can continue without push notifications
+          return null;
+        } else {
+          // For other errors, log but don't proceed - registration failed
+          if (__DEV__) {
+            console.error('[notifications] iOS registration failed:', registerError?.message);
+            console.error('[notifications] Registration error details:', {
+              code: registerError?.code,
+              message: registerError?.message,
+            });
+          }
+          return null;
         }
+      }
+
+      // Double-check: if registration didn't succeed, don't try to get token
+      if (!registrationSuccessful) {
+        if (__DEV__) {
+          console.warn('[notifications] iOS registration not successful, cannot get FCM token');
+        }
+        return null;
       }
     }
 
@@ -199,9 +255,45 @@ export const getFCMToken = async (): Promise<string | null> => {
       console.log('[notifications] FCM token obtained:', token.substring(0, 20) + '...');
     }
     return token;
-  } catch (error) {
+  } catch (error: any) {
+    // On iOS, if we get the "unregistered" error, retry after ensuring registration
+    if (
+      Platform.OS === 'ios' &&
+      (error?.code === 'messaging/unregistered' || error?.message?.includes('unregistered')) &&
+      retryCount < MAX_RETRIES
+    ) {
+      if (__DEV__) {
+        console.log(
+          `[notifications] iOS unregistered error, retrying (${retryCount + 1}/${MAX_RETRIES})...`
+        );
+      }
+
+      // Ensure registration before retry
+      try {
+        await messaging().registerDeviceForRemoteMessages();
+        await new Promise<void>((resolve) => setTimeout(() => resolve(), RETRY_DELAY));
+      } catch (regError: any) {
+        // Ignore "already-registered" errors
+        if (regError?.code !== 'messaging/already-registered') {
+          if (__DEV__) {
+            console.warn('[notifications] Registration failed during retry:', regError?.message);
+          }
+        } else {
+          await new Promise<void>((resolve) => setTimeout(() => resolve(), RETRY_DELAY));
+        }
+      }
+
+      // Retry getting the token
+      return getFCMToken(retryCount + 1);
+    }
+
     if (__DEV__) {
       console.error('[notifications] Failed to get FCM token:', error);
+      console.error('[notifications] FCM token error details:', {
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack?.substring(0, 300),
+      });
     }
     return null;
   }
@@ -297,10 +389,13 @@ export const saveFCMTokenToBackend = async (token: string): Promise<boolean> => 
     getApp(); // Ensure Firebase is initialized
 
     // Ensure Firebase Auth user is authenticated (required for Firestore security rules)
-    const firebaseUser = await waitForFirebaseUser(3000);
+    // Increase wait time to 5 seconds to allow Firebase authentication to complete
+    const firebaseUser = await waitForFirebaseUser(5000);
     if (!firebaseUser) {
       if (__DEV__) {
-        console.warn('[notifications] Firebase user not authenticated, skipping FCM token save');
+        console.warn(
+          '[notifications] Firebase user not authenticated after 5s, skipping FCM token save'
+        );
       }
       return false;
     }
@@ -373,13 +468,38 @@ export const saveFCMTokenToBackend = async (token: string): Promise<boolean> => 
               newUserId: userId,
             });
           }
-          deletePromises.push(doc.ref.delete());
+          // Wrap delete in a promise that handles errors gracefully
+          deletePromises.push(
+            doc.ref.delete().catch((deleteErr: any) => {
+              // Handle permission denied gracefully - might not have permission to delete other users' tokens
+              if (
+                deleteErr?.code === 'permission-denied' ||
+                deleteErr?.code === 'firestore/permission-denied'
+              ) {
+                if (__DEV__) {
+                  console.warn(
+                    '[notifications] Permission denied when deleting token from other user (non-critical):',
+                    deleteErr?.message
+                  );
+                }
+              } else {
+                // Log other errors but don't throw
+                if (__DEV__) {
+                  console.warn(
+                    '[notifications] Error deleting token from other user:',
+                    deleteErr?.message
+                  );
+                }
+              }
+            })
+          );
           deletedCount++;
         }
       }
 
       if (deletePromises.length > 0) {
-        await Promise.all(deletePromises);
+        // Use Promise.allSettled to handle all promises even if some fail
+        await Promise.allSettled(deletePromises);
         if (__DEV__) {
           console.log('[notifications] Cleaned up tokens from other users:', deletedCount);
         }
@@ -497,7 +617,18 @@ export const initializeNotifications = async (): Promise<string | null> => {
             '[notifications] Got FCM token without requesting permission (already granted)'
           );
         }
-        await saveFCMTokenToBackend(existingToken);
+        // Wrap in try-catch to prevent unhandled promise rejections
+        try {
+          await saveFCMTokenToBackend(existingToken);
+        } catch (saveError: any) {
+          // Non-critical error - token was obtained, just couldn't save to backend
+          if (__DEV__) {
+            console.warn(
+              '[notifications] Failed to save token to backend (non-critical):',
+              saveError?.message
+            );
+          }
+        }
         return existingToken;
       }
     } catch (tokenError: any) {
@@ -518,6 +649,11 @@ export const initializeNotifications = async (): Promise<string | null> => {
       console.log('[notifications] Permission request result:', hasPermission);
     }
 
+    // On iOS, add a small delay after permission is granted to ensure system is ready
+    if (Platform.OS === 'ios' && hasPermission) {
+      await new Promise<void>((resolve) => setTimeout(() => resolve(), 200));
+    }
+
     // Try to get token after permission request
     const token = await getFCMToken();
     if (token) {
@@ -526,10 +662,20 @@ export const initializeNotifications = async (): Promise<string | null> => {
           '[notifications] FCM token obtained after permission request, saving to backend...'
         );
       }
-      // Save token to backend
-      const saved = await saveFCMTokenToBackend(token);
-      if (__DEV__) {
-        console.log('[notifications] Token save result:', saved);
+      // Save token to backend - wrap in try-catch to prevent unhandled promise rejections
+      try {
+        const saved = await saveFCMTokenToBackend(token);
+        if (__DEV__) {
+          console.log('[notifications] Token save result:', saved);
+        }
+      } catch (saveError: any) {
+        // Non-critical error - token was obtained, just couldn't save to backend
+        if (__DEV__) {
+          console.warn(
+            '[notifications] Failed to save token to backend (non-critical):',
+            saveError?.message
+          );
+        }
       }
       return token;
     } else {
@@ -557,7 +703,18 @@ export const setupTokenRefreshListener = (): (() => void) => {
     if (__DEV__) {
       console.log('[notifications] FCM token refreshed:', token.substring(0, 20) + '...');
     }
-    await saveFCMTokenToBackend(token);
+    // Wrap in try-catch to prevent unhandled promise rejections
+    try {
+      await saveFCMTokenToBackend(token);
+    } catch (error: any) {
+      // Non-critical error - token was refreshed, just couldn't save to backend
+      if (__DEV__) {
+        console.warn(
+          '[notifications] Failed to save refreshed token to backend (non-critical):',
+          error?.message
+        );
+      }
+    }
   });
 };
 

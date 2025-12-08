@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 
 import { ModalWrapper } from '@/common/components/ModalWrapper';
 import { RequestItem } from './List';
@@ -37,17 +36,15 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ visible, onClose, request }
       </TouchableOpacity>
 
       <ScrollView className="pt-5" contentContainerStyle={{ paddingBottom: 24 }}>
-        <View className="w-14 h-14 rounded-full items-center justify-center overflow-hidden mb-4">
-          <LinearGradient
-            colors={['#27B07D', '#36D399']}
-            className="w-full h-full items-center justify-center"
-          >
-            <Image
-              source={require('@/assets/icons/note.png')}
-              className="w-6 h-6"
-              resizeMode="contain"
-            />
-          </LinearGradient>
+        <View
+          className="w-14 h-14 rounded-full items-center justify-center overflow-hidden mb-4"
+          style={{ backgroundColor: '#27B07D' }}
+        >
+          <Image
+            source={require('@/assets/icons/note.png')}
+            className="w-6 h-6"
+            resizeMode="contain"
+          />
         </View>
 
         <Text className="text-2xl font-urbanist font-bold text-textDark">
