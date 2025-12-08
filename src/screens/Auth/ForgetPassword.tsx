@@ -116,14 +116,13 @@ export default function ForgetPassword({ navigation }: any) {
         {/* Send Reset Link Button */}
         <Button
           text="Send Verification Code"
+          variant="gradient"
           onPress={handleSubmit(onSubmit)}
           loading={loading}
           disabled={loading}
-          className="rounded-2xl mb-6 h-[50px] justify-center items-center"
-          textClassName="text-[16px] font-bold"
         />
 
-        <Pressable onPress={() => navigation.navigate('Login')} className="self-center">
+        <Pressable onPress={() => navigation.navigate('Login')} className="self-center mt-4">
           <Text className="font-normal text-[13px] text-textPrimary">Back to Login</Text>
         </Pressable>
       </View>

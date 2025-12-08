@@ -137,11 +137,10 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                     end={{ x: 1, y: 0 }}
                     style={{
                       borderRadius: 10,
-                      paddingVertical: 10,
+                      paddingVertical: 4,
                       paddingHorizontal: 14,
                       justifyContent: 'center',
                       alignItems: 'center',
-                      minHeight: 28,
                       overflow: 'hidden',
                     }}
                   >

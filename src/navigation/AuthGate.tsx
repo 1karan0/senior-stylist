@@ -11,7 +11,7 @@ export default function AuthGate() {
   if (isLoading) {
     return (
       <GradientBackground className="flex-1 items-center justify-center">
-        <View className=" ">
+        <View className=" flex-1 justify-center items-center">
           <ActivityIndicator size="large" />
         </View>
       </GradientBackground>
