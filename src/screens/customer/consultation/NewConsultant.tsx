@@ -188,7 +188,7 @@ const NewConsultant = ({ navigation }: any) => {
                   resizeMode="contain"
                 />
               }
-              className="rounded-xl"
+              className="rounded-[14px]"
             />
 
             {/* Show Preview */}
@@ -221,7 +221,6 @@ const NewConsultant = ({ navigation }: any) => {
                     resizeMode="contain"
                   />
                 }
-                className="rounded-xl"
               />
             </View>
           </View>

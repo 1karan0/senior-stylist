@@ -1,17 +1,7 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ActivityIndicator,
-  Image,
-  ScrollView,
-  KeyboardAvoidingView,
-} from 'react-native';
+import { View, Text, Image, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
-import LinearGradient from 'react-native-linear-gradient';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 
 import { AuthStackParamList } from '@/common/types';
@@ -20,6 +10,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import GradientBackground from '@/common/components/GradientBackground';
 import Toast from '@/common/components/Toast';
 import TextInputField from '@/common/components/TextInputField';
+import Button from '@/common/components/Button';
 
 const ResetPassword = () => {
   const {
@@ -28,8 +19,6 @@ const ResetPassword = () => {
     formState: { errors },
   } = useForm();
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [toast, setToast] = useState({
     visible: false,
     message: '',
@@ -168,24 +157,15 @@ const ResetPassword = () => {
           />
 
           {/* Submit Button */}
-          <Pressable
-            onPress={handleSubmit(onSubmit)}
-            className="rounded-2xl overflow-hidden mt-4"
-            disabled={loading}
-          >
-            <LinearGradient
-              colors={loading ? ['#94A3B8', '#64748B'] : ['#2CCB91', '#23A76F']}
-              start={{ x: 0, y: 1 }}
-              end={{ x: 1, y: 0 }}
-              className="h-[50px] rounded-xl items-center justify-center"
-            >
-              {loading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white text-[16px] font-semibold">Reset Password</Text>
-              )}
-            </LinearGradient>
-          </Pressable>
+          <View className="mt-4">
+            <Button
+              text="Reset Password"
+              onPress={handleSubmit(onSubmit)}
+              loading={loading}
+              disabled={loading}
+              variant="gradient"
+            />
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </GradientBackground>

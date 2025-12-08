@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, Pressable, Image, ActivityIndicator, Animated } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, Text, TextInput, Pressable, Image } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useResendVerificationCodeApi } from '@/api/auth/useResendCode';
+import { useForgotPassword } from '@/api/auth/useForgotPasswod';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useVerifyForgotPassOtp } from '@/api/auth/useverifyForgotPassOtp';
@@ -24,12 +24,20 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
   const { verifyEmail } = useAuth();
 
   const isOtpComplete = otp.every((digit) => digit !== '');
-  const resendMutation = useResendVerificationCodeApi();
+
+  const { params } = route;
+  const screen = params?.screen;
+  const email = params?.email;
+
+  // Call both hooks unconditionally to follow Rules of Hooks
+  const resendVerificationMutation = useResendVerificationCodeApi();
+  const forgotPasswordMutation = useForgotPassword();
+
+  // Select the appropriate mutation based on screen
+  const resendMutation = screen === 'signup' ? resendVerificationMutation : forgotPasswordMutation;
 
   const { isDark } = useTheme();
 
-  const email = route.params.email;
-  const screen = route.params.screen;
   const verifyForgotMutation = useVerifyForgotPassOtp();
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {

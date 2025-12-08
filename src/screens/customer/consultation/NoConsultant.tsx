@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
+import Button from '@/common/components/Button';
 
 type RootStackParamList = {
   NewConsultant: undefined;
@@ -55,16 +56,19 @@ const NoConsultant = () => {
           </Text>
 
           {/* Button */}
-          <TouchableOpacity
+          <Button
+            text="Find a Consultant"
             onPress={() => navigation.navigate('NewConsultant')}
-            className="bg-green-500 flex-row items-center justify-center rounded-xl py-3 px-6 w-full"
-          >
-            <Image
-              source={require('@/assets/icons/white-search-icon.png')}
-              className="w-5 h-5 mr-2"
-            />
-            <Text className="text-white font-semibold text-base">Find an Consultant</Text>
-          </TouchableOpacity>
+            variant="gradient"
+            className="w-full"
+            icon={
+              <Image
+                source={require('@/assets/icons/white-search-icon.png')}
+                className="w-5 h-5 mr-2"
+                resizeMode="contain"
+              />
+            }
+          />
         </View>
       </GradientBackground>
     </View>

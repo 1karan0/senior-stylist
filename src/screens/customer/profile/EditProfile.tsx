@@ -246,7 +246,7 @@ const EditProfile = () => {
               text="Cancel"
               variant="light"
               onPress={() => navigation.goBack()}
-              className="rounded-[10px]"
+              className="rounded-[14px]"
             />
           </View>
         </ScrollView>

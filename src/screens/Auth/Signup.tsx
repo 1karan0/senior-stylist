@@ -323,7 +323,7 @@ export default function SignupScreen({ navigation, route }: any) {
             </View>
 
             {/* Sign in link */}
-            <View className="text-center mb-5 flex flex-row justify-center">
+            <View className="text-center mt-3 mb-5 flex flex-row justify-center">
               <Text
                 className={`text-center ${isDark ? 'text-textSecondary' : 'text-[#64748B]'} font-normal text-[14px]`}
               >

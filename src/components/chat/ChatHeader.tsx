@@ -54,13 +54,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     | null
     | undefined;
   const specialization = consultantDetails?.specialization;
+  console.log('consultantDetails=====', consultantDetails);
 
   return (
     <View>
       <StatusBar translucent backgroundColor="#36D399" barStyle="light-content" />
       <View
         className="bg-commonGradientStop2 pb-7 px-4 rounded-b-3xl"
-        style={{ paddingTop: Platform.OS === 'ios' ? insets.top + 12 : 12 }}
+        style={{ paddingTop: Platform.OS === 'ios' ? insets.top + 12 : 55 }}
       >
         <View className="flex-row items-center">
           <TouchableOpacity
@@ -78,17 +79,21 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             />
           ) : (
             <View className="w-10 h-10 rounded-full bg-white/20 justify-center items-center mr-3">
-              <Text className="text-white text-base font-semibold">
+              <Text className="text-white text-[16px] font-urbanist-semibold">
                 {getInitials(otherPersonName)}
               </Text>
             </View>
           )}
           <View>
-            <View className="flex-1 items-center">
-              <Text className="text-base  font-semibold text-white">{otherPersonName}</Text>
+            <View className="flex-1 items-center gap-[4px]">
+              <Text className="text-[16px]  font-urbanist-semibold text-white">
+                {otherPersonName}
+              </Text>
               {specialization ? (
                 <View className="px-2 py-1 bg-textMuted rounded-xl">
-                  <Text className="text-xs font-bold text-white ">{specialization ?? ''}</Text>
+                  <Text className="text-[13px] font-urbanist-bold text-white ">
+                    {specialization ?? 'stylist'}
+                  </Text>
                 </View>
               ) : null}
             </View>

@@ -6,7 +6,6 @@ import GradientBackground from '@/common/components/GradientBackground';
 import Toast from '@/common/components/Toast';
 
 import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import TextInputField from '@/common/components/TextInputField';
 import Button from '@/common/components/Button';
 

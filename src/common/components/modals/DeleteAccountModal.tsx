@@ -65,6 +65,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
             variant="light"
             textClassName={'text-textDark'}
             onPress={onCancel}
+            className="rounded-[14px]"
           />
         </View>
       </View>

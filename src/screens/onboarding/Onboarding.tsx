@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, StatusBar } from 'react-native';
+import { View, Text, Image, StatusBar, Platform } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
@@ -53,7 +53,10 @@ const OnboardingScreen = ({ navigation }: any) => {
         </PagerView>
 
         {/* DOTS */}
-        <View className="flex-row justify-center mb-6 -mt-[20px]">
+        <View
+          className="flex-row justify-center -mt-[20px]"
+          style={{ marginBottom: Platform.OS === 'android' ? 80 : 0 }}
+        >
           {onboardData.map((_, i) => (
             <View
               key={i}
@@ -71,7 +74,10 @@ const OnboardingScreen = ({ navigation }: any) => {
         </View>
 
         {/* BUTTONS */}
-        <View className="flex-row items-center justify-center gap-4 px-6 ">
+        <View
+          className="flex-row items-center justify-center gap-4 px-6 "
+          style={{ marginBottom: Platform.OS === 'android' ? 15 : 0 }}
+        >
           {page !== onboardData.length - 1 && (
             <Button
               text="Skip"
@@ -86,7 +92,7 @@ const OnboardingScreen = ({ navigation }: any) => {
             text={page === onboardData.length - 1 ? 'Get Started' : 'Next'}
             variant="gradient"
             onPress={goNext}
-            className={` ${page === onboardData.length - 1 ? 'w-[240px]' : 'w-[160px]'} rounded-2xl`}
+            className={` ${page === onboardData.length - 1 ? 'w-[280px]' : 'w-[160px]'} rounded-2xl`}
           />
         </View>
       </GradientBackground>

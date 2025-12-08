@@ -1,5 +1,12 @@
 import React, { ReactNode } from 'react';
-import { TouchableOpacity, Text, View, ActivityIndicator, Platform } from 'react-native';
+import {
+  TouchableOpacity,
+  Text,
+  View,
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+} from 'react-native';
 
 export type ButtonVariant = 'gradient' | 'light';
 
@@ -28,11 +35,11 @@ export const Button: React.FC<ButtonProps> = ({
   const gradientColors = ['#27B07D', '#36D399'];
 
   // Default visual tokens
-  const disabledBgClass = 'bg-disabled';
+  const disabledBgClass = 'bg-gray-300';
   const lightDefaultBgClass = 'bg-[#DAE7E0]';
   const lightDefaultTextClass = 'text-textDark';
   const gradientDefaultTextClass = 'text-white';
-  const disabledTextClass = 'text-textMuted';
+  const disabledTextClass = 'text-white';
 
   // Determine label color
   const defaultLabelClass = isGradient ? gradientDefaultTextClass : lightDefaultTextClass;
@@ -50,21 +57,38 @@ export const Button: React.FC<ButtonProps> = ({
       activeOpacity={0.8}
       onPress={onPress}
       disabled={effectiveDisabled}
-      className={`${isGradient ? className : `${nonGradientDefaultContainer} ${className}`.trim()} ${effectiveDisabled ? nonGradientDisabledContainer : ''}`.trim()}
+      className={`${isGradient ? className : `${nonGradientDefaultContainer} ${className}`.trim()} ${effectiveDisabled ? `${nonGradientDisabledContainer} rounded-[14px]` : ''}`.trim()}
+      style={effectiveDisabled ? { borderRadius: 14, overflow: 'hidden' } : undefined}
     >
       {isGradient ? (
         <View
-          className=" rounded-[10px]"
           style={{
-            borderRadius: 10,
+            borderRadius: 14,
             paddingVertical: Platform.OS === 'ios' ? 6 : 3,
             paddingHorizontal: 12,
-            backgroundColor: '#27B07D',
+            overflow: 'hidden',
+            backgroundColor: effectiveDisabled ? '#D1D5DB' : gradientColors[0],
           }}
         >
+          {/* Gradient effect using overlay for both platforms */}
+          <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+            {/* Diagonal gradient simulation - 135deg from top-left to bottom-right */}
+            <View
+              style={{
+                position: 'absolute',
+                top: -100,
+                left: -20,
+                width: 400,
+                height: 400,
+                backgroundColor: effectiveDisabled ? '#D1D5DB' : gradientColors[1],
+                transform: [{ rotate: '45deg' }],
+                opacity: 0.7,
+              }}
+            />
+          </View>
           <View
             className="flex-row items-center justify-center gap-2 py-2"
-            style={{ paddingVertical: 12 }}
+            style={{ paddingVertical: 12, zIndex: 1 }}
           >
             {loading ? (
               <ActivityIndicator size="small" color="#ffffff" />
@@ -82,7 +106,7 @@ export const Button: React.FC<ButtonProps> = ({
         </View>
       ) : (
         // Light variant OR Disabled (render using TouchableOpacity wrapper above)
-        <View className={`p-3 `} style={{ borderRadius: 12 }}>
+        <View className={`p-3 `} style={{ borderRadius: 14 }}>
           <View className="flex-row items-center justify-center gap-2">
             {loading ? (
               <ActivityIndicator size="small" color="#000000" />
