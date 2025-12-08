@@ -177,6 +177,23 @@ export const getFCMToken = async (): Promise<string | null> => {
   try {
     getApp(); // Ensure Firebase is initialized
 
+    // On iOS, we must register for remote messages before getting the token
+    if (Platform.OS === 'ios') {
+      try {
+        await messaging().registerDeviceForRemoteMessages();
+        if (__DEV__) {
+          console.log('[notifications] iOS device registered for remote messages');
+        }
+      } catch (registerError: any) {
+        // If already registered, this will throw an error - that's okay
+        if (__DEV__) {
+          if (registerError?.code !== 'messaging/already-registered') {
+            console.warn('[notifications] iOS registration warning:', registerError?.message);
+          }
+        }
+      }
+    }
+
     const token = await messaging().getToken();
     if (__DEV__) {
       console.log('[notifications] FCM token obtained:', token.substring(0, 20) + '...');
@@ -230,12 +247,29 @@ export const deleteFCMTokenFromBackend = async (): Promise<boolean> => {
     }
 
     // Delete the FCM token from Firestore
-    await firestore()
-      .collection('users')
-      .doc(userId)
-      .collection('fcmTokens')
-      .doc(deviceId)
-      .delete();
+    try {
+      await firestore()
+        .collection('users')
+        .doc(userId)
+        .collection('fcmTokens')
+        .doc(deviceId)
+        .delete();
+    } catch (deleteError: any) {
+      // Handle permission denied gracefully - token might not exist or user might not have permission
+      if (
+        deleteError?.code === 'permission-denied' ||
+        deleteError?.code === 'firestore/permission-denied'
+      ) {
+        if (__DEV__) {
+          console.warn(
+            '[notifications] Permission denied when deleting FCM token (non-critical):',
+            deleteError?.message
+          );
+        }
+        return false; // Return false but don't throw
+      }
+      throw deleteError; // Re-throw other errors
+    }
 
     if (__DEV__) {
       console.log('[notifications] ✅ FCM token successfully deleted from Firestore:', {
@@ -297,7 +331,27 @@ export const saveFCMTokenToBackend = async (token: string): Promise<boolean> => 
       // Use collection group query to find all fcmTokens across all users
       // Note: We'll filter by checking document ID (which is deviceId) in memory
       // This is necessary because Firestore doesn't allow filtering collection groups by document ID
-      const existingTokensSnapshot = await firestore().collectionGroup('fcmTokens').get();
+      let existingTokensSnapshot;
+      try {
+        existingTokensSnapshot = await firestore().collectionGroup('fcmTokens').get();
+      } catch (queryError: any) {
+        // Handle permission denied gracefully - user might not have permission for collection group queries
+        if (
+          queryError?.code === 'permission-denied' ||
+          queryError?.code === 'firestore/permission-denied'
+        ) {
+          if (__DEV__) {
+            console.warn(
+              '[notifications] Permission denied for collection group query (non-critical):',
+              queryError?.message
+            );
+          }
+          // Continue without cleanup - this is not critical
+          existingTokensSnapshot = { docs: [] } as any;
+        } else {
+          throw queryError; // Re-throw other errors
+        }
+      }
 
       // Delete tokens that have the same deviceId but belong to other users
       const deletePromises: Promise<void>[] = [];
@@ -380,12 +434,29 @@ export const saveFCMTokenToBackend = async (token: string): Promise<boolean> => 
     };
 
     // Save to Firestore: users/{userId}/fcmTokens/{deviceId}
-    await firestore()
-      .collection('users')
-      .doc(userId)
-      .collection('fcmTokens')
-      .doc(deviceId)
-      .set(tokenData, { merge: true });
+    try {
+      await firestore()
+        .collection('users')
+        .doc(userId)
+        .collection('fcmTokens')
+        .doc(deviceId)
+        .set(tokenData, { merge: true });
+    } catch (saveError: any) {
+      // Handle permission denied gracefully
+      if (
+        saveError?.code === 'permission-denied' ||
+        saveError?.code === 'firestore/permission-denied'
+      ) {
+        if (__DEV__) {
+          console.warn(
+            '[notifications] Permission denied when saving FCM token. User may not be authenticated:',
+            saveError?.message
+          );
+        }
+        return false; // Return false but don't throw
+      }
+      throw saveError; // Re-throw other errors
+    }
 
     if (__DEV__) {
       console.log('[notifications] FCM token saved to Firestore:', {

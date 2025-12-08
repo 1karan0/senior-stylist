@@ -24,7 +24,7 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
         resizeMode="cover"
         style={{
           width: '100%',
-          height: '75%',
+          height: '85%',
           position: 'absolute',
           top: 0,
           left: 0,
@@ -35,7 +35,7 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
       <View
         style={{
           position: 'absolute',
-          top: SCREEN_HEIGHT * 0.6, // Start at 70% (just above where 75% image ends)
+          top: SCREEN_HEIGHT * 0.7, // Start at 70% (just above where 75% image ends)
           left: 0,
           right: 0,
           width: '100%',

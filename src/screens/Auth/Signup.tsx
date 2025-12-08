@@ -1,16 +1,7 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  Image,
-  ActivityIndicator,
-  ScrollView,
-  KeyboardAvoidingView,
-} from 'react-native';
+import { View, Text, Pressable, Image, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
-import LinearGradient from 'react-native-linear-gradient';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 
 import { BASE_URL } from '@/config';
@@ -18,6 +9,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import GradientBackground from '@/common/components/GradientBackground';
 import Toast from '@/common/components/Toast';
 import TextInputField from '@/common/components/TextInputField';
+import Button from '@/common/components/Button';
 
 export default function SignupScreen({ navigation, route }: any) {
   const {
@@ -319,24 +311,16 @@ export default function SignupScreen({ navigation, route }: any) {
             )}
 
             {/* Sign Up Button */}
-            <Pressable
-              onPress={handleSubmit(handleSignup)}
-              className="rounded-lg overflow-hidden mb-6 mt-3"
-              disabled={loading}
-            >
-              <LinearGradient
-                colors={loading ? ['#94A3B8', '#64748B'] : ['#2CCB91', '#23A76F']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                className="h-[50px] justify-center items-center"
-              >
-                {loading ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="text-white font-bold text-[16px]">Create Account</Text>
-                )}
-              </LinearGradient>
-            </Pressable>
+            <View className="mt-6">
+              <Button
+                text="Create Account"
+                variant="gradient"
+                onPress={handleSubmit(handleSignup)}
+                loading={loading}
+                disabled={loading}
+                className="rounded-lg"
+              />
+            </View>
 
             {/* Sign in link */}
             <View className="text-center mb-5 flex flex-row justify-center">

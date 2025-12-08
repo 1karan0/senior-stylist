@@ -145,12 +145,23 @@ export const waitForFirebaseUser = (
     }, timeout);
   });
 
-export const listenToStylistRequests = (
+export const listenToStylistRequests = async (
   stylistId: number | string,
   callbacks: StylistRequestListenerCallbacks
 ) => {
   try {
     getApp(); // Ensure Firebase is initialized
+
+    // Wait for Firebase user authentication before setting up listener
+    const firebaseUser = await waitForFirebaseUser(5000);
+    if (!firebaseUser) {
+      if (__DEV__) {
+        console.warn('[firebase] Firebase user not authenticated, cannot set up listener');
+      }
+      callbacks.onError?.(new Error('Firebase user not authenticated'));
+      return null;
+    }
+
     const requestsRef = firestore()
       .collection('stylist_requests')
       .doc(String(stylistId))
@@ -159,6 +170,11 @@ export const listenToStylistRequests = (
 
     const unsubscribe = requestsRef.onSnapshot(
       (snapshot) => {
+        // Check for permission denied errors in snapshot
+        if (snapshot.metadata.hasPendingWrites && snapshot.empty) {
+          // This might indicate a permission issue, but we'll let the error handler catch it
+        }
+
         snapshot.docChanges().forEach((change) => {
           const requestId = change.doc.id;
           const data = change.doc.data() as StylistRequest;
@@ -172,7 +188,19 @@ export const listenToStylistRequests = (
 
         callbacks.onConnectionChange?.(!snapshot.metadata.fromCache);
       },
-      (error) => {
+      (error: any) => {
+        // Handle permission denied errors gracefully
+        if (error?.code === 'permission-denied' || error?.code === 'firestore/permission-denied') {
+          if (__DEV__) {
+            console.warn(
+              '[firebase] Firestore permission denied. User may not be authenticated or lacks permissions.'
+            );
+          }
+          // Don't call onError for permission denied - it's expected in some cases
+          callbacks.onConnectionChange?.(false);
+          return;
+        }
+
         if (__DEV__) {
           console.error('Firestore listener error:', error);
         }

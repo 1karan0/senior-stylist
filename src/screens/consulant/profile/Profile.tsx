@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Switch, Image } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -49,10 +48,7 @@ const Profile: React.FC = () => {
               {/* Avatar + Name + Badge + Theme Switch */}
               <View className="flex-row items-start">
                 {/* Avatar */}
-                <LinearGradient
-                  colors={['#2CCB91', '#23A76F']}
-                  start={{ x: 0, y: 1 }}
-                  end={{ x: 1, y: 0 }}
+                <View
                   style={{
                     borderRadius: 28,
                     height: 56,
@@ -60,6 +56,7 @@ const Profile: React.FC = () => {
                     justifyContent: 'center',
                     alignItems: 'center',
                     overflow: 'hidden',
+                    backgroundColor: '#2CCB91',
                   }}
                 >
                   {user?.profile_picture_url ? (
@@ -76,7 +73,7 @@ const Profile: React.FC = () => {
                       {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
                     </Text>
                   )}
-                </LinearGradient>
+                </View>
 
                 {/* Name, Badge and Theme Switch */}
                 <View className="flex-1 ml-3">
@@ -89,10 +86,7 @@ const Profile: React.FC = () => {
                   </Text>
 
                   <View style={{ alignSelf: 'flex-start' }}>
-                    <LinearGradient
-                      colors={['#2CCB91', '#23A76F']}
-                      start={{ x: 0, y: 1 }}
-                      end={{ x: 1, y: 0 }}
+                    <View
                       style={{
                         borderRadius: 10,
                         paddingVertical: 10,
@@ -101,6 +95,7 @@ const Profile: React.FC = () => {
                         justifyContent: 'center',
                         alignItems: 'center',
                         minHeight: 28,
+                        backgroundColor: '#2CCB91',
                       }}
                     >
                       <Text
@@ -113,7 +108,7 @@ const Profile: React.FC = () => {
                       >
                         {user?.role}
                       </Text>
-                    </LinearGradient>
+                    </View>
                   </View>
                 </View>
               </View>
