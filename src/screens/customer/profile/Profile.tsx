@@ -247,7 +247,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
               paddingTop: 16,
               paddingBottom: 16,
               paddingHorizontal: 16,
-              marginTop: 20,
               marginLeft: -20,
               marginRight: -20,
               width: '100%',
