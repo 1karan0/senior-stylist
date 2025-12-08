@@ -3,10 +3,8 @@ import { View, Text, Image, StatusBar } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import onboardData from '@/lib/onboardData';
-import LinearGradient from 'react-native-linear-gradient';
 import OnboardItem from './components/OnboardItem';
 
 const OnboardingScreen = ({ navigation }: any) => {
@@ -40,61 +38,59 @@ const OnboardingScreen = ({ navigation }: any) => {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View className="flex-1">
       <StatusBar hidden />
-      <View className="flex-1">
-        <GradientBackground>
-          <PagerView
-            ref={pagerRef}
-            style={{ flex: 1 }}
-            initialPage={0}
-            onPageSelected={(e) => setPage(e.nativeEvent.position)}
-          >
-            {onboardData.map((item) => (
-              <OnboardItem key={item.id} item={item} />
-            ))}
-          </PagerView>
+      <GradientBackground edges={['bottom', 'left', 'right']}>
+        <PagerView
+          ref={pagerRef}
+          style={{ flex: 1 }}
+          initialPage={0}
+          onPageSelected={(e) => setPage(e.nativeEvent.position)}
+        >
+          {onboardData.map((item) => (
+            <OnboardItem key={item.id} item={item} />
+          ))}
+        </PagerView>
 
-          {/* DOTS */}
-          <View className="flex-row justify-center mb-6 -mt-[20px]">
-            {onboardData.map((_, i) => (
-              <View
-                key={i}
-                className={`h-2 mx-1 rounded-full ${
-                  i === page
-                    ? isDark
-                      ? 'bg-green-400 w-6'
-                      : 'bg-green-600 w-6'
-                    : isDark
-                      ? 'bg-gray-600 w-2'
-                      : 'bg-gray-300 w-2'
-                }`}
-              />
-            ))}
-          </View>
-
-          {/* BUTTONS */}
-          <View className="flex-row items-center justify-center gap-4 px-6 ">
-            {page !== onboardData.length - 1 && (
-              <Button
-                text="Skip"
-                variant="light"
-                onPress={() => navigation.replace('Login')}
-                className={`w-[160px]  ${isDark ? 'bg-[#0E1B17] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'} rounded-2xl border`}
-                textClassName={`${isDark ? 'text-[#ffffff]' : 'text-[#162721]'} text-base font-urbanist-bold`}
-              />
-            )}
-
-            <Button
-              text={page === onboardData.length - 1 ? 'Get Started' : 'Next'}
-              variant="gradient"
-              onPress={goNext}
-              className={` ${page === onboardData.length - 1 ? 'w-[240px]' : 'w-[160px]'} rounded-2xl`}
+        {/* DOTS */}
+        <View className="flex-row justify-center mb-6 -mt-[20px]">
+          {onboardData.map((_, i) => (
+            <View
+              key={i}
+              className={`h-2 mx-1 rounded-full ${
+                i === page
+                  ? isDark
+                    ? 'bg-green-400 w-6'
+                    : 'bg-green-600 w-6'
+                  : isDark
+                    ? 'bg-gray-600 w-2'
+                    : 'bg-gray-300 w-2'
+              }`}
             />
-          </View>
-        </GradientBackground>
-      </View>
-    </SafeAreaView>
+          ))}
+        </View>
+
+        {/* BUTTONS */}
+        <View className="flex-row items-center justify-center gap-4 px-6 ">
+          {page !== onboardData.length - 1 && (
+            <Button
+              text="Skip"
+              variant="light"
+              onPress={() => navigation.replace('Login')}
+              className={`w-[160px]  ${isDark ? 'bg-[#0E1B17] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'} rounded-2xl border`}
+              textClassName={`${isDark ? 'text-[#ffffff]' : 'text-[#162721]'} text-base font-urbanist-bold`}
+            />
+          )}
+
+          <Button
+            text={page === onboardData.length - 1 ? 'Get Started' : 'Next'}
+            variant="gradient"
+            onPress={goNext}
+            className={` ${page === onboardData.length - 1 ? 'w-[240px]' : 'w-[160px]'} rounded-2xl`}
+          />
+        </View>
+      </GradientBackground>
+    </View>
   );
 };
 

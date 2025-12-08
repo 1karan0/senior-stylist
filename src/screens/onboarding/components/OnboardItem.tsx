@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, Image, ImageSourcePropType, Dimensions } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import LinearGradient from 'react-native-linear-gradient';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface Props {
   item: {
@@ -21,23 +22,30 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
       <Image
         source={item.image}
         resizeMode="cover"
-        className="w-full h-[75%] absolute top-0 left-0"
+        style={{
+          width: '100%',
+          height: '75%',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+        }}
       />
 
       {/* TEXT SECTION */}
-      <LinearGradient
-        colors={
-          isDark
-            ? ['hsl(158, 32%, 12%)', 'hsl(158, 32%, 8%)']
-            : ['hsl(158, 64%, 95%)', 'hsl(146, 25%, 97%)']
-        }
-        className="absolute bottom-0 w-full h-[32%] px-5 pt-10"
-        start={{ x: 0, y: 1 }}
-        end={{ x: 0, y: 0 }}
+      <View
         style={{
+          position: 'absolute',
+          top: SCREEN_HEIGHT * 0.6, // Start at 70% (just above where 75% image ends)
+          left: 0,
+          right: 0,
+          width: '100%',
+          height: SCREEN_HEIGHT * 0.3, // 30% height to ensure it reaches bottom
+          paddingHorizontal: 20,
+          paddingTop: 40,
           borderTopLeftRadius: 30,
           borderTopRightRadius: 30,
           overflow: 'hidden',
+          backgroundColor: isDark ? 'hsl(158, 32%, 12%)' : 'hsl(158, 64%, 95%)',
         }}
       >
         <Text
@@ -55,7 +63,7 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
         >
           {item.description}
         </Text>
-      </LinearGradient>
+      </View>
     </View>
   );
 };

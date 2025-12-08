@@ -619,7 +619,7 @@ const ConsultantChatScreen: React.FC = () => {
     consultation.chat_window_is_open ?? ['assigned', 'active'].includes(consultation.status);
 
   return (
-    <GradientBackground>
+    <GradientBackground edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
