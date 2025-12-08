@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -21,7 +20,7 @@ const PROGRESS_INTERVAL = 500;
 const FindingStylist: React.FC = () => {
   const route = useRoute<FindingRoute>();
   const navigation = useNavigation<any>();
-  const { consultationId } = route.params;
+  const consultationId = route.params?.consultationId;
 
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -86,7 +85,7 @@ const FindingStylist: React.FC = () => {
   }, [consultationId, navigation, stopAllTimers]);
 
   const checkConsultationStatus = useCallback(async () => {
-    if (!Number.isFinite(consultationId)) {
+    if (!consultationId || !Number.isFinite(consultationId)) {
       handleSearchFailure('Invalid consultation reference.');
       return;
     }
@@ -243,8 +242,25 @@ const FindingStylist: React.FC = () => {
     </>
   );
 
+  // Early return if consultationId is missing
+  if (!consultationId || !Number.isFinite(consultationId)) {
+    return (
+      <View className="flex-1" style={{ backgroundColor: '#0E1B16' }}>
+        <SafeAreaView className="flex-1 px-5 justify-center items-center">
+          <Text className="text-white text-lg mb-4">Invalid consultation reference</Text>
+          <TouchableOpacity
+            className="rounded-xl bg-buttonPrimaryBg py-3.5 px-6"
+            onPress={() => navigation.goBack()}
+          >
+            <Text className="text-white text-[15px] font-bold">Go Back</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   return (
-    <LinearGradient colors={['#0E1B16', '#152821']} className="flex-1">
+    <View className="flex-1" style={{ backgroundColor: '#0E1B16' }}>
       <SafeAreaView className="flex-1 px-5">
         <TouchableOpacity
           className="w-10 h-10 rounded-full border border-white/20 justify-center items-center mb-4"
@@ -266,7 +282,7 @@ const FindingStylist: React.FC = () => {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 };
 
