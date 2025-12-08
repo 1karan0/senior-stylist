@@ -16,10 +16,7 @@ const Itemcard: React.FC<ItemProps> = ({ item, onPress }) => {
       className={`rounded-xl mb-5 ${isDark ? 'bg-commonGradientStop6 border-commonGradientStop7' : 'bg-white border-gray-200'} shadow-sm border `}
     >
       <View className="absolute top-3 left-3 z-10">
-        <LinearGradient
-          colors={['#2CCB91', '#23A76F']}
-          start={{ x: 0, y: 1 }}
-          end={{ x: 1, y: 0 }}
+        <View
           style={{
             borderRadius: 10,
             paddingVertical: 8,
@@ -27,10 +24,11 @@ const Itemcard: React.FC<ItemProps> = ({ item, onPress }) => {
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'row',
+            backgroundColor: '#2CCB91',
           }}
         >
           <Text className="text-white text-xs font-semibold">{item.category?.name}</Text>
-        </LinearGradient>
+        </View>
       </View>
 
       <Image

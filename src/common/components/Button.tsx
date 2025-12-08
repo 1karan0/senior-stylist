@@ -1,6 +1,5 @@
 import React, { ReactNode } from 'react';
 import { TouchableOpacity, Text, View, ActivityIndicator, Platform } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 
 export type ButtonVariant = 'gradient' | 'light';
 
@@ -54,13 +53,13 @@ export const Button: React.FC<ButtonProps> = ({
       className={`${isGradient ? className : `${nonGradientDefaultContainer} ${className}`.trim()} ${effectiveDisabled ? nonGradientDisabledContainer : ''}`.trim()}
     >
       {isGradient ? (
-        <LinearGradient
-          colors={gradientColors}
+        <View
           className=" rounded-[10px]"
           style={{
             borderRadius: 10,
-            paddingVertical: Platform.OS === 'ios' ? 12 : 3,
+            paddingVertical: Platform.OS === 'ios' ? 6 : 3,
             paddingHorizontal: 12,
+            backgroundColor: '#27B07D',
           }}
         >
           <View
@@ -80,7 +79,7 @@ export const Button: React.FC<ButtonProps> = ({
               </>
             )}
           </View>
-        </LinearGradient>
+        </View>
       ) : (
         // Light variant OR Disabled (render using TouchableOpacity wrapper above)
         <View className={`p-3 `} style={{ borderRadius: 12 }}>

@@ -1,6 +1,5 @@
 import { Image, Text, View } from 'react-native';
 import { NewsArticle } from '@/common/types';
-import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface ArticleCardProps {
@@ -16,15 +15,15 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ item }) => {
       {/* Category Chip */}
       <View>
         <View className="">
-          <LinearGradient
-            colors={['#2CCB91', '#23A76F']}
-            start={{ x: 0, y: 1 }}
-            end={{ x: 1, y: 0 }}
-            style={{ borderRadius: 10 }}
+          <View
+            style={{
+              borderRadius: 10,
+              backgroundColor: '#2CCB91',
+            }}
             className="z-50  absolute  top-2 left-2  px-3 py-1 "
           >
             <Text className="text-white text-sm font-bold">{item.category?.name}</Text>
-          </LinearGradient>
+          </View>
         </View>
 
         {/* Image */}
