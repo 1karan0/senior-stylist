@@ -130,31 +130,28 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 >
                   {user?.name}
                 </Text>
-                <View style={{ alignSelf: 'flex-start', marginTop: 4 }}>
-                  <LinearGradient
-                    colors={['#2CCB91', '#23A76F']}
-                    start={{ x: 0, y: 1 }}
-                    end={{ x: 1, y: 0 }}
+                <View
+                  style={{
+                    alignSelf: 'flex-start',
+                    marginTop: 4,
+                    borderRadius: 10,
+                    paddingVertical: 4,
+                    paddingHorizontal: 14,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: '#2CCB91',
+                  }}
+                >
+                  <Text
+                    className="text-white text-xs font-urbanist-bold"
                     style={{
-                      borderRadius: 10,
-                      paddingVertical: 4,
-                      paddingHorizontal: 14,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      overflow: 'hidden',
+                      textAlignVertical: 'center',
+                      includeFontPadding: false,
+                      lineHeight: 14,
                     }}
                   >
-                    <Text
-                      className="text-white text-xs font-urbanist-bold"
-                      style={{
-                        textAlignVertical: 'center',
-                        includeFontPadding: false,
-                        lineHeight: 14,
-                      }}
-                    >
-                      {user?.role || 'Member'}
-                    </Text>
-                  </LinearGradient>
+                    {user?.role || 'Member'}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -237,18 +234,11 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           </View>
 
           {/* ---------- Rewards ---------- */}
-          <LinearGradient
-            colors={['#2CCB91', '#23A76F']}
-            start={{ x: 0, y: 1 }}
-            end={{ x: 1, y: 0 }}
+          <View
+            className="p-4 mt-5"
             style={{
               borderRadius: 12,
-              paddingTop: 16,
-              paddingBottom: 16,
-              paddingHorizontal: 16,
-              marginTop: 20,
-
-              width: '100%',
+              backgroundColor: '#2CCB91',
             }}
           >
             <View className=" flex-col gap-3">
@@ -270,7 +260,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 </View>
               </View>
             </View>
-          </LinearGradient>
+          </View>
 
           {/* ---------- Referral Program ---------- */}
           <View

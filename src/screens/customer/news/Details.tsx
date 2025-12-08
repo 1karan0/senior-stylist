@@ -12,7 +12,6 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NewsStackParamList } from '@/common/types';
 import GradientBackground from '@/common/components/GradientBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import LinearGradient from 'react-native-linear-gradient';
 import RenderHTML from 'react-native-render-html';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useGetNewsDetail } from '@/api/user/news/useGetNewsDetail';
@@ -123,15 +122,15 @@ const Details: React.FC = () => {
             <Image source={{ uri: article.image_url }} className="w-full h-48 rounded-md" />
 
             <View className="absolute top-3 left-3">
-              <LinearGradient
-                colors={['#2CCB91', '#23A76F']}
-                start={{ x: 0, y: 1 }}
-                end={{ x: 1, y: 0 }}
-                style={{ borderRadius: 10 }}
+              <View
+                style={{
+                  borderRadius: 10,
+                  backgroundColor: '#2CCB91',
+                }}
                 className="px-4 py-1"
               >
                 <Text className="text-white text-sm font-bold">{article.category?.name}</Text>
-              </LinearGradient>
+              </View>
             </View>
           </View>
 

@@ -1,6 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Image, StatusBar } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  StatusBar,
+  Platform,
+} from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ConsultantConsultation } from '@/api/consultant/consultations';
 import ChatHeaderSkeleton from '@/common/components/skeletons/ChatHeaderSkeleton';
@@ -32,6 +41,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   isLoading = false,
   isFinishing = false,
 }) => {
+  const insets = useSafeAreaInsets();
+
   if (isLoading || !consultation) {
     return <ChatHeaderSkeleton />;
   }
@@ -47,7 +58,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   return (
     <View>
       <StatusBar translucent backgroundColor="#36D399" barStyle="light-content" />
-      <View className="bg-commonGradientStop2 pt-16 pb-7 px-4 rounded-b-3xl">
+      <View
+        className="bg-commonGradientStop2 pb-7 px-4 rounded-b-3xl"
+        style={{ paddingTop: Platform.OS === 'ios' ? insets.top + 12 : 12 }}
+      >
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={onBack}
