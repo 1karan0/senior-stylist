@@ -81,7 +81,7 @@ const Request: React.FC = () => {
       }
 
       await loadInitialRequests({ silent: false });
-      setupFirebaseListener(user.id);
+      await setupFirebaseListener(user.id);
     };
 
     bootstrap();
@@ -118,12 +118,12 @@ const Request: React.FC = () => {
     }
   };
 
-  const setupFirebaseListener = (stylistId: number) => {
+  const setupFirebaseListener = async (stylistId: number) => {
     if (unsubscribeRef.current) {
       unsubscribeRef.current();
     }
 
-    const unsubscribe = listenToStylistRequests(stylistId, {
+    const unsubscribe = await listenToStylistRequests(stylistId, {
       onRequestAdded: async (firebaseRequest, requestId) => {
         const consultationId = Number(requestId);
         if (Number.isNaN(consultationId)) {

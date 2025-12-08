@@ -1,7 +1,6 @@
 import React, { use, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import LinearGradient from 'react-native-linear-gradient';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useForm, Controller } from 'react-hook-form';
 import { createConsultation } from '@/api/user/consultation/useCreateConsultation';
@@ -9,6 +8,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 import Toast from '@/common/components/Toast';
 import { storage } from '@/services/storage';
+import Button from '@/common/components/Button';
 
 const NEW_CONSULTATION_DRAFT_KEY = 'NEW_CONSULTATION_DRAFT';
 
@@ -107,14 +107,14 @@ const NewConsultant = ({ navigation }: any) => {
 
   return (
     <View className="flex-1 bg-white">
-      <GradientBackground className="flex-1 px-5 pt-6">
+      <GradientBackground className="flex-1">
         <Toast
           visible={toast.visible}
           message={toast.message}
           type={toast.type}
           onClose={() => setToast({ ...toast, visible: false })}
         />
-        <ScrollView className="flex-1">
+        <ScrollView className="flex-1 px-5 pt-6">
           {/* Header */}
           <View className="flex-row items-center mb-5">
             <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -140,7 +140,7 @@ const NewConsultant = ({ navigation }: any) => {
 
           {/* Card */}
           <View
-            className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-gray-100'} rounded-md p-5 shadow border `}
+            className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-gray-100'} rounded-md p-5 border `}
           >
             <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
               Describe Your Requirements
@@ -177,13 +177,19 @@ const NewConsultant = ({ navigation }: any) => {
               Upload Photo (Optional)
             </Text>
 
-            <TouchableOpacity
+            <Button
+              text="Upload reference photo"
+              variant="light"
               onPress={pickImage}
-              className="bg-[#DAE7E0] rounded-xl py-3 flex-row items-center justify-center"
-            >
-              <Image source={require('@/assets/icons/upload-2.png')} className="w-5 h-5 mr-2" />
-              <Text className="text-textDark font-semibold">Upload reference photo</Text>
-            </TouchableOpacity>
+              icon={
+                <Image
+                  source={require('@/assets/icons/upload-2.png')}
+                  style={{ width: 20, height: 20 }}
+                  resizeMode="contain"
+                />
+              }
+              className="rounded-xl"
+            />
 
             {/* Show Preview */}
             {selectedImage && (
@@ -201,27 +207,23 @@ const NewConsultant = ({ navigation }: any) => {
             </Text>
 
             {/* CTA Button */}
-            <LinearGradient
-              colors={['#2CCB91', '#23A76F']}
-              start={{ x: 0, y: 1 }}
-              end={{ x: 1, y: 0 }}
-              style={{ borderRadius: 10 }}
-              className="h-[50px] mt-6 rounded-xl justify-center items-center"
-            >
-              <TouchableOpacity
+            <View className="mt-6">
+              <Button
+                text={loading ? 'Processing...' : 'Find Stylist'}
+                variant="gradient"
                 onPress={handleSubmit(onSubmit)}
-                className="flex-row items-center justify-center w-full h-full"
+                loading={loading}
                 disabled={loading}
-              >
-                <Image
-                  source={require('@/assets/icons/white-search-icon.png')}
-                  className="w-5 h-5 mr-2"
-                />
-                <Text className="text-white font-semibold text-base">
-                  {loading ? 'Processing...' : 'Find Stylist'}
-                </Text>
-              </TouchableOpacity>
-            </LinearGradient>
+                icon={
+                  <Image
+                    source={require('@/assets/icons/white-search-icon.png')}
+                    style={{ width: 20, height: 20 }}
+                    resizeMode="contain"
+                  />
+                }
+                className="rounded-xl"
+              />
+            </View>
           </View>
         </ScrollView>
       </GradientBackground>

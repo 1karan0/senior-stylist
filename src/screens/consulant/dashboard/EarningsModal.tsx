@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { ModalWrapper } from '@/common/components/ModalWrapper';
 import { Button } from '@/common/components/Button';
@@ -38,12 +37,12 @@ const EarningsModal: React.FC<EarningsModalProps> = ({ visible, onClose }) => {
           </Text>
         </View>
         {/* Total Earnings Card */}
-        <LinearGradient
-          colors={['#27B07D', '#36D399']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <View
           className="rounded-xl p-5 mb-5"
-          style={{ borderRadius: 12 }}
+          style={{
+            borderRadius: 12,
+            backgroundColor: '#27B07D',
+          }}
         >
           <View className="flex-row items-center mb-2 self-start">
             <Ionicons name="logo-usd" size={20} color="white" />
@@ -58,7 +57,7 @@ const EarningsModal: React.FC<EarningsModalProps> = ({ visible, onClose }) => {
               </Text>
             </View>
           </View>
-        </LinearGradient>
+        </View>
 
         {/* This Month & Pending */}
         <View className="flex-row justify-between mb-6">
