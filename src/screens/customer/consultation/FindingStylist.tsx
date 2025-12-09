@@ -263,7 +263,7 @@ const FindingStylist: React.FC = () => {
     <View className="flex-1" style={{ backgroundColor: '#0E1B16' }}>
       <SafeAreaView className="flex-1 px-5">
         <TouchableOpacity
-          className="w-10 h-10 rounded-full border border-white/20 justify-center items-center mb-4"
+          className="w-10 h-10 rounded-full border border-white/20 justify-center items-center mt-4"
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={22} color="#FFFFFF" />

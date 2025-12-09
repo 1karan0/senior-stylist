@@ -47,7 +47,7 @@ const UserTabNavigator: React.FC = () => {
   const { isDark } = useTheme();
 
   // lower base bottom to bring bar closer to the bottom
-  const baseBottom = Platform.OS === 'ios' ? 4 : 2;
+  const baseBottom = Platform.OS === 'ios' ? 4 : 3;
   const bottomOffset = baseBottom + Math.max(0, insets.bottom - 6);
 
   return (
