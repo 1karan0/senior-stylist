@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, Animated, StatusBar } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ChatHeaderSkeleton: React.FC = () => {
   const { isDark } = useTheme();
   const shimmer = React.useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
 
   React.useEffect(() => {
     Animated.loop(
@@ -57,7 +60,10 @@ const ChatHeaderSkeleton: React.FC = () => {
   return (
     <View>
       <StatusBar translucent backgroundColor="#36D399" barStyle="light-content" />
-      <View className="bg-commonGradientStop2 pt-16 pb-7 px-4 rounded-b-3xl">
+      <View
+        className="bg-commonGradientStop2  pb-7 px-4 rounded-b-3xl"
+        style={{ paddingTop: Platform.OS === 'ios' ? insets.top + 12 : 30 }}
+      >
         <View className="flex-row items-center">
           {/* Back Button Skeleton */}
           <SkeletonBox width="40" height={40} style={{ borderRadius: 8, marginRight: 12 }} />

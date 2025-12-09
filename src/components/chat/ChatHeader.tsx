@@ -54,7 +54,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     | null
     | undefined;
   const specialization = consultantDetails?.specialization;
-  console.log('consultantDetails=====', consultantDetails);
 
   return (
     <View>

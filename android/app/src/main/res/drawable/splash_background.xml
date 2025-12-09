@@ -10,8 +10,10 @@
         </shape>
     </item>
     
-    <!-- Logo centered -->
+    <!-- Logo centered with proper size constraint (120dp) to match layout -->
     <item
+        android:width="120dp"
+        android:height="120dp"
         android:drawable="@drawable/logo"
         android:gravity="center" />
 </layer-list>

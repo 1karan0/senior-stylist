@@ -57,6 +57,7 @@ const Profile: React.FC = () => {
                     alignItems: 'center',
                     overflow: 'hidden',
                     backgroundColor: '#2CCB91',
+                    marginTop: 4,
                   }}
                 >
                   {user?.profile_picture_url ? (
@@ -76,9 +77,9 @@ const Profile: React.FC = () => {
                 </View>
 
                 {/* Name, Badge and Theme Switch */}
-                <View className="flex-1 ml-3">
+                <View className="flex-1 ml-3 ">
                   <Text
-                    className={`text-2xl font-urbanist-bold mb-2 ${
+                    className={`text-2xl font-urbanist-bold mb-2 ml-1 ${
                       isDark ? 'text-white' : 'text-textDark'
                     }`}
                   >
@@ -88,9 +89,9 @@ const Profile: React.FC = () => {
                   <View style={{ alignSelf: 'flex-start' }}>
                     <View
                       style={{
-                        borderRadius: 10,
-                        paddingVertical: 10,
-                        paddingHorizontal: 14,
+                        borderRadius: 14,
+                        paddingVertical: 4,
+                        paddingHorizontal: 10,
                         marginTop: 4,
                         justifyContent: 'center',
                         alignItems: 'center',
@@ -99,7 +100,7 @@ const Profile: React.FC = () => {
                       }}
                     >
                       <Text
-                        className="text-white text-xs font-urbanist-bold"
+                        className="text-white text-[13px] font-urbanist-bold"
                         style={{
                           textAlignVertical: 'center',
                           includeFontPadding: false,

@@ -323,27 +323,6 @@ const EditProfile: React.FC = () => {
                 editable={!isSaving}
               />
             </View>
-
-            {/* Address (optional) */}
-            <View className="mt-4">
-              <Text
-                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-              >
-                Address
-              </Text>
-              <TextInput
-                value={formData.address}
-                onChangeText={(text) => setFormData({ ...formData, address: text })}
-                multiline
-                className={`border rounded-xl px-4 py-3 font-poppins-regular ${
-                  isDark
-                    ? 'bg-[#0F1F1A] border-commonGradientStop7 text-white'
-                    : 'bg-white border-[#DAE7E0] text-textDark'
-                }`}
-                placeholderTextColor={isDark ? '#8AA897' : '#658176'}
-                editable={!isSaving}
-              />
-            </View>
           </View>
 
           {/* Save Changes Button */}
