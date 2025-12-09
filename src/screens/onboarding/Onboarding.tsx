@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, StatusBar, Platform } from 'react-native';
+import { View, Text, Image, StatusBar, Platform, Dimensions } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
@@ -11,6 +11,7 @@ const OnboardingScreen = ({ navigation }: any) => {
   const pagerRef = useRef<PagerView>(null);
   const [page, setPage] = useState(0);
   const { isDark } = useTheme();
+  const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
   const goNext = () => {
     if (page < onboardData.length - 1) {
@@ -54,8 +55,14 @@ const OnboardingScreen = ({ navigation }: any) => {
 
         {/* DOTS */}
         <View
-          className="flex-row justify-center -mt-[20px]"
-          style={{ marginBottom: Platform.OS === 'android' ? 80 : 0 }}
+          className="flex-row justify-center"
+          style={{
+            position: 'absolute',
+            top: SCREEN_HEIGHT * 0.78, // Position just below the text section (which ends at ~90%)
+            left: 0,
+            right: 0,
+            zIndex: 10,
+          }}
         >
           {onboardData.map((_, i) => (
             <View
@@ -75,7 +82,7 @@ const OnboardingScreen = ({ navigation }: any) => {
 
         {/* BUTTONS */}
         <View
-          className="flex-row items-center justify-center gap-4 px-6 "
+          className={`${page === onboardData.length - 1 ? 'items-center' : 'flex-row items-center justify-center gap-4'} px-6`}
           style={{ marginBottom: Platform.OS === 'android' ? 15 : 0 }}
         >
           {page !== onboardData.length - 1 && (
@@ -92,7 +99,7 @@ const OnboardingScreen = ({ navigation }: any) => {
             text={page === onboardData.length - 1 ? 'Get Started' : 'Next'}
             variant="gradient"
             onPress={goNext}
-            className={` ${page === onboardData.length - 1 ? 'w-[280px]' : 'w-[160px]'} rounded-2xl`}
+            className={`${page === onboardData.length - 1 ? 'w-full px-3' : 'w-[160px]'} rounded-2xl`}
           />
         </View>
       </GradientBackground>

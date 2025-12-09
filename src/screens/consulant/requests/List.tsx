@@ -41,13 +41,18 @@ const formatTimeAgo = (timestamp: number) => {
   return `${Math.floor(diffInSeconds / 86400)}d ago`;
 };
 
-const getInitials = (name: string) =>
-  name
+const getInitials = (name: string) => {
+  if (!name || typeof name !== 'string') {
+    return '??';
+  }
+  const initials = name
     .split(' ')
     .filter(Boolean)
     .map((chunk) => chunk[0]?.toUpperCase() || '')
     .join('')
     .slice(0, 2);
+  return initials || '??';
+};
 
 const List: React.FC<ListProps> = ({
   requests,
@@ -92,7 +97,7 @@ const List: React.FC<ListProps> = ({
         </View>
       ) : (
         requests.map((request) => {
-          const initials = getInitials(request.customerName);
+          const initials = getInitials(request.customerName || '');
           const timeAgo = formatTimeAgo(request.requestedAt);
           const buttonLabel =
             acceptingId && acceptingId === request.id ? 'Accepting…' : 'Accept Request';
@@ -107,7 +112,11 @@ const List: React.FC<ListProps> = ({
                   className="w-14 h-14 rounded-full items-center justify-center mr-3 overflow-hidden"
                   style={{ backgroundColor: '#27B07D' }}
                 >
-                  <Text className="text-white font-urbanist font-semibold text-xl">{initials}</Text>
+                  {initials ? (
+                    <Text className="text-white font-urbanist font-semibold text-xl">
+                      {initials}
+                    </Text>
+                  ) : null}
                 </View>
                 <View className="flex-1">
                   {request.hasImage && (
