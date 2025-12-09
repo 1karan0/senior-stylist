@@ -8,6 +8,8 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import LinearGradient from 'react-native-linear-gradient';
+import Button from '@/common/components/Button';
 
 const Profile: React.FC = () => {
   const { isDark } = useTheme();
@@ -42,92 +44,82 @@ const Profile: React.FC = () => {
         >
           {/* Profile Card */}
           <View
-            className={`rounded-2xl border p-4 mb-3 shadow-sm ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
+            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}  rounded-xl p-4 border mb-5`}
           >
-            <View className="items-start mb-4">
-              {/* Avatar + Name + Badge + Theme Switch */}
-              <View className="flex-row items-start">
-                {/* Avatar */}
+            <View className="flex-row items-center gap-4 mb-4">
+              {/* Avatar */}
+              <LinearGradient
+                colors={['#2CCB91', '#23A76F']}
+                start={{ x: 0, y: 1 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  borderRadius: 28,
+                  height: 56,
+                  width: 56,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  overflow: 'hidden',
+                }}
+              >
+                {user?.profile_picture_url ? (
+                  <Image
+                    source={{ uri: user.profile_picture_url }}
+                    style={{
+                      height: 56,
+                      width: 56,
+                      borderRadius: 28,
+                    }}
+                  />
+                ) : (
+                  <Text className="text-white text-xl font-urbanist-bold">
+                    {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
+                  </Text>
+                )}
+              </LinearGradient>
+
+              {/* Name + Role */}
+              <View className="flex-1">
+                <Text
+                  className={`text-2xl ${isDark ? 'text-white' : 'text-textDark'} font-urbanist-bold`}
+                >
+                  {user?.name}
+                </Text>
                 <View
                   style={{
-                    borderRadius: 28,
-                    height: 56,
-                    width: 56,
+                    alignSelf: 'flex-start',
+                    marginTop: 4,
+                    borderRadius: 10,
+                    paddingVertical: 4,
+                    paddingHorizontal: 14,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    overflow: 'hidden',
                     backgroundColor: '#2CCB91',
-                    marginTop: 4,
                   }}
                 >
-                  {user?.profile_picture_url ? (
-                    <Image
-                      source={{ uri: user.profile_picture_url }}
-                      style={{
-                        height: 56,
-                        width: 56,
-                        borderRadius: 28,
-                      }}
-                    />
-                  ) : (
-                    <Text className="text-white text-xl font-urbanist-bold">
-                      {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
-                    </Text>
-                  )}
-                </View>
-
-                {/* Name, Badge and Theme Switch */}
-                <View className="flex-1 ml-3 ">
                   <Text
-                    className={`text-2xl font-urbanist-bold mb-2 ml-1 ${
-                      isDark ? 'text-white' : 'text-textDark'
-                    }`}
+                    className="text-white text-xs font-urbanist-bold"
+                    style={{
+                      textAlignVertical: 'center',
+                      includeFontPadding: false,
+                      lineHeight: 14,
+                    }}
                   >
-                    {user?.name}
+                    {user?.role || 'Member'}
                   </Text>
-
-                  <View style={{ alignSelf: 'flex-start' }}>
-                    <View
-                      style={{
-                        borderRadius: 14,
-                        paddingVertical: 4,
-                        paddingHorizontal: 10,
-                        marginTop: 4,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        minHeight: 28,
-                        backgroundColor: '#2CCB91',
-                      }}
-                    >
-                      <Text
-                        className="text-white text-[13px] font-urbanist-bold"
-                        style={{
-                          textAlignVertical: 'center',
-                          includeFontPadding: false,
-                          lineHeight: 14,
-                        }}
-                      >
-                        {user?.role}
-                      </Text>
-                    </View>
-                  </View>
                 </View>
               </View>
-
-              {/* Edit Profile Button */}
-              <TouchableOpacity
-                onPress={goToEditProfile}
-                className="w-full bg-[#DAE7E0] py-3 rounded-xl mt-4"
-                activeOpacity={0.8}
-              >
-                <Text className="text-textDark text-center font-urbanist-bold">Edit Profile</Text>
-              </TouchableOpacity>
             </View>
+            <Button
+              text="Edit Profile"
+              variant="light"
+              onPress={goToEditProfile}
+              className={` bg-[#DAE7E0] rounded-[10px]`}
+            />
           </View>
 
           {/* Account Information */}
           <View
-            className={`rounded-xl border p-6 mb-6 shadow-sm ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
+            className={`rounded-xl border p-6 mb-5 shadow-sm ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
           >
             <Text
               className={`text-xl font-urbanist-semibold mb-4 ${isDark ? 'text-white' : 'text-textDark'}`}
@@ -170,7 +162,7 @@ const Profile: React.FC = () => {
 
           {/* Performance Overview */}
           <View
-            className={`rounded-xl p-6 mb-6 shadow-sm ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
+            className={`rounded-xl p-6 mb-5 shadow-sm ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
           >
             <Text
               className={`text-xl font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'}`}

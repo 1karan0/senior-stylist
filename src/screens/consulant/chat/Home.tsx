@@ -10,7 +10,6 @@ import {
   View,
   Platform,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -392,7 +391,11 @@ const ChatHome: React.FC = () => {
           >
             Client Consultations
           </Text>
-          {connectionIndicator}
+          <Text className={`text-xs font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}>
+            {isRealtimeConnected
+              ? 'Connected to live updates'
+              : 'Showing last synced conversations'}
+          </Text>
 
           <View
             className={`flex-row items-center border mt-3 rounded-xl ${
@@ -455,6 +458,7 @@ const ChatHome: React.FC = () => {
             data={filteredConversations}
             keyExtractor={(item) => String(item.id)}
             renderItem={renderConversation}
+            showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom }} // <- critical change
             ListEmptyComponent={renderEmpty}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
