@@ -199,7 +199,7 @@ const CustomerChatHome: React.FC = () => {
   }, [loadConversations, subscribeRealtime]);
 
   const previews: ConversationPreview[] = useMemo(
-    () => consultations.map((c) => createPreview(c)),
+    () => consultations.filter((c) => c.status !== 'cancelled').map((c) => createPreview(c)),
     [consultations, createPreview]
   );
 
