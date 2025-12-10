@@ -1,15 +1,16 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { createConsultation } from '@/api/user/consultation/useCreateConsultation';
+import { useCancelConsultaion } from '@/api/user/consultation/useCancelConsultaion';
 import { customerConsultationsApi } from '@/api/customer/consultations';
 import type { AppStackParamList, ConsultationStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { storage } from '@/services/storage';
+import Toast from '@/common/components/Toast';
 
 type CombinedStackParamList = AppStackParamList & ConsultationStackParamList;
 type FindingRoute = RouteProp<CombinedStackParamList, 'FindingStylist'>;
@@ -25,6 +26,7 @@ const FindingStylist: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [searchFailedMessage, setSearchFailedMessage] = useState<string | null>(null);
+  const [consultationStatus, setConsultationStatus] = useState<string | null>(null);
   const [toast, setToast] = useState({
     visible: false,
     message: '',
@@ -32,6 +34,7 @@ const FindingStylist: React.FC = () => {
   });
 
   const { isDark } = useTheme();
+  const cancelConsultationMutation = useCancelConsultaion();
 
   const statusIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -94,6 +97,7 @@ const FindingStylist: React.FC = () => {
       const response = await customerConsultationsApi.get(consultationId);
       if (response.status === 'success' && response.data?.consultation) {
         const updated = response.data.consultation;
+        setConsultationStatus(updated.status);
 
         if (
           (updated.status === 'assigned' && updated.consultant_id) ||
@@ -191,6 +195,46 @@ const FindingStylist: React.FC = () => {
     });
   };
 
+  const handleCancelConsultation = async () => {
+    if (!consultationId) {
+      showToast('Invalid consultation reference.', 'error');
+      return;
+    }
+
+    // Check if consultation can be cancelled (not accepted/assigned/active)
+    if (consultationStatus === 'assigned' || consultationStatus === 'active') {
+      showToast('This consultation has already been accepted and cannot be cancelled.', 'warning');
+      return;
+    }
+
+    try {
+      stopAllTimers();
+      setLoading(true);
+      await cancelConsultationMutation.mutateAsync(String(consultationId));
+      showToast('Consultation cancelled successfully.', 'success');
+
+      // Clear draft and navigate back
+      await storage.removeConsultationDraft();
+      setTimeout(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'ConsultationHome' as keyof CombinedStackParamList }],
+        });
+      }, 1500);
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to cancel consultation. Please try again.', 'error');
+      setLoading(false);
+    }
+  };
+
+  // Check if consultation can be cancelled (not accepted yet)
+  const canCancelConsultation =
+    consultationStatus &&
+    consultationStatus !== 'assigned' &&
+    consultationStatus !== 'active' &&
+    consultationStatus !== 'cancelled' &&
+    consultationStatus !== 'expired';
+
   const renderSearchingState = () => (
     <>
       <View className={` justify-center items-center mb-4`}>
@@ -261,6 +305,12 @@ const FindingStylist: React.FC = () => {
 
   return (
     <View className="flex-1" style={{ backgroundColor: '#0E1B16' }}>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, visible: false })}
+      />
       <SafeAreaView className="flex-1 px-5">
         <TouchableOpacity
           className="w-10 h-10 rounded-full border border-white/20 justify-center items-center mt-4"
@@ -278,6 +328,19 @@ const FindingStylist: React.FC = () => {
                 <ActivityIndicator color="#27B07D" size="small" />
                 <Text className="text-[13px] text-[#7C7C7C]">Connecting you with stylists…</Text>
               </View>
+            )}
+
+            {/* Cancel Button - Only show when consultation is not accepted */}
+            {!searchFailedMessage && canCancelConsultation && (
+              <TouchableOpacity
+                className="mt-4 w-full rounded-xl border border-red-300 py-3.5 items-center"
+                onPress={handleCancelConsultation}
+                disabled={cancelConsultationMutation.isPending || loading}
+              >
+                <Text className="text-red-500 text-[15px] font-semibold">
+                  {cancelConsultationMutation.isPending ? 'Cancelling...' : 'Cancel Consultation'}
+                </Text>
+              </TouchableOpacity>
             )}
           </View>
         </ScrollView>
