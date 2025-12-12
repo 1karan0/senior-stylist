@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, Linking } from 'react-native';
-import { useTheme } from '@/contexts/ThemeContext';
 import LinearGradient from 'react-native-linear-gradient';
+
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ItemProps {
   item: any;

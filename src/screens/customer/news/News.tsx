@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
+
 import { useGetNewsArticles } from '@/api/user/news/useGetNewsArticles';
 import { useGetNewsCategories } from '@/api/user/news/useGetNewsCategories';
 import ArticleCard from './components/ArticleCard';

@@ -4,13 +4,13 @@ import { useForm, Controller } from 'react-hook-form';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 
-import { AuthStackParamList } from '@/common/types';
 import { useResetPassword } from '@/api/auth/useResetPassword';
-import { useTheme } from '@/contexts/ThemeContext';
+import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import Toast from '@/common/components/Toast';
 import TextInputField from '@/common/components/TextInputField';
-import Button from '@/common/components/Button';
+import { AuthStackParamList } from '@/common/types';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const ResetPassword = () => {
   const {

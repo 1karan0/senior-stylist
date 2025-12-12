@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, StatusBar, Platform, Dimensions } from 'react-native';
+import { View, StatusBar, Platform, Dimensions } from 'react-native';
 import PagerView from 'react-native-pager-view';
+
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
+import OnboardItem from './components/OnboardItem';
 import { useTheme } from '@/contexts/ThemeContext';
 import onboardData from '@/lib/onboardData';
-import OnboardItem from './components/OnboardItem';
 
 const OnboardingScreen = ({ navigation }: any) => {
   const pagerRef = useRef<PagerView>(null);
@@ -83,7 +84,7 @@ const OnboardingScreen = ({ navigation }: any) => {
         {/* BUTTONS */}
         <View
           className={`${page === onboardData.length - 1 ? 'items-center' : 'flex-row items-center justify-center gap-4'} px-6`}
-          style={{ marginBottom: Platform.OS === 'android' ? 15 : 0 }}
+          style={{ marginBottom: Platform.OS === 'android' ? 35 : 0 }}
         >
           {page !== onboardData.length - 1 && (
             <Button

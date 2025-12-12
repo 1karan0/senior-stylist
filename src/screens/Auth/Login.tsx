@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, Image, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';

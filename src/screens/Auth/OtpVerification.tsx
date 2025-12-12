@@ -197,7 +197,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
               }}
               maxLength={1}
               keyboardType="number-pad"
-              className={`w-12 h-12 border border-textPrimary ${
+              className={`w-12 h-14 border border-textPrimary ${
                 isDark ? 'bg-commonGradientStop6 text-white' : 'bg-white text-black'
               } rounded-md mx-1 text-center text-[20px]  `}
             />

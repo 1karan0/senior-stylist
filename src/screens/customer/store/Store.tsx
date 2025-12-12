@@ -11,13 +11,13 @@ import {
   Platform,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import GradientBackground from '@/common/components/GradientBackground';
-import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
-import { useTheme } from '@/contexts/ThemeContext';
 
 import { useGetStoreProducts } from '@/api/user/store/useGetStoreProducts';
 import { useGetStoreCategories } from '@/api/user/store/useGetStoreCategories';
+import GradientBackground from '@/common/components/GradientBackground';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import Itemcard from './components/Itemcard';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const StoreScreen = () => {
   const [products, setProducts] = useState<any[]>([]);

@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, Animated } from 'react-native';
-import { useGetProfile } from '@/api/user/profile/useGetProfile';
-import { useAuth } from '@/contexts/AuthContext';
+import LinearGradient from 'react-native-linear-gradient';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { ProfileStackParamList, ProfileUser } from '@/common/types';
+
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
+import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
-import Clipboard from '@react-native-clipboard/clipboard';
+import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
-import LinearGradient from 'react-native-linear-gradient';
-import Button from '@/common/components/Button';
+import { useAuth } from '@/contexts/AuthContext';
 
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
@@ -27,6 +28,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const scaleAnim = useState(new Animated.Value(1))[0];
   const fadeAnim = useState(new Animated.Value(0))[0];
 
+  console.log('profile', profile);
   const user = profile as ProfileUser;
 
   const handleCopyCode = () => {
@@ -249,13 +251,17 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
               <View className="flex-row items-center justify-center ">
                 <View className="items-center  w-[50%]">
-                  <Text className="text-white text-[40px] font-urbanist-bold">1</Text>
-                  <Text className="text-white font-poppins-medium text-center text-sm w-[70%]">
+                  <Text className="text-white text-[40px] font-urbanist-bold">
+                    {user?.referral_stats?.total_rewards_earned ?? 0}
+                  </Text>
+                  <Text className="text-white font-poppins-medium text-center text-sm">
                     Free Consultation Sessions
                   </Text>
                 </View>
                 <View className="items-center  w-[50%] h-full">
-                  <Text className="text-white text-[40px] font-urbanist-bold">4</Text>
+                  <Text className="text-white text-[40px] font-urbanist-bold">
+                    {user?.referral_stats?.total_referrals ?? 0}
+                  </Text>
                   <Text className="text-white font-poppins-medium text-sm">Referrals</Text>
                 </View>
               </View>

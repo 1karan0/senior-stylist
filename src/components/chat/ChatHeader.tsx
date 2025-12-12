@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ConsultantConsultation } from '@/api/consultant/consultations';
 import ChatHeaderSkeleton from '@/common/components/skeletons/ChatHeaderSkeleton';
+import ConsultantDetails from '@/common/components/modals/ConsultantDetailsModal';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ChatHeaderProps {
   consultation: ConsultantConsultation | null;
@@ -42,6 +44,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   isFinishing = false,
 }) => {
   const insets = useSafeAreaInsets();
+  const { isDark } = useTheme();
+  const [showConsultantModal, setShowConsultantModal] = useState(false);
 
   if (isLoading || !consultation) {
     return <ChatHeaderSkeleton />;
@@ -50,10 +54,26 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const otherPerson = isConsultant ? consultation.user : consultation.consultant;
   const otherPersonName = otherPerson?.name || (isConsultant ? 'Client' : 'Stylist');
   const consultantDetails = consultation.consultant?.consultant_details as
-    | { specialization?: string }
+    | {
+        specialization?: string;
+        bio?: string;
+        years_experience?: number;
+        average_rating?: string;
+        total_sessions?: number;
+      }
     | null
     | undefined;
   const specialization = consultantDetails?.specialization;
+
+  const handleProfilePress = () => {
+    if (isConsultant && consultation.user) {
+      // Consultant viewing user profile
+      setShowConsultantModal(true);
+    } else if (!isConsultant && consultation.consultant) {
+      // User viewing consultant profile
+      setShowConsultantModal(true);
+    }
+  };
 
   return (
     <View>
@@ -71,18 +91,20 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
 
-          {otherPerson?.profile_picture_url ? (
-            <Image
-              source={{ uri: otherPerson.profile_picture_url }}
-              className="w-12 h-12 rounded-full mr-3"
-            />
-          ) : (
-            <View className="w-10 h-10 rounded-full bg-white/20 justify-center items-center mr-3">
-              <Text className="text-white text-[16px] font-urbanist-semibold">
-                {getInitials(otherPersonName)}
-              </Text>
-            </View>
-          )}
+          <TouchableOpacity onPress={handleProfilePress} activeOpacity={0.7}>
+            {otherPerson?.profile_picture_url ? (
+              <Image
+                source={{ uri: otherPerson.profile_picture_url }}
+                className="w-12 h-12 rounded-full mr-3"
+              />
+            ) : (
+              <View className="w-10 h-10 rounded-full bg-white/20 justify-center items-center mr-3">
+                <Text className="text-white text-[16px] font-urbanist-semibold">
+                  {getInitials(otherPersonName)}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
           <View>
             <View className="flex-1 items-center gap-[4px]">
               <Text className="text-[16px]  font-urbanist-semibold text-white">
@@ -150,6 +172,16 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </View>
         )}
       </View>
+
+      {/* Profile Details Modal */}
+      {(isConsultant ? consultation.user : consultation.consultant) && (
+        <ConsultantDetails
+          visible={showConsultantModal}
+          onClose={() => setShowConsultantModal(false)}
+          consultation={consultation}
+          isConsultant={isConsultant}
+        />
+      )}
     </View>
   );
 };

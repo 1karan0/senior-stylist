@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, ImageSourcePropType, Dimensions } from 'react-native';
+
 import { useTheme } from '@/contexts/ThemeContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -24,7 +25,7 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
         resizeMode="cover"
         style={{
           width: '100%',
-          height: '85%',
+          height: '75%',
           position: 'absolute',
           top: 0,
           left: 0,

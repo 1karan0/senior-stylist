@@ -1,14 +1,12 @@
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import React from 'react';
 
 import { useGetConsultation } from '@/api/user/consultation/usegetconsultation';
-import NoConsultant from './NoConsultant';
-import Chat from './Chat';
-import { useTheme } from '@/contexts/ThemeContext';
-import ChatHome from '@/screens/consulant/chat/Home';
 import CustomerChatHome from './ChatHome';
+import NoConsultant from './NoConsultant';
+import { useTheme } from '@/contexts/ThemeContext';
 
-const Consultation = ({ navigation }: any) => {
+const Consultation = () => {
   const { data, isLoading } = useGetConsultation();
   const { isDark } = useTheme();
 

@@ -11,6 +11,7 @@ export const useEditProfile = () => {
       address: string;
       profile_picture_url: string;
       phone: string;
+      password?: string;
     }) => {
       const token = await storage.getToken();
       if (!token) throw new Error('Auth token missing');

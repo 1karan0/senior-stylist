@@ -1,22 +1,20 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'react-native-image-picker';
 import LinearGradient from 'react-native-linear-gradient';
 
-import GradientBackground from '@/common/components/GradientBackground';
-import { useTheme } from '@/contexts/ThemeContext';
-
-import { ProfileUser } from '@/common/types';
-import TextInputField from '@/common/components/TextInputField';
-
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';
 import { useEditProfile } from '@/api/user/profile/useEditProfile';
 import { Button } from '@/common/components/Button';
-
+import GradientBackground from '@/common/components/GradientBackground';
+import { ProfileUser } from '@/common/types';
+import TextInputField from '@/common/components/TextInputField';
 import ImagePickerModal from '@/common/components/modals/ImagePickerModal';
+import ImageModal from '@/components/chat/ImageModal';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const EditProfile = () => {
   const navigation = useNavigation();
@@ -28,17 +26,27 @@ const EditProfile = () => {
   const uploadMutation = useUploadProfilePicture();
   const editMutation = useEditProfile();
 
-  const { control, handleSubmit, setValue, watch } = useForm({
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       name: profile.name,
       phone: profile.phone,
       address: profile.address ?? '',
       email: profile.email,
+      newPassword: '',
+      confirmPassword: '',
     },
   });
 
   const [profilePic, setProfilePic] = React.useState(profile.profile_picture_url);
   const [showModal, setShowModal] = React.useState(false);
+  const [showImagePreview, setShowImagePreview] = React.useState(false);
+  const [showPasswordSection, setShowPasswordSection] = React.useState(false);
 
   // Optimize Image
   const optimizeImage = (asset: ImagePicker.Asset) => {
@@ -109,8 +117,11 @@ const EditProfile = () => {
 
   const onSave = (values: any) => {
     const payload = {
-      ...values,
+      name: values.name,
+      phone: values.phone,
+      address: values.address,
       profile_picture_url: profilePic,
+      ...(values.newPassword && { password: values.newPassword }),
     };
 
     editMutation.mutate(payload, {
@@ -145,12 +156,13 @@ const EditProfile = () => {
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Profile Pic */}
           <View className="items-center mb-10">
-            <View>
+            <View style={{ position: 'relative' }}>
               {/* Profile Pic Container */}
               <TouchableOpacity
                 onPress={() => {
-                  console.log('pressed!');
-                  setShowModal(true);
+                  if (profilePic) {
+                    setShowImagePreview(true);
+                  }
                 }}
                 activeOpacity={0.8}
               >
@@ -175,8 +187,8 @@ const EditProfile = () => {
 
               {/* The PLUS button - make it a real touchable */}
               <TouchableOpacity
-                onPress={() => {
-                  console.log('pressed!', showModal);
+                onPress={(e) => {
+                  e.stopPropagation();
                   setShowModal(true);
                 }}
                 activeOpacity={0.7}
@@ -232,6 +244,93 @@ const EditProfile = () => {
             </View>
           </View>
 
+          {/* Change Password Section - Instagram Style */}
+          <View
+            className={`${
+              isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'
+            } rounded-2xl border mt-5 overflow-hidden`}
+          >
+            <TouchableOpacity
+              onPress={() => setShowPasswordSection(!showPasswordSection)}
+              activeOpacity={0.7}
+              className="flex-row items-center justify-between px-4 py-4"
+            >
+              <Text
+                className={`text-base font-urbanist-semibold ${
+                  isDark ? 'text-white' : 'text-textDark'
+                }`}
+              >
+                Change Password
+              </Text>
+              <Image
+                source={
+                  isDark
+                    ? require('@/assets/icons/green-back.png')
+                    : require('@/assets/icons/back.png')
+                }
+                style={{
+                  width: 16,
+                  height: 16,
+                  transform: [{ rotate: showPasswordSection ? '90deg' : '-90deg' }],
+                }}
+              />
+            </TouchableOpacity>
+
+            {showPasswordSection && (
+              <View
+                className="px-4 pb-4 border-t"
+                style={{ borderTopColor: isDark ? '#1a3a2e' : '#DAE7E0' }}
+              >
+                <View className="pt-4 gap-3">
+                  <Controller
+                    control={control}
+                    name="newPassword"
+                    rules={{
+                      validate: (value) => {
+                        if (value && value.length < 6)
+                          return 'Password must be at least 6 characters';
+                        return true;
+                      },
+                    }}
+                    render={({ field: { onChange, value } }) => (
+                      <TextInputField
+                        label="NEW PASSWORD"
+                        placeholder="Enter new password"
+                        value={value || ''}
+                        onChangeText={onChange}
+                        isPassword={true}
+                        error={errors.newPassword?.message as string}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="confirmPassword"
+                    rules={{
+                      validate: (value, formValues) => {
+                        if (formValues.newPassword && !value) return 'Please confirm your password';
+                        if (formValues.newPassword && value !== formValues.newPassword)
+                          return 'Passwords do not match';
+                        return true;
+                      },
+                    }}
+                    render={({ field: { onChange, value } }) => (
+                      <TextInputField
+                        label="CONFIRM NEW PASSWORD"
+                        placeholder="Confirm new password"
+                        value={value || ''}
+                        onChangeText={onChange}
+                        isPassword={true}
+                        error={errors.confirmPassword?.message as string}
+                      />
+                    )}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
+
           <View className="mt-6">
             <Button
               loading={editMutation.isPending}
@@ -250,13 +349,19 @@ const EditProfile = () => {
             />
           </View>
         </ScrollView>
-        {/* The new modal */}
+        {/* Image Picker Modal */}
         <ImagePickerModal
           visible={showModal}
           onClose={() => setShowModal(false)}
           onCamera={takePhoto}
           onGallery={pickFromGallery}
           loading={uploadMutation.isPending}
+        />
+        {/* Image Preview Modal */}
+        <ImageModal
+          visible={showImagePreview}
+          imageUri={profilePic || null}
+          onClose={() => setShowImagePreview(false)}
         />
       </View>
     </GradientBackground>

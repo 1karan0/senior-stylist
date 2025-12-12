@@ -1,10 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ConsultationStackParamList } from '@/common/types';
-import Chat from '@/screens/customer/consultation/Chat';
 import Consultation from '@/screens/customer/consultation/Consultation';
-import CustomerChatHome from '@/screens/customer/consultation/ChatHome';
-import Details from '@/screens/customer/consultation/Details';
+
 import NoConsultant from '@/screens/customer/consultation/NoConsultant';
 import NewConsultant from '@/screens/customer/consultation/NewConsultant';
 import FindingStylist from '@/screens/customer/consultation/FindingStylist';
@@ -23,11 +21,6 @@ const ConsultationStack: React.FC = () => (
       options={{ title: 'Consultation' }}
     />
     <Stack.Screen
-      name="ConsultationDetail"
-      component={Details}
-      options={{ title: 'Consultation Details' }}
-    />
-    <Stack.Screen
       name="NoConsultant"
       component={NoConsultant}
       options={{ title: 'No Consultant Available' }}
@@ -42,9 +35,6 @@ const ConsultationStack: React.FC = () => (
       component={FindingStylist}
       options={{ title: 'Finding Stylist' }}
     />
-    <Stack.Screen name="ConsultationChat" options={{ title: 'Chat' }}>
-      {(props) => <Chat {...(props as any)} />}
-    </Stack.Screen>
   </Stack.Navigator>
 );
 

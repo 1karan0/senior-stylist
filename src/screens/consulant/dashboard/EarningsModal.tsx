@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
+
 import { ModalWrapper } from '@/common/components/ModalWrapper';
 import { Button } from '@/common/components/Button';
 

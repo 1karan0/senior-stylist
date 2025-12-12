@@ -223,6 +223,12 @@ export interface ConversationPreview {
   unreadCount: number;
 }
 
+export interface ReferralStats {
+  total_referrals: number;
+  total_rewards_earned: number;
+  total_rewards_available: number;
+}
+
 export interface ProfileUser {
   id: number;
   name: string;
@@ -235,4 +241,5 @@ export interface ProfileUser {
   created_at: string;
   is_away: boolean;
   away_since: string | null;
+  referral_stats?: ReferralStats;
 }

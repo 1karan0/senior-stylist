@@ -79,7 +79,7 @@ const UserTabNavigator: React.FC = () => {
         tabBarItemStyle: {
           alignItems: 'center',
           justifyContent: 'center',
-          paddingHorizontal: Platform.OS === 'ios' ? 4 : 0,
+          paddingHorizontal: Platform.OS === 'ios' ? 4 : 10,
           paddingTop: Platform.OS === 'ios' ? 2 : 0,
           paddingBottom: Platform.OS === 'ios' ? 4 : 6,
         },

@@ -175,55 +175,9 @@ const Settings: React.FC = () => {
             </View>
           </View>
 
-          {/* Account Section */}
-          <View
-            className={`rounded-xl border p-5 mb-4 shadow-sm ${
-              isDark
-                ? 'bg-buttonSecondaryText border-commonGradientStop7'
-                : 'bg-white border-[#DAE7E0]'
-            }`}
-          >
-            <Text
-              className={`text-lg font-urbanist-semibold mb-4 ${
-                isDark ? 'text-white' : 'text-textDark'
-              }`}
-            >
-              Account
-            </Text>
-
-            <TouchableOpacity
-              onPress={handleDeleteAccount}
-              className={`flex-row items-center justify-between p-4 rounded-xl ${
-                isDark ? 'bg-[#0F1F1A]' : 'bg-[#F5F9F7]'
-              }`}
-              activeOpacity={0.7}
-            >
-              <View className="flex-row items-center flex-1">
-                <View className="w-10 h-10 bg-red-500/10 rounded-full items-center justify-center mr-3">
-                  <Ionicons name="trash-outline" size={20} color="#F22D2D" />
-                </View>
-
-                <View className="flex-1">
-                  <Text className="text-error font-urbanist-semibold text-base">
-                    Delete Account
-                  </Text>
-                  <Text
-                    className={`text-sm font-poppins-regular mt-1 ${
-                      isDark ? 'text-textSecondary' : 'text-textMuted'
-                    }`}
-                  >
-                    Permanently delete your account
-                  </Text>
-                </View>
-              </View>
-
-              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-            </TouchableOpacity>
-          </View>
-
           {/* About Section */}
           <View
-            className={`rounded-xl border p-5 mb-8 shadow-sm ${
+            className={`rounded-xl border p-5 mb-4 shadow-sm ${
               isDark
                 ? 'bg-buttonSecondaryText border-commonGradientStop7'
                 : 'bg-white border-[#DAE7E0]'
@@ -281,6 +235,51 @@ const Settings: React.FC = () => {
                 <Ionicons name="chevron-forward" size={18} color={isDark ? '#8AA897' : '#658176'} />
               </TouchableOpacity>
             </View>
+          </View>
+          {/* Account Section */}
+          <View
+            className={`rounded-xl border p-5 mb-4 shadow-sm ${
+              isDark
+                ? 'bg-buttonSecondaryText border-commonGradientStop7'
+                : 'bg-white border-[#DAE7E0]'
+            }`}
+          >
+            <Text
+              className={`text-lg font-urbanist-semibold mb-4 ${
+                isDark ? 'text-white' : 'text-textDark'
+              }`}
+            >
+              Account
+            </Text>
+
+            <TouchableOpacity
+              onPress={handleDeleteAccount}
+              className={`flex-row items-center justify-between p-4 rounded-xl ${
+                isDark ? 'bg-[#0F1F1A]' : 'bg-[#F5F9F7]'
+              }`}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center flex-1">
+                <View className="w-10 h-10 bg-red-500/10 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="trash-outline" size={20} color="#F22D2D" />
+                </View>
+
+                <View className="flex-1">
+                  <Text className="text-error font-urbanist-semibold text-base">
+                    Delete Account
+                  </Text>
+                  <Text
+                    className={`text-sm font-poppins-regular mt-1 ${
+                      isDark ? 'text-textSecondary' : 'text-textMuted'
+                    }`}
+                  >
+                    Permanently delete your account
+                  </Text>
+                </View>
+              </View>
+
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            </TouchableOpacity>
           </View>
         </ScrollView>
 

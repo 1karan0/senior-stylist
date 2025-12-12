@@ -256,7 +256,6 @@ const Profile: React.FC = () => {
               <Ionicons name="log-out-outline" size={24} color="#F22D2D" />
               <Text className="text-error font-urbanist-semibold ml-3">Sign Out</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
           </TouchableOpacity>
         </ScrollView>
       </View>

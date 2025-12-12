@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,12 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { NewsStackParamList } from '@/common/types';
-import GradientBackground from '@/common/components/GradientBackground';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import RenderHTML from 'react-native-render-html';
-import { useTheme } from '@/contexts/ThemeContext';
+
 import { useGetNewsDetail } from '@/api/user/news/useGetNewsDetail';
+import GradientBackground from '@/common/components/GradientBackground';
+import { NewsStackParamList } from '@/common/types';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // simple relative time formatter (avoids adding a new dependency)
 const formatRelativeTime = (iso?: string | null) => {
@@ -52,7 +52,9 @@ const Details: React.FC = () => {
   if (isLoading) {
     return (
       <GradientBackground className="flex-1 justify-center">
-        <ActivityIndicator size="large" />
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" />
+        </View>
       </GradientBackground>
     );
   }

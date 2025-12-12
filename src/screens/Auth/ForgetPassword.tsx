@@ -1,13 +1,13 @@
+import { useState } from 'react';
+import { View, Text, Pressable, Image } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
+
 import { useForgotPassword } from '@/api/auth/useForgotPasswod';
-import { useEffect, useState } from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
+import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import Toast from '@/common/components/Toast';
-
-import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
 import TextInputField from '@/common/components/TextInputField';
-import Button from '@/common/components/Button';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function ForgetPassword({ navigation }: any) {
   const {

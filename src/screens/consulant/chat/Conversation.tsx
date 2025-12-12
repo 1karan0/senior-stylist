@@ -1,76 +1,65 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
-import Ionicons from '@react-native-vector-icons/ionicons';
-import LinearGradient from 'react-native-linear-gradient';
-import NetInfo from '@react-native-community/netinfo';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import firestore from '@react-native-firebase/firestore';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { ConsultantConsultation, consultantConsultationsApi } from '@/api/consultant/consultations';
-import { customerConsultationsApi } from '@/api/customer/consultations';
-import { consultationMessagesApi } from '@/api/consultations/messages';
+import { useConsultation } from '@/hooks/useConsultation';
+import { useChatMessages } from '@/hooks/useChatMessages';
+import { setActiveChat, clearActiveChat } from '@/api/chat/useActiveChat';
+import { useFinishConsultation } from '@/api/user/consultation/useFinishConsultation';
+import { useRatingConsultation } from '@/api/user/consultation/useRatingConsultation';
+
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatInput from '@/components/chat/ChatInput';
 import MessageBubble from '@/components/chat/MessageBubble';
 import ImageModal from '@/components/chat/ImageModal';
-import { sendMessageToFirestore, waitForFirebaseUser } from '@/services/firebase';
-import { setActiveChat, clearActiveChat } from '@/api/chat/useActiveChat';
-import { useFinishConsultation } from '@/api/user/consultation/useFinishConsultation';
-import { useRatingConsultation } from '@/api/user/consultation/useRatingConsultation';
-import {
-  getCachedConsultation,
-  getMessages,
-  initChatDatabase,
-  markAllAsRead,
-  saveConsultation,
-  saveMessage,
-  saveMessages,
-  updateMessageStatus,
-} from '@/services/chatDatabase';
+import ScrollToBottomButton from '@/components/chat/ScrollToBottomButton';
+import ChatClosedBanner from '@/components/chat/ChatClosedBanner';
+import ChatLoadingScreen from '@/components/chat/ChatLoadingScreen';
+import EmptyMessageList from '@/components/chat/EmptyMessageList';
+
 import type { ChatMessage } from '@/types/chat';
 import type { AppStackParamList } from '@/common/types';
 import GradientBackground from '@/common/components/GradientBackground';
 import MessageListSkeleton from '@/common/components/skeletons/MessageSkeleton';
 import FinishConsultationModal from '@/common/components/modals/FinishConsultationModal';
 import RatingModal from '@/common/components/modals/RatingModal';
-import { useTheme } from '@/contexts/ThemeContext';
 
 type RouteProps = RouteProp<AppStackParamList, 'ConsultantChat'>;
 
-const PAGE_SIZE = 20;
-const REALTIME_LIMIT = 50;
-
 const ConsultantChatScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute<RouteProps>();
   const { consultationId, asCustomer } = route.params;
   const { user } = useAuth();
-  const { isDark } = useTheme();
 
   const currentUserId = user ? String(user.id) : null;
   const currentUserName = user?.name ?? 'You';
   const isConsultant = user?.role === 'consultant' && !asCustomer;
 
-  const [consultation, setConsultation] = useState<ConsultantConsultation | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingOlder, setLoadingOlder] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [realtimeEnabled, setRealtimeEnabled] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
-  const [offlineError, setOfflineError] = useState<string | null>(null);
+  const { consultation, loading, isOnline } = useConsultation({
+    consultationId,
+    isConsultant,
+  });
+
+  const {
+    messages,
+    loading: messagesLoading,
+    loadingOlder,
+    hasMore,
+    realtimeEnabled,
+    offlineError: messagesOfflineError,
+    loadOlderMessages,
+    sendMessage: sendMessageHook,
+    retryMessage,
+    reloadMessages,
+  } = useChatMessages({
+    consultationId,
+    isOnline,
+    currentUserId: currentUserId || '',
+  });
+
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
@@ -80,22 +69,7 @@ const ConsultantChatScreen: React.FC = () => {
   const ratingMutation = useRatingConsultation();
 
   const flashListRef = useRef<FlashListRef<ChatMessage>>(null);
-  const realtimeUnsubscribeRef = useRef<(() => void) | null>(null);
   const scrollOffsetRef = useRef(0);
-
-  useEffect(() => {
-    initChatDatabase();
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      setIsOnline(Boolean(state.isConnected));
-      if (state.isConnected && offlineError) {
-        setOfflineError(null);
-      }
-    });
-    return () => unsubscribe();
-  }, [offlineError]);
 
   // Set active chat when screen opens, clear when screen closes
   useEffect(() => {
@@ -105,7 +79,6 @@ const ConsultantChatScreen: React.FC = () => {
       }
     });
 
-    // Clear active chat when screen closes/unmounts
     return () => {
       if (consultationId) {
         clearActiveChat(consultationId).catch((error) => {
@@ -117,350 +90,44 @@ const ConsultantChatScreen: React.FC = () => {
     };
   }, [consultationId]);
 
-  const loadConsultation = useCallback(async () => {
-    setLoading(true);
-    try {
-      const cached = await getCachedConsultation(consultationId);
-      if (cached) {
-        setConsultation(cached);
-      }
-
-      if (!isOnline) {
-        if (!cached) {
-          setOfflineError('Offline. Consultation not cached.');
-        }
-        return;
-      }
-
-      if (isConsultant) {
-        const latest = await consultantConsultationsApi.get(consultationId);
-        if (latest) {
-          setConsultation(latest);
-          await saveConsultation(latest);
-        } else if (!cached) {
-          setOfflineError('Consultation not found.');
-        }
-      } else {
-        // Customer view uses the customer consultation API to ensure we see
-        // the assigned stylist details as soon as they are available.
-        const response = await customerConsultationsApi.get(consultationId);
-        const latest = response.data?.consultation;
-        if (latest) {
-          setConsultation(latest);
-          await saveConsultation(latest);
-        } else if (!cached) {
-          setOfflineError('Unable to load consultation details.');
-        }
-      }
-    } catch (error: any) {
-      if (__DEV__) {
-        console.error('[chat] failed to load consultation', error);
-        console.error('[chat] Error details:', {
-          consultationId,
-          isConsultant,
-          status: error?.response?.status,
-          statusText: error?.response?.statusText,
-          message: error?.message,
-          url: error?.config?.url,
-        });
-      }
-      const cached = await getCachedConsultation(consultationId);
-      if (cached) {
-        setConsultation(cached);
-        setOfflineError('Unable to refresh consultation. Showing cached data.');
-      } else {
-        // Check if it's a 404 (consultation not found)
-        if (error?.response?.status === 404) {
-          setOfflineError(
-            'Consultation not found. It may have been deleted or you may not have access.'
-          );
-        } else {
-          setOfflineError('Unable to load consultation.');
-        }
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [consultationId, isConsultant, isOnline]);
-
-  const loadMessages = useCallback(
-    async (reset = false) => {
-      try {
-        if (reset) {
-          setOfflineError(null);
-        }
-        const cached = await getMessages(consultationId, PAGE_SIZE);
-        if (cached.length && reset) {
-          setMessages(cached);
-        }
-
-        if (!isOnline) {
-          if (!cached.length) {
-            setOfflineError('Offline. No cached messages available.');
-          } else if (reset) {
-            setOfflineError('Offline. Showing cached messages.');
-          }
-          return;
-        }
-
-        const response = await consultationMessagesApi.list(consultationId, { limit: PAGE_SIZE });
-        if (response?.messages?.length) {
-          await saveMessages(consultationId, response.messages);
-          setMessages(
-            response.messages
-              .slice()
-              .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-          );
-          setHasMore(response.has_more ?? false);
-        } else if (!cached.length) {
-          setMessages([]);
-          setHasMore(false);
-        }
-      } catch (error) {
-        if (__DEV__) {
-          console.error('[chat] failed to load messages', error);
-        }
-        if (reset) {
-          const cachedMessages = await getMessages(consultationId, PAGE_SIZE);
-          if (cachedMessages.length) {
-            setMessages(cachedMessages);
-            setOfflineError('Unable to refresh messages. Showing cached data.');
-          } else {
-            setOfflineError('Unable to load messages.');
-          }
-        }
-      }
-    },
-    [consultationId, isOnline]
-  );
-
-  useEffect(() => {
-    loadConsultation();
-    loadMessages(true);
-  }, [loadConsultation, loadMessages]);
-
-  useEffect(() => {
-    if (!currentUserId) {
-      return;
-    }
-
-    let mounted = true;
-
-    const setup = async () => {
-      const firebaseUser = await waitForFirebaseUser(5000);
-      if (!firebaseUser) {
-        return;
-      }
-
-      if (realtimeUnsubscribeRef.current) {
-        realtimeUnsubscribeRef.current();
-      }
-
-      const messagesRef = firestore()
-        .collection('consultations')
-        .doc(String(consultationId))
-        .collection('messages')
-        .orderBy('created_at', 'desc')
-        .limit(REALTIME_LIMIT);
-
-      const unsubscribe = messagesRef.onSnapshot(
-        (snapshot) => {
-          if (!mounted) {
-            return;
-          }
-          const realtime = snapshot.docs
-            .map((doc) => {
-              const data = doc.data();
-              return {
-                id: doc.id,
-                user_id: data.user_id ?? '',
-                user_name: data.user_name ?? '',
-                message: data.message ?? undefined,
-                message_type: data.message_type ?? 'text',
-                attachment_url: data.attachment_url ?? undefined,
-                link_preview: data.link_preview,
-                is_read: Boolean(data.is_read),
-                created_at:
-                  typeof data.created_at === 'string'
-                    ? data.created_at
-                    : (data.created_at?.toDate?.().toISOString?.() ?? new Date().toISOString()),
-              } as ChatMessage;
-            })
-            .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-
-          if (realtime.length) {
-            saveMessages(consultationId, realtime).catch(() => {});
-          }
-
-          setMessages((prev) => {
-            const map = new Map<string, ChatMessage>();
-            prev.forEach((msg) => map.set(msg.id, msg));
-
-            realtime.forEach((msg) => {
-              // Try to find and remove a matching temp message (pending) created locally.
-              // For image messages, we intentionally ignore attachment_url because the local
-              // URI (file://) will differ from the remote download URL stored in Firestore.
-              const tempMatch = Array.from(map.values()).find((existing) => {
-                if (!existing.temp_id) return false;
-                if (existing.user_id !== msg.user_id) return false;
-
-                const bothImage = existing.message_type === 'image' || msg.message_type === 'image';
-
-                if (!bothImage) {
-                  if ((existing.message || '') !== (msg.message || '')) return false;
-                  if ((existing.attachment_url || '') !== (msg.attachment_url || '')) {
-                    return false;
-                  }
-                }
-
-                const existingTime = new Date(existing.created_at).getTime();
-                const msgTime = new Date(msg.created_at).getTime();
-                return Math.abs(existingTime - msgTime) < 8000; // allow a bit more skew
-              });
-
-              if (tempMatch) {
-                map.delete(tempMatch.id);
-              }
-
-              map.set(msg.id, { ...msg, status: 'sent' });
-            });
-
-            return Array.from(map.values()).sort(
-              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-            );
-          });
-          setRealtimeEnabled(true);
-        },
-        (error) => {
-          if (__DEV__) {
-            console.error('[chat] realtime listener error', error);
-          }
-          setRealtimeEnabled(false);
-        }
-      );
-
-      realtimeUnsubscribeRef.current = unsubscribe;
-    };
-
-    setup();
-    return () => {
-      mounted = false;
-      if (realtimeUnsubscribeRef.current) {
-        realtimeUnsubscribeRef.current();
-      }
-    };
-  }, [consultationId, currentUserId]);
-
-  useEffect(() => {
-    return () => {
-      if (realtimeUnsubscribeRef.current) {
-        realtimeUnsubscribeRef.current();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      markAllAsRead(consultationId).catch(() => {});
-      consultationMessagesApi.markChatRead(consultationId).catch(() => {});
-    }
-  }, [consultationId, messages.length]);
-
-  const loadOlderMessages = useCallback(async () => {
-    if (!hasMore || loadingOlder) {
-      return;
-    }
-    setLoadingOlder(true);
-    try {
-      const oldest = messages[0];
-      if (!oldest) {
-        return;
-      }
-      const response = await consultationMessagesApi.list(consultationId, {
-        limit: PAGE_SIZE,
-        before: oldest.created_at,
-      });
-      if (response?.messages?.length) {
-        await saveMessages(consultationId, response.messages);
-        setMessages((prev) => {
-          const map = new Map<string, ChatMessage>();
-          [...response.messages, ...prev].forEach((msg) => map.set(msg.id, msg));
-          return Array.from(map.values()).sort(
-            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
-        });
-        setHasMore(response.has_more ?? false);
-      } else {
-        setHasMore(false);
-      }
-    } catch (error) {
-      if (__DEV__) {
-        console.error('[chat] failed to load older messages', error);
-      }
-    } finally {
-      setLoadingOlder(false);
-    }
-  }, [consultationId, hasMore, loadingOlder, messages]);
-
   const handleSend = useCallback(
     async (text: string, imageUri?: string) => {
-      if ((!text.trim() && !imageUri) || !currentUserId) {
+      if (!currentUserId || !consultation) {
         return;
       }
+
       const chatOpen =
-        consultation?.chat_window_is_open ??
-        ['assigned', 'active'].includes(consultation?.status || '');
+        consultation.chat_window_is_open ?? ['assigned', 'active'].includes(consultation.status);
       if (!chatOpen) {
         Alert.alert('Chat closed', 'This chat is closed for new messages.');
         return;
       }
 
-      const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-      const pending: ChatMessage = {
-        id: tempId,
-        temp_id: tempId,
-        user_id: currentUserId,
-        user_name: currentUserName,
-        message: text || undefined,
-        message_type: imageUri ? 'image' : 'text',
-        attachment_url: imageUri ?? undefined,
-        is_read: false,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      };
+      const result = await sendMessageHook(
+        text,
+        imageUri,
+        currentUserId,
+        currentUserName,
+        isConsultant,
+        chatOpen
+      );
 
-      setMessages((prev) => [...prev, pending]);
-      saveMessage(consultationId, pending).catch(() => {});
-
-      const netInfo = await NetInfo.fetch();
-      if (!netInfo.isConnected) {
-        return;
-      }
-
-      try {
-        const firestoreId = await sendMessageToFirestore(
-          consultationId,
-          currentUserId,
-          currentUserName,
-          !!isConsultant,
-          text,
-          imageUri
-        );
-        await updateMessageStatus(consultationId, tempId, 'sent', firestoreId);
-      } catch (error) {
-        if (__DEV__) {
-          console.warn('[chat] send failed, marking as failed', error);
+      if (result?.error) {
+        if (result.error === 'Chat closed') {
+          Alert.alert('Chat closed', 'This chat is closed for new messages.');
+        } else if (result.error === 'No internet') {
+          // Already handled in hook
+        } else if (result.error === 'Failed to send') {
+          Alert.alert(
+            'Failed to send',
+            imageUri
+              ? 'Unable to send image. Please try again.'
+              : 'Unable to send message. Please try again.'
+          );
         }
-        await updateMessageStatus(consultationId, tempId, 'failed');
-        Alert.alert(
-          'Failed to send',
-          imageUri
-            ? 'Unable to send image. Please try again.'
-            : 'Unable to send message. Please try again.'
-        );
       }
     },
-    [consultation, consultationId, currentUserId, currentUserName, isConsultant]
+    [consultation, currentUserId, currentUserName, isConsultant, sendMessageHook]
   );
 
   const handleRetry = useCallback(
@@ -470,29 +137,17 @@ const ConsultantChatScreen: React.FC = () => {
         return;
       }
 
-      const netInfo = await NetInfo.fetch();
-      if (!netInfo.isConnected) {
-        Alert.alert('No internet', 'Please check your connection and try again.');
-        return;
-      }
+      const result = await retryMessage(messageId, message);
 
-      await updateMessageStatus(consultationId, messageId, 'pending');
-      try {
-        const firestoreId = await sendMessageToFirestore(
-          consultationId,
-          message.user_id,
-          message.user_name,
-          true,
-          message.message,
-          message.attachment_url
-        );
-        await updateMessageStatus(consultationId, messageId, 'sent', firestoreId);
-      } catch {
-        await updateMessageStatus(consultationId, messageId, 'failed');
-        Alert.alert('Error', 'Failed to resend message.');
+      if (result?.error) {
+        if (result.error === 'No internet') {
+          Alert.alert('No internet', 'Please check your connection and try again.');
+        } else {
+          Alert.alert('Error', 'Failed to resend message.');
+        }
       }
     },
-    [consultationId, messages]
+    [messages, retryMessage]
   );
 
   const handleFinishConsultation = useCallback(async () => {
@@ -569,50 +224,8 @@ const ConsultantChatScreen: React.FC = () => {
     );
   };
 
-  const renderEmpty = () => {
-    if (offlineError && messages.length === 0) {
-      return (
-        <View className="flex-1 justify-center items-center p-10">
-          <Text className="text-[#FF4433] text-base text-center mb-4">{offlineError}</Text>
-          <TouchableOpacity
-            className="bg-buttonPrimaryBg px-6 py-3 rounded-lg"
-            onPress={() => {
-              if (!realtimeEnabled) {
-                loadMessages(true);
-              }
-            }}
-          >
-            <Text className="text-white text-base font-semibold">Retry</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-    if (messages.length === 0 && !loading) {
-      return (
-        <View className="flex-1 justify-center items-center p-10">
-          <Text className="text-[#A1A09A] text-base text-center">
-            No messages yet. Start the conversation!
-          </Text>
-        </View>
-      );
-    }
-    return null;
-  };
-
   if (!consultation) {
-    return (
-      <LinearGradient colors={['#0E1B16', '#152821']} className="flex-1">
-        <View className="bg-buttonPrimaryBg pt-[50px] pb-4 px-4 flex-row items-center">
-          <TouchableOpacity onPress={() => navigation.goBack()} className=" p-1">
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <View className="flex-1 flex-row items-center justify-center">
-            <ActivityIndicator size="small" color="#FFFFFF" />
-            <Text className="text-white text-sm font-medium ml-2">Loading chat…</Text>
-          </View>
-        </View>
-      </LinearGradient>
-    );
+    return <ChatLoadingScreen onBack={() => navigation.goBack()} />;
   }
 
   const chatWindowOpen =
@@ -635,7 +248,7 @@ const ConsultantChatScreen: React.FC = () => {
           isFinishing={finishMutation.isPending}
         />
 
-        {loading && messages.length === 0 ? (
+        {messagesLoading && messages.length === 0 ? (
           <MessageListSkeleton />
         ) : (
           <FlashList
@@ -645,7 +258,15 @@ const ConsultantChatScreen: React.FC = () => {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ paddingVertical: 16, paddingBottom: 20 }}
             ListHeaderComponent={renderHeader}
-            ListEmptyComponent={renderEmpty}
+            ListEmptyComponent={() => (
+              <EmptyMessageList
+                offlineError={messagesOfflineError}
+                hasMessages={messages.length > 0}
+                loading={messagesLoading}
+                onRetry={reloadMessages}
+                realtimeEnabled={realtimeEnabled}
+              />
+            )}
             maintainVisibleContentPosition={{
               autoscrollToBottomThreshold: 0.2,
               startRenderingFromBottom: true,
@@ -661,15 +282,7 @@ const ConsultantChatScreen: React.FC = () => {
           />
         )}
 
-        {!chatWindowOpen ? (
-          <View
-            className={` ${isDark ? 'bg-[#1A1A1A] border-[#152821]' : 'border-commonGradientStop11'} p-2 border-t `}
-          >
-            <Text className="text-[#A1A09A] text-xs text-center">
-              This chat is closed for new messages.
-            </Text>
-          </View>
-        ) : null}
+        {!chatWindowOpen && <ChatClosedBanner />}
 
         <ChatInput
           onSend={handleSend}
@@ -677,20 +290,13 @@ const ConsultantChatScreen: React.FC = () => {
           placeholder="Type message here..."
         />
 
-        {showScrollToBottom ? (
-          <TouchableOpacity
-            className="absolute bottom-[100px] right-4"
-            onPress={() => {
-              flashListRef.current?.scrollToEnd({ animated: true });
-              setShowScrollToBottom(false);
-            }}
-            activeOpacity={0.7}
-          >
-            <View className="w-11 h-11 rounded-full bg-black/50 justify-center items-center">
-              <Ionicons name="chevron-down" size={20} color="#FFFFFF" />
-            </View>
-          </TouchableOpacity>
-        ) : null}
+        <ScrollToBottomButton
+          visible={showScrollToBottom}
+          onPress={() => {
+            flashListRef.current?.scrollToEnd({ animated: true });
+            setShowScrollToBottom(false);
+          }}
+        />
       </KeyboardAvoidingView>
 
       <ImageModal

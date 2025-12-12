@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, Text, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
+
+import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
-import Button from '@/common/components/Button';
 
 type RootStackParamList = {
   NewConsultant: undefined;

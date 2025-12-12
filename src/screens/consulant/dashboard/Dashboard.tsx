@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Platform } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import EarningsModal from './EarningsModal';
 import { Button } from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';

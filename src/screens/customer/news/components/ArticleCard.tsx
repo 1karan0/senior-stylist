@@ -1,7 +1,7 @@
 import { Image, Text, View } from 'react-native';
+
 import { NewsArticle } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
-
 interface ArticleCardProps {
   item: NewsArticle;
 }
