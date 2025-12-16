@@ -139,11 +139,21 @@ const StoreScreen = () => {
         <FlashList
           data={products}
           numColumns={2}
-          renderItem={({ item }) => (
-            <View style={{ marginRight: 8, marginBottom: 12, flex: 1 }}>
-              <ItemCard item={item} />
-            </View>
-          )}
+          renderItem={({ item, index }) => {
+            const isEven = index % 2 === 0;
+            return (
+              <View
+                style={{
+                  marginRight: isEven ? 2 : 0,
+                  marginLeft: isEven ? 0 : 8,
+                  marginBottom: 8,
+                  flex: 1,
+                }}
+              >
+                <ItemCard item={item} />
+              </View>
+            );
+          }}
           keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}
