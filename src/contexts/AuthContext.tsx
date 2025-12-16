@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Platform, Linking } from 'react-native';
 import { storage } from '@/services/storage';
 import { useLoginApi } from '@/api/auth/useLogin';
 import { useVerifyEmailApi } from '@/api/auth/useVerifyEmail';
@@ -11,12 +12,17 @@ import {
   signOutFirebase,
 } from '@/services/firebase';
 import { initializeNotifications, deleteFCMTokenFromBackend } from '@/services/notifications';
+import { useVersionCheck } from '@/api/app/useVersionCheck';
+import DeviceInfo from 'react-native-device-info';
 import { clearAllActiveChats } from '@/api/chat/useActiveChat';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isOnbordingCompleted: boolean;
+  forceUpdateRequired: boolean;
+  versionCheckMessage: string | null;
+  openStoreForUpdate: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   verifyEmail: (email: string, otp: string) => Promise<{ success: boolean; error?: string }>;
 
@@ -30,9 +36,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isOnBordingCompleted, setIsBordingCompleted] = useState(false);
+  const [forceUpdateRequired, setForceUpdateRequired] = useState(false);
+  const [versionCheckMessage, setVersionCheckMessage] = useState<string | null>(null);
 
   const loginMutation = useLoginApi();
   const verifyEmailMutation = useVerifyEmailApi();
+  const versionCheckMutation = useVersionCheck();
 
   //check if user is logged in
   useEffect(() => {
@@ -64,6 +73,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAuthStatus = async () => {
     try {
+      // 1) Check app version first, while splash screen is visible
+      try {
+        const currentVersion = DeviceInfo.getVersion(); // Gets native app version (Android: versionName, iOS: CFBundleShortVersionString)
+        const res = await versionCheckMutation.mutateAsync({
+          platform: Platform.OS === 'ios' ? 'ios' : 'android',
+          current_version: currentVersion,
+        });
+
+        if (res?.data?.force_update_required) {
+          setForceUpdateRequired(true);
+          setVersionCheckMessage(res.data.message || 'A new version of the app is required.');
+          // Stop further auth/loading logic – splash screen can now show a forced-update UI
+          setIsLoading(false);
+          return;
+        } else {
+          setForceUpdateRequired(false);
+          setVersionCheckMessage(null);
+        }
+      } catch (error) {
+        // If version check fails, allow user to continue using the app
+        setForceUpdateRequired(false);
+        setVersionCheckMessage(null);
+      }
+
+      // 2) Normal auth status check
       const [token, userData, onbordingCompleted] = await Promise.all([
         storage.getToken(),
         storage.getUserData(),
@@ -230,10 +264,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsBordingCompleted(true);
   };
 
+  const openStoreForUpdate = async () => {
+    const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.seniorstylist'; // TODO: confirm package name
+    const APP_STORE_URL = 'https://apps.apple.com/app/id0000000000'; // TODO: replace with real App Store id
+
+    const url = Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL;
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      }
+    } catch {
+      // Silently fail; splash/update UI can optionally show an error
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
     isOnbordingCompleted: isOnBordingCompleted,
+    forceUpdateRequired,
+    versionCheckMessage,
+    openStoreForUpdate,
     login,
     verifyEmail,
     logout,
