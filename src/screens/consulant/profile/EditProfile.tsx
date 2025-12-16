@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 
 import GradientBackground from '@/common/components/GradientBackground';
+import Button from '@/common/components/Button';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -326,39 +327,28 @@ const EditProfile: React.FC = () => {
           </View>
 
           {/* Save Changes Button */}
-          <TouchableOpacity
-            onPress={handleSaveChanges}
-            activeOpacity={0.8}
-            disabled={isUploading || isSaving}
-          >
-            <LinearGradient
-              colors={['#27B07D', '#36D399']}
-              style={{ borderRadius: 10 }}
-              className="rounded-xl py-4 mb-4"
-            >
-              {isSaving ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <Text className="text-white text-center font-urbanist-bold text-base">
-                  Save Changes
-                </Text>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+          <View className="mb-4">
+            <Button
+              text="Save Changes"
+              onPress={handleSaveChanges}
+              disabled={isUploading || isSaving}
+              loading={isSaving}
+              variant="gradient"
+              className="rounded-xl py-4"
+            />
+          </View>
 
           {/* Cancel Button */}
-          <TouchableOpacity
-            onPress={handleCancel}
-            className={`border rounded-xl py-4 mb-8 ${isDark ? 'border-commonGradientStop7 bg-transparent' : 'border-[#DAE7E0] bg-white'}`}
-            activeOpacity={0.7}
-            disabled={isUploading || isSaving}
-          >
-            <Text
-              className={`text-center font-urbanist-bold text-base ${isDark ? 'text-white' : 'text-textDark'}`}
-            >
-              Cancel
-            </Text>
-          </TouchableOpacity>
+          <View className="mb-8">
+            <Button
+              text="Cancel"
+              onPress={handleCancel}
+              disabled={isUploading || isSaving}
+              variant="light"
+              className={`border rounded-xl py-4 ${isDark ? 'border-commonGradientStop7 bg-transparent' : 'border-[#DAE7E0] bg-white'}`}
+              textClassName={isDark ? 'text-white' : 'text-textDark'}
+            />
+          </View>
         </ScrollView>
 
         {/* Image Picker Modal */}

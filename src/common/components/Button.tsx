@@ -46,7 +46,13 @@ export const Button: React.FC<ButtonProps> = ({
   const labelClass = disabled ? disabledTextClass : defaultLabelClass;
 
   // Determine container defaults for non-gradient (light) when not disabled.
-  const nonGradientDefaultContainer = !isGradient && !disabled ? lightDefaultBgClass : '';
+  // Only apply default background if className doesn't already specify a background or border
+  const hasCustomBg =
+    className.includes('bg-') ||
+    className.includes('border-') ||
+    className.includes('bg-transparent');
+  const nonGradientDefaultContainer =
+    !isGradient && !disabled && !hasCustomBg ? lightDefaultBgClass : '';
   const nonGradientDisabledContainer = disabled ? disabledBgClass : '';
 
   // If loading, treat button as disabled for interaction
@@ -106,7 +112,15 @@ export const Button: React.FC<ButtonProps> = ({
         </View>
       ) : (
         // Light variant OR Disabled (render using TouchableOpacity wrapper above)
-        <View className={`p-3 `} style={{ borderRadius: 14 }}>
+        // Use className for padding if provided, otherwise default to p-3
+        <View
+          className={
+            className.includes('py-') || className.includes('px-') || className.includes('p-')
+              ? ''
+              : 'p-3'
+          }
+          style={{ borderRadius: 14 }}
+        >
           <View className="flex-row items-center justify-center gap-2">
             {loading ? (
               <ActivityIndicator size="small" color="#000000" />
@@ -114,9 +128,7 @@ export const Button: React.FC<ButtonProps> = ({
               <>
                 {icon}
                 {text && (
-                  <Text
-                    className={`text-base font-urbanist-bold text-textDark ${labelClass} ${textClassName}`}
-                  >
+                  <Text className={`text-base font-urbanist-bold ${textClassName || labelClass}`}>
                     {text}
                   </Text>
                 )}
