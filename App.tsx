@@ -17,9 +17,9 @@ initializeFirebase();
 
 const queryClient = new QueryClient();
 
-const App = () => {
+// Inner app component that uses React Query hooks
+const AppContent = () => {
   const [isInitializing, setIsInitializing] = useState(true);
-
   const { isChecking, forceUpdateRequired } = useAppVersionCheck();
 
   // Handle initial app loading
@@ -45,24 +45,30 @@ const App = () => {
   }
 
   // Show force update screen if required
-  if (forceUpdateRequired) {
-    return <ForceUpdateScreen />;
-  }
+  // if (forceUpdateRequired) {
+  //   return <ForceUpdateScreen />;
+  // }
 
   // Normal app flow
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <NavigationContainer>
-            <View className="flex-1 bg-white dark:bg-black">
-              <AppNavigator />
-              <NotificationHandler />
-            </View>
-          </NavigationContainer>
-        </AuthProvider>
-      </QueryClientProvider>
+      <AuthProvider>
+        <NavigationContainer>
+          <View className="flex-1 bg-white dark:bg-black">
+            <AppNavigator />
+            <NotificationHandler />
+          </View>
+        </NavigationContainer>
+      </AuthProvider>
     </ThemeProvider>
+  );
+};
+
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppContent />
+    </QueryClientProvider>
   );
 };
 
