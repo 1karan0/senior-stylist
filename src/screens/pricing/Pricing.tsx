@@ -1,55 +1,59 @@
-import { View, Text, Pressable } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import SubscriptionModal from '../../components/modals/SubscriptionModal';
+import {
+  useGetSubscriptionPlans,
+  SubscriptionPlan,
+} from '@/api/subscription/useGetSubscriptionPlans';
+import SubscriptionModal from '@/components/modals/SubscriptionModal';
 
-const plans = [
-  {
-    key: 'starter',
-    title: 'Starter',
-    price: '£6',
-    priceSub: '£12 /month',
-    desc: 'Then £12/month after 6 months',
-    features: [
-      '5 consultations/month',
-      'Message-based consultations',
-      'Product recommendations',
-      'Expert matching system',
-    ],
-  },
-  {
-    key: 'professional',
-    title: 'Professional',
-    price: '£10',
-    priceSub: '£20 /month',
-    desc: 'Then £16/month after 6 months',
-    features: [
-      '5 consultations/month',
-      'Message-based consultations',
-      'Product recommendations',
-      'Expert matching system',
-    ],
-  },
-  {
-    key: 'business',
-    title: 'Business',
-    price: '£6',
-    priceSub: '£12 /month',
-    desc: 'Then £20/month after 6 months',
-    features: [
-      '5 consultations/month',
-      'Message-based consultations',
-      'Product recommendations',
-      'Expert matching system',
-    ],
-  },
-];
+interface PlanDisplay {
+  key: string;
+  title: string;
+  price: string;
+  priceSub: string;
+  desc: string;
+  features: string[];
+  originalPlan: SubscriptionPlan;
+}
 
 export default function PricingScreen() {
-  const [selectedPlan, setSelectedPlan] = useState<(typeof plans)[number] | null>(
-    () => plans.find((p) => p.key === 'professional') ?? null
-  );
+  const { data: subscriptionPlans, isLoading, error } = useGetSubscriptionPlans();
+  const [selectedPlan, setSelectedPlan] = useState<PlanDisplay | null>(null);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
+
+  // Transform API data to display format and filter out test plans
+  const plans = useMemo(() => {
+    if (!subscriptionPlans) return [];
+
+    return subscriptionPlans
+      .filter((plan) => !plan.slug.includes('-test')) // Filter out test plans
+      .sort((a, b) => a.sort_order - b.sort_order) // Sort by sort_order
+      .map((plan) => ({
+        key: plan.slug,
+        title: plan.name,
+        price: plan.discounted_price_formatted,
+        priceSub: `${plan.monthly_price_formatted}/month`,
+        desc: `Then ${plan.monthly_price_formatted}/month after ${plan.discount_duration_months} months`,
+        features: [
+          `${plan.consultations_per_month} consultations/month`,
+          'Message-based consultations',
+          'Product recommendations',
+          'Expert matching system',
+        ],
+        originalPlan: plan,
+      }));
+  }, [subscriptionPlans]);
+
+  // Set default selected plan when plans are loaded
+  useEffect(() => {
+    if (plans.length > 0 && !selectedPlan) {
+      // Default to the middle plan or first plan
+      const defaultPlan = plans[Math.floor(plans.length / 2)] || plans[0];
+      setSelectedPlan(defaultPlan);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plans]);
 
   return (
     <LinearGradient
@@ -79,47 +83,69 @@ export default function PricingScreen() {
 
         {/* PLANS */}
         <View className="mt-8 flex flex-col gap-4">
-          {plans.map((item) => {
-            const active = selectedPlan?.key === item.key;
+          {isLoading ? (
+            <View className="items-center justify-center py-8">
+              <ActivityIndicator size="large" color="#23A76F" />
+              <Text className="text-textMuted mt-4">Loading plans...</Text>
+            </View>
+          ) : error ? (
+            <View className="items-center justify-center py-8">
+              <Text className="text-red-500 text-center">
+                Failed to load subscription plans. Please try again.
+              </Text>
+            </View>
+          ) : plans.length === 0 ? (
+            <View className="items-center justify-center py-8">
+              <Text className="text-textMuted text-center">No subscription plans available.</Text>
+            </View>
+          ) : (
+            plans.map((item) => {
+              const active = selectedPlan?.key === item.key;
 
-            return (
-              <Pressable
-                key={item.key}
-                onPress={() => setSelectedPlan(item)}
-                className={`rounded-md border px-4 py-4 ${
-                  active ? 'border-[#23A76F]' : 'border-[#E2E8F0]'
-                } bg-white`}
-              >
-                <View className="flex-row items-center justify-between">
-                  {/* Left Side */}
-                  <View className="flex-row items-center gap-3">
-                    {/* Radio Button */}
-                    <View
-                      className={`w-5 h-5 rounded-full border ${
-                        active ? 'border-[#23A76F]' : 'border-[#94A3B8]'
-                      } items-center justify-center`}
-                    >
-                      {active && <View className="w-3 h-3 rounded-full bg-[#23A76F]" />}
-                    </View>
-
-                    <View>
-                      <Text className="text-textDark font-semibold text-[16px]">{item.title}</Text>
-
-                      <View className="flex-row items-baseline mt-1">
-                        <Text className="text-textDark font-bold text-[20px]">{item.price}</Text>
-                        <Text className="text-textDark font-medium ml-1">{item.priceSub}</Text>
+              return (
+                <Pressable
+                  key={item.key}
+                  onPress={() => setSelectedPlan(item)}
+                  className={`rounded-md border px-4 py-4 ${
+                    active ? 'border-[#23A76F]' : 'border-[#E2E8F0]'
+                  } bg-white`}
+                >
+                  <View className="flex-row items-center justify-between">
+                    {/* Left Side */}
+                    <View className="flex-row items-center gap-3">
+                      {/* Radio Button */}
+                      <View
+                        className={`w-5 h-5 rounded-full border ${
+                          active ? 'border-[#23A76F]' : 'border-[#94A3B8]'
+                        } items-center justify-center`}
+                      >
+                        {active && <View className="w-3 h-3 rounded-full bg-[#23A76F]" />}
                       </View>
 
-                      <Text className="text-[#94A3B8] text-[12px] mt-1">{item.desc}</Text>
-                    </View>
-                  </View>
+                      <View>
+                        <Text className="text-textDark font-semibold text-[16px]">
+                          {item.title}
+                        </Text>
 
-                  {/* Arrow */}
-                  <Text className="text-[#94A3B8] text-[20px]">{'>'}</Text>
-                </View>
-              </Pressable>
-            );
-          })}
+                        <View className="flex-row items-baseline mt-1">
+                          <Text className="text-textDark font-bold text-[20px]">{item.price}</Text>
+                          <Text className="text-textDark font-medium ml-1">{item.priceSub}</Text>
+                        </View>
+
+                        <Text className="text-[#94A3B8] text-[12px] mt-1">{item.desc}</Text>
+                        <Text className="text-[#94A3B8] text-[12px] mt-1">
+                          {item.originalPlan.description}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Arrow */}
+                    <Text className="text-[#94A3B8] text-[20px]">{'>'}</Text>
+                  </View>
+                </Pressable>
+              );
+            })
+          )}
         </View>
 
         {/* BUTTON */}
