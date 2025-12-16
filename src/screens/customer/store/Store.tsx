@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,14 +12,19 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 
-import { useGetStoreProducts } from '@/api/user/store/useGetStoreProducts';
-import { useGetStoreCategories } from '@/api/user/store/useGetStoreCategories';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
-import Itemcard from './components/Itemcard';
 import { useTheme } from '@/contexts/ThemeContext';
 
+import { useGetStoreProducts } from '@/api/user/store/useGetStoreProducts';
+import { useGetStoreCategories } from '@/api/user/store/useGetStoreCategories';
+
+import ItemCard from './components/Itemcard';
+
 const StoreScreen = () => {
+  const { isDark } = useTheme();
+  const { paddingBottom } = useTabBarSafePadding();
+
   const [products, setProducts] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -27,74 +32,59 @@ const StoreScreen = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const { isDark } = useTheme();
-  const { paddingBottom } = useTabBarSafePadding();
-
-  const { mutateAsync: getProducts, isPending } = useGetStoreProducts();
+  const { mutateAsync: getProducts } = useGetStoreProducts();
   const { data: categories = [] } = useGetStoreCategories();
 
   const loadProducts = async (reset = false) => {
-    if (reset) setRefreshing(true);
-    else setLoadingMore(true);
+    reset ? setRefreshing(true) : setLoadingMore(true);
 
-    const next = reset ? 1 : page + 1;
+    const nextPage = reset ? 1 : page + 1;
 
     const res = await getProducts({
-      page: next,
+      page: nextPage,
       search,
       category,
     });
 
     setProducts((prev) => (reset ? res.items : [...prev, ...res.items]));
-    if (!reset) setPage(next);
+    setPage(nextPage);
 
     setRefreshing(false);
     setLoadingMore(false);
   };
 
   useEffect(() => {
-    const timeout = setTimeout(() => loadProducts(true), 300);
-    return () => clearTimeout(timeout);
+    const timer = setTimeout(() => loadProducts(true), 300);
+    return () => clearTimeout(timer);
   }, [search, category]);
-
-  const renderProduct = ({ item }: any) => <Itemcard item={item} />;
 
   return (
     <GradientBackground>
-      <View className="flex-1 px-5 pt-6 mb-5 ">
+      <View className="flex-1 px-5 pt-6 pb-5">
+        {/* Header */}
         <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
-          Partner Store
+          Products
         </Text>
 
         {/* Search */}
         <View
-          className={`flex-row items-center border mt-5 rounded-xl ${
+          className={`flex-row items-center mt-4 rounded-xl border ${
             isDark
               ? 'bg-commonGradientStop6 border-commonGradientStop7'
               : 'bg-[#FAFAFA] border-[#E6E6E6]'
           }`}
-          style={{
-            paddingHorizontal: 12,
-            minHeight: Platform.OS === 'ios' ? 36 : 48,
-            paddingVertical: Platform.OS === 'ios' ? 8 : 0,
-          }}
+          style={{ paddingHorizontal: 12, minHeight: 44 }}
         >
           <Image
             source={require('../../../assets/icons/search-icon.png')}
             className="w-5 h-5 opacity-70"
           />
-
           <TextInput
-            placeholder="Search Products..."
-            placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
             value={search}
             onChangeText={setSearch}
+            placeholder="Search products, brands…"
+            placeholderTextColor={isDark ? '#8AA897' : '#94A3B8'}
             className={`ml-2 flex-1 ${isDark ? 'text-white' : 'text-black'}`}
-            style={{
-              paddingVertical: Platform.OS === 'ios' ? 8 : 0,
-              fontSize: 15,
-              includeFontPadding: false,
-            }}
           />
         </View>
 
@@ -129,21 +119,41 @@ const StoreScreen = () => {
               );
             }}
           />
+          {/* Promo Image (NOT a banner component) */}
+          <TouchableOpacity activeOpacity={0.9} className="mb-5 rounded-2xl overflow-hidden">
+            <Image
+              source={require('../../../assets/images/store-promo.png')}
+              className="w-full h-32"
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
         </View>
-
-        {/* Product FlashList */}
+        <View>
+          <Text
+            className={`text-2xl font-poppins-semibold mb-[13px] ${isDark ? 'text-white' : 'text-[#0F172A]'}`}
+          >
+            Popular Products
+          </Text>
+        </View>
+        {/* Product Grid */}
         <FlashList
           data={products}
-          renderItem={renderProduct}
+          numColumns={2}
+          renderItem={({ item }) => (
+            <View style={{ marginRight: 8, marginBottom: 12, flex: 1 }}>
+              <ItemCard item={item} />
+            </View>
+          )}
+          keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingTop: 20, paddingVertical: 4, paddingBottom }}
+          contentContainerStyle={{ paddingBottom }}
           onEndReached={() => loadProducts(false)}
-          onEndReachedThreshold={0.2}
+          onEndReachedThreshold={0.3}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={() => loadProducts(true)} />
           }
           ListFooterComponent={
-            loadingMore ? <ActivityIndicator color="#00C896" className="mt-4" /> : null
+            loadingMore ? <ActivityIndicator className="mt-4" color="#00C896" /> : null
           }
         />
       </View>

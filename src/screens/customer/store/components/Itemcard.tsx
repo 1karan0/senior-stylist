@@ -1,82 +1,47 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, Linking } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
-interface ItemProps {
-  item: any;
-  onPress?: (item: any) => void;
-}
-
-const Itemcard: React.FC<ItemProps> = ({ item, onPress }) => {
+const ItemCard = ({ item }: any) => {
   const { isDark } = useTheme();
 
   return (
     <View
-      className={`rounded-xl mb-5 ${isDark ? 'bg-commonGradientStop6 border-commonGradientStop7' : 'bg-white border-gray-200'} shadow-sm border `}
+      className={`rounded-[10px] overflow-hidden border ${
+        isDark ? 'bg-commonGradientStop6 border-commonGradientStop7' : 'bg-white border-gray-200'
+      }`}
     >
-      <View className="absolute top-3 left-3 z-10">
-        <View
-          style={{
-            borderRadius: 10,
-            paddingVertical: 8,
-            paddingHorizontal: 12,
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'row',
-            backgroundColor: '#2CCB91',
-          }}
-        >
-          <Text className="text-white text-xs font-semibold">{item.category?.name}</Text>
+      {/* Image */}
+      <View className="relative">
+        <Image source={{ uri: item.image_url }} className="w-full z-0 h-36" resizeMode="cover" />
+
+        {/* Tag */}
+
+        <View className="absolute z-50 top-2 left-2 bg-[#00C896] px-2 py-1 rounded-[10px]">
+          <Text className="text-white text-[14px] font-urbanist-bold">{item.category?.slug}</Text>
         </View>
       </View>
 
-      <Image
-        source={{ uri: item.image_url }}
-        className="w-full h-44 rounded-md"
-        resizeMode="cover"
-      />
-
-      <View className="p-4">
-        <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
+      {/* Content */}
+      <View className="p-3">
+        <Text className="text-xs text-textMuted">{item.provider}</Text>
+        <Text
+          className={`font-poppins-semibold text-base ${isDark ? 'text-white' : 'text-[#0F172A]'}`}
+        >
           {item.title}
         </Text>
 
-        <Text className={`text-sm mt-1 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
-          {item.description}
-        </Text>
-
-        <View className="mt-3 mb-3 flex-row items-center justify-between">
-          <Text className="text-textPrimary font-semibold text-xl">₹{item.display_price}</Text>
-
-          <Text className={`text-sm ${isDark ? 'text-textSecondary' : 'text-gray-500'}`}>
-            by {item.provider}
+        <View className="flex-row items-center justify-between mt-2">
+          <Text className="font-poppins-semibold text-base text-[#00C896]">
+            ₹{item.display_price}
           </Text>
         </View>
-
-        <LinearGradient
-          colors={['#2CCB91', '#23A76F']}
-          start={{ x: 0, y: 1 }}
-          end={{ x: 1, y: 0 }}
-          style={{ borderRadius: 10 }}
-          className=""
-        >
-          <TouchableOpacity
-            onPress={() => {
-              if (item.product_link) Linking.openURL(item.product_link);
-              else onPress?.(item);
-            }}
-            className=" py-3 rounded-xl "
-          >
-            <Text className="text-white text-center font-semibold">
-              {item.buy_now_button_text || 'Buy Now'}
-            </Text>
-          </TouchableOpacity>
-        </LinearGradient>
+        <TouchableOpacity className="bg-[#00C896] px-5 py-2 rounded-[5px]">
+          <Text className="text-white text-sm text-center font-poppins-semibold">Buy Now</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-export default Itemcard;
+export default ItemCard;
