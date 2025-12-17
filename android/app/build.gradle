@@ -73,6 +73,12 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+// Configure react-native-config to use different .env files per flavor
+project.ext.envConfigFiles = [
+    dev: ".env.dev",
+    prod: ".env.prod"
+]
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -102,6 +108,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
+        missingDimensionStrategy "environment", "dev"
     }
     signingConfigs {
         debug {
@@ -116,12 +123,14 @@ android {
         dev {
             dimension "environment"
             applicationId "com.seniorstylist.app.dev"
+            resValue "string", "build_config_package", "com.senior_stylist"
         }
         prod {
             dimension "environment"
             applicationId "com.seniorstylist.app"
+            resValue "string", "build_config_package", "com.senior_stylist"
         }
-    }   
+    }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
@@ -149,4 +158,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+}
+
+// Alias installDebug to installDevDebug for React Native CLI compatibility
+tasks.register('installDebug') {
+    dependsOn 'installDevDebug'
 }

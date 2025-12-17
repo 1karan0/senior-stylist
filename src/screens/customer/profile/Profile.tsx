@@ -28,7 +28,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const scaleAnim = useState(new Animated.Value(1))[0];
   const fadeAnim = useState(new Animated.Value(0))[0];
 
-  console.log('profile', profile);
   const user = profile as ProfileUser;
 
   const handleCopyCode = () => {

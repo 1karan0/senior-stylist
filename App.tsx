@@ -38,16 +38,16 @@ const AppContent = () => {
   // Show loading while checking version
   if (isInitializing || isChecking) {
     return (
-      <View className="flex-1 bg-white justify-center items-center">
-        <ActivityIndicator size="large" className="text-blue-500" />
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" />
       </View>
     );
   }
 
   // Show force update screen if required
-  // if (forceUpdateRequired) {
-  //   return <ForceUpdateScreen />;
-  // }
+  if (forceUpdateRequired) {
+    return <ForceUpdateScreen />;
+  }
 
   // Normal app flow
   return (

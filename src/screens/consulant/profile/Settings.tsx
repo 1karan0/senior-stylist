@@ -1,20 +1,38 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Switch } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Switch,
+  Platform,
+  ActivityIndicator,
+  Linking,
+} from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
+
 import GradientBackground from '@/common/components/GradientBackground';
+import DeleteAccountModal from '@/common/components/modals/DeleteAccountModal';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import DeleteAccountModal from '@/common/components/modals/DeleteAccountModal';
+import { useDeleteAccount } from '@/api/auth/useDeletAccount';
+import Toast from '@/common/components/Toast';
 
 const Settings: React.FC = () => {
   const { theme, isDark, setTheme } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
   const navigation = useNavigation();
   const { logout } = useAuth();
+  const deleteAccountMutation = useDeleteAccount();
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'info' as any,
+  });
 
   // ---- THEME LOGIC FIXED ---- //
 
@@ -47,14 +65,47 @@ const Settings: React.FC = () => {
   const handleBack = () => navigation.goBack();
   const handleDeleteAccount = () => setShowDeleteModal(true);
 
-  const confirmDeleteAccount = () => {
-    setShowDeleteModal(false);
-    logout();
+  const handleOpenTerms = () => {
+    Linking.openURL('https://senior-stylist.com/terms-conditions');
+  };
+
+  const handleOpenPrivacyPolicy = () => {
+    Linking.openURL('https://senior-stylist.com/privacy-policy');
+  };
+
+  const handleContactUs = () => {
+    Linking.openURL('https://senior-stylist.com/contact');
+  };
+
+  const confirmDeleteAccount = async () => {
+    try {
+      await deleteAccountMutation.mutateAsync();
+      setShowDeleteModal(false);
+      await logout();
+      setToast({
+        visible: true,
+        message: 'Your account has been deleted successfully.',
+        type: 'success' as any,
+      });
+    } catch (error: any) {
+      const message = error?.message || 'Failed to delete account. Please try again.';
+      setToast({
+        visible: true,
+        message,
+        type: 'error' as any,
+      });
+    }
   };
 
   return (
     <GradientBackground>
       <View className="flex-1">
+        <Toast
+          visible={toast.visible}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, visible: false })}
+        />
         {/* Header */}
         <View className="px-5 py-6">
           <View className="flex-row items-center">
@@ -125,16 +176,18 @@ const Settings: React.FC = () => {
                 </View>
               </View>
 
-              <Switch
-                value={darkSwitchValue}
-                disabled={theme === 'system'} // disable when system mode is on
-                onValueChange={toggleDarkMode}
-                trackColor={{
-                  false: '#d1d5db',
-                  true: `${theme === 'system' ? '#ffffff' : '#10b981'}`,
-                }}
-                thumbColor={theme === 'system' ? '#9ca3af' : '#ffffff'}
-              />
+              <View style={{ width: Platform.OS === 'ios' ? 51 : undefined }}>
+                <Switch
+                  value={darkSwitchValue}
+                  disabled={theme === 'system'} // disable when system mode is on
+                  onValueChange={toggleDarkMode}
+                  trackColor={{
+                    false: '#d1d5db',
+                    true: `${theme === 'system' ? '#ffffff' : '#10b981'}`,
+                  }}
+                  thumbColor={theme === 'system' ? '#9ca3af' : '#ffffff'}
+                />
+              </View>
             </View>
 
             {/* System Mode Toggle */}
@@ -166,12 +219,14 @@ const Settings: React.FC = () => {
                 </View>
               </View>
 
-              <Switch
-                value={systemSwitchValue}
-                onValueChange={toggleSystemMode}
-                trackColor={{ false: '#d1d5db', true: '#10b981' }}
-                thumbColor={'#ffffff'}
-              />
+              <View style={{ width: Platform.OS === 'ios' ? 51 : undefined }}>
+                <Switch
+                  value={systemSwitchValue}
+                  onValueChange={toggleSystemMode}
+                  trackColor={{ false: '#d1d5db', true: '#10b981' }}
+                  thumbColor={'#ffffff'}
+                />
+              </View>
             </View>
           </View>
 
@@ -206,10 +261,25 @@ const Settings: React.FC = () => {
                   1.0.0
                 </Text>
               </View>
-
               <TouchableOpacity
                 className="flex-row items-center justify-between"
                 activeOpacity={0.7}
+                onPress={handleContactUs}
+              >
+                <Text
+                  className={`font-poppins-regular ${
+                    isDark ? 'text-textSecondary' : 'text-textMuted'
+                  }`}
+                >
+                  Contact Us
+                </Text>
+                <Ionicons name="chevron-forward" size={18} color={isDark ? '#8AA897' : '#658176'} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="flex-row items-center justify-between mt-3"
+                activeOpacity={0.7}
+                onPress={handleOpenTerms}
               >
                 <Text
                   className={`font-poppins-regular ${
@@ -224,6 +294,7 @@ const Settings: React.FC = () => {
               <TouchableOpacity
                 className="flex-row items-center justify-between mt-3"
                 activeOpacity={0.7}
+                onPress={handleOpenPrivacyPolicy}
               >
                 <Text
                   className={`font-poppins-regular ${

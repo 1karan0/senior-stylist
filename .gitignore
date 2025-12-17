@@ -3,6 +3,8 @@
 .DS_Store
 .env
 .env.local
+.env.dev
+.env.prod 
 config.local.ts
 config.ts
 
