@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView, Animated, Platform } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -254,7 +254,12 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   <Text className="text-white text-[40px] font-urbanist-bold">
                     {user?.referral_stats?.total_rewards_earned ?? 0}
                   </Text>
-                  <Text className="text-white font-poppins-medium text-center text-sm">
+                  <Text
+                    style={{
+                      width: Platform.OS === 'ios' ? '80%' : '100%',
+                    }}
+                    className="text-white font-poppins-medium text-center text-sm"
+                  >
                     Free Consultation Sessions
                   </Text>
                 </View>

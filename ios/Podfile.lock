@@ -1406,6 +1406,37 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
+  - NitroIap (14.6.2):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - NitroModules
+    - openiap (= 1.3.5)
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - NitroModules (0.31.10):
     - boost
     - DoubleConversion
@@ -1435,6 +1466,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - openiap (1.3.5)
   - PromisesObjC (2.4.0)
   - RCT-Folly (2024.11.18.00):
     - boost
@@ -4162,7 +4194,7 @@ PODS:
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNScreens (4.18.0):
+  - RNScreens (4.19.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -4189,10 +4221,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNScreens/common (= 4.18.0)
+    - RNScreens/common (= 4.19.0)
     - SocketRocket
     - Yoga
-  - RNScreens/common (4.18.0):
+  - RNScreens/common (4.19.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -4322,6 +4354,7 @@ DEPENDENCIES:
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - NitroIap (from `../node_modules/react-native-iap`)
   - NitroModules (from `../node_modules/react-native-nitro-modules`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -4438,6 +4471,7 @@ SPEC REPOS:
     - GTMSessionFetcher
     - leveldb-library
     - nanopb
+    - openiap
     - PromisesObjC
     - RecaptchaInterop
     - SocketRocket
@@ -4460,6 +4494,8 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2025-09-01-RNv0.82.0-265ef62ff3eb7289d17e366664ac0da82303e101
+  NitroIap:
+    :path: "../node_modules/react-native-iap"
   NitroModules:
     :path: "../node_modules/react-native-nitro-modules"
   RCT-Folly:
@@ -4670,7 +4706,9 @@ SPEC CHECKSUMS:
   hermes-engine: 273e30e7fb618279934b0b95ffab60ecedb7acf5
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
+  NitroIap: 0f08240c29eff1ee5b9bc38dc060ace63b72f14d
   NitroModules: cf8804dafa637b6535c73fd113c3202b11307bfd
+  openiap: 8e6a58d311215bde63d36bdd61c475291f6b889a
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: f17e2ebc07876ca9ab8eb6e4b0a4e4647497ae3a
@@ -4758,7 +4796,7 @@ SPEC CHECKSUMS:
   RNNitroSQLite: 5fa7133eefbdbdef4f0658c3f9e9c07633042c0b
   RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
   RNReanimated: 97d1a1419c06fdd51105089b551a891d57fe01f7
-  RNScreens: 98771ad898d1c0528fc8139606bbacf5a2e9d237
+  RNScreens: d6413aeb1878cdafd3c721e2c5218faf5d5d3b13
   RNWorklets: d9c050940f140af5d8b611d937eab1cbfce5e9a5
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 526f25666395d30c297d53154398ffd249eaf9e1
