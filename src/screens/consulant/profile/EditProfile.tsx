@@ -10,6 +10,7 @@ import {
   Modal,
   Pressable,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
@@ -25,6 +26,11 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';
 import { useEditProfile } from '@/api/user/profile/useEditProfile';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
+import {
+  requestCameraPermission,
+  requestPhotoLibraryPermission,
+  showPermissionDeniedAlert,
+} from '@/utils/imagePermissions';
 
 const EditProfile: React.FC = () => {
   const { isDark } = useTheme();
@@ -65,8 +71,22 @@ const EditProfile: React.FC = () => {
     }
   }, [user]);
 
-  const handleImagePicker = (type: 'camera' | 'gallery') => {
+  const handleImagePicker = async (type: 'camera' | 'gallery') => {
     setShowImageModal(false);
+
+    // Request permission before opening picker
+    let hasPermission = false;
+    if (type === 'camera') {
+      hasPermission = await requestCameraPermission();
+    } else {
+      hasPermission = await requestPhotoLibraryPermission();
+    }
+
+    // If permission denied, show alert (on Android; iOS handles it automatically)
+    if (!hasPermission && Platform.OS === 'android') {
+      showPermissionDeniedAlert(type === 'camera' ? 'camera' : 'photo');
+      return;
+    }
 
     const options = {
       mediaType: 'photo' as const,
@@ -78,6 +98,14 @@ const EditProfile: React.FC = () => {
     const callback = (response: any) => {
       if (response.didCancel) return;
       if (response.errorCode) {
+        // Handle permission errors
+        if (
+          response.errorCode === 'permission' ||
+          response.errorMessage?.toLowerCase().includes('permission')
+        ) {
+          showPermissionDeniedAlert(type === 'camera' ? 'camera' : 'photo');
+          return;
+        }
         Alert.alert('Error', response.errorMessage || 'Failed to pick image');
         return;
       }
