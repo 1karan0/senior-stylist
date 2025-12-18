@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Switch, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import GradientBackground from '@/common/components/GradientBackground';
@@ -18,6 +17,8 @@ const Profile: React.FC = () => {
   const { data: profile } = useGetProfile();
 
   const user = profile as any;
+  const totalSessions = user?.consultant_details?.total_sessions ?? 0;
+  const averageRating = user?.consultant_details?.average_rating ?? 0;
 
   const { paddingBottom } = useTabBarSafePadding();
 
@@ -169,11 +170,11 @@ const Profile: React.FC = () => {
             >
               Performance Overview
             </Text>
-            <Text
+            {/* <Text
               className={`text-sm font-poppins-regular mb-4 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
             >
               Pro Plan - $19.99/month
-            </Text>
+            </Text> */}
 
             {/* Stats Row */}
             <View className="flex-row justify-between mb-4">
@@ -202,7 +203,7 @@ const Profile: React.FC = () => {
                 <Text
                   className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
                 >
-                  156
+                  {totalSessions}
                 </Text>
                 <Text
                   className={`text-xs font-poppins-regular mt-1 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
@@ -220,7 +221,7 @@ const Profile: React.FC = () => {
               <Text
                 className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
               >
-                4.8
+                {averageRating.toFixed ? averageRating.toFixed(1) : averageRating}
               </Text>
               <Text
                 className={`text-sm text-textMuted font-poppins-regular mt-1 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}

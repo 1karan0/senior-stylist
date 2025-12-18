@@ -15,6 +15,12 @@ import TextInputField from '@/common/components/TextInputField';
 import ImagePickerModal from '@/common/components/modals/ImagePickerModal';
 import ImageModal from '@/components/chat/ImageModal';
 import { useTheme } from '@/contexts/ThemeContext';
+import {
+  requestCameraPermission,
+  requestPhotoLibraryPermission,
+  showPermissionDeniedAlert,
+} from '@/utils/imagePermissions';
+import { Platform } from 'react-native';
 
 const EditProfile = () => {
   const navigation = useNavigation();
@@ -69,6 +75,14 @@ const EditProfile = () => {
 
   // Gallery
   const pickFromGallery = async () => {
+    // Request permission before opening gallery
+    const hasPermission = await requestPhotoLibraryPermission();
+    if (!hasPermission && Platform.OS === 'android') {
+      showPermissionDeniedAlert('photo');
+      setShowModal(false);
+      return;
+    }
+
     const res = await ImagePicker.launchImageLibrary({
       mediaType: 'photo',
       includeBase64: true,
@@ -78,10 +92,23 @@ const EditProfile = () => {
       selectionLimit: 1,
     });
 
-    if (res.didCancel || !res.assets) return;
+    if (res.didCancel || !res.assets) {
+      setShowModal(false);
+      return;
+    }
+
+    // Handle permission errors
+    if (res.errorCode === 'permission' || res.errorMessage?.toLowerCase().includes('permission')) {
+      showPermissionDeniedAlert('photo');
+      setShowModal(false);
+      return;
+    }
 
     const file = optimizeImage(res.assets[0]);
-    if (!file) return;
+    if (!file) {
+      setShowModal(false);
+      return;
+    }
 
     uploadMutation.mutate(file, {
       onSuccess: (res) => {
@@ -93,6 +120,14 @@ const EditProfile = () => {
 
   // Camera
   const takePhoto = async () => {
+    // Request permission before opening camera
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission && Platform.OS === 'android') {
+      showPermissionDeniedAlert('camera');
+      setShowModal(false);
+      return;
+    }
+
     const res = await ImagePicker.launchCamera({
       mediaType: 'photo',
       includeBase64: true,
@@ -102,10 +137,23 @@ const EditProfile = () => {
       saveToPhotos: false,
     });
 
-    if (res.didCancel || !res.assets) return;
+    if (res.didCancel || !res.assets) {
+      setShowModal(false);
+      return;
+    }
+
+    // Handle permission errors
+    if (res.errorCode === 'permission' || res.errorMessage?.toLowerCase().includes('permission')) {
+      showPermissionDeniedAlert('camera');
+      setShowModal(false);
+      return;
+    }
 
     const file = optimizeImage(res.assets[0]);
-    if (!file) return;
+    if (!file) {
+      setShowModal(false);
+      return;
+    }
 
     uploadMutation.mutate(file, {
       onSuccess: (res) => {

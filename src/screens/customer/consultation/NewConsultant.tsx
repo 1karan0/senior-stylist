@@ -18,6 +18,7 @@ import Toast from '@/common/components/Toast';
 import Button from '@/common/components/Button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { storage } from '@/services/storage';
+import { requestPhotoLibraryPermission, showPermissionDeniedAlert } from '@/utils/imagePermissions';
 
 const NewConsultant = ({ navigation }: any) => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
@@ -45,6 +46,13 @@ const NewConsultant = ({ navigation }: any) => {
 
   const pickImage = async () => {
     try {
+      // Request permission before opening gallery
+      const hasPermission = await requestPhotoLibraryPermission();
+      if (!hasPermission && Platform.OS === 'android') {
+        showPermissionDeniedAlert('photo');
+        return;
+      }
+
       const result = await launchImageLibrary({
         mediaType: 'photo',
         quality: 0.8,
@@ -52,6 +60,15 @@ const NewConsultant = ({ navigation }: any) => {
       });
 
       if (result.didCancel) return;
+
+      // Handle permission errors
+      if (
+        result.errorCode === 'permission' ||
+        result.errorMessage?.toLowerCase().includes('permission')
+      ) {
+        showPermissionDeniedAlert('photo');
+        return;
+      }
 
       if (result.assets && result.assets.length > 0) {
         const asset = result.assets[0];

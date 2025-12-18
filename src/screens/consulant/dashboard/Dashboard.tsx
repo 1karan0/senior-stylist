@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import EarningsModal from './EarningsModal';
 import { Button } from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
 
 const Dashboard: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const { isDark } = useTheme();
-  const insets = useSafeAreaInsets();
+  const { data: profile } = useGetProfile();
+
+  const user = profile as any;
+  const totalSessions = user?.consultant_details?.total_sessions ?? 0;
+  const averageRating = user?.consultant_details?.average_rating ?? 0;
 
   // Keep these values in sync with your tab navigator
   const { paddingBottom } = useTabBarSafePadding();
@@ -54,7 +58,7 @@ const Dashboard: React.FC = () => {
                   <Text
                     className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
                   >
-                    156
+                    {totalSessions}
                   </Text>
                   <Text
                     className={`font-poppins-regular  text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
@@ -106,7 +110,7 @@ const Dashboard: React.FC = () => {
                   <Text
                     className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
                   >
-                    4.8
+                    {averageRating.toFixed ? averageRating.toFixed(1) : averageRating}
                   </Text>
                   <Text
                     className={`font-poppins-regular  text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
