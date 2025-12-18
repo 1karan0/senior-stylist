@@ -15,6 +15,7 @@ import { FlashList } from '@shopify/flash-list';
 import { useGetNewsArticles } from '@/api/user/news/useGetNewsArticles';
 import { useGetNewsCategories } from '@/api/user/news/useGetNewsCategories';
 import ArticleCard from './components/ArticleCard';
+import NewsWebViewModal from './components/NewsWebViewModal';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -25,6 +26,15 @@ const NewsScreen = () => {
   const [hasMore, setHasMore] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [search, setSearch] = useState('');
+  const [webViewModal, setWebViewModal] = useState<{
+    visible: boolean;
+    url: string;
+    title: string;
+  }>({
+    visible: false,
+    url: '',
+    title: '',
+  });
 
   const navigation = useNavigation<any>();
   const { isDark } = useTheme();
@@ -38,6 +48,7 @@ const NewsScreen = () => {
     const next = reset ? 1 : page + 1;
 
     const res = await getArticles(next);
+    console.log('res', res);
 
     setList((prev) => (reset ? res.items : [...prev, ...res.items]));
     setPage(res.pagination.current_page);
@@ -134,7 +145,19 @@ const NewsScreen = () => {
           contentContainerStyle={{ paddingTop: 20, paddingVertical: 4, paddingBottom }}
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() => navigation.navigate('NewsDetail', { slug: item.slug })}
+              onPress={() => {
+                // Check if article should open in web view modal
+                if (item.open_in_webview && item.external_url) {
+                  setWebViewModal({
+                    visible: true,
+                    url: item.external_url,
+                    title: item.title,
+                  });
+                } else {
+                  // Navigate to detail screen for regular articles
+                  navigation.navigate('NewsDetail', { slug: item.slug });
+                }
+              }}
             >
               <ArticleCard item={item} />
             </TouchableOpacity>
@@ -145,6 +168,14 @@ const NewsScreen = () => {
           ListFooterComponent={
             isPending ? <ActivityIndicator size="small" color="#00C896" className="my-4" /> : null
           }
+        />
+
+        {/* WebView Modal */}
+        <NewsWebViewModal
+          visible={webViewModal.visible}
+          url={webViewModal.url}
+          title={webViewModal.title}
+          onClose={() => setWebViewModal({ visible: false, url: '', title: '' })}
         />
       </View>
     </GradientBackground>

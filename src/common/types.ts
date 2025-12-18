@@ -198,6 +198,9 @@ export interface NewsArticle {
   created_at: string;
   views_count: number; // ← add this
   category: NewsCategory | null;
+  external_url?: string;
+  open_in_webview?: boolean;
+  source_type?: string;
 }
 
 export interface Article {
