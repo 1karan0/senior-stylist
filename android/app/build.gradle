@@ -90,23 +90,6 @@ android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
-// Add this block to verify CMake version
-    println "=== CMake Configuration ==="
-    def cmakeDir = project.findProperty('cmake.dir')
-    if (cmakeDir) {
-        println "CMake dir from local.properties: ${cmakeDir}"
-        def cmakeExe = new File(cmakeDir, "bin/cmake")
-        if (cmakeExe.exists()) {
-            def proc = "${cmakeExe.absolutePath} --version".execute()
-            proc.waitFor()
-            println "CMake version:\n${proc.text}"
-        } else {
-            println "CMake executable not found at: ${cmakeExe.absolutePath}"
-        }
-    } else {
-        println "No cmake.dir specified, using default from Android SDK"
-    }
-    println "=========================="
 
     namespace "com.senior_stylist"
     defaultConfig {
