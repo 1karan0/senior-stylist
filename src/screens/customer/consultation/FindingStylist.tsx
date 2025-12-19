@@ -21,7 +21,6 @@ type FindingRoute = RouteProp<CombinedStackParamList, 'FindingStylist'>;
 const STATUS_POLL_INTERVAL = 3000;
 const PROGRESS_INTERVAL = 500;
 const INITIAL_AD_DELAY = 2500; // 2.5 seconds before showing first ad
-const PROFILE_DISPLAY_DURATION = 5000; // 5 seconds to show stylist profile
 
 const FindingStylist: React.FC = () => {
   const route = useRoute<FindingRoute>();
@@ -119,8 +118,11 @@ const FindingStylist: React.FC = () => {
     }
   }, [hasShownInitialAd, isAdsEnabled, preloadAd, getAndConsumeAd]);
 
-  // Handle Ad #2 (after stylist accepts)
+  // Handle Ad #2 (when user clicks to go to chat)
   const showSecondAd = useCallback(async () => {
+    // Hide profile first
+    setShowStylistProfile(false);
+
     if (!isAdsEnabled) {
       // If ads disabled, go straight to chat
       navigateToChat();
@@ -198,17 +200,11 @@ const FindingStylist: React.FC = () => {
           (updated.status === 'assigned' && updated.consultant_id) ||
           updated.status === 'active'
         ) {
-          // Stylist accepted - show profile then ad #2
+          // Stylist accepted - show profile with button to go to chat
           if (!showStylistProfile && !isWaitingForAd2) {
             setAcceptedConsultation(updated);
             setShowStylistProfile(true);
             stopAllTimers(); // Stop polling
-
-            // Show profile for 5 seconds, then show ad #2
-            profileTimerRef.current = setTimeout(() => {
-              setShowStylistProfile(false);
-              showSecondAd();
-            }, PROFILE_DISPLAY_DURATION);
           }
           return;
         }
@@ -423,10 +419,12 @@ const FindingStylist: React.FC = () => {
           </Text>
         )}
         {bio && <Text className="text-[14px] text-textMuted text-center mb-5 px-4">{bio}</Text>}
-        <View className="flex-row items-center gap-2 mt-3">
-          <ActivityIndicator color="#27B07D" size="small" />
-          <Text className="text-[13px] text-[#7C7C7C]">Preparing your connection...</Text>
-        </View>
+        <TouchableOpacity
+          className="mt-4 w-full rounded-xl bg-buttonPrimaryBg py-3.5 items-center"
+          onPress={showSecondAd}
+        >
+          <Text className="text-white text-[15px] font-bold">Go to Chat</Text>
+        </TouchableOpacity>
       </>
     );
   };
