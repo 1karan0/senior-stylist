@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Switch,
-  Platform,
-  ActivityIndicator,
-  Linking,
-} from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Switch, Platform, Linking } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -18,6 +9,8 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDeleteAccount } from '@/api/auth/useDeletAccount';
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
+import { useUpdateAvailability } from '@/api/consultant/useUpdateAvailability';
 import Toast from '@/common/components/Toast';
 
 const Settings: React.FC = () => {
@@ -26,6 +19,12 @@ const Settings: React.FC = () => {
   const navigation = useNavigation();
   const { logout } = useAuth();
   const deleteAccountMutation = useDeleteAccount();
+  const { data: userProfile } = useGetProfile();
+  const updateAvailabilityMutation = useUpdateAvailability();
+
+  const user = userProfile as any;
+  const isAway = user?.is_away ?? false;
+  const isApproved = user?.consultant_details?.is_approved ?? false;
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [toast, setToast] = useState({
@@ -97,6 +96,26 @@ const Settings: React.FC = () => {
     }
   };
 
+  const handleToggleAvailability = async (value: boolean) => {
+    try {
+      await updateAvailabilityMutation.mutateAsync({ is_away: value });
+      setToast({
+        visible: true,
+        message: value
+          ? 'You are now away and will not receive consultation requests.'
+          : 'You are now available and will receive consultation requests.',
+        type: 'success' as any,
+      });
+    } catch (error: any) {
+      const message = error?.message || 'Failed to update availability. Please try again.';
+      setToast({
+        visible: true,
+        message,
+        type: 'error' as any,
+      });
+    }
+  };
+
   return (
     <GradientBackground>
       <View className="flex-1">
@@ -126,6 +145,71 @@ const Settings: React.FC = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}
         >
+          {/* Availability Section */}
+          <View
+            className={`rounded-xl border p-5 mb-4 shadow-sm ${
+              isDark
+                ? 'bg-buttonSecondaryText border-commonGradientStop7'
+                : 'bg-white border-[#DAE7E0]'
+            }`}
+          >
+            <Text
+              className={`text-lg font-urbanist-semibold mb-4 ${
+                isDark ? 'text-white' : 'text-textDark'
+              }`}
+            >
+              Consultation Requests
+            </Text>
+
+            {/* Accept Consultation Requests Toggle */}
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center flex-1">
+                <View
+                  className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                    isDark ? 'bg-commonGradientStop7' : 'bg-[#F5F9F7]'
+                  }`}
+                >
+                  <Ionicons
+                    name={isAway ? 'pause-circle-outline' : 'play-circle-outline'}
+                    size={20}
+                    color="#27B07D"
+                  />
+                </View>
+
+                <View className="flex-1">
+                  <Text
+                    className={`font-urbanist-semibold text-base ${
+                      isDark ? 'text-white' : 'text-textDark'
+                    }`}
+                  >
+                    Accept Consultation Requests
+                  </Text>
+                  <Text
+                    className={`text-sm font-poppins-regular mt-1 ${
+                      isDark ? 'text-textSecondary' : 'text-textMuted'
+                    }`}
+                  >
+                    {!isApproved
+                      ? 'Your consultant account is pending approval'
+                      : isAway
+                        ? 'You are away and will not receive new requests'
+                        : 'You are available and will receive consultation requests'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={{ width: Platform.OS === 'ios' ? 51 : undefined }}>
+                <Switch
+                  value={!isAway}
+                  onValueChange={(value) => handleToggleAvailability(!value)}
+                  disabled={updateAvailabilityMutation.isPending || !isApproved}
+                  trackColor={{ false: '#d1d5db', true: '#10b981' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+            </View>
+          </View>
+
           {/* Theme Section */}
           <View
             className={`rounded-xl border p-5 mb-4 shadow-sm ${
