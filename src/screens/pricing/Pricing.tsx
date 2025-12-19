@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Alert } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
 import {
   useGetSubscriptionPlans,
   SubscriptionPlan,
@@ -11,9 +12,11 @@ interface PlanDisplay {
   key: string;
   title: string;
   price: string;
-  priceSub: string;
+  priceSub: string; // Kept for SubscriptionModal compatibility
+  priceWithConsultations: string;
   desc: string;
   features: string[];
+  consulationPerMonth: number;
   originalPlan: SubscriptionPlan;
 }
 
@@ -24,25 +27,75 @@ export default function PricingScreen() {
 
   // Transform API data to display format and filter out test plans
   const plans = useMemo(() => {
-    if (!subscriptionPlans) return [];
+    if (!subscriptionPlans) {
+      console.log('[Pricing] No subscription plans data available');
+      return [];
+    }
 
-    return subscriptionPlans
-      .filter((plan) => !plan.slug.includes('-test')) // Filter out test plans
-      .sort((a, b) => a.sort_order - b.sort_order) // Sort by sort_order
-      .map((plan) => ({
+    console.log('[Pricing] Raw subscription plans from API:', subscriptionPlans);
+
+    const filteredPlans = subscriptionPlans.filter((plan) => !plan.slug.includes('-test'));
+    console.log('[Pricing] Filtered plans (removed test plans):', filteredPlans.length);
+
+    const sortedPlans = filteredPlans.sort((a, b) => a.sort_order - b.sort_order);
+    console.log(
+      '[Pricing] Sorted plans by sort_order:',
+      sortedPlans.map((p) => p.name)
+    );
+
+    const mappedPlans = sortedPlans.map((plan) => {
+      // Helper function to remove decimals from price
+      const formatPriceWithoutDecimals = (priceString: string): string => {
+        const priceMatch = priceString.match(/£?([\d,]+\.?\d*)/);
+        if (priceMatch) {
+          const numericValue = parseFloat(priceMatch[1].replace(/,/g, ''));
+          const currencySymbol = priceString.includes('£') ? '£' : '';
+          const priceValue =
+            numericValue % 1 === 0 ? Math.floor(numericValue).toString() : numericValue.toString();
+          return `${currencySymbol}${priceValue}`;
+        }
+        return priceString;
+      };
+
+      // Extract numeric value from discounted_price_formatted and remove decimals
+      // e.g., "£6.00" -> "£6" or "£12.00" -> "£12"
+      const formattedPrice = formatPriceWithoutDecimals(plan.discounted_price_formatted);
+      const formattedMonthlyPrice = formatPriceWithoutDecimals(plan.monthly_price_formatted);
+
+      // Format: "£6/Monthly - 4 consultations"
+      const priceWithConsultations = `${formattedPrice}/Monthly - ${plan.consultations_per_month} consultations`;
+
+      const planDisplay = {
         key: plan.slug,
         title: plan.name,
-        price: plan.discounted_price_formatted,
-        priceSub: `${plan.monthly_price_formatted}/month`,
-        desc: `Then ${plan.monthly_price_formatted}/month after ${plan.discount_duration_months} months`,
+        price: formattedPrice, // Just the price number without decimals
+        priceSub: `${plan.monthly_price_formatted}/month`, // Kept for SubscriptionModal compatibility
+        priceWithConsultations, // Full price line with consultations
+        desc: `Then ${formattedMonthlyPrice}/month after ${plan.discount_duration_months} months`,
         features: [
           `${plan.consultations_per_month} consultations/month`,
           'Message-based consultations',
           'Product recommendations',
           'Expert matching system',
         ],
+        consulationPerMonth: plan.consultations_per_month,
         originalPlan: plan,
-      }));
+      };
+
+      console.log(`[Pricing] Mapped plan "${plan.name}":`, {
+        key: planDisplay.key,
+        productIds: {
+          apple: plan.apple_product_id,
+          google: plan.google_product_id,
+        },
+        planId: plan.id,
+      });
+
+      return planDisplay;
+    });
+
+    console.log('[Pricing] Final mapped plans count:', mappedPlans.length);
+    return mappedPlans;
   }, [subscriptionPlans]);
 
   // Set default selected plan when plans are loaded
@@ -50,6 +103,14 @@ export default function PricingScreen() {
     if (plans.length > 0 && !selectedPlan) {
       // Default to the middle plan or first plan
       const defaultPlan = plans[Math.floor(plans.length / 2)] || plans[0];
+      console.log('[Pricing] Setting default selected plan:', {
+        name: defaultPlan.title,
+        key: defaultPlan.key,
+        productIds: {
+          apple: defaultPlan.originalPlan.apple_product_id,
+          google: defaultPlan.originalPlan.google_product_id,
+        },
+      });
       setSelectedPlan(defaultPlan);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,37 +171,38 @@ export default function PricingScreen() {
                     active ? 'border-[#23A76F]' : 'border-[#E2E8F0]'
                   } bg-white`}
                 >
-                  <View className="flex-row items-center justify-between">
-                    {/* Left Side */}
-                    <View className="flex-row items-center gap-3">
-                      {/* Radio Button */}
-                      <View
-                        className={`w-5 h-5 rounded-full border ${
-                          active ? 'border-[#23A76F]' : 'border-[#94A3B8]'
-                        } items-center justify-center`}
-                      >
-                        {active && <View className="w-3 h-3 rounded-full bg-[#23A76F]" />}
-                      </View>
-
-                      <View>
-                        <Text className="text-textDark font-semibold text-[16px]">
-                          {item.title}
-                        </Text>
-
-                        <View className="flex-row items-baseline mt-1">
-                          <Text className="text-textDark font-bold text-[20px]">{item.price}</Text>
-                          <Text className="text-textDark font-medium ml-1">{item.priceSub}</Text>
-                        </View>
-
-                        <Text className="text-[#94A3B8] text-[12px] mt-1">{item.desc}</Text>
-                        <Text className="text-[#94A3B8] text-[12px] mt-1">
-                          {item.originalPlan.description}
-                        </Text>
-                      </View>
+                  <View className="flex-row items-center gap-3">
+                    {/* Radio Button */}
+                    <View
+                      className={`w-5 h-5 rounded-full border ${
+                        active ? 'border-[#23A76F]' : 'border-[#94A3B8]'
+                      } items-center justify-center`}
+                    >
+                      {active && <View className="w-3 h-3 rounded-full bg-[#23A76F]" />}
                     </View>
 
-                    {/* Arrow */}
-                    <Text className="text-[#94A3B8] text-[20px]">{'>'}</Text>
+                    <View className="flex-1">
+                      <Text className="text-textDark font-semibold text-lg">{item.title}</Text>
+
+                      {/* Price with consultations: "£6/Monthly - 4 consultations" */}
+                      <View className="flex-row items-center justify-between mt-1">
+                        <View className="flex-row items-center flex-1">
+                          <Text className="text-[#162721] font-medium text-[22px]">
+                            {item?.price}
+                          </Text>
+                          <Text className="text-[#658176] font-medium text-[16px]">/</Text>
+                          <Text className="text-[#658176] font-medium text-[16px]">Monthly</Text>
+                          <Text className="text-[#658176] font-medium text-[14px] ml-1">
+                            {`- ${item.consulationPerMonth} consultations`}
+                          </Text>
+                        </View>
+                        {/* Arrow Icon inside the box, aligned to the right */}
+                        <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+                      </View>
+
+                      {/* Description: "Then £12/month after 6 months" */}
+                      <Text className="text-[#658176] text-[12px] mt-1">{item.desc}</Text>
+                    </View>
                   </View>
                 </Pressable>
               );
@@ -150,7 +212,26 @@ export default function PricingScreen() {
 
         {/* BUTTON */}
         <Pressable
-          onPress={() => setSubscriptionModal(true)}
+          onPress={() => {
+            console.log('[Pricing] Continue to Payment clicked', {
+              selectedPlan: selectedPlan
+                ? {
+                    name: selectedPlan.title,
+                    key: selectedPlan.key,
+                    productIds: {
+                      apple: selectedPlan.originalPlan.apple_product_id,
+                      google: selectedPlan.originalPlan.google_product_id,
+                    },
+                    planId: selectedPlan.originalPlan.id,
+                  }
+                : null,
+            });
+            if (!selectedPlan) {
+              Alert.alert('No Plan Selected', 'Please select a subscription plan first.');
+              return;
+            }
+            setSubscriptionModal(true);
+          }}
           className="mt-10 rounded-xl overflow-hidden"
         >
           <LinearGradient
@@ -169,7 +250,13 @@ export default function PricingScreen() {
         </Pressable>
       </View>
       {subscriptionModal && (
-        <SubscriptionModal plan={selectedPlan} onClose={() => setSubscriptionModal(false)} />
+        <SubscriptionModal
+          plan={selectedPlan}
+          onClose={() => {
+            console.log('[Pricing] SubscriptionModal closed');
+            setSubscriptionModal(false);
+          }}
+        />
       )}
     </LinearGradient>
   );
