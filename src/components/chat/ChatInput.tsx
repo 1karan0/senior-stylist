@@ -12,6 +12,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { launchCamera, launchImageLibrary, Asset } from 'react-native-image-picker';
 import { useTheme } from '@/contexts/ThemeContext';
+import {
+  requestCameraPermission,
+  requestPhotoLibraryPermission,
+  showPermissionDeniedAlert,
+} from '@/utils/imagePermissions';
 
 interface ChatInputProps {
   onSend: (message: string, imageUri?: string) => void;
@@ -62,23 +67,65 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const pickFromLibrary = async () => {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      selectionLimit: 1,
-      quality: 0.8,
-      includeBase64: true,
-    });
-    handlePickerResult(result.assets?.[0]);
+    try {
+      // Request photo library permission before opening gallery
+      const hasPermission = await requestPhotoLibraryPermission();
+      if (!hasPermission && Platform.OS === 'android') {
+        showPermissionDeniedAlert('photo');
+        return;
+      }
+
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+        quality: 0.8,
+        includeBase64: true,
+      });
+
+      // Handle permission errors
+      if (
+        result.errorCode === 'permission' ||
+        result.errorMessage?.toLowerCase().includes('permission')
+      ) {
+        showPermissionDeniedAlert('photo');
+        return;
+      }
+
+      handlePickerResult(result.assets?.[0]);
+    } catch (error) {
+      console.error('Error picking from library:', error);
+    }
   };
 
   const takePhoto = async () => {
-    const result = await launchCamera({
-      mediaType: 'photo',
-      quality: 0.8,
-      saveToPhotos: false,
-      includeBase64: true,
-    });
-    handlePickerResult(result.assets?.[0]);
+    try {
+      // Request camera permission before opening camera
+      const hasPermission = await requestCameraPermission();
+      if (!hasPermission && Platform.OS === 'android') {
+        showPermissionDeniedAlert('camera');
+        return;
+      }
+
+      const result = await launchCamera({
+        mediaType: 'photo',
+        quality: 0.8,
+        saveToPhotos: false,
+        includeBase64: true,
+      });
+
+      // Handle permission errors
+      if (
+        result.errorCode === 'permission' ||
+        result.errorMessage?.toLowerCase().includes('permission')
+      ) {
+        showPermissionDeniedAlert('camera');
+        return;
+      }
+
+      handlePickerResult(result.assets?.[0]);
+    } catch (error) {
+      console.error('Error taking photo:', error);
+    }
   };
 
   const handleAttachmentPress = () => {

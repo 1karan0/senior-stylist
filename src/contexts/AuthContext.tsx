@@ -146,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const token = response.data?.access_token;
       const userData = response.data?.user;
+      const firebaseToken = response.data?.firebase_custom_token;
 
       if (!token) {
         return { success: false, error: 'Token missing' };
@@ -154,6 +155,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await Promise.all([storage.setToken(token), storage.setUserData(userData)]);
 
       setUser(userData);
+
+      // Initialize Firebase session
+      if (firebaseToken) {
+        await initializeFirebase();
+        await signInWithFirebaseCustomToken(firebaseToken);
+      } else {
+        await ensureFirebaseSession();
+      }
+
+      // Request notification permissions and register FCM token after successful email verification
+      if (__DEV__) {
+        console.log('[auth] Email verified, initializing notifications...');
+      }
+      initializeNotifications()
+        .then((token) => {
+          if (__DEV__) {
+            if (token) {
+              console.log(
+                '[auth] Notifications initialized successfully, token:',
+                token.substring(0, 20) + '...'
+              );
+            } else {
+              console.warn('[auth] Notifications initialized but no token obtained');
+            }
+          }
+        })
+        .catch((error) => {
+          if (__DEV__) {
+            console.error('[auth] Failed to initialize notifications:', error);
+            console.error('[auth] Notification error details:', {
+              message: error?.message,
+              code: error?.code,
+            });
+          }
+        });
 
       return { success: true };
     } catch (err: any) {

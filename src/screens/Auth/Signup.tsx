@@ -9,6 +9,8 @@ import GradientBackground from '@/common/components/GradientBackground';
 import TextInputField from '@/common/components/TextInputField';
 import Toast from '@/common/components/Toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import { requestStoragePermission, showPermissionDeniedAlert } from '@/utils/imagePermissions';
+import { Platform } from 'react-native';
 
 export default function SignupScreen({ navigation, route }: any) {
   const {
@@ -40,6 +42,21 @@ export default function SignupScreen({ navigation, route }: any) {
 
   const pickDocument = async () => {
     try {
+      // Request storage permission before picking document (Android < 13)
+      if (Platform.OS === 'android') {
+        const androidVersion =
+          typeof Platform.Version === 'number'
+            ? Platform.Version
+            : parseInt(String(Platform.Version), 10);
+        if (androidVersion < 33) {
+          const hasPermission = await requestStoragePermission();
+          if (!hasPermission) {
+            showPermissionDeniedAlert('storage');
+            return;
+          }
+        }
+      }
+
       const pickerResult = await pick({
         type: [types.allFiles],
         allowMultiSelection: false,
@@ -52,10 +69,18 @@ export default function SignupScreen({ navigation, route }: any) {
       }
     } catch (err: any) {
       if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
-        console.log('User cancelled.');
+        // User cancelled, no action needed
       } else {
         console.error('Error picking document:', err);
-        showToast('Failed to upload CV. Please try again.', 'error');
+        // Check if error is related to permissions
+        if (
+          err?.message?.toLowerCase().includes('permission') ||
+          err?.code?.includes('permission')
+        ) {
+          showPermissionDeniedAlert('storage');
+        } else {
+          showToast('Failed to upload CV. Please try again.', 'error');
+        }
       }
     }
   };
@@ -104,7 +129,6 @@ export default function SignupScreen({ navigation, route }: any) {
         navigation.navigate('OtpVerification', { email: form.email, screen: 'signup' });
       }, 1500);
     } catch (err: any) {
-      console.log('Signup error:', err);
       const errorMessage = err?.message || 'Something went wrong. Please try again.';
       showToast(errorMessage, 'error');
     } finally {

@@ -16,8 +16,6 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
   dismissOnBackdropPress = true,
   containerClassName = '',
 }) => {
-  console.log('ModalWrapper - visible:', visible);
-
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       <View className="flex-1 justify-center items-center bg-black/80">

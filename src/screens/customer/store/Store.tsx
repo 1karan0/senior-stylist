@@ -144,10 +144,9 @@ const StoreScreen = () => {
             return (
               <View
                 style={{
-                  marginRight: isEven ? 2 : 0,
-                  marginLeft: isEven ? 0 : 8,
-                  marginBottom: 8,
-                  flex: 1,
+                  marginRight: isEven ? 4 : 0,
+                  marginLeft: isEven ? 0 : 4,
+                  marginBottom: 12,
                 }}
               >
                 <ItemCard item={item} />

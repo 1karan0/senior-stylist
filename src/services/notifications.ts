@@ -117,7 +117,11 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 
     if (Platform.OS === 'android') {
       // Android 13+ requires runtime permission
-      if (Platform.Version >= 33) {
+      const androidVersion =
+        typeof Platform.Version === 'number'
+          ? Platform.Version
+          : parseInt(String(Platform.Version), 10);
+      if (androidVersion >= 33) {
         if (__DEV__) {
           console.log('[notifications] Requesting Android POST_NOTIFICATIONS permission...');
         }
@@ -607,60 +611,41 @@ export const initializeNotifications = async (): Promise<string | null> => {
 
     getApp(); // Ensure Firebase is initialized
 
-    // First, try to get token without requesting permission
-    // This avoids showing popup if permission is already granted
-    try {
-      const existingToken = await getFCMToken();
-      if (existingToken) {
-        if (__DEV__) {
-          console.log(
-            '[notifications] Got FCM token without requesting permission (already granted)'
-          );
-        }
-        // Wrap in try-catch to prevent unhandled promise rejections
-        try {
-          await saveFCMTokenToBackend(existingToken);
-        } catch (saveError: any) {
-          // Non-critical error - token was obtained, just couldn't save to backend
-          if (__DEV__) {
-            console.warn(
-              '[notifications] Failed to save token to backend (non-critical):',
-              saveError?.message
-            );
-          }
-        }
-        return existingToken;
-      }
-    } catch (tokenError: any) {
+    // Always check permission status first
+    const alreadyGranted = await checkNotificationPermission();
+
+    if (!alreadyGranted) {
+      // Permission not granted, request it explicitly
       if (__DEV__) {
-        console.log(
-          '[notifications] Cannot get token without permission, will request:',
-          tokenError?.message
-        );
+        console.log('[notifications] Permission not granted, requesting...');
+      }
+      const hasPermission = await requestNotificationPermission();
+      if (__DEV__) {
+        console.log('[notifications] Permission request result:', hasPermission);
+      }
+
+      if (!hasPermission) {
+        if (__DEV__) {
+          console.warn('[notifications] Permission denied by user');
+        }
+        return null;
+      }
+    } else {
+      if (__DEV__) {
+        console.log('[notifications] Permission already granted');
       }
     }
 
-    // If we can't get token, request permission
-    if (__DEV__) {
-      console.log('[notifications] Requesting notification permission...');
-    }
-    const hasPermission = await requestNotificationPermission();
-    if (__DEV__) {
-      console.log('[notifications] Permission request result:', hasPermission);
-    }
-
-    // On iOS, add a small delay after permission is granted to ensure system is ready
-    if (Platform.OS === 'ios' && hasPermission) {
+    // On iOS, add a small delay after permission check to ensure system is ready
+    if (Platform.OS === 'ios') {
       await new Promise<void>((resolve) => setTimeout(() => resolve(), 200));
     }
 
-    // Try to get token after permission request
+    // Try to get token (with permission granted)
     const token = await getFCMToken();
     if (token) {
       if (__DEV__) {
-        console.log(
-          '[notifications] FCM token obtained after permission request, saving to backend...'
-        );
+        console.log('[notifications] FCM token obtained successfully, saving to backend...');
       }
       // Save token to backend - wrap in try-catch to prevent unhandled promise rejections
       try {
@@ -680,7 +665,7 @@ export const initializeNotifications = async (): Promise<string | null> => {
       return token;
     } else {
       if (__DEV__) {
-        console.warn('[notifications] Failed to get FCM token after permission request');
+        console.warn('[notifications] Failed to get FCM token');
       }
       return null;
     }

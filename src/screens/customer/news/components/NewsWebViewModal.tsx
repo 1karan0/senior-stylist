@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Platform, StatusBar } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  Platform,
+  StatusBar,
+  Modal,
+  ActivityIndicator,
+} from 'react-native';
 import { WebView } from 'react-native-webview';
-import { ModalWrapper } from '@/common/components/ModalWrapper';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface NewsWebViewModalProps {
   visible: boolean;
@@ -13,6 +22,7 @@ interface NewsWebViewModalProps {
 
 const NewsWebViewModal: React.FC<NewsWebViewModalProps> = ({ visible, url, title, onClose }) => {
   const { isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -23,28 +33,43 @@ const NewsWebViewModal: React.FC<NewsWebViewModalProps> = ({ visible, url, title
   };
 
   return (
-    <ModalWrapper
+    <Modal
       visible={visible}
-      onClose={handleClose}
-      dismissOnBackdropPress={false}
-      containerClassName={`flex-1 w-full h-full m-0 p-0 rounded-none ${
-        isDark ? 'bg-[#0D1A16]' : 'bg-white'
-      }`}
+      transparent={false}
+      animationType="slide"
+      onRequestClose={handleClose}
+      statusBarTranslucent
     >
       <StatusBar
         translucent
         backgroundColor={isDark ? '#0D1A16' : '#FFFFFF'}
         barStyle={isDark ? 'light-content' : 'dark-content'}
       />
-      <View className="flex-1" style={{ backgroundColor: isDark ? '#0D1A16' : '#FFFFFF' }}>
+      <View
+        className="flex-1"
+        style={{
+          backgroundColor: isDark ? '#0D1A16' : '#FFFFFF',
+          paddingTop: insets.top,
+        }}
+      >
         {/* Header */}
         <View
-          className={`flex-row items-center justify-between px-5  py-4 border-b ${
+          className={`flex-row items-center justify-between px-4 py-3 border-b ${
             isDark ? 'bg-[#0D1A16] border-commonGradientStop7' : 'bg-white border-[#E6E6E6]'
           }`}
-          style={{ paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0 }}
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
         >
-          <TouchableOpacity onPress={handleClose} className="p-2">
+          <TouchableOpacity
+            onPress={handleClose}
+            className="p-2 -ml-2"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Image
               source={
                 isDark
@@ -52,11 +77,12 @@ const NewsWebViewModal: React.FC<NewsWebViewModalProps> = ({ visible, url, title
                   : require('@/assets/icons/back.png')
               }
               className="w-6 h-6"
+              resizeMode="contain"
             />
           </TouchableOpacity>
           {title && (
             <Text
-              className={`flex-1 ml-4 text-lg font-semibold ${
+              className={`flex-1 ml-2 text-base font-semibold ${
                 isDark ? 'text-white' : 'text-textDark'
               }`}
               numberOfLines={1}
@@ -68,20 +94,50 @@ const NewsWebViewModal: React.FC<NewsWebViewModalProps> = ({ visible, url, title
         </View>
 
         {/* WebView Container */}
-        <View className="flex-1">
+        <View className="flex-1 relative">
           {error ? (
-            <View className="flex-1 justify-center items-center px-5">
-              <Text className={`text-center ${isDark ? 'text-white' : 'text-textDark'}`}>
-                Unable to load the article. Please check your internet connection.
+            <View className="flex-1 justify-center items-center px-6">
+              <View
+                className={`w-20 h-20 rounded-full items-center justify-center mb-4 ${
+                  isDark ? 'bg-commonGradientStop6' : 'bg-[#F5F5F5]'
+                }`}
+              >
+                <Image
+                  source={
+                    isDark
+                      ? require('@/assets/icons/green-back.png')
+                      : require('@/assets/icons/back.png')
+                  }
+                  className="w-10 h-10 opacity-50"
+                />
+              </View>
+              <Text
+                className={`text-center text-lg font-semibold mb-2 ${
+                  isDark ? 'text-white' : 'text-textDark'
+                }`}
+              >
+                Unable to Load Article
+              </Text>
+              <Text
+                className={`text-center text-sm mb-6 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+              >
+                Please check your internet connection and try again.
               </Text>
               <TouchableOpacity
                 onPress={() => {
                   setError(false);
                   setLoading(true);
                 }}
-                className="mt-4 px-6 py-3 bg-[#00C896] rounded-xl"
+                className="px-8 py-3 bg-[#00C896] rounded-xl"
+                style={{
+                  shadowColor: '#00C896',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 5,
+                }}
               >
-                <Text className="text-white font-semibold">Retry</Text>
+                <Text className="text-white font-semibold text-base">Retry</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -108,7 +164,7 @@ const NewsWebViewModal: React.FC<NewsWebViewModalProps> = ({ visible, url, title
           )}
         </View>
       </View>
-    </ModalWrapper>
+    </Modal>
   );
 };
 
