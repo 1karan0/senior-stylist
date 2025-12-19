@@ -72,6 +72,23 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleManageSubscription = () => {
+    // Navigate to Pricing screen in AppStack (parent navigator)
+    // ProfileStack is nested in UserTabs, which is in AppStack
+    // We need to navigate to the AppStack level to access Pricing
+    const parentNavigator = navigation.getParent?.();
+    if (parentNavigator) {
+      console.log('[Profile] Navigating to Pricing screen via parent navigator');
+      // @ts-ignore - parent navigator has Pricing route in AppStack
+      parentNavigator.navigate('Pricing');
+    } else {
+      console.log('[Profile] Parent navigator not found, trying direct navigation');
+      // Fallback: try direct navigation (might work if navigation structure allows)
+      // @ts-ignore
+      navigation.navigate('Pricing');
+    }
+  };
+
   return (
     <GradientBackground>
       <View className="flex-1 pb-10 ">
@@ -230,6 +247,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             <Button
               text="Manage Subscription"
               variant="light"
+              onPress={handleManageSubscription}
               className={` bg-[#DAE7E0] rounded-[10px]`}
             />
           </View>

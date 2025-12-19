@@ -37,7 +37,7 @@ export const useGetSubscriptionPlans = () => {
     queryFn: async () => {
       try {
         const res = await axios.get<SubscriptionPlansResponse>(
-          `${BASE_URL}/api/subscriptions-plans`
+          `${BASE_URL}/api/subscription-plans`
         );
 
         return res.data.data;
