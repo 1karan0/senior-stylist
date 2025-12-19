@@ -7,6 +7,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { AdProvider } from '@/contexts/AdContext';
 import { initializeFirebase } from '@/services/firebase';
 import NotificationHandler from '@/components/notifications/NotificationHandler';
 import ForceUpdateScreen from '@/screens/ForceUpdateScreen';
@@ -52,14 +53,16 @@ const AppContent = () => {
   // Normal app flow
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <NavigationContainer>
-          <View className="flex-1 bg-white dark:bg-black">
-            <AppNavigator />
-            <NotificationHandler />
-          </View>
-        </NavigationContainer>
-      </AuthProvider>
+      <AdProvider>
+        <AuthProvider>
+          <NavigationContainer>
+            <View className="flex-1 bg-white dark:bg-black">
+              <AppNavigator />
+              <NotificationHandler />
+            </View>
+          </NavigationContainer>
+        </AuthProvider>
+      </AdProvider>
     </ThemeProvider>
   );
 };
