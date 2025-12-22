@@ -3,20 +3,25 @@ import { View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 
 import EarningsModal from './EarningsModal';
-import { Button } from '@/common/components/Button';
+// import { Button } from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
+import { useGetLeaderboard } from '@/api/consultant/useGetLeaderboard';
 
 const Dashboard: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const { isDark } = useTheme();
   const { data: profile } = useGetProfile();
+  const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useGetLeaderboard();
 
   const user = profile as any;
   const totalSessions = user?.consultant_details?.total_sessions ?? 0;
   const averageRating = user?.consultant_details?.average_rating ?? 0;
+  const activeSessions = user?.consultant_details?.active_sessions ?? 0;
+  const totalSessionsChange = user?.consultant_details?.total_sessions_change ?? 0;
+  const averageRatingChange = user?.consultant_details?.average_rating_change ?? 0;
 
   // Keep these values in sync with your tab navigator
   const { paddingBottom } = useTabBarSafePadding();
@@ -42,6 +47,7 @@ const Dashboard: React.FC = () => {
         >
           {/* Stats Grid */}
           <View className="px-5">
+            {/* Total Sessions and Avg Rating - Side by Side */}
             <View className="flex-row justify-between mb-4">
               {/* Total Sessions */}
               <View
@@ -53,7 +59,10 @@ const Dashboard: React.FC = () => {
                     <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
                       <Ionicons name="chatbubble-outline" size={20} color="#14B8A6" />
                     </View>
-                    <Text className="text-textPrimary text-sm font-poppins-medium">+12%</Text>
+                    <Text className="text-textPrimary text-sm font-poppins-medium">
+                      {totalSessionsChange > 0 ? '+' : ''}
+                      {totalSessionsChange}%
+                    </Text>
                   </View>
                   <Text
                     className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
@@ -68,36 +77,9 @@ const Dashboard: React.FC = () => {
                 </View>
               </View>
 
-              {/* Active Clients */}
-              <View
-                className={`rounded-xl p-4 flex-1 mr-2 shadow-sm border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
-              >
-                <View className="flex-col items-center">
-                  <View className="flex-row items-center justify-between w-full mb-1">
-                    <View className="flex-1" /> {/* Spacer to balance the layout */}
-                    <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
-                      <Ionicons name="people-outline" size={20} color="#14B8A6" />
-                    </View>
-                    <Text className="text-textPrimary text-sm font-poppins-medium">+5%</Text>
-                  </View>
-                  <Text
-                    className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
-                  >
-                    23
-                  </Text>
-                  <Text
-                    className={`font-poppins-regular  text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-                  >
-                    Active Clients
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View className="flex-row justify-between mb-5">
               {/* Avg Rating */}
               <View
-                className={`rounded-xl p-4 flex-1 mr-2 shadow-sm border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
+                className={`rounded-xl p-4 flex-1 ml-2 shadow-sm border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
               >
                 <View className="flex-col items-center">
                   <View className="flex-row items-center justify-between w-full mb-1">
@@ -105,7 +87,12 @@ const Dashboard: React.FC = () => {
                     <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
                       <Ionicons name="star-outline" size={20} color="#14B8A6" />
                     </View>
-                    <Text className="text-textPrimary text-sm font-poppins-medium">+0.2</Text>
+                    <Text className="text-textPrimary text-sm font-poppins-medium">
+                      {averageRatingChange > 0 ? '+' : ''}
+                      {averageRatingChange.toFixed
+                        ? averageRatingChange.toFixed(1)
+                        : averageRatingChange}
+                    </Text>
                   </View>
                   <Text
                     className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
@@ -119,28 +106,28 @@ const Dashboard: React.FC = () => {
                   </Text>
                 </View>
               </View>
+            </View>
 
-              {/* This Month */}
+            {/* Active Sessions - Full Width */}
+            <View className="mb-5">
               <View
-                className={`rounded-xl p-4 flex-1 mr-2 shadow-sm border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
+                className={`rounded-xl p-4 shadow-sm border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
               >
                 <View className="flex-col items-center">
-                  <View className="flex-row items-center justify-between w-full mb-1">
-                    <View className="flex-1" /> {/* Spacer to balance the layout */}
-                    <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
-                      <Ionicons name="trending-up-outline" size={20} color="#14B8A6" />
+                  <View className="flex-row items-center justify-center w-full mb-1">
+                    <View className="w-10 h-10 flex items-center justify-center">
+                      <Ionicons name="chatbubble-ellipses-outline" size={20} color="#14B8A6" />
                     </View>
-                    <Text className="text-textPrimary text-sm font-poppins-medium">+18%</Text>
                   </View>
                   <Text
                     className={`font-urbanist-bold text-3xl  mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
                   >
-                    $2,340
+                    {activeSessions}
                   </Text>
                   <Text
                     className={`font-poppins-regular  text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
                   >
-                    This Month
+                    Active Sessions
                   </Text>
                 </View>
               </View>
@@ -148,7 +135,7 @@ const Dashboard: React.FC = () => {
           </View>
 
           {/* About Earnings Button */}
-          <View className="px-5 mb-5">
+          {/* <View className="px-5 mb-5">
             <Button
               text="About Earnings"
               icon={<Text className="text-white text-xl font-bold">$</Text>}
@@ -156,67 +143,85 @@ const Dashboard: React.FC = () => {
               variant="gradient"
               className="shadow-sm"
             />
-          </View>
+          </View> */}
 
-          {/* Recent Activity Section */}
+          {/* Leaderboard Section */}
           <View
             className={` border  p-4 mb-8 mx-5 rounded-xl ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
           >
             <Text
               className={`text-xl font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark '}`}
             >
-              Recent Activity
+              Leaderboard
             </Text>
             <Text
               className={`font-poppins-regular mb-4 text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
             >
-              Your latest consultations
+              {leaderboardData
+                ? `Showing latest available leaderboard: ${leaderboardData.month_name} ${leaderboardData.year}`
+                : 'Your latest consultations'}
             </Text>
 
-            {/* Activity Items */}
-            {[
-              { name: 'Alice T.', service: 'Marketing Strategy', time: '2 hours ago', rating: 5 },
-              { name: 'Bob W.', service: 'Business Plan', time: '5 hours ago', rating: 5 },
-              { name: 'Alice T.', service: 'Marketing Strategy', time: '2 hours ago', rating: 5 },
-              { name: 'Alice T.', service: 'Marketing Strategy', time: '2 hours ago', rating: 5 },
-              { name: 'Bob W.', service: 'Business Plan', time: '5 hours ago', rating: 5 },
-              { name: 'Alice T.', service: 'Marketing Strategy', time: '2 hours ago', rating: 5 },
-            ].map((item, index) => (
-              <View
-                key={index}
-                className={`rounded-xl p-4 mb-3 border ${isDark ? 'bg-[#233931] border-[#445E54]' : 'bg-[#F5F9F7] border-[#DAE7E0]'}`}
-              >
-                <View className="flex-row justify-between items-center">
-                  <View className="flex-1">
-                    <Text
-                      className={`font-urbanist-semibold text-base ${isDark ? 'text-white' : 'text-textDark'}`}
-                    >
-                      {item.name}
-                    </Text>
-                    <Text
-                      className={`font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-                    >
-                      {item.service}
-                    </Text>
-                  </View>
-                  <View className="items-end">
-                    <View className="flex-row items-center">
-                      <Text className="text-yellow-400 text-base mr-1">⭐</Text>
-                      <Text
-                        className={`font-poppins-medium  ${isDark ? 'text-white' : 'text-[#161616]'}`}
+            {/* Leaderboard Items */}
+            {isLoadingLeaderboard ? (
+              <View className="items-center py-8">
+                <Text className={`text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
+                  Loading leaderboard...
+                </Text>
+              </View>
+            ) : leaderboardData?.leaderboard && leaderboardData.leaderboard.length > 0 ? (
+              leaderboardData.leaderboard.map((item) => (
+                <View
+                  key={item.consultant_id}
+                  className={`rounded-xl p-4 mb-3 border ${isDark ? 'bg-[#233931] border-[#445E54]' : 'bg-[#F5F9F7] border-[#DAE7E0]'}`}
+                >
+                  <View className="flex-row justify-between items-center">
+                    <View className="flex-row items-center flex-1">
+                      {/* Rank Badge */}
+                      <View
+                        className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                          item.rank === 1
+                            ? 'bg-yellow-400'
+                            : item.rank === 2
+                              ? 'bg-gray-300'
+                              : item.rank === 3
+                                ? 'bg-orange-300'
+                                : isDark
+                                  ? 'bg-[#445E54]'
+                                  : 'bg-[#DAE7E0]'
+                        }`}
                       >
-                        {item.rating}
-                      </Text>
+                        <Text
+                          className={`font-urbanist-bold text-sm ${
+                            item.rank <= 3 ? 'text-white' : isDark ? 'text-white' : 'text-textDark'
+                          }`}
+                        >
+                          {item.rank}
+                        </Text>
+                      </View>
+                      <View className="flex-1">
+                        <Text
+                          className={`font-urbanist-semibold text-base ${isDark ? 'text-white' : 'text-textDark'}`}
+                        >
+                          {item.name}
+                        </Text>
+                        <Text
+                          className={`font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                        >
+                          {item.consultations_count} consultations
+                        </Text>
+                      </View>
                     </View>
-                    <Text
-                      className={`font-poppins-regular text-xs ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-                    >
-                      {item.time}
-                    </Text>
                   </View>
                 </View>
+              ))
+            ) : (
+              <View className="items-center py-8">
+                <Text className={`text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
+                  No leaderboard data available
+                </Text>
               </View>
-            ))}
+            )}
           </View>
         </ScrollView>
 

@@ -166,7 +166,7 @@ const Profile: React.FC = () => {
             className={`rounded-xl p-6 mb-5 shadow-sm ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
           >
             <Text
-              className={`text-xl font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
+              className={`text-xl font-urbanist-semibold mb-2 ${isDark ? 'text-white' : 'text-textDark'}`}
             >
               Performance Overview
             </Text>
@@ -177,27 +177,10 @@ const Profile: React.FC = () => {
             </Text> */}
 
             {/* Stats Row */}
-            <View className="flex-row justify-between mb-4">
-              {/* Total Earnings */}
-              <View
-                className={`flex-1 items-center  border  rounded-xl p-4 mr-2 ${isDark ? 'border-commonGradientStop7 bg-transparent' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
-              >
-                <Ionicons name="trending-up-outline" size={24} color="#10b981" />
-                <Text
-                  className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
-                >
-                  $2,340
-                </Text>
-                <Text
-                  className={`text-xs font-poppins-regular mt-1 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-                >
-                  Total Earnings
-                </Text>
-              </View>
-
+            <View className="flex-row mb-4">
               {/* Total Sessions */}
               <View
-                className={`flex-1 items-center border rounded-xl p-4 ml-2 ${isDark ? 'border-commonGradientStop7 bg-transparent' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
+                className={`flex-1 items-center border rounded-xl p-4 mr-1.5 ${isDark ? 'border-commonGradientStop7 bg-transparent' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
               >
                 <Ionicons name="chatbubble-outline" size={24} color="#10b981" />
                 <Text
@@ -211,23 +194,23 @@ const Profile: React.FC = () => {
                   Total Sessions
                 </Text>
               </View>
-            </View>
 
-            {/* Rating */}
-            <View
-              className={`items-center  border rounded-xl p-4 ${isDark ? 'border-commonGradientStop7' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
-            >
-              <Ionicons name="star" size={28} color="#fbbf24" />
-              <Text
-                className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
+              {/* Rating */}
+              <View
+                className={`flex-1 items-center border rounded-xl p-4 ml-1.5 ${isDark ? 'border-commonGradientStop7' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
               >
-                {averageRating.toFixed ? averageRating.toFixed(1) : averageRating}
-              </Text>
-              <Text
-                className={`text-sm text-textMuted font-poppins-regular mt-1 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-              >
-                Average Rating
-              </Text>
+                <Ionicons name="star" size={28} color="#fbbf24" />
+                <Text
+                  className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
+                >
+                  {averageRating.toFixed ? averageRating.toFixed(1) : averageRating}
+                </Text>
+                <Text
+                  className={`text-sm text-textMuted font-poppins-regular mt-1 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                >
+                  Average Rating
+                </Text>
+              </View>
             </View>
           </View>
 
