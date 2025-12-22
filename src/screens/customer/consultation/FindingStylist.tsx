@@ -21,6 +21,7 @@ type FindingRoute = RouteProp<CombinedStackParamList, 'FindingStylist'>;
 const STATUS_POLL_INTERVAL = 3000;
 const PROGRESS_INTERVAL = 500;
 const INITIAL_AD_DELAY = 2500; // 2.5 seconds before showing first ad
+const FOLLOW_UP_AD_DELAY = 3000; // 3 seconds delay before showing follow-up ad
 
 const FindingStylist: React.FC = () => {
   const route = useRoute<FindingRoute>();
@@ -46,6 +47,7 @@ const FindingStylist: React.FC = () => {
   );
   const [hasShownInitialAd, setHasShownInitialAd] = useState(false);
   const [isWaitingForAd2, setIsWaitingForAd2] = useState(false);
+  const [adLoopActive, setAdLoopActive] = useState(false); // Track if ad loop is active
 
   const { isDark } = useTheme();
   const cancelConsultationMutation = useCancelConsultaion();
@@ -55,6 +57,9 @@ const FindingStylist: React.FC = () => {
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const initialAdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const profileTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nextAdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showStylistProfileRef = useRef(false);
+  const adLoopActiveRef = useRef(false);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     setToast({
@@ -81,6 +86,10 @@ const FindingStylist: React.FC = () => {
       clearTimeout(profileTimerRef.current);
       profileTimerRef.current = null;
     }
+    if (nextAdTimerRef.current) {
+      clearTimeout(nextAdTimerRef.current);
+      nextAdTimerRef.current = null;
+    }
   }, []);
 
   const navigateToChat = useCallback(() => {
@@ -102,7 +111,7 @@ const FindingStylist: React.FC = () => {
     }
   }, [consultationId, navigation, stopAllTimers]);
 
-  // Handle Ad #1 (initial search ad)
+  // Handle Ad #1 (initial search ad) - starts the ad loop
   const showInitialAd = useCallback(async () => {
     if (hasShownInitialAd || !isAdsEnabled) return;
 
@@ -115,10 +124,13 @@ const FindingStylist: React.FC = () => {
       setCurrentAd(ad);
       setShowAd(true);
       setHasShownInitialAd(true);
+      // Start the ad loop
+      setAdLoopActive(true);
+      adLoopActiveRef.current = true;
     }
   }, [hasShownInitialAd, isAdsEnabled, preloadAd, getAndConsumeAd]);
 
-  // Handle Ad #2 (when user clicks to go to chat)
+  // Handle Ad #2 (when user clicks "Go to Chat" button)
   const showSecondAd = useCallback(async () => {
     // Hide profile first
     setShowStylistProfile(false);
@@ -144,9 +156,42 @@ const FindingStylist: React.FC = () => {
     }
   }, [isAdsEnabled, preloadAd, getAndConsumeAd, navigateToChat]);
 
-  // Handle fallback ad (no stylist pickup)
-  const showFallbackAd = useCallback(async () => {
-    if (!isAdsEnabled) return;
+  // Keep refs in sync with state
+  useEffect(() => {
+    showStylistProfileRef.current = showStylistProfile;
+    adLoopActiveRef.current = adLoopActive;
+  }, [showStylistProfile, adLoopActive]);
+
+  const handleSearchFailure = useCallback(
+    (message?: string) => {
+      stopAllTimers();
+      setSearchFailedMessage(
+        message || 'This is a very busy period for our stylists. Please try again in a few minutes.'
+      );
+      // Stop ad loop when search fails - no ads at try again stage
+      setAdLoopActive(false);
+      adLoopActiveRef.current = false;
+      setShowAd(false);
+      setCurrentAd(null);
+    },
+    [stopAllTimers]
+  );
+
+  // Show next ad in the loop (after 3 second break)
+  const showNextAd = useCallback(async () => {
+    // Don't show if:
+    // - Consultation is already selected
+    // - Ads are disabled
+    // - Search has failed (try again stage)
+    // - Ad loop is not active
+    if (
+      showStylistProfileRef.current ||
+      !isAdsEnabled ||
+      searchFailedMessage !== null ||
+      !adLoopActiveRef.current
+    ) {
+      return;
+    }
 
     // Preload if not already loaded
     await preloadAd('small');
@@ -157,19 +202,7 @@ const FindingStylist: React.FC = () => {
       setCurrentAd(ad);
       setShowAd(true);
     }
-  }, [isAdsEnabled, preloadAd, getAndConsumeAd]);
-
-  const handleSearchFailure = useCallback(
-    (message?: string) => {
-      stopAllTimers();
-      setSearchFailedMessage(
-        message || 'This is a very busy period for our stylists. Please try again in a few minutes.'
-      );
-      // Show fallback ad when search fails
-      showFallbackAd();
-    },
-    [stopAllTimers, showFallbackAd]
-  );
+  }, [isAdsEnabled, searchFailedMessage, preloadAd, getAndConsumeAd]);
 
   // Handle ad finished
   const handleAdFinished = useCallback(() => {
@@ -177,12 +210,32 @@ const FindingStylist: React.FC = () => {
     setCurrentAd(null);
 
     if (isWaitingForAd2) {
-      // Ad #2 finished, navigate to chat
+      // Ad #2 finished (after clicking Go to Chat), navigate to chat
       setIsWaitingForAd2(false);
       navigateToChat();
+      return;
     }
-    // For Ad #1 and fallback, just continue with the search flow
-  }, [isWaitingForAd2, navigateToChat]);
+
+    // For loop ads: If consultation not selected and search hasn't failed, schedule next ad after 3 seconds
+    if (adLoopActiveRef.current && !showStylistProfileRef.current && searchFailedMessage === null) {
+      // Clear any existing next ad timer
+      if (nextAdTimerRef.current) {
+        clearTimeout(nextAdTimerRef.current);
+      }
+
+      // Schedule next ad after 3 second break
+      nextAdTimerRef.current = setTimeout(() => {
+        // Double-check conditions before showing ad
+        if (
+          adLoopActiveRef.current &&
+          !showStylistProfileRef.current &&
+          searchFailedMessage === null
+        ) {
+          showNextAd();
+        }
+      }, FOLLOW_UP_AD_DELAY);
+    }
+  }, [isWaitingForAd2, navigateToChat, showNextAd, searchFailedMessage]);
 
   const checkConsultationStatus = useCallback(async () => {
     if (!consultationId || !Number.isFinite(consultationId)) {
@@ -200,11 +253,26 @@ const FindingStylist: React.FC = () => {
           (updated.status === 'assigned' && updated.consultant_id) ||
           updated.status === 'active'
         ) {
-          // Stylist accepted - show profile with button to go to chat
+          // Stylist accepted - stop ad loop and show profile
           if (!showStylistProfile && !isWaitingForAd2) {
             setAcceptedConsultation(updated);
             setShowStylistProfile(true);
+            showStylistProfileRef.current = true; // Update ref
             stopAllTimers(); // Stop polling
+
+            // Stop ad loop
+            setAdLoopActive(false);
+            adLoopActiveRef.current = false;
+
+            // Close any open ad
+            setShowAd(false);
+            setCurrentAd(null);
+
+            // Cancel any pending next ad
+            if (nextAdTimerRef.current) {
+              clearTimeout(nextAdTimerRef.current);
+              nextAdTimerRef.current = null;
+            }
           }
           return;
         }
@@ -227,6 +295,12 @@ const FindingStylist: React.FC = () => {
     stopAllTimers,
     showSecondAd,
   ]);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    showStylistProfileRef.current = showStylistProfile;
+    adLoopActiveRef.current = adLoopActive;
+  }, [showStylistProfile, adLoopActive]);
 
   useEffect(() => {
     checkConsultationStatus();
