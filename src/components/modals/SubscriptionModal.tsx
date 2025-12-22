@@ -38,30 +38,20 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
   const [iapInitialized, setIapInitialized] = useState(false);
   const [iapError, setIapError] = useState<string | null>(null);
 
-  // Log when modal receives plan data
+  // Log when modal receives plan data (high-level only)
   useEffect(() => {
-    console.log('[SubscriptionModal] Modal opened with plan:', {
-      planName: plan?.title,
-      planKey: plan?.key,
-      planId: plan?.originalPlan?.id,
-      productIds: {
-        apple: plan?.originalPlan?.apple_product_id,
-        google: plan?.originalPlan?.google_product_id,
-      },
-      platform: Platform.OS,
-      selectedProductId: Platform.select({
-        ios: plan?.originalPlan?.apple_product_id,
-        android: plan?.originalPlan?.google_product_id,
-      }),
-    });
+    if (plan?.originalPlan) {
+      console.log('[SubscriptionModal] Modal opened', {
+        planId: plan.originalPlan.id,
+        planName: plan.title,
+        platform: Platform.OS,
+      });
+    }
   }, [plan]);
 
   // 2. Initiating the Purchase
   const handleSubscribe = useCallback(async () => {
-    console.log('[SubscriptionModal] handleSubscribe called');
-
     if (!plan?.originalPlan) {
-      console.error('[SubscriptionModal] Plan information is missing');
       Alert.alert('Error', 'Plan information is missing.');
       return;
     }
@@ -69,22 +59,13 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
     // Check if IAP is initialized
     if (!iapInitialized) {
       const errorMsg = iapError || 'Payment system is not available.';
-      Alert.alert(
-        'Payment Unavailable',
-        `${errorMsg}\n\n` +
-          (Platform.OS === 'android'
-            ? 'Please use a device with Google Play Services or a properly configured emulator.'
-            : 'Please use a physical iOS device or TestFlight.'),
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Payment Unavailable', errorMsg, [{ text: 'OK' }]);
       return;
     }
 
-    console.log('[SubscriptionModal] Plan data available:', {
+    console.log('[SubscriptionModal] Subscribe pressed', {
       planId: plan.originalPlan.id,
       planName: plan.title,
-      appleProductId: plan.originalPlan.apple_product_id,
-      googleProductId: plan.originalPlan.google_product_id,
     });
 
     setIsLoading(true);
@@ -97,66 +78,110 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
     });
 
     try {
-      console.log('[SubscriptionModal] Platform detection:', {
-        platform: Platform.OS,
-        selectedProductId: productId,
-        allProductIds: {
-          apple: plan.originalPlan.apple_product_id,
-          google: plan.originalPlan.google_product_id,
-        },
-      });
+      console.log('[SubscriptionModal] Entered try block', { productId, platform: Platform.OS });
 
       if (!productId) {
+        console.error('[SubscriptionModal] Product ID is null/undefined');
         const errorMsg = `Product ID not configured for ${Platform.OS}`;
-        console.error('[SubscriptionModal]', errorMsg);
         throw new Error(errorMsg);
       }
 
-      console.log('[SubscriptionModal] Initiating purchase for product:', productId);
-      console.log('[SubscriptionModal] Purchase configuration:', {
+      console.log(
+        '[SubscriptionModal] Initiating purchase - platform:',
+        Platform.OS,
+        'productId:',
+        productId
+      );
+
+      // CRITICAL: Simple string logs - if these don't show, execution stopped or logs are filtered
+      console.log('[SubscriptionModal] === LOG TEST 1 ===');
+      console.log('[SubscriptionModal] === LOG TEST 2 ===');
+      console.log('[SubscriptionModal] === LOG TEST 3 ===');
+      console.warn('[SubscriptionModal] === WARN TEST ===');
+      console.error('[SubscriptionModal] === ERROR TEST ===');
+
+      // Check productId safely
+      const productIdType = typeof productId;
+      const isEmpty = !productId;
+      let isWhitespace = false;
+      try {
+        isWhitespace = productId && typeof productId === 'string' ? productId.trim() === '' : false;
+      } catch (e) {
+        console.error('[SubscriptionModal] Error checking productId whitespace:', e);
+      }
+
+      console.log('[SubscriptionModal] STEP C: ProductId validation check', {
         productId,
-        platform: Platform.OS,
-        planId: plan.originalPlan.id,
-        productIdType: typeof productId,
-        productIdLength: productId?.length,
+        productIdType,
+        isEmpty,
+        isWhitespace,
       });
 
       // Validate productId is not empty
       if (!productId || productId.trim() === '') {
+        console.error('[SubscriptionModal] Product ID is empty or invalid', {
+          productId,
+          isEmpty: !productId,
+          isWhitespace: productId?.trim() === '',
+        });
         throw new Error(`Product ID is empty or invalid for ${Platform.OS}`);
       }
 
+      console.log('[SubscriptionModal] Step 1: Validating product ID - OK', { productId });
+
       // Fetch subscriptions first to ensure products are loaded in the store
       // This is required for the store to recognize the product IDs
-      console.log('[SubscriptionModal] Fetching subscription products before purchase...');
       const productIds = [productId];
+      console.log('[SubscriptionModal] Step 2: Fetching subscriptions from store...', {
+        productIds,
+      });
 
       let subscriptions: any[] = [];
       try {
+        console.log('[SubscriptionModal] Checking if getSubscriptions is available...');
         if ((RNIap as any).getSubscriptions) {
-          subscriptions = await (RNIap as any).getSubscriptions(productIds);
-          console.log('[SubscriptionModal] Fetched subscriptions:', subscriptions);
+          console.log('[SubscriptionModal] getSubscriptions is available, calling it...');
+
+          // Add timeout wrapper to prevent hanging
+          const getSubscriptionsPromise = (RNIap as any).getSubscriptions(productIds);
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('getSubscriptions timeout after 10 seconds')), 10000)
+          );
+
+          console.log('[SubscriptionModal] Awaiting getSubscriptions response...');
+          subscriptions = (await Promise.race([getSubscriptionsPromise, timeoutPromise])) as any[];
+
+          console.log('[SubscriptionModal] getSubscriptions response received:', {
+            count: subscriptions?.length || 0,
+            subscriptions: subscriptions,
+          });
 
           if (!subscriptions || subscriptions.length === 0) {
+            console.error('[SubscriptionModal] No subscriptions returned from store');
             throw new Error(
               `Product "${productId}" not found in store. Please verify it's configured in ${
                 Platform.OS === 'android' ? 'Google Play Console' : 'App Store Connect'
               }`
             );
           }
+          console.log('[SubscriptionModal] Step 2: Subscriptions fetched successfully');
+        } else {
+          console.warn('[SubscriptionModal] getSubscriptions not available, skipping validation');
         }
       } catch (fetchError: any) {
-        console.error('[SubscriptionModal] Failed to fetch subscriptions:', fetchError);
+        console.error('[SubscriptionModal] getSubscriptions failed:', {
+          code: fetchError.code,
+          message: fetchError.message,
+          error: fetchError,
+          stack: fetchError.stack,
+        });
+        // Re-throw with more context
         throw new Error(
-          `Unable to load subscription product. Please check your internet connection and try again.`
+          `Unable to load subscription product: ${fetchError.message || 'Product not found in store'}. Please verify the product ID "${productId}" is correctly configured in ${
+            Platform.OS === 'android' ? 'Google Play Console' : 'App Store Connect'
+          }`
         );
       }
-
-      console.log(subscriptions, 'subscriptions');
-
-      // This triggers the native payment modal
-      // react-native-iap v14+ - use requestPurchase with proper structure for subscriptions
-      console.log('[SubscriptionModal] Calling requestPurchase with productId:', productId);
 
       // In react-native-iap v14, requestPurchase for subscriptions requires:
       // { request: { google: { skus: [...] } or apple: { sku: ... } }, type: 'subs' }
@@ -190,18 +215,26 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         type: 'subs' as const, // Specify this is a subscription
       };
 
-      console.log('[SubscriptionModal] Purchase params:', JSON.stringify(purchaseParams, null, 2));
-      console.log('[SubscriptionModal] Android skus array:', {
-        length: Platform.OS === 'android' ? skusArray.length : 'N/A',
-        skus: Platform.OS === 'android' ? skusArray : 'N/A',
-        isEmpty: Platform.OS === 'android' ? skusArray.length === 0 : 'N/A',
+      console.log('[SubscriptionModal] Step 3: Calling requestPurchase...', {
+        platform: Platform.OS,
+        productId,
+        skusArray: Platform.OS === 'android' ? skusArray : undefined,
       });
 
-      await requestPurchase(purchaseParams);
-
-      console.log(
-        '[SubscriptionModal] requestSubscription called successfully, waiting for purchase update...'
-      );
+      try {
+        await requestPurchase(purchaseParams);
+        console.log(
+          '[SubscriptionModal] Step 3: requestPurchase called successfully, waiting for purchase update event'
+        );
+      } catch (requestError: any) {
+        console.error('[SubscriptionModal] requestPurchase failed:', {
+          code: requestError.code,
+          message: requestError.message,
+          error: requestError,
+        });
+        // Re-throw to be caught by outer catch
+        throw requestError;
+      }
 
       // Note: The purchase result will come through the purchaseUpdatedListener
       // We don't set loading to false here because the listener will handle it
@@ -209,11 +242,18 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
       setIsLoading(false);
       setIsProcessingPurchase(false);
 
-      console.error('[SubscriptionModal] Purchase initiation error:', {
-        code: error.code,
-        message: error.message,
+      console.error('[SubscriptionModal] ========== PURCHASE INITIATION ERROR ==========');
+      console.error('[SubscriptionModal] Error caught in catch block');
+      console.error('[SubscriptionModal] Error details:', {
+        code: error?.code,
+        message: error?.message,
+        name: error?.name,
+        stack: error?.stack,
         error: error,
+        productId: productId,
+        platform: Platform.OS,
       });
+      console.error('[SubscriptionModal] ===============================================');
 
       // Check if user cancelled
       if (error.code === 'E_USER_CANCELLED' || error.code === 'E_USER_CANCELED') {
@@ -221,57 +261,100 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         return;
       }
 
-      // Handle other errors
+      // Handle specific error codes
       let errorMessage = 'Failed to start purchase process.';
-      if (error.code === 'E_ITEM_UNAVAILABLE') {
-        errorMessage = 'This subscription is not available at the moment.';
-        console.error('[SubscriptionModal] Product unavailable:', productId);
+      let errorTitle = 'Purchase Failed';
+
+      if (
+        error.code === 'E_ITEM_UNAVAILABLE' ||
+        error.message?.includes('not found') ||
+        error.message?.includes('could not be found')
+      ) {
+        errorTitle = 'Product Not Found';
+        errorMessage = `The subscription product "${productId}" could not be found in the ${
+          Platform.OS === 'android' ? 'Google Play Store' : 'App Store'
+        }.\n\nPlease verify:\n• The product ID matches exactly in ${
+          Platform.OS === 'android' ? 'Google Play Console' : 'App Store Connect'
+        }\n• The product is Active and available\n• You're using the correct app package/account`;
+        console.error('[SubscriptionModal] Product not found in store:', {
+          productId,
+          platform: Platform.OS,
+          errorCode: error.code,
+        });
       } else if (error.code === 'E_NETWORK_ERROR') {
-        errorMessage = 'Network error. Please check your connection.';
+        errorMessage = 'Network error. Please check your connection and try again.';
         console.error('[SubscriptionModal] Network error during purchase');
       } else if (error.message) {
         errorMessage = error.message;
       }
 
-      Alert.alert('Purchase Failed', errorMessage);
+      Alert.alert(errorTitle, errorMessage);
     }
   }, [plan, iapInitialized, iapError]);
 
   // 3. Handling the Purchase Result
   const handlePurchaseUpdate = useCallback(
     async (purchase: any) => {
-      console.log('[SubscriptionModal] Purchase update received:', {
+      console.log('[SubscriptionModal] handlePurchaseUpdate called', {
         productId: purchase.productId,
         transactionId: purchase.transactionId,
         platform: Platform.OS,
-        purchaseStateAndroid: purchase.purchaseStateAndroid,
+        purchaseState: purchase.purchaseState,
         transactionStateIOS: purchase.transactionStateIOS,
-        fullPurchase: purchase,
       });
 
       // Check if purchase is successful
-      const isPurchaseSuccessful =
-        (Platform.OS === 'android' && purchase.purchaseStateAndroid === 1) ||
-        (Platform.OS === 'ios' && purchase.transactionStateIOS === 1);
+      let isPurchaseSuccessful = false;
 
-      console.log('[SubscriptionModal] Purchase success check:', {
-        isPurchaseSuccessful,
-        platform: Platform.OS,
-        androidState: purchase.purchaseStateAndroid,
-        iosState: purchase.transactionStateIOS,
-      });
+      if (Platform.OS === 'android') {
+        // In v14, Android uses purchase.purchaseState (string) and dataAndroid.purchaseState (number)
+        const purchaseState = purchase.purchaseState;
+        const purchaseStateString =
+          purchaseState !== undefined && purchaseState !== null
+            ? String(purchaseState).toLowerCase()
+            : undefined;
+
+        let dataAndroidPurchaseState: number | null = null;
+        if (purchase.dataAndroid) {
+          try {
+            const parsed = JSON.parse(purchase.dataAndroid);
+            dataAndroidPurchaseState = parsed.purchaseState;
+          } catch {
+            // ignore parse errors – we'll rely on purchaseStateString
+          }
+        }
+
+        isPurchaseSuccessful =
+          purchaseStateString === 'purchased' ||
+          dataAndroidPurchaseState === 0 ||
+          (purchaseStateString !== 'canceled' && purchaseStateString !== 'refunded');
+
+        console.log('[SubscriptionModal] Android purchase state', {
+          purchaseState,
+          purchaseStateString,
+          dataAndroidPurchaseState,
+          isPurchaseSuccessful,
+        });
+      } else {
+        isPurchaseSuccessful = purchase.transactionStateIOS === 1;
+        console.log('[SubscriptionModal] iOS purchase state', {
+          transactionStateIOS: purchase.transactionStateIOS,
+          isPurchaseSuccessful,
+        });
+      }
 
       if (!isPurchaseSuccessful) {
-        console.warn('[SubscriptionModal] Purchase was not successful, state:', {
-          androidState: purchase.purchaseStateAndroid,
-          iosState: purchase.transactionStateIOS,
+        console.warn('[SubscriptionModal] Purchase not marked successful, skipping backend call', {
+          platform: Platform.OS,
+          purchaseState: purchase.purchaseState,
+          transactionStateIOS: purchase.transactionStateIOS,
           productId: purchase.productId,
         });
         setIsProcessingPurchase(false);
         return;
       }
 
-      console.log('[SubscriptionModal] Purchase successful, processing...');
+      console.log('[SubscriptionModal] Purchase successful, processing');
 
       try {
         // Get user data and token for backend verification
@@ -285,7 +368,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           throw new Error('Authentication token missing');
         }
 
-        // Extract purchase data for backend
+        // Extract purchase data for backend (single log before sending)
         const purchaseDataForBackend = {
           userId: userData.id,
           planId: plan?.originalPlan.id,
@@ -314,75 +397,13 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           purchaseTime: new Date().toISOString(),
         };
 
-        // Comprehensive console log of all data being sent to backend
-        console.log('========================================');
-        console.log('[SubscriptionModal] 📤 SENDING SUBSCRIPTION DATA TO BACKEND');
-        console.log('========================================');
-        console.log(
-          '[SubscriptionModal] Endpoint:',
-          `${BASE_URL}/api/subscriptions/verify-purchase`
-        );
-        console.log('[SubscriptionModal] Method: POST');
-        console.log('[SubscriptionModal] Platform:', Platform.OS);
-        console.log('----------------------------------------');
-        console.log('[SubscriptionModal] 📋 COMPLETE PURCHASE DATA:');
-        console.log(JSON.stringify(purchaseDataForBackend, null, 2));
-        console.log('----------------------------------------');
-        console.log('[SubscriptionModal] 🔑 Core Fields:');
-        console.log('  - userId:', purchaseDataForBackend.userId);
-        console.log('  - planId:', purchaseDataForBackend.planId);
-        console.log('  - platform:', purchaseDataForBackend.platform);
-        console.log('  - transactionId:', purchaseDataForBackend.transactionId);
-        console.log('  - productId:', purchaseDataForBackend.productId);
-        console.log('  - purchaseDate:', purchaseDataForBackend.purchaseDate);
-        console.log('  - purchaseTime:', purchaseDataForBackend.purchaseTime);
-        console.log('  - planName:', purchaseDataForBackend.planName);
-        console.log('  - planPrice:', purchaseDataForBackend.planPrice);
-        console.log('----------------------------------------');
-        if (Platform.OS === 'android') {
-          console.log('[SubscriptionModal] 🤖 Android-Specific Fields:');
-          console.log(
-            '  - purchaseToken:',
-            (purchaseDataForBackend as any).purchaseToken || 'MISSING'
-          );
-          console.log('  - orderId:', (purchaseDataForBackend as any).orderId || 'MISSING');
-          console.log('  - dataAndroid:', (purchaseDataForBackend as any).dataAndroid || 'MISSING');
-          console.log(
-            '  - autoRenewing:',
-            (purchaseDataForBackend as any).autoRenewing || 'MISSING'
-          );
-          console.log('  - packageName:', (purchaseDataForBackend as any).packageName || 'MISSING');
-        } else {
-          console.log('[SubscriptionModal] 🍎 iOS-Specific Fields:');
-          console.log(
-            '  - originalTransactionId:',
-            (purchaseDataForBackend as any).originalTransactionId || 'MISSING'
-          );
-          console.log(
-            '  - transactionReceipt:',
-            (purchaseDataForBackend as any).transactionReceipt
-              ? 'PRESENT (length: ' +
-                  (purchaseDataForBackend as any).transactionReceipt.length +
-                  ')'
-              : 'MISSING'
-          );
-        }
-        console.log('----------------------------------------');
-        console.log('[SubscriptionModal] 📦 Raw Purchase Object (for reference):');
-        console.log(JSON.stringify(purchase, null, 2));
-        console.log('========================================');
-
-        // Send to your backend for verification
-        console.log('[SubscriptionModal] Sending purchase to backend for verification...');
+        console.log('[SubscriptionModal] Sending purchase to backend for verification');
+        console.log(purchaseDataForBackend, 'purchaseDataForBackend we have reached here');
         const verificationResult = await sendPurchaseToBackend(purchaseDataForBackend);
-        console.log('[SubscriptionModal] Backend verification result:', verificationResult);
+        console.log('[SubscriptionModal] Backend verification result', verificationResult);
 
         if (verificationResult.success) {
-          console.log(
-            '[SubscriptionModal] Backend verification successful, finishing transaction...'
-          );
-
-          // Finish the transaction (MANDATORY)
+          console.log('[SubscriptionModal] Backend verification successful, finishing transaction');
           await finishTransaction({ purchase, isConsumable: false });
           console.log('[SubscriptionModal] Transaction finished successfully');
 
@@ -397,10 +418,8 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           throw new Error('Backend verification failed');
         }
       } catch (error: any) {
-        console.error('[SubscriptionModal] Error processing purchase:', {
-          error: error,
+        console.error('[SubscriptionModal] Error processing purchase', {
           message: error.message,
-          stack: error.stack,
         });
         Alert.alert(
           'Verification Failed',
@@ -424,24 +443,17 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
     const initializeIAP = async () => {
       try {
-        console.log('[SubscriptionModal] Initializing IAP connection...');
-        console.log('[SubscriptionModal] Platform:', Platform.OS);
-        console.log('[SubscriptionModal] Plan available:', !!plan);
-
         // Initialize connection to App Store/Google Play
         await initConnection();
-        console.log('[SubscriptionModal] IAP connection initialized');
 
         if (!isMounted) return;
 
         // Clear any pending transactions (important for Android)
         if (Platform.OS === 'android') {
-          console.log('[SubscriptionModal] Clearing pending Android transactions...');
           // @ts-ignore - some versions of react-native-iap don't expose this in types
           if ((RNIap as any).flushFailedPurchasesCachedAsPendingAndroid) {
             // @ts-ignore
             await (RNIap as any).flushFailedPurchasesCachedAsPendingAndroid();
-            console.log('[SubscriptionModal] Pending Android transactions cleared');
           }
         }
 
@@ -455,37 +467,29 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
               ? [plan.originalPlan.google_product_id]
               : [plan.originalPlan.apple_product_id];
 
-          console.log('[SubscriptionModal] Fetching subscription products:', productIds);
           try {
             // Try to get subscriptions to verify they're available
             if ((RNIap as any).getSubscriptions) {
               const subscriptions = await (RNIap as any).getSubscriptions(productIds);
-              console.log('[SubscriptionModal] Available subscriptions:', subscriptions);
+              console.log(subscriptions, 'subscriptions');
             }
           } catch (fetchError: any) {
-            console.warn(
-              '[SubscriptionModal] Could not fetch subscriptions (this is OK if products are configured):',
-              fetchError.message
-            );
+            console.warn('[SubscriptionModal] Could not fetch subscriptions:', fetchError.message);
           }
         }
 
         if (!isMounted) return;
 
-        // Set up purchase success listener
-        console.log('[SubscriptionModal] Setting up purchase update listener...');
         purchaseUpdateSubscription = purchaseUpdatedListener(async (purchase: any) => {
-          console.log('[SubscriptionModal] Purchase update listener triggered');
+          console.log('[SubscriptionModal] Purchase event received from native module');
           await handlePurchaseUpdate(purchase);
         });
 
         // Set up purchase error listener
-        console.log('[SubscriptionModal] Setting up purchase error listener...');
         purchaseErrorSubscription = purchaseErrorListener((error: any) => {
-          console.error('[SubscriptionModal] Purchase error listener triggered:', {
+          console.error('[SubscriptionModal] Purchase error from listener', {
             code: error.code,
             message: error.message,
-            error: error,
           });
 
           setIsLoading(false);
@@ -494,7 +498,6 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           // Don't show alert for user cancellation
           const errorCode = (error as any)?.code;
           if (errorCode !== 'E_USER_CANCELLED' && errorCode !== 'E_USER_CANCELED') {
-            console.error('[SubscriptionModal] Non-cancellation error, showing alert');
             Alert.alert('Purchase Error', error.message || 'An error occurred during purchase');
           } else {
             console.log('[SubscriptionModal] User cancelled purchase');
@@ -503,17 +506,15 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
         if (!isMounted) return;
 
-        console.log('[SubscriptionModal] IAP initialized successfully, listeners set up');
+        console.log('[SubscriptionModal] IAP initialized, listeners set up');
         setIapInitialized(true);
         setIapError(null);
       } catch (error: any) {
-        console.error('[SubscriptionModal] Failed to initialize IAP:', {
-          error: error,
+        console.error('[SubscriptionModal] Failed to initialize IAP', {
           message: error.message,
           code: error.code,
           responseCode: error.responseCode,
           debugMessage: error.debugMessage,
-          stack: error.stack,
         });
 
         if (!isMounted) return;
@@ -579,21 +580,13 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
   // Function to send purchase data to your backend
   const sendPurchaseToBackend = async (purchaseData: any) => {
+    console.log(purchaseData, 'purchaseData we have reached here');
     try {
-      console.log('[SubscriptionModal] 🔄 sendPurchaseToBackend called');
-      console.log(
-        '[SubscriptionModal] Backend endpoint:',
-        `${BASE_URL}/api/subscriptions/verify-purchase`
-      );
-
       // Get auth token for backend request
       const token = await storage.getToken();
       if (!token) {
         throw new Error('Authentication token missing');
       }
-
-      console.log('[SubscriptionModal] 🔐 Auth token present:', token ? 'YES' : 'NO');
-      console.log('[SubscriptionModal] 📡 Making HTTP POST request...');
 
       // Send purchase verification to backend
       const response = await fetch(`${BASE_URL}/api/subscriptions/verify-purchase`, {
@@ -605,39 +598,22 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         body: JSON.stringify(purchaseData),
       });
 
-      console.log('[SubscriptionModal] 📥 Backend response received');
-      console.log('[SubscriptionModal] Response Status Code:', response.status);
-      console.log('[SubscriptionModal] Response Status Text:', response.statusText);
-      console.log(
-        '[SubscriptionModal] Response Headers:',
-        JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)
-      );
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('========================================');
-        console.error('[SubscriptionModal] ❌ BACKEND ERROR RESPONSE');
-        console.error('========================================');
-        console.error('[SubscriptionModal] Status Code:', response.status);
-        console.error('[SubscriptionModal] Error Response:', errorText);
-        console.error('========================================');
+        console.error('[SubscriptionModal] Backend error response', {
+          status: response.status,
+          body: errorText,
+        });
         throw new Error(`Backend responded with ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('[SubscriptionModal] ✅ Backend verification successful');
+      console.log('[SubscriptionModal] Backend verification successful');
       return result;
     } catch (error: any) {
-      console.error('========================================');
-      console.error('[SubscriptionModal] ❌ BACKEND REQUEST FAILED');
-      console.error('========================================');
-      console.error('[SubscriptionModal] Error Type:', error.name);
-      console.error('[SubscriptionModal] Error Message:', error.message);
-      console.error('[SubscriptionModal] Error Stack:', error.stack);
-      if (error.response) {
-        console.error('[SubscriptionModal] Error Response:', error.response);
-      }
-      console.error('========================================');
+      console.error('[SubscriptionModal] Backend request failed', {
+        message: error.message,
+      });
       throw error;
     }
   };
