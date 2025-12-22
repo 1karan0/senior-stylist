@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import { getCurrentPlatformAdConfig, isAdSizeAllowed } from '@/api/ads/getAdsConfig';
 
 export type AdMediaType = 'image' | 'video';
@@ -40,12 +39,29 @@ interface AdProviderResponse {
 const parseAdFromApi = (apiData: AdProviderResponse['data']): Ad | null => {
   if (!apiData) return null;
 
+  // Normalize media URL so the rest of the app can always treat it as a
+  // valid data URI. Some providers might send raw base64 without the prefix.
+  const rawMediaUrl = apiData.media_url || '';
+  let normalizedMediaUrl = rawMediaUrl;
+
+  const isAlreadyDataUri = rawMediaUrl.startsWith('data:');
+  const isHttpOrFile =
+    rawMediaUrl.startsWith('http://') ||
+    rawMediaUrl.startsWith('https://') ||
+    rawMediaUrl.startsWith('file://');
+
+  if (!isAlreadyDataUri && !isHttpOrFile && rawMediaUrl.length > 0) {
+    // Assume raw base64 content; infer mime type from media_type
+    const mimeType = apiData.media_type === 'video' ? 'video/mp4' : 'image/png';
+    normalizedMediaUrl = `data:${mimeType};base64,${rawMediaUrl}`;
+  }
+
   return {
     id: apiData.id,
     title: apiData.title,
     description: apiData.description || '',
     mediaType: apiData.media_type,
-    mediaUrl: apiData.media_url, // Already a base64 data URI
+    mediaUrl: normalizedMediaUrl,
     segundosActivo: apiData.segundos_activo,
     redirectUrl: apiData.redirect_url,
     size: apiData.size,

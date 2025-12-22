@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
+import RNFS from 'react-native-fs';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import Svg, { Circle } from 'react-native-svg';
 import type { Ad } from '@/services/adService';
@@ -23,26 +24,24 @@ interface AdModalProps {
   onClosedEarly?: () => void;
 }
 
-const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, onClosedEarly }) => {
+const AUTO_CLOSE_DURATION = 30;
+
+const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [canClose, setCanClose] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
+  const [localVideoPath, setLocalVideoPath] = useState<string | null>(null);
+  const [localImagePath, setLocalImagePath] = useState<string | null>(null);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const videoRef = useRef<any>(null);
   const elapsedSecondsRef = useRef(0);
   const adIdRef = useRef<number | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const AUTO_CLOSE_DURATION = 30;
 
-  const handleClose = useCallback(() => {
-    const shouldAllowClose = canClose || elapsedSecondsRef.current >= AUTO_CLOSE_DURATION;
-
-    if (!shouldAllowClose) {
-      return;
-    }
-
+  const clearTimers = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -51,132 +50,174 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, onClosedEarl
       clearTimeout(autoCloseTimerRef.current);
       autoCloseTimerRef.current = null;
     }
+  }, []);
 
+  const resetState = useCallback(() => {
     setElapsedSeconds(0);
     elapsedSecondsRef.current = 0;
     setCanClose(false);
     setVideoEnded(false);
+    setLocalVideoPath(null);
+    setLocalImagePath(null);
+    setMediaError(null);
+  }, []);
 
+  const handleClose = useCallback(() => {
+    if (!canClose && elapsedSecondsRef.current < AUTO_CLOSE_DURATION) return;
+    clearTimers();
+    resetState();
     onFinished();
-  }, [canClose, onFinished]);
+  }, [canClose, clearTimers, resetState, onFinished]);
 
-  // Fade in close button when available
+  // Prepare media file from base64
+  const prepareMediaFile = useCallback(
+    async (uri: string, mediaType: 'image' | 'video', adId: number): Promise<string | null> => {
+      const trimmedUri = uri.trim();
+
+      if (
+        trimmedUri.startsWith('http://') ||
+        trimmedUri.startsWith('https://') ||
+        trimmedUri.startsWith('file://')
+      ) {
+        return trimmedUri;
+      }
+
+      const isBase64 =
+        mediaType === 'video'
+          ? trimmedUri.startsWith('data:video') && trimmedUri.includes(';base64,')
+          : trimmedUri.startsWith('data:image') && trimmedUri.includes(';base64,');
+
+      if (!isBase64) return trimmedUri;
+
+      try {
+        const base64Data = trimmedUri.split(';base64,')[1];
+        if (!base64Data) throw new Error(`Invalid base64 data URI for ${mediaType}`);
+
+        let extension = mediaType === 'video' ? 'mp4' : 'png';
+        if (mediaType === 'image') {
+          if (trimmedUri.includes('jpeg') || trimmedUri.includes('jpg')) extension = 'jpg';
+          else if (trimmedUri.includes('gif')) extension = 'gif';
+          else if (trimmedUri.includes('webp')) extension = 'webp';
+        }
+
+        const fileName = `ad_${adId || 'temp'}.${extension}`;
+        const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+        await RNFS.writeFile(filePath, base64Data, 'base64');
+
+        if (__DEV__) console.log(`[AdModal] ${mediaType} written to temp file:`, filePath);
+        return `file://${filePath}`;
+      } catch (error) {
+        console.error(`[AdModal] Failed to prepare ${mediaType} file:`, error);
+        throw error;
+      }
+    },
+    []
+  );
+
+  // Prepare video
   useEffect(() => {
-    if (canClose) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      fadeAnim.setValue(0);
+    let isMounted = true;
+    if (!visible || !ad || ad.mediaType !== 'video' || !ad.mediaUrl) {
+      setLocalVideoPath(null);
+      return;
     }
-  }, [canClose, fadeAnim]);
 
+    prepareMediaFile(ad.mediaUrl, 'video', ad.id)
+      .then((path) => isMounted && setLocalVideoPath(path))
+      .catch(() => isMounted && setMediaError('Failed to load video'));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [visible, ad, prepareMediaFile]);
+
+  // Prepare image
   useEffect(() => {
-    if (visible && ad) {
-      const isNewAd = adIdRef.current !== ad.id;
+    let isMounted = true;
+    if (!visible || !ad || ad.mediaType !== 'image' || !ad.mediaUrl) {
+      setLocalImagePath(null);
+      return;
+    }
 
-      if (isNewAd) {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-        if (autoCloseTimerRef.current) {
-          clearTimeout(autoCloseTimerRef.current);
-          autoCloseTimerRef.current = null;
-        }
+    prepareMediaFile(ad.mediaUrl, 'image', ad.id)
+      .then((path) => isMounted && setLocalImagePath(path))
+      .catch(() => isMounted && setMediaError('Failed to load image'));
 
-        setElapsedSeconds(0);
-        elapsedSecondsRef.current = 0;
-        setCanClose(false);
-        setVideoEnded(false);
-        setMediaError(null);
-        adIdRef.current = ad.id;
+    return () => {
+      isMounted = false;
+    };
+  }, [visible, ad, prepareMediaFile]);
 
-        if (__DEV__) {
-          console.log('[AdModal] Ad data:', {
-            id: ad.id,
-            mediaType: ad.mediaType,
-            mediaUrl: ad.mediaUrl?.substring(0, 50) + '...',
-            segundosActivo: ad.segundosActivo,
-          });
-        }
-
-        timerRef.current = setInterval(() => {
-          setElapsedSeconds((prev) => {
-            const next = prev + 1;
-            elapsedSecondsRef.current = next;
-            const requiredSeconds = ad.segundosActivo;
-
-            if (next >= requiredSeconds) {
-              setCanClose(true);
-            }
-
-            return next;
-          });
-        }, 1000);
-
-        autoCloseTimerRef.current = setTimeout(() => {
-          setCanClose(true);
-          handleClose();
-        }, AUTO_CLOSE_DURATION * 1000);
-      }
-
-      return () => {
-        if (!visible || adIdRef.current !== ad.id) {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-          if (autoCloseTimerRef.current) {
-            clearTimeout(autoCloseTimerRef.current);
-            autoCloseTimerRef.current = null;
-          }
-        }
-      };
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      if (autoCloseTimerRef.current) {
-        clearTimeout(autoCloseTimerRef.current);
-        autoCloseTimerRef.current = null;
-      }
-      setElapsedSeconds(0);
-      elapsedSecondsRef.current = 0;
-      setCanClose(false);
-      setVideoEnded(false);
-      setMediaError(null);
+  // Timer and ad lifecycle
+  useEffect(() => {
+    if (!visible || !ad) {
+      clearTimers();
+      resetState();
       adIdRef.current = null;
+      return;
     }
-  }, [visible, ad?.id, handleClose]);
 
+    const isNewAd = adIdRef.current !== ad.id;
+    if (isNewAd) {
+      clearTimers();
+      resetState();
+      adIdRef.current = ad.id;
+
+      if (__DEV__) {
+        console.log('[AdModal] Ad data:', {
+          id: ad.id,
+          mediaType: ad.mediaType,
+          mediaUrl: ad.mediaUrl?.substring(0, 50) + '...',
+          segundosActivo: ad.segundosActivo,
+        });
+      }
+
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds((prev) => {
+          const next = prev + 1;
+          elapsedSecondsRef.current = next;
+          if (next >= ad.segundosActivo) setCanClose(true);
+          return next;
+        });
+      }, 1000);
+
+      autoCloseTimerRef.current = setTimeout(() => {
+        setCanClose(true);
+        handleClose();
+      }, AUTO_CLOSE_DURATION * 1000);
+    }
+
+    return () => {
+      if (!visible || adIdRef.current !== ad.id) clearTimers();
+    };
+  }, [visible, ad, clearTimers, resetState, handleClose]);
+
+  // Back handler
   useEffect(() => {
     if (!visible) return;
-
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (canClose) {
-        handleClose();
-        return true;
-      }
+      if (canClose) handleClose();
       return true;
     });
-
     return () => backHandler.remove();
   }, [visible, canClose, handleClose]);
 
+  // Auto-enable close
   useEffect(() => {
     if (!ad || !visible) return;
-
-    const shouldEnableClose =
-      elapsedSeconds >= ad.segundosActivo || (ad.mediaType === 'video' && videoEnded);
-
-    if (shouldEnableClose) {
+    if (elapsedSeconds >= ad.segundosActivo || (ad.mediaType === 'video' && videoEnded)) {
       setCanClose(true);
     }
   }, [elapsedSeconds, videoEnded, ad, visible]);
+
+  // Fade animation
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: canClose ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [canClose, fadeAnim]);
 
   const handleVideoEnd = useCallback(() => {
     setVideoEnded(true);
@@ -185,28 +226,17 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, onClosedEarl
 
   const handleMediaPress = useCallback(() => {
     if (ad?.redirectUrl && canClose) {
-      Linking.openURL(ad.redirectUrl).catch((err) => {
-        console.error('[AdModal] Failed to open redirect URL:', err);
-      });
+      Linking.openURL(ad.redirectUrl).catch((err) =>
+        console.error('[AdModal] Failed to open redirect URL:', err)
+      );
     }
   }, [ad, canClose]);
 
-  const handleImageError = useCallback((error: any) => {
-    console.error('[AdModal] Image error:', error);
-    setMediaError('Failed to load image');
-  }, []);
+  if (!ad || !visible) return null;
 
-  const handleVideoError = useCallback((error: any) => {
-    console.error('[AdModal] Video error:', error);
-    setMediaError('Failed to load video');
-  }, []);
-
-  if (!ad || !visible) {
-    return null;
-  }
-
-  const progressPercentage = ad ? Math.min((elapsedSeconds / ad.segundosActivo) * 100, 100) : 0;
-  const remainingSeconds = ad ? Math.max(ad.segundosActivo - elapsedSeconds, 0) : 0;
+  const progressPercentage = Math.min((elapsedSeconds / ad.segundosActivo) * 100, 100);
+  const remainingSeconds = Math.max(ad.segundosActivo - elapsedSeconds, 0);
+  const topOffset = Platform.OS === 'ios' ? 60 : 30;
 
   const renderMedia = () => {
     if (!ad.mediaUrl) {
@@ -218,64 +248,53 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, onClosedEarl
       );
     }
 
-    const isBase64 = ad.mediaUrl.startsWith('data:');
-    const isVideoBase64 = isBase64 && ad.mediaUrl.startsWith('data:video/');
-
     if (ad.mediaType === 'video') {
-      if (isVideoBase64) {
+      if (!localVideoPath) {
         return (
           <View className="flex-1 justify-center items-center bg-[#0a0a0a]">
-            <Ionicons name="videocam-off-outline" size={64} color="#666666" />
-            <Text className="text-gray-400 text-base mt-4 text-center px-8">
-              Video format not supported
-            </Text>
-            <Text className="text-gray-500 text-xs mt-2 text-center px-8">
-              Base64 videos are not supported
-            </Text>
+            <Ionicons name="videocam-outline" size={64} color="#666666" />
+            <Text className="text-gray-400 text-base mt-4 text-center px-8">Loading video...</Text>
           </View>
         );
       }
-
       return (
         <Video
           ref={videoRef}
-          source={{ uri: ad.mediaUrl }}
-          className="w-full h-full bg-transparent"
+          source={{ uri: localVideoPath }}
+          style={{ flex: 1, width: '100%', height: '100%', backgroundColor: 'transparent' }}
           resizeMode="contain"
           paused={false}
           muted={false}
           repeat={false}
           onEnd={handleVideoEnd}
-          onError={handleVideoError}
-          onLoad={() => {
-            if (__DEV__) console.log('[AdModal] Video loaded successfully');
-            setMediaError(null);
-          }}
-          key={ad.id || ad.mediaUrl}
-        />
-      );
-    } else {
-      return (
-        <Image
-          source={{ uri: ad.mediaUrl }}
-          className="w-full h-full bg-transparent"
-          resizeMode="contain"
-          onError={handleImageError}
-          onLoad={() => {
-            if (__DEV__) console.log('[AdModal] Image loaded successfully');
-            setMediaError(null);
-          }}
-          onLoadStart={() => {
-            if (__DEV__) console.log('[AdModal] Image loading started');
-          }}
-          key={ad.id || ad.mediaUrl}
+          onError={() => setMediaError('Failed to load video')}
+          onLoad={() => setMediaError(null)}
+          key={ad.id || localVideoPath}
         />
       );
     }
+
+    if (!localImagePath && ad.mediaUrl.startsWith('data:image')) {
+      return (
+        <View className="flex-1 justify-center items-center bg-[#0a0a0a]">
+          <Ionicons name="image-outline" size={64} color="#666666" />
+          <Text className="text-gray-400 text-base mt-4 text-center px-8">Loading image...</Text>
+        </View>
+      );
+    }
+
+    return (
+      <Image
+        source={{ uri: localImagePath || ad.mediaUrl }}
+        style={{ flex: 1, width: '100%', height: '100%', backgroundColor: 'transparent' }}
+        resizeMode="contain"
+        onError={() => setMediaError('Failed to load image')}
+      />
+    );
   };
 
   const renderTimerIndicator = () => {
-    if (!ad) return null;
+    if (!ad || canClose) return null;
 
     const size = 28;
     const strokeWidth = 3;
@@ -284,31 +303,16 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, onClosedEarl
     const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
 
     return (
-      <View
-        className={`absolute z-20 ${canClose ? 'hidden' : 'block'}`}
-        style={{
-          top: Platform.OS === 'ios' ? 60 : 30,
-          right: 20,
-        }}
-      >
+      <View className="absolute z-20" style={{ top: topOffset, right: 20 }}>
         <View
           className="items-center justify-center rounded-full shadow-lg"
-          style={{
-            width: size,
-            height: size,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-          }}
+          style={{ width: size, height: size, backgroundColor: 'rgba(0, 0, 0, 0.75)' }}
         >
-          {/* SVG Circle Progress */}
           <Svg
             width={size}
             height={size}
-            style={{
-              position: 'absolute',
-              transform: [{ rotate: '-90deg' }],
-            }}
+            style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}
           >
-            {/* Background circle */}
             <Circle
               cx={size / 2}
               cy={size / 2}
@@ -317,7 +321,6 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, onClosedEarl
               strokeWidth={strokeWidth}
               fill="none"
             />
-            {/* Progress circle */}
             <Circle
               cx={size / 2}
               cy={size / 2}
@@ -330,8 +333,6 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, onClosedEarl
               strokeLinecap="round"
             />
           </Svg>
-
-          {/* Timer text */}
           <Text className="text-white text-lg font-bold">{remainingSeconds}</Text>
         </View>
       </View>
@@ -350,15 +351,13 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, onClosedEarl
         className="flex-1 bg-black justify-center items-center"
         edges={['top', 'bottom']}
       >
-        {/* Timer Indicator */}
         {renderTimerIndicator()}
 
-        {/* Close Button with fade animation */}
         {canClose && (
           <Animated.View
             style={{
               position: 'absolute',
-              top: Platform.OS === 'ios' ? 60 : 30,
+              top: topOffset,
               right: 20,
               zIndex: 20,
               opacity: fadeAnim,
@@ -382,14 +381,10 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, onClosedEarl
           </Animated.View>
         )}
 
-        {/* Redirect indicator */}
         {ad.redirectUrl && canClose && (
           <View
             className="absolute z-10"
-            style={{
-              bottom: Platform.OS === 'ios' ? 100 : 80,
-              alignSelf: 'center',
-            }}
+            style={{ bottom: Platform.OS === 'ios' ? 100 : 80, alignSelf: 'center' }}
           >
             <View
               className="px-6 py-3 rounded-full shadow-lg"
@@ -400,16 +395,14 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, onClosedEarl
           </View>
         )}
 
-        {/* Media Container */}
         <TouchableOpacity
-          className="w-full h-full justify-center items-center bg-[#0a0a0a]"
+          className="w-full h-full bg-[#0a0a0a]"
+          style={{ position: 'relative' }}
           activeOpacity={ad.redirectUrl && canClose ? 0.95 : 1}
           onPress={handleMediaPress}
           disabled={!canClose || !ad.redirectUrl}
         >
           {renderMedia()}
-
-          {/* Error overlay */}
           {mediaError && (
             <View
               className="absolute top-0 left-0 right-0 bottom-0 justify-center items-center"
@@ -424,13 +417,9 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, onClosedEarl
           )}
         </TouchableOpacity>
 
-        {/* Brand/Sponsor label (optional) */}
         <View
           className="absolute z-10"
-          style={{
-            bottom: Platform.OS === 'ios' ? 50 : 30,
-            alignSelf: 'center',
-          }}
+          style={{ bottom: Platform.OS === 'ios' ? 50 : 30, alignSelf: 'center' }}
         >
           <View
             className="px-4 py-2 rounded-full"
