@@ -2,11 +2,15 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, Pressable, ActivityIndicator, Alert } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   useGetSubscriptionPlans,
   SubscriptionPlan,
 } from '@/api/subscription/useGetSubscriptionPlans';
 import SubscriptionModal from '@/components/modals/SubscriptionModal';
+import { AppStackParamList } from '@/common/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PlanDisplay {
   key: string;
@@ -20,7 +24,11 @@ interface PlanDisplay {
   originalPlan: SubscriptionPlan;
 }
 
+type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'Pricing'>;
+
 export default function PricingScreen() {
+  const navigation = useNavigation<NavigationProp>();
+  const { user } = useAuth();
   const { data: subscriptionPlans, isLoading, error } = useGetSubscriptionPlans();
   const [selectedPlan, setSelectedPlan] = useState<PlanDisplay | null>(null);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
@@ -245,7 +253,25 @@ export default function PricingScreen() {
         </Pressable>
 
         {/* SKIP */}
-        <Pressable className="mt-4">
+        <Pressable
+          className="mt-4"
+          onPress={() => {
+            console.log('[Pricing] Skip button clicked, navigating to Consultation tab');
+            const userRole = user?.role;
+
+            if (userRole === 'consultant') {
+              // Navigate to ConsultantTabs and then to ChatTab (consultant's consultation equivalent)
+              (navigation as any).navigate('ConsultantTabs', {
+                screen: 'ChatTab',
+              });
+            } else {
+              // Navigate to UserTabs and then to ConsultationTab
+              (navigation as any).navigate('UserTabs', {
+                screen: 'ConsultationTab',
+              });
+            }
+          }}
+        >
           <Text className="text-center text-textDark font-bold text-base">Skip</Text>
         </Pressable>
       </View>
