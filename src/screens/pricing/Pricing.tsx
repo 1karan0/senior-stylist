@@ -11,10 +11,10 @@ import {
 import SubscriptionModal from '@/components/modals/SubscriptionModal';
 import { AppStackParamList } from '@/common/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
-import { ThemeColors } from '@/constants/Theme';
-import GradientBackground from '@/common/components/GradientBackground';
-import Button from '@/common/components/Button';
+import {
+  getCurrentSubscription,
+  type CurrentSubscription,
+} from '@/api/subscription/subscriptionManagement';
 
 interface PlanDisplay {
   key: string;
@@ -36,11 +36,8 @@ export default function PricingScreen() {
   const { data: subscriptionPlans, isLoading, error } = useGetSubscriptionPlans();
   const [selectedPlan, setSelectedPlan] = useState<PlanDisplay | null>(null);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
-  const { isDark } = useTheme();
-
-  const backgroundGradient: (string | number)[] = isDark
-    ? [...ThemeColors.gradients.dark.background]
-    : [...ThemeColors.gradients.light.background];
+  const [currentSubscription, setCurrentSubscription] = useState<CurrentSubscription | null>(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
 
   // Transform API data to display format and filter out test plans
   const plans = useMemo(() => {
@@ -140,36 +137,29 @@ export default function PricingScreen() {
   }, [plans, currentSubscription]);
 
   return (
-    <GradientBackground>
-      <View className="px-5 py-6">
+    <LinearGradient
+      colors={['#ECFAF5', '#D1F6E7']} // pick your exact light-green gradient shades
+      start={{ x: 0, y: 0 }}
+      end={{ x: 2, y: 4 }}
+      className="flex-1 px-6"
+    >
+      <View className="">
         {/* HEADER */}
         <View className="pt-6 items-center">
-          <Text
-            className={`text-[24px] font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
-          >
-            Choose Your Plan
-          </Text>
-          <Text
-            className={`text-center font-poppins-regular mt-2 ${isDark ? 'text-textMuted' : 'text-textDark'}`}
-          >
+          <Text className="text-[24px] font-bold text-textDark">Choose Your Plan</Text>
+          <Text className="text-center text-textMuted mt-2">
             Select a subscription to get started with expert{'\n'}consultations
           </Text>
         </View>
 
         {/* OFFER BADGE */}
         <View className="mt-6 items-center">
-          <View className="rounded-xl py-2 px-4 w-60 bg-commonGradientStop10">
-            <Text
-              className={`text-center text-base font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
-            >
+          <View className="bg-commonGradientStop10 rounded-xl py-2 px-4 w-60">
+            <Text className="text-center text-base font-bold text-textDark">
               50% OFF - First 6 Months
             </Text>
           </View>
-          <Text
-            className={`text-sm font-poppins-regular mt-2 ${isDark ? 'text-textMuted' : 'text-textDark'}`}
-          >
-            Minimum 1 year subscription
-          </Text>
+          <Text className="text-sm text-textMuted mt-2">Minimum 1 year subscription</Text>
         </View>
 
         {/* PLANS */}
@@ -177,9 +167,7 @@ export default function PricingScreen() {
           {isLoading ? (
             <View className="items-center justify-center py-8">
               <ActivityIndicator size="large" color="#23A76F" />
-              <Text className="mt-4" style={{ color: isDark ? '#9CA3AF' : '#64748B' }}>
-                Loading plans...
-              </Text>
+              <Text className="text-textMuted mt-4">Loading plans...</Text>
             </View>
           ) : error ? (
             <View className="items-center justify-center py-8">
@@ -189,9 +177,7 @@ export default function PricingScreen() {
             </View>
           ) : plans.length === 0 ? (
             <View className="items-center justify-center py-8">
-              <Text className="text-center" style={{ color: isDark ? '#9CA3AF' : '#64748B' }}>
-                No subscription plans available.
-              </Text>
+              <Text className="text-textMuted text-center">No subscription plans available.</Text>
             </View>
           ) : (
             plans.map((item) => {
@@ -204,65 +190,48 @@ export default function PricingScreen() {
                 <Pressable
                   key={item.key}
                   onPress={() => setSelectedPlan(item)}
-                  className={`rounded-md border px-4 py-4 ${active && 'border-commonGradientStop2'} ${isDark ? 'bg-bgDark1 border-[#273F36]' : 'bg-bgLight0 border-[#DAE7E0]'}`}
+                  className={`rounded-md border px-4 py-4 ${
+                    active ? 'border-[#23A76F]' : 'border-[#E2E8F0]'
+                  } bg-white ${isCurrentPlan ? 'bg-green-50' : ''}`}
                 >
                   <View className="flex-row items-center gap-3">
                     {/* Radio Button */}
                     <View
                       className={`w-5 h-5 rounded-full border ${
-                        active ? 'border-commonGradientStop1' : 'border-[#273F36]'
+                        active ? 'border-[#23A76F]' : 'border-[#94A3B8]'
                       } items-center justify-center`}
                     >
                       {active && <View className="w-3 h-3 rounded-full bg-[#23A76F]" />}
                     </View>
 
                     <View className="flex-1">
-                      <Text
-                        className="font-poppins-medium text-[18px]"
-                        style={{ color: isDark ? '#ffffff' : '#162721' }}
-                      >
-                        {item.title}
-                      </Text>
+                      <View className="flex-row items-center gap-2">
+                        <Text className="text-textDark font-semibold text-lg">{item.title}</Text>
+                        {isCurrentPlan && (
+                          <View className="bg-[#23A76F] px-2 py-0.5 rounded-full">
+                            <Text className="text-white text-xs font-semibold">Current</Text>
+                          </View>
+                        )}
+                      </View>
 
                       {/* Price with consultations: "£6/Monthly - 4 consultations" */}
                       <View className="flex-row items-center justify-between mt-1">
                         <View className="flex-row items-center flex-1">
-                          <Text
-                            className="font-poppins-semibold text-[22px]"
-                            style={{ color: isDark ? '#ffffff' : '#162721' }}
-                          >
+                          <Text className="text-[#162721] font-medium text-[22px]">
                             {item?.price}
                           </Text>
-                          <Text
-                            className="font-poppins-regular text-[16px]"
-                            style={{ color: isDark ? '#8AA897' : '#658176' }}
-                          >
-                            /
-                          </Text>
-                          <Text
-                            className="font-poppins-regular text-[16px]"
-                            style={{ color: isDark ? '#8AA897' : '#658176' }}
-                          >
-                            Monthly
-                          </Text>
-                          <Text
-                            className="font-poppins-regular text-[14px] ml-1"
-                            style={{ color: isDark ? '#8AA897' : '#658176' }}
-                          >
+                          <Text className="text-[#658176] font-medium text-[16px]">/</Text>
+                          <Text className="text-[#658176] font-medium text-[16px]">Monthly</Text>
+                          <Text className="text-[#658176] font-medium text-[14px] ml-1">
                             {`- ${item.consulationPerMonth} consultations`}
                           </Text>
                         </View>
                         {/* Arrow Icon inside the box, aligned to the right */}
-                        <Ionicons name="chevron-forward" size={20} color="#8AA897" />
+                        <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
                       </View>
 
                       {/* Description: "Then £12/month after 6 months" */}
-                      <Text
-                        className="font-poppins-regular text-[12px] mt-1"
-                        style={{ color: isDark ? '#8AA897' : '#658176' }}
-                      >
-                        {item.desc}
-                      </Text>
+                      <Text className="text-[#658176] text-[12px] mt-1">{item.desc}</Text>
                     </View>
                   </View>
                 </Pressable>
@@ -288,8 +257,7 @@ export default function PricingScreen() {
         )}
 
         {/* BUTTON */}
-        <Button
-          text="Continue to Payment"
+        <Pressable
           onPress={() => {
             if (!selectedPlan) {
               Alert.alert('No Plan Selected', 'Please select a subscription plan first.');
@@ -297,8 +265,27 @@ export default function PricingScreen() {
             }
             setSubscriptionModal(true);
           }}
-          className="mt-10 w-full"
-        />
+          className="mt-10 rounded-xl overflow-hidden"
+          disabled={isLoadingSubscription}
+        >
+          <LinearGradient
+            colors={['#2CCB91', '#23A76F']}
+            start={{ x: 0, y: 1 }}
+            end={{ x: 1, y: 0 }}
+            className="h-[52px] rounded-xl items-center justify-center"
+          >
+            <Text className="text-white text-[16px] font-semibold">
+              {isLoadingSubscription
+                ? 'Loading...'
+                : currentSubscription?.status === 'active' &&
+                    currentSubscription.plan_id === selectedPlan?.originalPlan.id
+                  ? 'Current Plan'
+                  : currentSubscription?.status === 'active'
+                    ? 'Switch Plan'
+                    : 'Continue to Payment'}
+            </Text>
+          </LinearGradient>
+        </Pressable>
 
         {/* SKIP */}
         <Pressable
@@ -319,14 +306,7 @@ export default function PricingScreen() {
             }
           }}
         >
-          <Text
-            className="text-center font-bold text-base"
-            style={{
-              color: isDark ? ThemeColors.text.primary.dark : ThemeColors.text.primary.light,
-            }}
-          >
-            Skip
-          </Text>
+          <Text className="text-center text-textDark font-bold text-base">Skip</Text>
         </Pressable>
       </View>
       {subscriptionModal && (
@@ -344,6 +324,6 @@ export default function PricingScreen() {
           }}
         />
       )}
-    </GradientBackground>
+    </LinearGradient>
   );
 }
