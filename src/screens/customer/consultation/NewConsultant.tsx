@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import Toast from '@/common/components/Toast';
 import Button from '@/common/components/Button';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAds } from '@/contexts/AdContext';
 import { storage } from '@/services/storage';
 import { requestPhotoLibraryPermission, showPermissionDeniedAlert } from '@/utils/imagePermissions';
 
@@ -30,6 +31,17 @@ const NewConsultant = ({ navigation }: any) => {
   });
 
   const { isDark } = useTheme();
+  const { isAdsEnabled, preloadAd } = useAds();
+
+  // Preload ad when component mounts (so it's ready when user taps "Find Stylist")
+  useEffect(() => {
+    if (isAdsEnabled) {
+      preloadAd('small').catch((err) => {
+        console.error('[NewConsultant] Failed to preload ad:', err);
+      });
+    }
+  }, [isAdsEnabled, preloadAd]);
+
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     setToast({
       visible: true,
