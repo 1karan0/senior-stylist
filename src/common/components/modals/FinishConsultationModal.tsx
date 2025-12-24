@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StatusBar, Pressable } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StatusBar } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/common/components/Button';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -84,7 +84,7 @@ const FinishConsultationModal: React.FC<FinishConsultationModalProps> = ({
             {/* Finish Button */}
             <View className="flex-1">
               <Button
-                text={isLoading ? 'Finishing...' : 'Finish Consultation'}
+                text={isLoading ? 'Finishing...' : 'Finish'}
                 variant="gradient"
                 onPress={onConfirm}
                 loading={isLoading}

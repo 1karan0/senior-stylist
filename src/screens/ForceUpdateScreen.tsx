@@ -11,9 +11,9 @@ const ForceUpdateScreen = () => {
     <View className="flex-1 bg-white dark:bg-gray-900 justify-center items-center p-6">
       <View className="items-center max-w-md">
         {/* Icon */}
-        <View className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-full">
+        <View className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-full">
           {/* Replaced ArrowUpCircle with an equivalent Ionicons icon */}
-          <Ionicons name="arrow-up-circle" size={64} color="#3B82F6" />
+          <Ionicons name="arrow-up-circle" size={64} color="#22c55e" />
         </View>
 
         {/* Title */}
@@ -30,7 +30,7 @@ const ForceUpdateScreen = () => {
         {/* Update Button */}
         <TouchableOpacity
           onPress={() => openStore()}
-          className="bg-blue-500 dark:bg-blue-600 px-8 py-4 rounded-lg shadow-lg active:opacity-90"
+          className="bg-green-500 dark:bg-green-600 px-8 py-4 rounded-lg shadow-lg active:opacity-90"
           activeOpacity={0.8}
         >
           <Text className="text-white text-lg font-semibold">Update Now</Text>
