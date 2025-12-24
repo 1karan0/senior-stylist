@@ -8,7 +8,7 @@ export interface Ad {
   title: string;
   description: string;
   mediaType: AdMediaType;
-  mediaUrl: string; // base64 data URI
+  mediaUrl: string; // URL to media file
   segundosActivo: number; // seconds before close button appears
   redirectUrl: string | null;
   size: AdSize;
@@ -23,7 +23,7 @@ interface AdProviderResponse {
     title: string;
     description: string;
     media_type: 'image' | 'video';
-    media_url: string; // base64 data URI
+    media_url: string; // URL to media file
     redirect_url: string | null;
     size: 'small' | 'large';
     segundos_activo: number;
@@ -39,29 +39,12 @@ interface AdProviderResponse {
 const parseAdFromApi = (apiData: AdProviderResponse['data']): Ad | null => {
   if (!apiData) return null;
 
-  // Normalize media URL so the rest of the app can always treat it as a
-  // valid data URI. Some providers might send raw base64 without the prefix.
-  const rawMediaUrl = apiData.media_url || '';
-  let normalizedMediaUrl = rawMediaUrl;
-
-  const isAlreadyDataUri = rawMediaUrl.startsWith('data:');
-  const isHttpOrFile =
-    rawMediaUrl.startsWith('http://') ||
-    rawMediaUrl.startsWith('https://') ||
-    rawMediaUrl.startsWith('file://');
-
-  if (!isAlreadyDataUri && !isHttpOrFile && rawMediaUrl.length > 0) {
-    // Assume raw base64 content; infer mime type from media_type
-    const mimeType = apiData.media_type === 'video' ? 'video/mp4' : 'image/png';
-    normalizedMediaUrl = `data:${mimeType};base64,${rawMediaUrl}`;
-  }
-
   return {
     id: apiData.id,
     title: apiData.title,
     description: apiData.description || '',
     mediaType: apiData.media_type,
-    mediaUrl: normalizedMediaUrl,
+    mediaUrl: apiData.media_url || '',
     segundosActivo: apiData.segundos_activo,
     redirectUrl: apiData.redirect_url,
     size: apiData.size,

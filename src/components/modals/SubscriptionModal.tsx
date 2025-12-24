@@ -11,7 +11,15 @@ import {
 } from 'react-native-iap';
 import * as RNIap from 'react-native-iap';
 import { storage } from '@/services/storage';
-import { BASE_URL } from '@/config';
+import {
+  verifyPurchase,
+  type VerifyPurchasePayload,
+  type VerifyPurchaseResponse,
+} from '@/api/subscription/verifyPurchase';
+import {
+  getCurrentSubscription,
+  type CurrentSubscription,
+} from '@/api/subscription/subscriptionManagement';
 
 interface SubscriptionModalProps {
   plan: {
@@ -26,6 +34,8 @@ interface SubscriptionModalProps {
       id: number;
       apple_product_id: string;
       google_product_id: string;
+      base_plan_product_id?: string | null; // Google Play base plan ID (from API: base_plan_product_id)
+      plan_type?: 'base' | 'sub';
       stripe_product_id: string | null;
     };
   } | null;
@@ -37,17 +47,46 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
   const [isProcessingPurchase, setIsProcessingPurchase] = useState(false);
   const [iapInitialized, setIapInitialized] = useState(false);
   const [iapError, setIapError] = useState<string | null>(null);
+  const [currentSubscription, setCurrentSubscription] = useState<CurrentSubscription | null>(null);
 
-  // Log when modal receives plan data (high-level only)
+  console.log(plan, 'subscription modalplan');
+
+  // Fetch current subscription when modal opens
   useEffect(() => {
+    const fetchCurrentSubscription = async () => {
+      try {
+        const subscription = await getCurrentSubscription();
+        setCurrentSubscription(subscription);
+        if (subscription) {
+          console.log('[SubscriptionModal] Current subscription found', {
+            subscriptionId: subscription.id,
+            planId: subscription.plan_id,
+            status: subscription.status,
+            platform: subscription.platform,
+          });
+        } else {
+          console.log('[SubscriptionModal] No active subscription found');
+        }
+      } catch (error: any) {
+        console.error('[SubscriptionModal] Failed to fetch current subscription:', error.message);
+        // Don't block the flow if we can't fetch subscription
+      }
+    };
+
     if (plan?.originalPlan) {
       console.log('[SubscriptionModal] Modal opened', {
         planId: plan.originalPlan.id,
         planName: plan.title,
         platform: Platform.OS,
       });
+      fetchCurrentSubscription();
     }
   }, [plan]);
+
+  // Note: We don't need to manually cancel subscriptions before upgrade/downgrade
+  // Apple and Google Play handle this automatically:
+  // - Apple: Automatically cancels old subscription when purchasing new one in same subscription group
+  // - Google Play: Automatically handles upgrade/downgrade when using same product with different base plans
 
   // 2. Initiating the Purchase
   const handleSubscribe = useCallback(async () => {
@@ -66,7 +105,40 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
     console.log('[SubscriptionModal] Subscribe pressed', {
       planId: plan.originalPlan.id,
       planName: plan.title,
+      hasExistingSubscription: !!currentSubscription,
+      isUpgradeDowngrade:
+        currentSubscription && currentSubscription.plan_id !== plan.originalPlan.id,
     });
+
+    // If user has an active subscription and is selecting a different plan, show confirmation
+    // Note: Apple/Google will automatically handle the cancellation when the new purchase completes
+    if (currentSubscription && currentSubscription.plan_id !== plan.originalPlan.id) {
+      const shouldProceed = await new Promise<boolean>((resolve) => {
+        Alert.alert(
+          'Change Subscription Plan',
+          `You currently have an active ${currentSubscription.plan?.name || 'subscription'}. Switching to ${plan.title} will automatically replace your current subscription. ${
+            Platform.OS === 'ios'
+              ? 'Upgrades take effect immediately, downgrades take effect at next renewal.'
+              : 'The change will be processed according to Google Play policies.'
+          } Continue?`,
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+              onPress: () => resolve(false),
+            },
+            {
+              text: 'Continue',
+              onPress: () => resolve(true),
+            },
+          ]
+        );
+      });
+
+      if (!shouldProceed) {
+        return;
+      }
+    }
 
     setIsLoading(true);
     setIsProcessingPurchase(true);
@@ -75,6 +147,21 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
     const productId = Platform.select({
       ios: plan.originalPlan.apple_product_id,
       android: plan.originalPlan.google_product_id,
+    });
+
+    // Get base plan ID for Google Play (if available)
+    // For Google Play: use base_plan_product_id from the API response
+    // This is the base plan ID (e.g., 'pro-monthly') that identifies the specific tier
+    const basePlanId =
+      Platform.OS === 'android' ? plan.originalPlan.base_plan_product_id : undefined;
+
+    console.log('[SubscriptionModal] Purchase configuration', {
+      platform: Platform.OS,
+      productId,
+      basePlanId,
+      planType: plan.originalPlan.plan_type,
+      googleProductId: plan.originalPlan.google_product_id,
+      appleProductId: plan.originalPlan.apple_product_id,
     });
 
     try {
@@ -86,12 +173,11 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         throw new Error(errorMsg);
       }
 
-      console.log(
-        '[SubscriptionModal] Initiating purchase - platform:',
-        Platform.OS,
-        'productId:',
-        productId
-      );
+      console.log('[SubscriptionModal] Initiating purchase', {
+        platform: Platform.OS,
+        productId,
+        basePlanId: Platform.OS === 'android' ? basePlanId : undefined,
+      });
 
       // CRITICAL: Simple string logs - if these don't show, execution stopped or logs are filtered
       console.log('[SubscriptionModal] === LOG TEST 1 ===');
@@ -193,15 +279,27 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
       }
 
       // Build the request object - use both 'google' and 'android' for maximum compatibility
+      // For Google Play with base plans, include basePlanId in the request
+      //
+      // IMPORTANT: Google Play Behavior:
+      // 1. If user tries to purchase SAME product + base plan: Google will show "Already subscribed" error
+      // 2. If user upgrades/downgrades (different base plan, same product): Google automatically:
+      //    - Cancels old subscription
+      //    - Creates new subscription with new base plan
+      //    - Handles proration automatically
+      // 3. We don't need to manually cancel - Google handles it automatically
       const purchaseParams = {
         request:
           Platform.OS === 'android'
             ? {
                 google: {
                   skus: skusArray, // Android uses 'skus' (plural) as an array - MUST be non-empty
+                  // Include base plan ID if available (e.g., 'pro-monthly', 'base-monthly', 'premium-monthly')
+                  ...(basePlanId && { basePlanId }), // This identifies the specific tier within the subscription product
                 },
                 android: {
                   skus: skusArray, // Also include deprecated 'android' for backward compatibility
+                  ...(basePlanId && { basePlanId }), // Include base plan ID if available
                 },
               }
             : {
@@ -218,6 +316,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
       console.log('[SubscriptionModal] Step 3: Calling requestPurchase...', {
         platform: Platform.OS,
         productId,
+        basePlanId: Platform.OS === 'android' ? basePlanId : undefined,
         skusArray: Platform.OS === 'android' ? skusArray : undefined,
       });
 
@@ -232,6 +331,25 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           message: requestError.message,
           error: requestError,
         });
+
+        // Handle "Already subscribed" error from Google Play
+        // Google Play will return an error if user tries to purchase the same subscription + base plan
+        if (
+          Platform.OS === 'android' &&
+          (requestError.code === 'E_ITEM_ALREADY_OWNED' ||
+            requestError.message?.toLowerCase().includes('already') ||
+            requestError.message?.toLowerCase().includes('subscribed'))
+        ) {
+          Alert.alert(
+            'Already Subscribed',
+            'You already have an active subscription for this plan. If you want to change your plan, please select a different tier.',
+            [{ text: 'OK' }]
+          );
+          setIsLoading(false);
+          setIsProcessingPurchase(false);
+          return;
+        }
+
         // Re-throw to be caught by outer catch
         throw requestError;
       }
@@ -290,7 +408,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
       Alert.alert(errorTitle, errorMessage);
     }
-  }, [plan, iapInitialized, iapError]);
+  }, [plan, iapInitialized, iapError, currentSubscription]);
 
   // 3. Handling the Purchase Result
   const handlePurchaseUpdate = useCallback(
@@ -357,48 +475,84 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
       console.log('[SubscriptionModal] Purchase successful, processing');
 
       try {
-        // Get user data and token for backend verification
-        const [userData, token] = await Promise.all([storage.getUserData(), storage.getToken()]);
+        console.log('[SubscriptionModal] Step 1: Loading user and plan for verification');
+
+        // Get user data for backend verification
+        const userData = await storage.getUserData();
 
         if (!userData?.id) {
+          console.error('[SubscriptionModal] User data missing or invalid', { userData });
           throw new Error('User not authenticated');
         }
 
-        if (!token) {
-          throw new Error('Authentication token missing');
+        if (!plan?.originalPlan?.id) {
+          console.error('[SubscriptionModal] Plan information missing', { plan });
+          throw new Error('Plan information missing for verification');
         }
 
-        // Extract purchase data for backend (single log before sending)
-        const purchaseDataForBackend = {
+        console.log('[SubscriptionModal] Step 2: User and plan OK', {
           userId: userData.id,
-          planId: plan?.originalPlan.id,
-          platform: Platform.OS,
-          transactionId: purchase.transactionId,
+          planId: plan.originalPlan.id,
+        });
+
+        const isAndroid = Platform.OS === 'android';
+
+        // Extract purchase data for backend in a simple, unified format
+        //
+        // VALUES SENT TO BACKEND (Same for both first-time subscription AND upgrade/downgrade):
+        // {
+        //   userId,                // User ID from local storage
+        //   planId,                // Plan ID from plan.originalPlan.id
+        //   platform,              // 'android' | 'ios'
+        //   transactionId,          // Transaction ID (orderId for Android, transactionId for iOS)
+        //   productId,             // Product ID from purchase object
+        //   base_plan_id,          // Google Play base plan ID (base, pro, premium) - only for Android
+        //   purchaseDate,          // Unix timestamp from purchase.transactionDate
+        //   purchaseToken,         // Android: purchaseToken (required for verification)
+        //   orderId,               // Android: orderId
+        //   autoRenewing,          // Android: autoRenewingAndroid
+        //   transactionReceipt,    // iOS: transactionReceipt (required for verification)
+        //   originalTransactionId  // iOS: originalTransactionIdentifierIOS
+        // }
+        //
+        // IMPORTANT NOTES:
+        // - Apple/Google automatically handle cancellation of old subscription when upgrading/downgrading
+        // - Same payload structure is sent for both new subscriptions and plan changes
+        // - Backend should detect if this is an upgrade/downgrade by checking existing subscription
+        // - For Android, we prefer orderId as transactionId for backend verification
+        // - For iOS, we use the native transactionId
+        // - For Google Play with base plans, we include base_plan_id from the plan
+        const purchaseDataForBackend: VerifyPurchasePayload = {
+          userId: userData.id,
+          planId: plan.originalPlan.id,
+          platform: Platform.OS as 'android' | 'ios',
+          transactionId: isAndroid
+            ? purchase.orderId || purchase.transactionId
+            : purchase.transactionId,
           productId: purchase.productId,
+          // Include base plan ID for Google Play subscriptions
+          // Use base_plan_product_id from API response (e.g., 'pro-monthly', 'base-monthly')
+          base_plan_id: isAndroid ? plan.originalPlan.base_plan_product_id || null : null,
+          // react-native-iap provides transactionDate as a unix timestamp string (ms since epoch)
+          // We forward it directly so backend can parse as needed
           purchaseDate: purchase.transactionDate,
 
-          // Platform-specific verification data
-          ...(Platform.OS === 'android' && {
-            purchaseToken: purchase.purchaseToken, // CRITICAL for Android verification
-            orderId: purchase.orderId,
-            dataAndroid: purchase.dataAndroid,
-            autoRenewing: purchase.autoRenewingAndroid,
-            packageName: purchase.packageNameAndroid,
-          }),
+          // Android-specific data
+          purchaseToken: purchase.purchaseToken,
+          orderId: purchase.orderId,
+          autoRenewing: purchase.autoRenewingAndroid,
 
-          ...(Platform.OS === 'ios' && {
-            originalTransactionId: purchase.originalTransactionIdentifierIOS, // CRITICAL for iOS
-            transactionReceipt: purchase.transactionReceipt, // CRITICAL for iOS verification
-          }),
-
-          // Additional metadata
-          planName: plan?.title,
-          planPrice: plan?.price,
-          purchaseTime: new Date().toISOString(),
+          // iOS-specific data
+          transactionReceipt: purchase.transactionReceipt,
+          originalTransactionId: purchase.originalTransactionIdentifierIOS,
         };
 
+        console.log(
+          '[SubscriptionModal] Step 3: Built purchaseDataForBackend',
+          purchaseDataForBackend
+        );
         console.log('[SubscriptionModal] Sending purchase to backend for verification');
-        console.log(purchaseDataForBackend, 'purchaseDataForBackend we have reached here');
+
         const verificationResult = await sendPurchaseToBackend(purchaseDataForBackend);
         console.log('[SubscriptionModal] Backend verification result', verificationResult);
 
@@ -481,7 +635,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         if (!isMounted) return;
 
         purchaseUpdateSubscription = purchaseUpdatedListener(async (purchase: any) => {
-          console.log('[SubscriptionModal] Purchase event received from native module');
+          console.log('[SubscriptionModal] Purchase event received from native module', purchase);
           await handlePurchaseUpdate(purchase);
         });
 
@@ -579,37 +733,18 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
   }, [plan, handlePurchaseUpdate]);
 
   // Function to send purchase data to your backend
-  const sendPurchaseToBackend = async (purchaseData: any) => {
+  const sendPurchaseToBackend = async (purchaseData: VerifyPurchasePayload) => {
     console.log(purchaseData, 'purchaseData we have reached here');
     try {
-      // Get auth token for backend request
-      const token = await storage.getToken();
-      if (!token) {
-        throw new Error('Authentication token missing');
-      }
+      const result: VerifyPurchaseResponse = await verifyPurchase(purchaseData);
+      console.log('[SubscriptionModal] Backend verification successful', result);
 
-      // Send purchase verification to backend
-      const response = await fetch(`${BASE_URL}/api/subscriptions/verify-purchase`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(purchaseData),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[SubscriptionModal] Backend error response', {
-          status: response.status,
-          body: errorText,
-        });
-        throw new Error(`Backend responded with ${response.status}: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('[SubscriptionModal] Backend verification successful');
-      return result;
+      return {
+        success: result.status === 'success',
+        code: result.code,
+        message: result.message,
+        data: result.data,
+      };
     } catch (error: any) {
       console.error('[SubscriptionModal] Backend request failed', {
         message: error.message,
@@ -696,6 +831,22 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           </View>
         )}
 
+        {/* Current Subscription Info */}
+        {currentSubscription && currentSubscription.status === 'active' && (
+          <View className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+            <View className="flex-row items-center mb-1">
+              <Ionicons name="information-circle" size={20} color="#D97706" className="mr-2" />
+              <Text className="text-yellow-800 font-semibold">Active Subscription</Text>
+            </View>
+            <Text className="text-yellow-700 text-xs mt-1">
+              You currently have an active {currentSubscription.plan?.name || 'subscription'}.
+              {currentSubscription.plan_id !== plan.originalPlan.id
+                ? ' Switching plans will cancel your current subscription.'
+                : ' This is the same plan you already have.'}
+            </Text>
+          </View>
+        )}
+
         {/* Purchase Status Indicator */}
         {isProcessingPurchase && (
           <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
@@ -712,9 +863,21 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         {/* SUBSCRIBE BUTTON */}
         <Pressable
           onPress={handleSubscribe}
-          disabled={isLoading || isProcessingPurchase || !iapInitialized}
+          disabled={
+            isLoading ||
+            isProcessingPurchase ||
+            !iapInitialized ||
+            (currentSubscription?.plan_id === plan.originalPlan.id &&
+              currentSubscription.status === 'active')
+          }
           className={`mt-5 rounded-xl overflow-hidden ${
-            isLoading || isProcessingPurchase || !iapInitialized ? 'opacity-70' : ''
+            isLoading ||
+            isProcessingPurchase ||
+            !iapInitialized ||
+            (currentSubscription?.plan_id === plan.originalPlan.id &&
+              currentSubscription.status === 'active')
+              ? 'opacity-70'
+              : ''
           }`}
         >
           <LinearGradient
@@ -730,7 +893,14 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
               </View>
             ) : (
               <Text className="text-white text-[16px] font-semibold">
-                {isProcessingPurchase ? 'Processing...' : 'Subscribe'}
+                {isProcessingPurchase
+                  ? 'Processing...'
+                  : currentSubscription?.plan_id === plan.originalPlan.id &&
+                      currentSubscription.status === 'active'
+                    ? 'Current Plan'
+                    : currentSubscription && currentSubscription.status === 'active'
+                      ? 'Switch Plan'
+                      : 'Subscribe'}
               </Text>
             )}
           </LinearGradient>

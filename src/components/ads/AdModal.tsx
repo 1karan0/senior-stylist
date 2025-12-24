@@ -12,8 +12,21 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
-import RNFS from 'react-native-fs';
 import Ionicons from '@react-native-vector-icons/ionicons';
+
+// Safely import react-native-fs - handle case where module might not be initialized
+let RNFS: any = null;
+try {
+  RNFS = require('react-native-fs');
+  // Verify the module is properly initialized
+  if (!RNFS || !RNFS.CachesDirectoryPath) {
+    console.warn('[AdModal] react-native-fs module not properly initialized');
+    RNFS = null;
+  }
+} catch (error) {
+  console.warn('[AdModal] Failed to import react-native-fs:', error);
+  RNFS = null;
+}
 import Svg, { Circle } from 'react-native-svg';
 import type { Ad } from '@/services/adService';
 
@@ -31,8 +44,6 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
   const [canClose, setCanClose] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
-  const [localVideoPath, setLocalVideoPath] = useState<string | null>(null);
-  const [localImagePath, setLocalImagePath] = useState<string | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -57,8 +68,6 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
     elapsedSecondsRef.current = 0;
     setCanClose(false);
     setVideoEnded(false);
-    setLocalVideoPath(null);
-    setLocalImagePath(null);
     setMediaError(null);
   }, []);
 
@@ -68,85 +77,6 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
     resetState();
     onFinished();
   }, [canClose, clearTimers, resetState, onFinished]);
-
-  // Prepare media file from base64
-  const prepareMediaFile = useCallback(
-    async (uri: string, mediaType: 'image' | 'video', adId: number): Promise<string | null> => {
-      const trimmedUri = uri.trim();
-
-      if (
-        trimmedUri.startsWith('http://') ||
-        trimmedUri.startsWith('https://') ||
-        trimmedUri.startsWith('file://')
-      ) {
-        return trimmedUri;
-      }
-
-      const isBase64 =
-        mediaType === 'video'
-          ? trimmedUri.startsWith('data:video') && trimmedUri.includes(';base64,')
-          : trimmedUri.startsWith('data:image') && trimmedUri.includes(';base64,');
-
-      if (!isBase64) return trimmedUri;
-
-      try {
-        const base64Data = trimmedUri.split(';base64,')[1];
-        if (!base64Data) throw new Error(`Invalid base64 data URI for ${mediaType}`);
-
-        let extension = mediaType === 'video' ? 'mp4' : 'png';
-        if (mediaType === 'image') {
-          if (trimmedUri.includes('jpeg') || trimmedUri.includes('jpg')) extension = 'jpg';
-          else if (trimmedUri.includes('gif')) extension = 'gif';
-          else if (trimmedUri.includes('webp')) extension = 'webp';
-        }
-
-        const fileName = `ad_${adId || 'temp'}.${extension}`;
-        const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
-        await RNFS.writeFile(filePath, base64Data, 'base64');
-
-        if (__DEV__) console.log(`[AdModal] ${mediaType} written to temp file:`, filePath);
-        return `file://${filePath}`;
-      } catch (error) {
-        console.error(`[AdModal] Failed to prepare ${mediaType} file:`, error);
-        throw error;
-      }
-    },
-    []
-  );
-
-  // Prepare video
-  useEffect(() => {
-    let isMounted = true;
-    if (!visible || !ad || ad.mediaType !== 'video' || !ad.mediaUrl) {
-      setLocalVideoPath(null);
-      return;
-    }
-
-    prepareMediaFile(ad.mediaUrl, 'video', ad.id)
-      .then((path) => isMounted && setLocalVideoPath(path))
-      .catch(() => isMounted && setMediaError('Failed to load video'));
-
-    return () => {
-      isMounted = false;
-    };
-  }, [visible, ad, prepareMediaFile]);
-
-  // Prepare image
-  useEffect(() => {
-    let isMounted = true;
-    if (!visible || !ad || ad.mediaType !== 'image' || !ad.mediaUrl) {
-      setLocalImagePath(null);
-      return;
-    }
-
-    prepareMediaFile(ad.mediaUrl, 'image', ad.id)
-      .then((path) => isMounted && setLocalImagePath(path))
-      .catch(() => isMounted && setMediaError('Failed to load image'));
-
-    return () => {
-      isMounted = false;
-    };
-  }, [visible, ad, prepareMediaFile]);
 
   // Timer and ad lifecycle
   useEffect(() => {
@@ -236,7 +166,7 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
 
   const progressPercentage = Math.min((elapsedSeconds / ad.segundosActivo) * 100, 100);
   const remainingSeconds = Math.max(ad.segundosActivo - elapsedSeconds, 0);
-  const topOffset = Platform.OS === 'ios' ? 60 : 30;
+  const topOffset = Platform.OS === 'ios' ? 60 : 50;
 
   const renderMedia = () => {
     if (!ad.mediaUrl) {
@@ -249,18 +179,10 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
     }
 
     if (ad.mediaType === 'video') {
-      if (!localVideoPath) {
-        return (
-          <View className="flex-1 justify-center items-center bg-[#0a0a0a]">
-            <Ionicons name="videocam-outline" size={64} color="#666666" />
-            <Text className="text-gray-400 text-base mt-4 text-center px-8">Loading video...</Text>
-          </View>
-        );
-      }
       return (
         <Video
           ref={videoRef}
-          source={{ uri: localVideoPath }}
+          source={{ uri: ad.mediaUrl }}
           style={{ flex: 1, width: '100%', height: '100%', backgroundColor: 'transparent' }}
           resizeMode="contain"
           paused={false}
@@ -269,23 +191,14 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
           onEnd={handleVideoEnd}
           onError={() => setMediaError('Failed to load video')}
           onLoad={() => setMediaError(null)}
-          key={ad.id || localVideoPath}
+          key={ad.id}
         />
-      );
-    }
-
-    if (!localImagePath && ad.mediaUrl.startsWith('data:image')) {
-      return (
-        <View className="flex-1 justify-center items-center bg-[#0a0a0a]">
-          <Ionicons name="image-outline" size={64} color="#666666" />
-          <Text className="text-gray-400 text-base mt-4 text-center px-8">Loading image...</Text>
-        </View>
       );
     }
 
     return (
       <Image
-        source={{ uri: localImagePath || ad.mediaUrl }}
+        source={{ uri: ad.mediaUrl }}
         style={{ flex: 1, width: '100%', height: '100%', backgroundColor: 'transparent' }}
         resizeMode="contain"
         onError={() => setMediaError('Failed to load image')}
