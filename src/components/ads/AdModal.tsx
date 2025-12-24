@@ -152,7 +152,7 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
 
   const progressPercentage = Math.min((elapsedSeconds / ad.segundosActivo) * 100, 100);
   const remainingSeconds = Math.max(ad.segundosActivo - elapsedSeconds, 0);
-  const topOffset = Platform.OS === 'ios' ? 60 : 30;
+  const topOffset = Platform.OS === 'ios' ? 60 : 50;
 
   const renderMedia = () => {
     if (!ad.mediaUrl) {
