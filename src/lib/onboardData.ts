@@ -9,7 +9,8 @@ const onboardData = [
   {
     id: 1,
     title: 'Connect with a Senior Stylist',
-    description: 'If you have an SOS hair emergency? Connect with a Senior Stylist now.',
+    description:
+      'Connect with a Stylist anywhere in the world. When just need that second opinion.',
     image: require('@/assets/images/first-screen.jpg'),
   },
   {
