@@ -12,8 +12,21 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
-import RNFS from 'react-native-fs';
 import Ionicons from '@react-native-vector-icons/ionicons';
+
+// Safely import react-native-fs - handle case where module might not be initialized
+let RNFS: any = null;
+try {
+  RNFS = require('react-native-fs');
+  // Verify the module is properly initialized
+  if (!RNFS || !RNFS.CachesDirectoryPath) {
+    console.warn('[AdModal] react-native-fs module not properly initialized');
+    RNFS = null;
+  }
+} catch (error) {
+  console.warn('[AdModal] Failed to import react-native-fs:', error);
+  RNFS = null;
+}
 import Svg, { Circle } from 'react-native-svg';
 import type { Ad } from '@/services/adService';
 
@@ -89,6 +102,12 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
 
       if (!isBase64) return trimmedUri;
 
+      // If RNFS is not available, return the original URI (React Native can handle data URIs)
+      if (!RNFS || !RNFS.CachesDirectoryPath) {
+        console.warn('[AdModal] react-native-fs not available, using original data URI');
+        return trimmedUri;
+      }
+
       try {
         const base64Data = trimmedUri.split(';base64,')[1];
         if (!base64Data) throw new Error(`Invalid base64 data URI for ${mediaType}`);
@@ -108,7 +127,8 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
         return `file://${filePath}`;
       } catch (error) {
         console.error(`[AdModal] Failed to prepare ${mediaType} file:`, error);
-        throw error;
+        // Fallback to original URI if file write fails
+        return trimmedUri;
       }
     },
     []

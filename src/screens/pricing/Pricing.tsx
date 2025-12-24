@@ -11,6 +11,10 @@ import {
 import SubscriptionModal from '@/components/modals/SubscriptionModal';
 import { AppStackParamList } from '@/common/types';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  getCurrentSubscription,
+  type CurrentSubscription,
+} from '@/api/subscription/subscriptionManagement';
 
 interface PlanDisplay {
   key: string;
@@ -32,6 +36,8 @@ export default function PricingScreen() {
   const { data: subscriptionPlans, isLoading, error } = useGetSubscriptionPlans();
   const [selectedPlan, setSelectedPlan] = useState<PlanDisplay | null>(null);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
+  const [currentSubscription, setCurrentSubscription] = useState<CurrentSubscription | null>(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
 
   // Transform API data to display format and filter out test plans
   const plans = useMemo(() => {
@@ -40,16 +46,8 @@ export default function PricingScreen() {
       return [];
     }
 
-    console.log('[Pricing] Raw subscription plans from API:', subscriptionPlans);
-
     const filteredPlans = subscriptionPlans.filter((plan) => !plan.slug.includes('-test'));
-    console.log('[Pricing] Filtered plans (removed test plans):', filteredPlans.length);
-
     const sortedPlans = filteredPlans.sort((a, b) => a.sort_order - b.sort_order);
-    console.log(
-      '[Pricing] Sorted plans by sort_order:',
-      sortedPlans.map((p) => p.name)
-    );
 
     const mappedPlans = sortedPlans.map((plan) => {
       // Helper function to remove decimals from price
@@ -90,39 +88,53 @@ export default function PricingScreen() {
         originalPlan: plan,
       };
 
-      console.log(`[Pricing] Mapped plan "${plan.name}":`, {
-        key: planDisplay.key,
-        productIds: {
-          apple: plan.apple_product_id,
-          google: plan.google_product_id,
-        },
-        planId: plan.id,
-      });
-
       return planDisplay;
     });
 
-    console.log('[Pricing] Final mapped plans count:', mappedPlans.length);
     return mappedPlans;
   }, [subscriptionPlans]);
+
+  // Fetch current subscription status
+  useEffect(() => {
+    const fetchCurrentSubscription = async () => {
+      try {
+        setIsLoadingSubscription(true);
+        const subscription = await getCurrentSubscription();
+        setCurrentSubscription(subscription);
+        if (subscription) {
+          console.log('[Pricing] Current subscription found', {
+            subscriptionId: subscription.id,
+            planId: subscription.plan_id,
+            status: subscription.status,
+          });
+        }
+      } catch (error: any) {
+        console.error('[Pricing] Failed to fetch current subscription:', error.message);
+      } finally {
+        setIsLoadingSubscription(false);
+      }
+    };
+
+    fetchCurrentSubscription();
+  }, []);
 
   // Set default selected plan when plans are loaded
   useEffect(() => {
     if (plans.length > 0 && !selectedPlan) {
+      // If user has active subscription, pre-select that plan
+      if (currentSubscription?.status === 'active' && currentSubscription.plan_id) {
+        const currentPlan = plans.find((p) => p.originalPlan.id === currentSubscription.plan_id);
+        if (currentPlan) {
+          setSelectedPlan(currentPlan);
+          return;
+        }
+      }
       // Default to the middle plan or first plan
       const defaultPlan = plans[Math.floor(plans.length / 2)] || plans[0];
-      console.log('[Pricing] Setting default selected plan:', {
-        name: defaultPlan.title,
-        key: defaultPlan.key,
-        productIds: {
-          apple: defaultPlan.originalPlan.apple_product_id,
-          google: defaultPlan.originalPlan.google_product_id,
-        },
-      });
       setSelectedPlan(defaultPlan);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plans]);
+  }, [plans, currentSubscription]);
 
   return (
     <LinearGradient
@@ -170,6 +182,9 @@ export default function PricingScreen() {
           ) : (
             plans.map((item) => {
               const active = selectedPlan?.key === item.key;
+              const isCurrentPlan =
+                currentSubscription?.status === 'active' &&
+                currentSubscription.plan_id === item.originalPlan.id;
 
               return (
                 <Pressable
@@ -177,7 +192,7 @@ export default function PricingScreen() {
                   onPress={() => setSelectedPlan(item)}
                   className={`rounded-md border px-4 py-4 ${
                     active ? 'border-[#23A76F]' : 'border-[#E2E8F0]'
-                  } bg-white`}
+                  } bg-white ${isCurrentPlan ? 'bg-green-50' : ''}`}
                 >
                   <View className="flex-row items-center gap-3">
                     {/* Radio Button */}
@@ -190,7 +205,14 @@ export default function PricingScreen() {
                     </View>
 
                     <View className="flex-1">
-                      <Text className="text-textDark font-semibold text-lg">{item.title}</Text>
+                      <View className="flex-row items-center gap-2">
+                        <Text className="text-textDark font-semibold text-lg">{item.title}</Text>
+                        {isCurrentPlan && (
+                          <View className="bg-[#23A76F] px-2 py-0.5 rounded-full">
+                            <Text className="text-white text-xs font-semibold">Current</Text>
+                          </View>
+                        )}
+                      </View>
 
                       {/* Price with consultations: "£6/Monthly - 4 consultations" */}
                       <View className="flex-row items-center justify-between mt-1">
@@ -218,22 +240,25 @@ export default function PricingScreen() {
           )}
         </View>
 
+        {/* Current Subscription Info */}
+        {currentSubscription?.status === 'active' && (
+          <View className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <View className="flex-row items-center mb-1">
+              <Ionicons name="information-circle" size={20} color="#2563EB" className="mr-2" />
+              <Text className="text-blue-800 font-semibold">Active Subscription</Text>
+            </View>
+            <Text className="text-blue-700 text-sm mt-1">
+              You have an active {currentSubscription.plan?.name || 'subscription'}.
+              {currentSubscription.plan_id !== selectedPlan?.originalPlan.id
+                ? ' Select a different plan to switch your subscription.'
+                : ' This is your current plan.'}
+            </Text>
+          </View>
+        )}
+
         {/* BUTTON */}
         <Pressable
           onPress={() => {
-            console.log('[Pricing] Continue to Payment clicked', {
-              selectedPlan: selectedPlan
-                ? {
-                    name: selectedPlan.title,
-                    key: selectedPlan.key,
-                    productIds: {
-                      apple: selectedPlan.originalPlan.apple_product_id,
-                      google: selectedPlan.originalPlan.google_product_id,
-                    },
-                    planId: selectedPlan.originalPlan.id,
-                  }
-                : null,
-            });
             if (!selectedPlan) {
               Alert.alert('No Plan Selected', 'Please select a subscription plan first.');
               return;
@@ -241,6 +266,7 @@ export default function PricingScreen() {
             setSubscriptionModal(true);
           }}
           className="mt-10 rounded-xl overflow-hidden"
+          disabled={isLoadingSubscription}
         >
           <LinearGradient
             colors={['#2CCB91', '#23A76F']}
@@ -248,7 +274,16 @@ export default function PricingScreen() {
             end={{ x: 1, y: 0 }}
             className="h-[52px] rounded-xl items-center justify-center"
           >
-            <Text className="text-white text-[16px] font-semibold">Continue to Payment</Text>
+            <Text className="text-white text-[16px] font-semibold">
+              {isLoadingSubscription
+                ? 'Loading...'
+                : currentSubscription?.status === 'active' &&
+                    currentSubscription.plan_id === selectedPlan?.originalPlan.id
+                  ? 'Current Plan'
+                  : currentSubscription?.status === 'active'
+                    ? 'Switch Plan'
+                    : 'Continue to Payment'}
+            </Text>
           </LinearGradient>
         </Pressable>
 
@@ -256,7 +291,6 @@ export default function PricingScreen() {
         <Pressable
           className="mt-4"
           onPress={() => {
-            console.log('[Pricing] Skip button clicked, navigating to Consultation tab');
             const userRole = user?.role;
 
             if (userRole === 'consultant') {
@@ -278,9 +312,15 @@ export default function PricingScreen() {
       {subscriptionModal && (
         <SubscriptionModal
           plan={selectedPlan}
-          onClose={() => {
-            console.log('[Pricing] SubscriptionModal closed');
+          onClose={async () => {
             setSubscriptionModal(false);
+            // Refresh subscription status after modal closes
+            try {
+              const subscription = await getCurrentSubscription();
+              setCurrentSubscription(subscription);
+            } catch (error: any) {
+              console.error('[Pricing] Failed to refresh subscription:', error.message);
+            }
           }}
         />
       )}
