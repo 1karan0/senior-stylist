@@ -13,6 +13,20 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
 import Ionicons from '@react-native-vector-icons/ionicons';
+
+// Safely import react-native-fs - handle case where module might not be initialized
+let RNFS: any = null;
+try {
+  RNFS = require('react-native-fs');
+  // Verify the module is properly initialized
+  if (!RNFS || !RNFS.CachesDirectoryPath) {
+    console.warn('[AdModal] react-native-fs module not properly initialized');
+    RNFS = null;
+  }
+} catch (error) {
+  console.warn('[AdModal] Failed to import react-native-fs:', error);
+  RNFS = null;
+}
 import Svg, { Circle } from 'react-native-svg';
 import type { Ad } from '@/services/adService';
 
