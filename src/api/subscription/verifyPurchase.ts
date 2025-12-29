@@ -17,6 +17,10 @@ export interface VerifyPurchasePayload {
   autoRenewing?: boolean | null;
   transactionReceipt?: string | null;
   originalTransactionId?: string | null;
+  // Optional fields for deferred downgrade handling
+  action?: 'deferred_downgrade' | 'upgrade' | 'downgrade' | 'initial';
+  scheduledPlanId?: string | null;
+  scheduledStartDate?: string | number | null;
 }
 
 export interface VerifyPurchaseResponseData {

@@ -126,7 +126,11 @@ export default function SignupScreen({ navigation, route }: any) {
 
       showToast('Account created successfully!', 'success');
       setTimeout(() => {
-        navigation.navigate('OtpVerification', { email: form.email, screen: 'signup' });
+        navigation.navigate('OtpVerification', {
+          email: form.email,
+          screen: 'signup',
+          isConsultant,
+        });
       }, 1500);
     } catch (err: any) {
       const errorMessage = err?.message || 'Something went wrong. Please try again.';

@@ -88,9 +88,13 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
         }
 
         showToast('Email verified successfully! Welcome aboard.', 'success');
-        setTimeout(() => {
-          navigation.navigate('UserApp');
-        }, 1500);
+        // After email verification, user is set in AuthContext
+        // Set flag to indicate this is a new signup so AppStack shows Pricing screen
+        // This flag is only set for new signups, not for login users
+        const { storage } = await import('@/services/storage');
+        await storage.setIsNewSignup(true);
+        // AuthGate will switch from AuthStack to AppStack
+        // AppStack will check the flag and navigate to Pricing for new signups
         return;
       }
 
