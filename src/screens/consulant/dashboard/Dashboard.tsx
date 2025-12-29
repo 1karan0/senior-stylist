@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 
-import EarningsModal from './EarningsModal';
+import EarningsPDFModal from '../../../common/components/modals/EarningsPDFModal';
+// import EarningsModal from './EarningsModal';
 // import { Button } from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useGetLeaderboard } from '@/api/consultant/useGetLeaderboard';
+import Button from '@/common/components/Button';
+import { BASE_URL } from '@/config';
 
 const Dashboard: React.FC = () => {
-  const [modalVisible, setModalVisible] = useState(false);
+  const [pdfModalVisible, setPdfModalVisible] = useState(false);
   const { isDark } = useTheme();
   const { data: profile } = useGetProfile();
   const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useGetLeaderboard();
@@ -25,6 +28,13 @@ const Dashboard: React.FC = () => {
 
   // Keep these values in sync with your tab navigator
   const { paddingBottom } = useTabBarSafePadding();
+
+  // PDF URL for About Earnings - Update this with your actual PDF URL
+  const EARNINGS_PDF_URL = `${BASE_URL}/Stylist_Pay_Protocol_Partnership_and_Growth-v1.pdf`; // Replace with your actual PDF URL
+
+  const handleOpenEarningsPDF = () => {
+    setPdfModalVisible(true);
+  };
 
   return (
     <GradientBackground>
@@ -60,8 +70,7 @@ const Dashboard: React.FC = () => {
                       <Ionicons name="chatbubble-outline" size={20} color="#14B8A6" />
                     </View>
                     <Text className="text-textPrimary text-sm font-poppins-medium">
-                      {totalSessionsChange > 0 ? '+' : ''}
-                      {totalSessionsChange}%
+                      {totalSessionsChange}
                     </Text>
                   </View>
                   <Text
@@ -88,7 +97,6 @@ const Dashboard: React.FC = () => {
                       <Ionicons name="star-outline" size={20} color="#14B8A6" />
                     </View>
                     <Text className="text-textPrimary text-sm font-poppins-medium">
-                      {averageRatingChange > 0 ? '+' : ''}
                       {averageRatingChange.toFixed
                         ? averageRatingChange.toFixed(1)
                         : averageRatingChange}
@@ -135,15 +143,15 @@ const Dashboard: React.FC = () => {
           </View>
 
           {/* About Earnings Button */}
-          {/* <View className="px-5 mb-5">
+          <View className="px-5 mb-5">
             <Button
               text="About Earnings"
               icon={<Text className="text-white text-xl font-bold">$</Text>}
-              onPress={() => setModalVisible(true)}
+              onPress={handleOpenEarningsPDF}
               variant="gradient"
               className="shadow-sm"
             />
-          </View> */}
+          </View>
 
           {/* Leaderboard Section */}
           <View
@@ -225,8 +233,12 @@ const Dashboard: React.FC = () => {
           </View>
         </ScrollView>
 
-        {/* Modal */}
-        <EarningsModal visible={modalVisible} onClose={() => setModalVisible(false)} />
+        {/* PDF Modal */}
+        <EarningsPDFModal
+          visible={pdfModalVisible}
+          pdfUrl={EARNINGS_PDF_URL}
+          onClose={() => setPdfModalVisible(false)}
+        />
       </View>
     </GradientBackground>
   );

@@ -120,7 +120,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             </View>
           </View>
 
-          {consultation.status !== 'completed' && (
+          {consultation.status !== 'completed' && !isConsultant && (
             <TouchableOpacity
               onPress={onFinish}
               disabled={isFinishing}

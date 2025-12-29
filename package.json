@@ -55,6 +55,7 @@
     "react-native": "0.82.1",
     "react-native-config": "^1.6.0",
     "react-native-device-info": "^15.0.1",
+    "react-native-flag-secure-android": "^1.0.3",
     "react-native-fs": "^2.20.0",
     "react-native-iap": "^14.5.0",
     "react-native-image-picker": "^8.2.1",

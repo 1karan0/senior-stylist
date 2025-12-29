@@ -48,7 +48,6 @@ const NewsScreen = () => {
     const next = reset ? 1 : page + 1;
 
     const res = await getArticles(next);
-    console.log('res', res);
 
     setList((prev) => (reset ? res.items : [...prev, ...res.items]));
     setPage(res.pagination.current_page);

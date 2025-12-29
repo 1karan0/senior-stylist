@@ -464,6 +464,15 @@ const FindingStylist: React.FC = () => {
     const specialization = consultantDetails?.specialization;
     const bio = consultantDetails?.bio;
     const yearsExperience = consultantDetails?.years_experience;
+    const averageRating = consultantDetails?.average_rating;
+
+    // Format rating - handle both string and number types
+    const formattedRating =
+      averageRating && parseFloat(String(averageRating)) > 0
+        ? typeof averageRating === 'number'
+          ? averageRating.toFixed(1)
+          : parseFloat(String(averageRating)).toFixed(1)
+        : null;
 
     return (
       <>
@@ -486,6 +495,12 @@ const FindingStylist: React.FC = () => {
         </Text>
         {specialization && (
           <Text className="text-[15px] text-textMuted text-center mb-2">{specialization}</Text>
+        )}
+        {formattedRating && (
+          <View className="flex-row items-center justify-center mb-2">
+            <Ionicons name="star" size={16} color="#FFD700" />
+            <Text className="text-[14px] ml-1 font-medium text-textDark">{formattedRating}</Text>
+          </View>
         )}
         {yearsExperience && (
           <Text className="text-[13px] text-textMuted text-center mb-4">

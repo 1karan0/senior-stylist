@@ -10,6 +10,7 @@ const ItemCard = ({ item }: any) => {
       className={`rounded-[10px] overflow-hidden border ${
         isDark ? 'bg-commonGradientStop6 border-commonGradientStop7' : 'bg-white border-gray-200'
       }`}
+      style={{ height: 300 }}
     >
       {/* Image */}
       <View className="relative">
@@ -23,20 +24,25 @@ const ItemCard = ({ item }: any) => {
       </View>
 
       {/* Content */}
-      <View className="p-3">
-        <Text className="text-xs text-textMuted">{item.provider}</Text>
-        <Text
-          className={`font-poppins-semibold text-base ${isDark ? 'text-white' : 'text-[#0F172A]'}`}
-        >
-          {item.title}
-        </Text>
-
-        <View className="flex-row items-center justify-between mt-2">
-          <Text className="font-poppins-semibold text-base text-[#00C896]">
-            ₹{item.display_price}
+      <View className="p-3 flex-1 justify-between">
+        <View className="flex-1">
+          <Text className="text-xs text-textMuted" numberOfLines={1}>
+            {item.provider}
           </Text>
+          <Text
+            className={`font-poppins-semibold text-base mt-1 ${isDark ? 'text-white' : 'text-[#0F172A]'}`}
+            numberOfLines={2}
+          >
+            {item.title}
+          </Text>
+
+          <View className="flex-row items-center justify-between mt-2">
+            <Text className="font-poppins-semibold text-base text-[#00C896]">
+              ₹{item.display_price}
+            </Text>
+          </View>
         </View>
-        <TouchableOpacity className="bg-[#00C896] px-5 py-2 rounded-[5px]">
+        <TouchableOpacity className="bg-[#00C896] px-5 py-2 rounded-[5px] mt-2">
           <Text className="text-white text-sm text-center font-poppins-semibold">Buy Now</Text>
         </TouchableOpacity>
       </View>

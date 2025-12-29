@@ -84,7 +84,7 @@ const FinishConsultationModal: React.FC<FinishConsultationModalProps> = ({
             {/* Finish Button */}
             <View className="flex-1">
               <Button
-                text={isLoading ? 'Finishing...' : 'Finish Consultation'}
+                text={isLoading ? 'Finishing...' : 'Finish'}
                 variant="gradient"
                 onPress={onConfirm}
                 loading={isLoading}
