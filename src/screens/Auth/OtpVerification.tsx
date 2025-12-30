@@ -80,21 +80,25 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
     setLoading(true);
     try {
       if (screen === 'signup') {
+        // IMPORTANT: Set the flag BEFORE calling verifyEmail
+        // This ensures the flag is set before AuthContext updates the user state
+        // which triggers AppStack to mount and check the flag
+        const { storage } = await import('@/services/storage');
+        await storage.setIsNewSignup(true);
+
         const res = await verifyEmail(email, code);
 
         if (!res.success) {
+          // If verification fails, clear the flag
+          await storage.setIsNewSignup(false);
           showToast(res.error || 'Invalid verification code', 'error');
           return;
         }
 
         showToast('Email verified successfully! Welcome aboard.', 'success');
         // After email verification, user is set in AuthContext
-        // Set flag to indicate this is a new signup so AppStack shows Pricing screen
-        // This flag is only set for new signups, not for login users
-        const { storage } = await import('@/services/storage');
-        await storage.setIsNewSignup(true);
         // AuthGate will switch from AuthStack to AppStack
-        // AppStack will check the flag and navigate to Pricing for new signups
+        // AppStack will check the flag (already set above) and navigate to Pricing for new signups
         return;
       }
 

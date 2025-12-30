@@ -39,13 +39,16 @@ const AppStack: React.FC = () => {
       // Only new signups should see Pricing screen
       try {
         const isNewSignup = await storage.getIsNewSignup();
+        console.log('[AppStack] Checking signup status:', { isNewSignup, userRole });
 
         if (isNewSignup) {
           // New signup - show Pricing screen
           // Note: Don't clear the flag here - let Pricing screen clear it after checking
+          console.log('[AppStack] New signup detected - navigating to Pricing');
           setInitialRoute('Pricing');
         } else {
           // Existing user (login) - always go to UserTabs
+          console.log('[AppStack] Existing user (login) - navigating to UserTabs');
           setInitialRoute('UserTabs');
         }
       } catch (error) {
