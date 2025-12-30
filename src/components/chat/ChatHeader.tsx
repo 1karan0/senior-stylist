@@ -14,7 +14,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ConsultantConsultation } from '@/api/consultant/consultations';
 import ChatHeaderSkeleton from '@/common/components/skeletons/ChatHeaderSkeleton';
 import ConsultantDetails from '@/common/components/modals/ConsultantDetailsModal';
-import { useTheme } from '@/contexts/ThemeContext';
 
 interface ChatHeaderProps {
   consultation: ConsultantConsultation | null;
@@ -44,7 +43,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   isFinishing = false,
 }) => {
   const insets = useSafeAreaInsets();
-  const { isDark } = useTheme();
   const [showConsultantModal, setShowConsultantModal] = useState(false);
 
   if (isLoading || !consultation) {

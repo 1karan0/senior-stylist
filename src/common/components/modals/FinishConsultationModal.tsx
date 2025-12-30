@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StatusBar, Pressable } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StatusBar } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/common/components/Button';
 import Ionicons from '@react-native-vector-icons/ionicons';

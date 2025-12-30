@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, Animated, Platform } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import Button from '@/common/components/Button';
@@ -11,6 +12,7 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { storage } from '@/services/storage';
 
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
@@ -25,10 +27,56 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const { paddingBottom } = useTabBarSafePadding();
 
   const [isCopied, setIsCopied] = useState(false);
+  const [subscriptionData, setSubscriptionData] = useState<any | null>(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
   const scaleAnim = useState(new Animated.Value(1))[0];
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   const user = profile as ProfileUser;
+
+  // Load subscription data from AsyncStorage
+  const loadSubscription = useCallback(async () => {
+    try {
+      setIsLoadingSubscription(true);
+      const subscription = await storage.getUserSubscription();
+      setSubscriptionData(subscription);
+    } catch (error) {
+      console.error('[Profile] Failed to load subscription:', error);
+    } finally {
+      setIsLoadingSubscription(false);
+    }
+  }, []);
+
+  // Load subscription on mount
+  useEffect(() => {
+    loadSubscription();
+  }, [loadSubscription]);
+
+  // Refresh subscription when screen comes into focus (e.g., after returning from Pricing screen)
+  useFocusEffect(
+    useCallback(() => {
+      loadSubscription();
+    }, [loadSubscription])
+  );
+
+  // Format next billing date
+  const formatBillingDate = (dateString: string | number | null | undefined): string => {
+    if (!dateString) return 'N/A';
+
+    try {
+      const date =
+        typeof dateString === 'string' ? new Date(dateString) : new Date(Number(dateString));
+      if (isNaN(date.getTime())) return 'N/A';
+
+      return date.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return 'N/A';
+    }
+  };
 
   const handleCopyCode = () => {
     const code = user?.referral_code;
@@ -76,16 +124,17 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     // Navigate to Pricing screen in AppStack (parent navigator)
     // ProfileStack is nested in UserTabs, which is in AppStack
     // We need to navigate to the AppStack level to access Pricing
+    // Pass fromProfile: true to indicate this is from Profile/Manage Subscription
     const parentNavigator = navigation.getParent?.();
     if (parentNavigator) {
       console.log('[Profile] Navigating to Pricing screen via parent navigator');
       // @ts-ignore - parent navigator has Pricing route in AppStack
-      parentNavigator.navigate('Pricing');
+      parentNavigator.navigate('Pricing', { fromProfile: true });
     } else {
       console.log('[Profile] Parent navigator not found, trying direct navigation');
       // Fallback: try direct navigation (might work if navigation structure allows)
       // @ts-ignore
-      navigation.navigate('Pricing');
+      navigation.navigate('Pricing', { fromProfile: true });
     }
   };
 
@@ -232,24 +281,72 @@ const Profile: React.FC<Props> = ({ navigation }) => {
               Subscription
             </Text>
 
-            <Text
-              className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular mb-1`}
-            >
-              Pro Plan – $19.99/month
-            </Text>
+            {isLoadingSubscription ? (
+              <Text
+                className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular mb-4`}
+              >
+                Loading subscription...
+              </Text>
+            ) : subscriptionData ? (
+              <>
+                <Text
+                  className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular mb-1`}
+                >
+                  {subscriptionData.planName || 'Subscription Plan'}
+                  {subscriptionData.consultationsPerMonth
+                    ? ` – ${subscriptionData.consultationsPerMonth} consultations/month`
+                    : ''}
+                </Text>
 
-            <Text
-              className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-4`}
-            >
-              Next billing date: 25 Dec 2025
-            </Text>
+                <Text
+                  className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-1`}
+                >
+                  Status:{' '}
+                  {subscriptionData.status === 'active'
+                    ? 'Active'
+                    : subscriptionData.status || 'Unknown'}
+                </Text>
 
-            <Button
-              text="Manage Subscription"
-              variant="light"
-              onPress={handleManageSubscription}
-              className={` bg-[#DAE7E0] rounded-[10px]`}
-            />
+                {subscriptionData.nextBillingDate && (
+                  <Text
+                    className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-4`}
+                  >
+                    Next billing date: {formatBillingDate(subscriptionData.nextBillingDate)}
+                  </Text>
+                )}
+
+                {subscriptionData.isScheduledDowngrade && (
+                  <Text
+                    className={`${isDark ? 'text-yellow-400' : 'text-yellow-600'} font-poppins-regular text-sm mb-4`}
+                  >
+                    Plan change scheduled: {subscriptionData.scheduledPlanName || 'Downgrade'} will
+                    start on {formatBillingDate(subscriptionData.scheduledStartDate)}
+                  </Text>
+                )}
+
+                <Button
+                  text="Manage Subscription"
+                  variant="light"
+                  onPress={handleManageSubscription}
+                  className={` bg-[#DAE7E0] rounded-[10px]`}
+                />
+              </>
+            ) : (
+              <>
+                <Text
+                  className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular mb-4`}
+                >
+                  No active subscription
+                </Text>
+
+                <Button
+                  text="Subscribe Now"
+                  variant="light"
+                  onPress={handleManageSubscription}
+                  className={` bg-[#DAE7E0] rounded-[10px]`}
+                />
+              </>
+            )}
           </View>
 
           {/* ---------- Rewards ---------- */}

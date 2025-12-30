@@ -43,7 +43,7 @@ export type AppStackParamList = {
   UserTabs: undefined;
   ConsultantTabs: undefined;
   ConsultantChat: { consultationId: number; asCustomer?: boolean };
-  Pricing: undefined;
+  Pricing: { fromSignup?: boolean; fromProfile?: boolean } | undefined;
 };
 
 export type MainTabParamList = {

@@ -118,7 +118,7 @@ const Settings: React.FC = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1">
+      <View className="flex-1 pb-5">
         <Toast
           visible={toast.visible}
           message={toast.message}
