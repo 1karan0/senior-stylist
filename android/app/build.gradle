@@ -154,6 +154,9 @@ dependencies {
     implementation 'androidx.activity:activity:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
+    // ADD THIS LINE FOR GOOGLE PLAY BILLING
+    implementation 'com.android.billingclient:billing:5.0.0'
+
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
