@@ -95,7 +95,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
           return;
         }
 
-        showToast('Email verified successfully! Welcome aboard.', 'success');
+        showToast('Email verified successfully!', 'success');
         // After email verification, user is set in AuthContext
         // AuthGate will switch from AuthStack to AppStack
         // AppStack will check the flag (already set above) and navigate to Pricing for new signups

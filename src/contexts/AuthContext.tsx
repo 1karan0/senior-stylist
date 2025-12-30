@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await loginMutation.mutateAsync({ email, password });
 
-      console.log(response, 'response');
+      console.log('response======>', response);
 
       const token = response?.data?.access_token;
       const user = response?.data?.user;

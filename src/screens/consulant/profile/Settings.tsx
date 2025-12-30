@@ -19,10 +19,10 @@ const Settings: React.FC = () => {
   const navigation = useNavigation();
   const { logout } = useAuth();
   const deleteAccountMutation = useDeleteAccount();
-  const { data: userProfile } = useGetProfile();
+  const { data: profileData } = useGetProfile();
   const updateAvailabilityMutation = useUpdateAvailability();
 
-  const user = userProfile as any;
+  const user = profileData?.user as any;
   const isAway = user?.is_away ?? false;
   const isApproved = user?.consultant_details?.is_approved ?? false;
 

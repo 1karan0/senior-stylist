@@ -4,6 +4,7 @@ import { FlashList } from '@shopify/flash-list';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { useGetPendingReviews } from '@/api/user/consultation/useGetPendingReviews';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
@@ -43,6 +44,9 @@ const CustomerChatHome: React.FC = () => {
     () => filterConversations(previews, searchQuery),
     [previews, searchQuery]
   );
+
+  const { data: pendingReviews } = useGetPendingReviews();
+  console.log('pendingReviews', pendingReviews);
 
   return (
     <GradientBackground className="flex-1">

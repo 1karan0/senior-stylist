@@ -14,9 +14,9 @@ const Profile: React.FC = () => {
   const { isDark } = useTheme();
   const { logout } = useAuth();
   const navigation = useNavigation<any>();
-  const { data: profile } = useGetProfile();
+  const { data: profileData } = useGetProfile();
 
-  const user = profile as any;
+  const user = profileData?.user as any;
   const totalSessions = user?.consultant_details?.total_sessions ?? 0;
   const averageRating = user?.consultant_details?.average_rating ?? 0;
 

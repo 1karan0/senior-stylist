@@ -3,10 +3,15 @@ import { parseApiError } from '@/utils/parseApiError';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { storage } from '@/services/storage';
-import { ProfileUser } from '@/common/types';
+import { ProfileUser, ProfileSubscription } from '@/common/types';
+
+export interface ProfileResponse {
+  user: ProfileUser;
+  subscription: ProfileSubscription | null;
+}
 
 export const useGetProfile = () => {
-  return useQuery<ProfileUser>({
+  return useQuery<ProfileResponse>({
     queryKey: ['profileData'],
     queryFn: async () => {
       try {
@@ -21,7 +26,10 @@ export const useGetProfile = () => {
           },
         });
 
-        return res.data.data.user;
+        return {
+          user: res.data.data.user,
+          subscription: res.data.data.subscription || null,
+        };
       } catch (err) {
         throw new Error(parseApiError(err));
       }

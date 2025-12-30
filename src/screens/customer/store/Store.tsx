@@ -36,7 +36,7 @@ const StoreScreen = () => {
   const { data: categories = [] } = useGetStoreCategories();
 
   const loadProducts = async (reset = false) => {
-    reset ? setRefreshing(true) : setLoadingMore(true);
+    reset && setRefreshing(true);
 
     const nextPage = reset ? 1 : page + 1;
 

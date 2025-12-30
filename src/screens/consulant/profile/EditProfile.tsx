@@ -40,7 +40,7 @@ const EditProfile: React.FC = () => {
 
   // fetch current user
   const { data: profileData, isLoading: profileLoading } = useGetProfile();
-  const user = profileData as any;
+  const user = profileData?.user as any;
 
   // local state
   const [profileImage, setProfileImage] = useState<string | null>(null);

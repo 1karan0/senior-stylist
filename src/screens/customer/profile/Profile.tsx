@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, Animated, Platform } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useFocusEffect } from '@react-navigation/native';
 
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import Button from '@/common/components/Button';
@@ -12,7 +11,6 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { storage } from '@/services/storage';
 
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
@@ -21,43 +19,17 @@ interface Props {
 }
 
 const Profile: React.FC<Props> = ({ navigation }) => {
-  const { data: profile } = useGetProfile();
+  const { data: profileData } = useGetProfile();
   const { logout } = useAuth();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
 
   const [isCopied, setIsCopied] = useState(false);
-  const [subscriptionData, setSubscriptionData] = useState<any | null>(null);
-  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
   const scaleAnim = useState(new Animated.Value(1))[0];
   const fadeAnim = useState(new Animated.Value(0))[0];
 
-  const user = profile as ProfileUser;
-
-  // Load subscription data from AsyncStorage
-  const loadSubscription = useCallback(async () => {
-    try {
-      setIsLoadingSubscription(true);
-      const subscription = await storage.getUserSubscription();
-      setSubscriptionData(subscription);
-    } catch (error) {
-      console.error('[Profile] Failed to load subscription:', error);
-    } finally {
-      setIsLoadingSubscription(false);
-    }
-  }, []);
-
-  // Load subscription on mount
-  useEffect(() => {
-    loadSubscription();
-  }, [loadSubscription]);
-
-  // Refresh subscription when screen comes into focus (e.g., after returning from Pricing screen)
-  useFocusEffect(
-    useCallback(() => {
-      loadSubscription();
-    }, [loadSubscription])
-  );
+  const user = profileData?.user as ProfileUser;
+  const subscription = profileData?.subscription;
 
   // Format next billing date
   const formatBillingDate = (dateString: string | number | null | undefined): string => {
@@ -281,20 +253,14 @@ const Profile: React.FC<Props> = ({ navigation }) => {
               Subscription
             </Text>
 
-            {isLoadingSubscription ? (
-              <Text
-                className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular mb-4`}
-              >
-                Loading subscription...
-              </Text>
-            ) : subscriptionData ? (
+            {subscription ? (
               <>
                 <Text
                   className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular mb-1`}
                 >
-                  {subscriptionData.planName || 'Subscription Plan'}
-                  {subscriptionData.consultationsPerMonth
-                    ? ` – ${subscriptionData.consultationsPerMonth} consultations/month`
+                  {subscription.plan_name || 'Subscription Plan'}
+                  {subscription.consultations_allowed
+                    ? ` – ${subscription.consultations_allowed} consultations/month`
                     : ''}
                 </Text>
 
@@ -302,27 +268,40 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-1`}
                 >
                   Status:{' '}
-                  {subscriptionData.status === 'active'
-                    ? 'Active'
-                    : subscriptionData.status || 'Unknown'}
+                  {subscription.status === 'active' ? 'Active' : subscription.status || 'Unknown'}
                 </Text>
 
-                {subscriptionData.nextBillingDate && (
+                {subscription.consultations_remaining !== undefined && (
                   <Text
-                    className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-4`}
+                    className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-1`}
                   >
-                    Next billing date: {formatBillingDate(subscriptionData.nextBillingDate)}
+                    Consultations remaining: {subscription.consultations_remaining} /{' '}
+                    {subscription.consultations_allowed}
                   </Text>
                 )}
 
-                {subscriptionData.isScheduledDowngrade && (
+                {subscription.next_billing_date && (
+                  <Text
+                    className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-1`}
+                  >
+                    Next billing date: {formatBillingDate(subscription.next_billing_date)}
+                  </Text>
+                )}
+
+                {subscription.scheduled_change && (
                   <Text
                     className={`${isDark ? 'text-yellow-400' : 'text-yellow-600'} font-poppins-regular text-sm mb-4`}
                   >
-                    Plan change scheduled: {subscriptionData.scheduledPlanName || 'Downgrade'} will
-                    start on {formatBillingDate(subscriptionData.scheduledStartDate)}
+                    Plan change scheduled: {subscription.scheduled_change?.plan_name || 'Change'}{' '}
+                    will start on{' '}
+                    {formatBillingDate(
+                      subscription.scheduled_change?.start_date ||
+                        subscription.scheduled_change?.effective_date
+                    )}
                   </Text>
                 )}
+
+                {!subscription.scheduled_change && <View className="mb-4" />}
 
                 <Button
                   text="Manage Subscription"

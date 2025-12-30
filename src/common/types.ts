@@ -7,7 +7,7 @@ export type AuthStackParamList = {
   ForgetPassword: undefined;
   ResetPassword: { token?: string } | undefined;
   OtpVerification: undefined;
-  Pricing: undefined;
+  Pricing: { fromSignup?: boolean; fromProfile?: boolean } | undefined;
 };
 
 export type ConsultationStackParamList = {
@@ -230,6 +230,26 @@ export interface ReferralStats {
   total_referrals: number;
   total_rewards_earned: number;
   total_rewards_available: number;
+}
+
+export interface ProfileSubscription {
+  is_active: boolean;
+  platform: string;
+  plan_id: number;
+  plan_name: string;
+  plan_slug: string;
+  store_plan_id: string;
+  offer_plan_id: string | null;
+  expires_at: string | null;
+  next_billing_date: string | null;
+  auto_renew: boolean;
+  status: string;
+  consultations_allowed: number;
+  consultations_used: number;
+  consultations_remaining: number;
+  is_in_discount_period: boolean;
+  discount_ends_at: string | null;
+  scheduled_change: any | null;
 }
 
 export interface ProfileUser {

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useConsultation } from '@/hooks/useConsultation';
@@ -38,7 +38,7 @@ const ConsultantChatScreen: React.FC = () => {
   const currentUserName = user?.name ?? 'You';
   const isConsultant = user?.role === 'consultant' && !asCustomer;
 
-  const { consultation, loading, isOnline } = useConsultation({
+  const { consultation, loading, isOnline, reloadConsultation } = useConsultation({
     consultationId,
     isConsultant,
   });
@@ -64,12 +64,15 @@ const ConsultantChatScreen: React.FC = () => {
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [isModalFromBackButton, setIsModalFromBackButton] = useState(false);
 
   const finishMutation = useFinishConsultation();
   const ratingMutation = useRatingConsultation();
 
   const flashListRef = useRef<FlashListRef<ChatMessage>>(null);
   const scrollOffsetRef = useRef(0);
+  const canNavigateRef = useRef(false);
+  const isConsultationFinishedRef = useRef(false);
 
   // Set active chat when screen opens, clear when screen closes
   useEffect(() => {
@@ -89,6 +92,40 @@ const ConsultantChatScreen: React.FC = () => {
       }
     };
   }, [consultationId]);
+
+  // Reset finished flag when consultation status becomes completed
+  useEffect(() => {
+    if (consultation?.status === 'completed') {
+      isConsultationFinishedRef.current = false;
+    }
+  }, [consultation?.status]);
+
+  // Intercept back button for customers when consultation is not completed
+  useEffect(() => {
+    if (!consultation || isConsultant) return;
+
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      // If we're already allowed to navigate (after cancel), don't intercept
+      if (canNavigateRef.current) {
+        canNavigateRef.current = false;
+        return;
+      }
+
+      // If consultation is already completed or was just finished, allow navigation
+      if (consultation.status === 'completed' || isConsultationFinishedRef.current) {
+        return;
+      }
+
+      // Prevent default navigation
+      e.preventDefault();
+
+      // Show finish consultation modal and mark it as from back button
+      setIsModalFromBackButton(true);
+      setShowFinishModal(true);
+    });
+
+    return unsubscribe;
+  }, [navigation, consultation, isConsultant]);
 
   const handleSend = useCallback(
     async (text: string, imageUri?: string) => {
@@ -154,8 +191,15 @@ const ConsultantChatScreen: React.FC = () => {
     if (!consultation) return;
 
     finishMutation.mutate(String(consultation.id), {
-      onSuccess: () => {
+      onSuccess: async () => {
+        // Mark consultation as finished locally
+        isConsultationFinishedRef.current = true;
         setShowFinishModal(false);
+        setIsModalFromBackButton(false);
+
+        // Refetch consultation to get updated status
+        await reloadConsultation();
+
         setShowRatingModal(true);
       },
       onError: (error) => {
@@ -163,7 +207,38 @@ const ConsultantChatScreen: React.FC = () => {
         console.error('errr ====', error.message);
       },
     });
-  }, [consultation, finishMutation, navigation]);
+  }, [consultation, finishMutation, navigation, reloadConsultation]);
+
+  const handleBack = useCallback(() => {
+    // If customer and consultation is not completed and not finished, show finish modal
+    if (
+      !isConsultant &&
+      consultation &&
+      consultation.status !== 'completed' &&
+      !isConsultationFinishedRef.current
+    ) {
+      setIsModalFromBackButton(true);
+      setShowFinishModal(true);
+    } else {
+      // Otherwise, allow navigation
+      navigation.goBack();
+    }
+  }, [isConsultant, consultation, navigation]);
+
+  const handleCancelFinish = useCallback(() => {
+    // Close modal
+    setShowFinishModal(false);
+
+    // If modal was opened from back button, navigate back
+    if (isModalFromBackButton) {
+      setIsModalFromBackButton(false);
+      canNavigateRef.current = true;
+      navigation.dispatch(CommonActions.goBack());
+    } else {
+      // Otherwise, just close the modal (opened from finish button)
+      setIsModalFromBackButton(false);
+    }
+  }, [navigation, isModalFromBackButton]);
 
   const handleSubmitRating = useCallback(
     (rating: number, feedback: string) => {
@@ -176,8 +251,10 @@ const ConsultantChatScreen: React.FC = () => {
           user_feedback: feedback,
         },
         {
-          onSuccess: (data) => {
+          onSuccess: async (data) => {
             setShowRatingModal(false);
+            // Refetch consultation to get updated status
+            await reloadConsultation();
             Alert.alert(
               'Thank you!',
               `Thank you for rating this consultation with ${rating} stars!`,
@@ -195,7 +272,7 @@ const ConsultantChatScreen: React.FC = () => {
         }
       );
     },
-    [consultation, ratingMutation, navigation]
+    [consultation, ratingMutation, navigation, reloadConsultation]
   );
 
   const renderMessage = useCallback(
@@ -240,8 +317,11 @@ const ConsultantChatScreen: React.FC = () => {
       >
         <ChatHeader
           consultation={consultation}
-          onBack={() => navigation.goBack()}
-          onFinish={() => setShowFinishModal(true)}
+          onBack={handleBack}
+          onFinish={() => {
+            setIsModalFromBackButton(false);
+            setShowFinishModal(true);
+          }}
           isConsultant={!!isConsultant}
           isConnecting={!isOnline}
           isLoading={loading && messages.length === 0}
@@ -307,7 +387,7 @@ const ConsultantChatScreen: React.FC = () => {
 
       <FinishConsultationModal
         visible={showFinishModal}
-        onClose={() => setShowFinishModal(false)}
+        onClose={handleCancelFinish}
         onConfirm={handleFinishConsultation}
         isLoading={finishMutation.isPending}
       />
@@ -319,7 +399,11 @@ const ConsultantChatScreen: React.FC = () => {
             ? consultation.user?.name || 'Client'
             : consultation.consultant?.name || 'Stylist'
         }
-        onClose={() => setShowRatingModal(false)}
+        onClose={async () => {
+          setShowRatingModal(false);
+          // When rating is skipped, refetch consultation to get updated status
+          await reloadConsultation();
+        }}
         onSubmit={handleSubmitRating}
         isLoading={ratingMutation.isPending}
       />

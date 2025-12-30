@@ -16,10 +16,10 @@ import { BASE_URL } from '@/config';
 const Dashboard: React.FC = () => {
   const [pdfModalVisible, setPdfModalVisible] = useState(false);
   const { isDark } = useTheme();
-  const { data: profile } = useGetProfile();
+  const { data: profileData } = useGetProfile();
   const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useGetLeaderboard();
 
-  const user = profile as any;
+  const user = profileData?.user as any;
   const totalSessions = user?.consultant_details?.total_sessions ?? 0;
   const averageRating = user?.consultant_details?.average_rating ?? 0;
   const activeSessions = user?.consultant_details?.active_sessions ?? 0;

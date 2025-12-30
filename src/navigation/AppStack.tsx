@@ -14,7 +14,7 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 const AppStack: React.FC = () => {
   const { user } = useAuth();
   const userRole = user?.role; // or 'customer'
-  const [initialRoute, setInitialRoute] = useState<string | undefined>(undefined);
+  const [initialRoute, setInitialRoute] = useState<keyof AppStackParamList | undefined>(undefined);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(true);
   const navigation = useNavigation<any>();
 
@@ -72,7 +72,7 @@ const AppStack: React.FC = () => {
   }
 
   // Determine default initial route
-  const defaultInitialRoute =
+  const defaultInitialRoute: keyof AppStackParamList =
     initialRoute || (userRole === 'consultant' ? 'ConsultantTabs' : 'UserTabs');
 
   return (
