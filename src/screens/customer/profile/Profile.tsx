@@ -444,6 +444,30 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             </View>
           </View>
 
+          <View
+            className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl p-4 mt-5 border`}
+          >
+            <TouchableOpacity
+              className="flex-row gap-2"
+              onPress={() => navigation.navigate('CreateDispute')}
+            >
+              <Image
+                source={
+                  isDark
+                    ? require('@/assets/icons/white-report.png')
+                    : require('@/assets/icons/report.png')
+                }
+                className=""
+                resizeMode="contain"
+              />
+              <Text
+                className={`${isDark ? 'text-white' : 'text-textDark'} font-urbanist-semibold text-[15px]`}
+              >
+                Report a Problem
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           {/* ---------- Settings ---------- */}
           <View
             className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl p-4 mt-5 border`}
