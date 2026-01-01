@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, Pressable, Alert, Platform, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
@@ -48,6 +48,7 @@ export default function SubscriptionModal({
   const [iapInitialized, setIapInitialized] = useState(false);
   const [iapError, setIapError] = useState<string | null>(null);
   const [currentSubscription, setCurrentSubscription] = useState<any | null>(null);
+  const processedPurchaseKeysRef = useRef<Set<string>>(new Set());
 
   // Fetch current subscription from AsyncStorage when modal opens
   useEffect(() => {
@@ -55,13 +56,6 @@ export default function SubscriptionModal({
       try {
         const subscription = await storage.getUserSubscription();
         setCurrentSubscription(subscription);
-        if (subscription) {
-          console.log('[SubscriptionModal] Current subscription loaded from storage', {
-            planId: subscription.plan_id,
-            status: subscription.status,
-            platform: subscription.platform,
-          });
-        }
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.error(
@@ -104,9 +98,47 @@ export default function SubscriptionModal({
       return;
     }
 
-    const basePlanId =
-      Platform.OS === 'android' ? plan.originalPlan.base_plan_product_id || null : null;
-    const offerPlanId = Platform.OS === 'android' ? plan.originalPlan.offer_plan_id || null : null;
+    /**
+     * Google Play subscriptions model:
+     * - productId: subscription product id (e.g. "senior_stylist_subscription")
+     * - basePlanId: base plan id (e.g. "basic-monthly", "premium-monthly", "pro-monthly")
+     * - offerId: offer id under that base plan (e.g. "basic-intro-6m")
+     *
+     * Our API currently doesn't always provide `offer_plan_id`, and `base_plan_product_id`
+     * may not be present on every plan row. So we derive safely from the plan slug.
+     */
+    const deriveAndroidBasePlanId = (): string | null => {
+      const anyPlan = plan.originalPlan as any;
+      // Prefer explicit field when present
+      if (typeof anyPlan.base_plan_product_id === 'string' && anyPlan.base_plan_product_id.trim()) {
+        return anyPlan.base_plan_product_id.trim();
+      }
+      // Fallback: slug matches Play Console basePlanId in your structure (basic-monthly, etc.)
+      if (typeof anyPlan.slug === 'string' && anyPlan.slug.trim()) {
+        return anyPlan.slug.trim();
+      }
+      return null;
+    };
+
+    const deriveAndroidOfferId = (basePlanId: string | null): string | null => {
+      const anyPlan = plan.originalPlan as any;
+      // Prefer explicit field when present
+      if (typeof anyPlan.offer_plan_id === 'string' && anyPlan.offer_plan_id.trim()) {
+        return anyPlan.offer_plan_id.trim();
+      }
+
+      // If discount is configured (e.g. 6 months), derive offerId like: basic-intro-6m
+      const months =
+        typeof anyPlan.discount_duration_months === 'number' ? anyPlan.discount_duration_months : 0;
+      if (!basePlanId || !months || months <= 0) return null;
+
+      const prefix = basePlanId.replace(/-monthly$/i, '').trim();
+      if (!prefix) return null;
+      return `${prefix}-intro-${months}m`;
+    };
+
+    const basePlanId = Platform.OS === 'android' ? deriveAndroidBasePlanId() : null;
+    const offerPlanId = Platform.OS === 'android' ? deriveAndroidOfferId(basePlanId) : null;
 
     try {
       if (Platform.OS === 'android') {
@@ -159,6 +191,31 @@ export default function SubscriptionModal({
               skus: [productId],
               type: 'subs',
             });
+            if (__DEV__) {
+              console.log('[SubscriptionModal][DEBUG] fetchProducts() raw return', {
+                count: Array.isArray(products) ? products.length : null,
+                products: Array.isArray(products)
+                  ? products.map((p: any) => ({
+                      productId: p.productId || p.id,
+                      title: p.title,
+                      type: p.type,
+                      // show both possible fields
+                      subscriptionOfferDetailsCount:
+                        (
+                          p.subscriptionOfferDetailsAndroid ||
+                          p.subscriptionOfferDetails ||
+                          p.subscriptionOffers ||
+                          []
+                        )?.length ?? 0,
+                      subscriptionOfferDetails:
+                        p.subscriptionOfferDetailsAndroid ||
+                        p.subscriptionOfferDetails ||
+                        p.subscriptionOffers ||
+                        null,
+                    }))
+                  : products,
+              });
+            }
             if (products && products.length > 0) {
               subscriptions = products.map((p: any) => ({
                 productId: p.productId || p.id,
@@ -200,62 +257,79 @@ export default function SubscriptionModal({
         }
 
         const offers = product.subscriptionOfferDetails;
+        if (__DEV__) {
+          console.log('[SubscriptionModal][DEBUG] offers raw shape', {
+            fetchMethod,
+            offersCount: offers?.length ?? 0,
+            offers: Array.isArray(offers)
+              ? offers.map((o: any) => ({
+                  basePlanId: o.basePlanId,
+                  offerId: o.offerId,
+                  hasOfferIdKey: Object.prototype.hasOwnProperty.call(o, 'offerId'),
+                  offerTokenPreview: o.offerToken ? String(o.offerToken).slice(0, 16) + '…' : null,
+                  keys: Object.keys(o || {}),
+                  pricingPhasesCount: o.pricingPhases?.pricingPhaseList?.length ?? 0,
+                  firstPhase: o.pricingPhases?.pricingPhaseList?.[0]
+                    ? {
+                        formattedPrice: o.pricingPhases.pricingPhaseList[0].formattedPrice,
+                        billingPeriod: o.pricingPhases.pricingPhaseList[0].billingPeriod,
+                        billingCycleCount: o.pricingPhases.pricingPhaseList[0].billingCycleCount,
+                        recurrenceMode: o.pricingPhases.pricingPhaseList[0].recurrenceMode,
+                      }
+                    : null,
+                }))
+              : offers,
+          });
+        }
 
-        // STEP 1: Log ALL available offers from Google Play with their details
-        console.log('[SubscriptionModal] 📋 All subscription offers from Google Play:', {
-          productId,
-          totalOffers: offers.length,
-          offers: offers.map((o: any) => ({
-            basePlanId: o.basePlanId,
-            offerId: o.offerId,
-            offerToken: o.offerToken,
-            offerTokenPreview: o.offerToken?.substring(0, 40) + '...',
-            price: o.pricingPhases?.pricingPhaseList?.[0]?.formattedPrice,
-            pricingPhasesCount: o.pricingPhases?.pricingPhaseList?.length || 0,
-            hasMultiplePhases: (o.pricingPhases?.pricingPhaseList?.length || 0) > 1,
-            allPhases: o.pricingPhases?.pricingPhaseList?.map((phase: any) => ({
-              price: phase.formattedPrice,
-              billingPeriod: phase.billingPeriod,
-              billingCycleCount: phase.billingCycleCount,
-            })),
-          })),
-        });
-
-        // STEP 2: Match the basePlanId (e.g., 'premium-monthly')
-        console.log('[SubscriptionModal] 🔍 Searching for offer:', {
-          searchingForBasePlanId: basePlanId,
-          searchingForOfferId: offerPlanId,
-          availableBasePlanIds: [...new Set(offers.map((o: any) => o.basePlanId))],
-        });
-
-        let selectedOffer = offers.find((o: any) => o.basePlanId === basePlanId);
-
-        // If an offerId/discount is specified, use that specific offer
-        if (offerPlanId && selectedOffer) {
-          const matchingOffer = offers.find(
-            (o: any) => o.basePlanId === basePlanId && o.offerId === offerPlanId
+        if (!basePlanId) {
+          throw new Error(
+            `Android basePlanId is missing for plan "${plan.title}". ` +
+              `Expected basePlanId like "basic-monthly". ` +
+              `Fix: ensure API returns base_plan_product_id OR plan.slug matches your Play base plan id.`
           );
-          if (matchingOffer) {
-            selectedOffer = matchingOffer;
-            console.log('[SubscriptionModal] ✅ Found specific offer with offerId:', {
-              basePlanId: matchingOffer.basePlanId,
-              offerId: matchingOffer.offerId,
-            });
-          }
+        }
+
+        // Select offer deterministically:
+        // 1) If offerPlanId provided/derived, prefer exact basePlanId+offerId match
+        // 2) Else prefer "promo" offer (offerId present OR multiple pricing phases)
+        // 3) Else fallback to the first offer for that basePlanId
+        let selectedOffer: any =
+          (offerPlanId
+            ? offers.find((o: any) => o.basePlanId === basePlanId && o.offerId === offerPlanId)
+            : null) ||
+          offers.find(
+            (o: any) =>
+              o.basePlanId === basePlanId &&
+              (!!o.offerId ||
+                ((o.pricingPhases?.pricingPhaseList?.length || 0) > 1 &&
+                  o.pricingPhases?.pricingPhaseList?.[0]?.billingCycleCount > 0))
+          ) ||
+          offers.find((o: any) => o.basePlanId === basePlanId);
+
+        if (__DEV__) {
+          console.log('[SubscriptionModal][DEBUG] selectedOffer details', {
+            basePlanId,
+            desiredOfferPlanId: offerPlanId,
+            selectedOfferBasePlanId: selectedOffer?.basePlanId,
+            selectedOfferOfferId: selectedOffer?.offerId,
+            hasOfferIdKey: selectedOffer
+              ? Object.prototype.hasOwnProperty.call(selectedOffer, 'offerId')
+              : null,
+            selectedOfferKeys: selectedOffer ? Object.keys(selectedOffer) : null,
+            selectedOfferTokenPreview: selectedOffer?.offerToken
+              ? String(selectedOffer.offerToken).slice(0, 16) + '…'
+              : null,
+            selectedOfferRaw: selectedOffer ?? null,
+          });
         }
 
         if (!selectedOffer) {
-          console.error('[SubscriptionModal] ❌ No matching offer found!', {
-            searchingForBasePlanId: basePlanId,
-            searchingForOfferId: offerPlanId,
-            availableOffers: offers.map((o: any) => ({
-              basePlanId: o.basePlanId,
-              offerId: o.offerId,
-            })),
-          });
           throw new Error(
             `No offer found for basePlanId: ${basePlanId}. ` +
-              `Available basePlanIds: ${offers.map((o: any) => o.basePlanId).join(', ')}`
+              `Available basePlanIds: ${[...new Set(offers.map((o: any) => o.basePlanId))].join(
+                ', '
+              )}`
           );
         }
 
@@ -268,34 +342,16 @@ export default function SubscriptionModal({
 
         selectedOfferToken = selectedOffer.offerToken;
 
-        // STEP 3: Log the selected offer details
-        console.log('[SubscriptionModal] ✅ Selected plan and offer token:', {
-          selectedPlan: plan.title,
-          planId: plan.originalPlan.id,
-          productId,
-          basePlanId: selectedOffer.basePlanId,
-          offerId: selectedOffer.offerId,
-          offerToken: selectedOffer.offerToken,
-          offerTokenPreview: selectedOffer.offerToken.substring(0, 40) + '...',
-          price: selectedOffer.pricingPhases?.pricingPhaseList?.[0]?.formattedPrice,
-          method: fetchMethod,
-        });
-
         // --- 2. PREPARE THE CORRECT REQUEST STRUCTURE FOR v14+ ---
-        // CRITICAL: For Android subscriptions with offers, we need the nested structure
-        // The "Missing purchase request configuration" error means the structure is wrong
         const subscriptionOffer: any = {
           sku: String(productId), // Must match the productId in skus array
-          basePlanId: basePlanId, // REQUIRED: Identifies which base plan
           offerToken: selectedOfferToken, // REQUIRED: The token from Google Play
         };
 
-        // CRITICAL: Include offerId if available - Google Play may need this to show correct price
-        if (selectedOffer.offerId) {
-          subscriptionOffer.offerId = selectedOffer.offerId;
-        }
-
         const purchaseRequest: any = {
+          // CRITICAL: If `type` is not set to 'subs', react-native-iap treats this as an in-app purchase,
+          // and will ignore `subscriptionOffers` => Google Play can default to the first base plan.
+          type: 'subs',
           request: {
             android: {
               // Top-level skus array is REQUIRED for Android Billing Library 5+
@@ -308,24 +364,38 @@ export default function SubscriptionModal({
 
         // Handle Upgrades/Downgrades (for existing subscriptions)
         if (currentSubscription?.transaction_id) {
-          // Add proration properties inside android object
-          purchaseRequest.request.android.purchaseToken = currentSubscription.transaction_id;
-          purchaseRequest.request.android.prorationMode =
-            plan.originalPlan.id > (currentSubscription.plan_id || 0) ? 1 : 4; // 1 = IMMEDIATE, 4 = DEFERRED
+          // react-native-iap expects these keys for subscription replacement
+          purchaseRequest.request.android.purchaseTokenAndroid = currentSubscription.transaction_id;
+          // replacementModeAndroid: 1 = CHARGE_PRORATED_PRICE (immediate), 4 = DEFERRED
+          const selectedTier = Number((plan.originalPlan as any)?.sort_order);
+          const currentTier = Number(
+            (currentSubscription as any)?.plan_sort_order ??
+              (currentSubscription as any)?.sortOrder ??
+              (currentSubscription as any)?.plan?.sort_order ??
+              (currentSubscription as any)?.plan?.sortOrder ??
+              NaN
+          );
+
+          const canCompareTiers = Number.isFinite(selectedTier) && Number.isFinite(currentTier);
+          const isUpgrade = canCompareTiers ? selectedTier > currentTier : false;
+          const isDowngrade = canCompareTiers ? selectedTier < currentTier : false;
+
+          // If we can't compare tiers, default to immediate replacement (safer UX than deferring unexpectedly)
+          purchaseRequest.request.android.replacementModeAndroid = isDowngrade ? 4 : 1;
+
+          if (__DEV__) {
+            console.log('[SubscriptionModal][DEBUG] Replacement mode decision', {
+              selectedTier,
+              currentTier,
+              canCompareTiers,
+              isUpgrade,
+              isDowngrade,
+              replacementModeAndroid: purchaseRequest.request.android.replacementModeAndroid,
+            });
+          }
         }
 
-        // STEP 4: Log the final purchase request (minimal, just key info)
-        console.log('[SubscriptionModal] 🚀 Sending purchase request:', {
-          productId,
-          basePlanId,
-          offerId: selectedOffer.offerId || 'none',
-          offerTokenPreview: selectedOfferToken?.substring(0, 40) + '...',
-          hasProration: !!currentSubscription?.transaction_id,
-          requestStructure: JSON.stringify(purchaseRequest, null, 2),
-        });
-
         // --- 3. EXECUTE PURCHASE REQUEST ---
-        // v14+ API: Pass request object with nested android structure
         await (RNIap as any).requestPurchase(purchaseRequest);
       } else {
         // iOS Implementation
@@ -352,24 +422,117 @@ export default function SubscriptionModal({
         platform: Platform.OS,
       });
 
+      console.log(purchase, 'purchase we have reached here');
+
       // 1. Determine Success State correctly for v14
       // Using type assertion to access platform-specific properties
       const purchaseAny = purchase as any;
       let isPurchaseSuccessful = false;
 
       if (Platform.OS === 'android') {
-        // purchaseStateAndroid: 0 (unspecified), 1 (purchased), 2 (pending)
-        isPurchaseSuccessful = purchaseAny.purchaseStateAndroid === 1;
+        /**
+         * Android purchase state can come in different shapes depending on react-native-iap version:
+         * - `purchaseStateAndroid` (number): 0 unspecified, 1 purchased, 2 pending
+         * - `purchaseState` (string): 'purchased' | 'pending' | ...
+         * - `dataAndroid` (stringified JSON) includes `purchaseState` + `orderId` + `purchaseToken`
+         */
+        const getAndroidPurchaseState = (): number | null => {
+          // Preferred: numeric state
+          if (typeof purchaseAny.purchaseStateAndroid === 'number')
+            return purchaseAny.purchaseStateAndroid;
+
+          // Common: string state
+          if (typeof purchaseAny.purchaseState === 'string') {
+            const s = purchaseAny.purchaseState.toLowerCase();
+            if (s === 'purchased') return 1;
+            if (s === 'pending') return 2;
+          }
+
+          // Fallback: parse raw payload from Google Play
+          if (typeof purchaseAny.dataAndroid === 'string' && purchaseAny.dataAndroid.trim()) {
+            try {
+              const parsed = JSON.parse(purchaseAny.dataAndroid);
+              const rawState = parsed?.purchaseState;
+              if (typeof rawState === 'number') {
+                // Some environments report purchaseState=0 even when `purchaseState: 'purchased'`
+                // and `orderId/purchaseToken` are present. Treat that as purchased.
+                if (
+                  rawState === 0 &&
+                  (parsed?.orderId || purchaseAny.orderId) &&
+                  (parsed?.purchaseToken || purchaseAny.purchaseToken)
+                ) {
+                  return 1;
+                }
+                return rawState;
+              }
+            } catch {
+              // ignore parse errors
+            }
+          }
+
+          return null;
+        };
+
+        const androidPurchaseState = getAndroidPurchaseState();
+        if (__DEV__) {
+          console.log('[SubscriptionModal][DEBUG] Android purchase state resolution', {
+            purchaseStateAndroid: purchaseAny.purchaseStateAndroid,
+            purchaseState: purchaseAny.purchaseState,
+            parsedPurchaseState: androidPurchaseState,
+            orderId: purchaseAny.orderId,
+            purchaseTokenPreview: purchaseAny.purchaseToken
+              ? String(purchaseAny.purchaseToken).slice(0, 12) + '…'
+              : null,
+          });
+        }
+
+        if (androidPurchaseState === 2) {
+          // Pending purchase: don't verify yet, but also don't leave UI stuck.
+          Alert.alert(
+            'Purchase Pending',
+            'Your purchase is pending. We will activate your subscription once Google Play confirms the payment.'
+          );
+          setIsProcessingPurchase(false);
+          setIsLoading(false);
+          return;
+        }
+
+        isPurchaseSuccessful = androidPurchaseState === 1;
       } else {
         // transactionStateIOS: 1 (purchased), 3 (restored)
-        isPurchaseSuccessful = purchaseAny.transactionStateIOS === 1;
+        isPurchaseSuccessful =
+          purchaseAny.transactionStateIOS === 1 || purchaseAny.transactionStateIOS === 3;
       }
 
       if (!isPurchaseSuccessful) {
-        console.warn('[SubscriptionModal] Purchase not successful, skipping backend');
+        console.warn('[SubscriptionModal] Purchase not successful, skipping backend', {
+          platform: Platform.OS,
+          purchaseStateAndroid: purchaseAny.purchaseStateAndroid,
+          purchaseState: purchaseAny.purchaseState,
+        });
         setIsProcessingPurchase(false);
+        setIsLoading(false);
         return;
       }
+
+      // De-dupe: purchaseUpdatedListener can fire multiple times for the same transaction.
+      // Prefer the platform-specific unique identifier.
+      const dedupeKey =
+        Platform.OS === 'android'
+          ? String(purchaseAny.purchaseToken || purchaseAny.orderId || purchase.transactionId || '')
+          : String(
+              purchaseAny.originalTransactionIdentifierIOS ||
+                purchaseAny.transactionId ||
+                purchase.transactionId ||
+                ''
+            );
+      if (dedupeKey && processedPurchaseKeysRef.current.has(dedupeKey)) {
+        console.log('[SubscriptionModal] Duplicate purchase update ignored', { dedupeKey });
+        setIsProcessingPurchase(false);
+        setIsLoading(false);
+        return;
+      }
+      if (dedupeKey) processedPurchaseKeysRef.current.add(dedupeKey);
 
       try {
         setIsLoading(true);
@@ -381,36 +544,227 @@ export default function SubscriptionModal({
 
         // 2. Build Payload for Backend
         // Using type assertion to access platform-specific properties
+        const resolvedTransactionIdRaw =
+          Platform.OS === 'android'
+            ? purchaseAny.orderId ||
+              purchase.transactionId ||
+              purchaseAny.transactionId ||
+              purchaseAny.id
+            : purchase.transactionId || purchaseAny.transactionId;
+
+        const resolvedTransactionId =
+          resolvedTransactionIdRaw !== undefined && resolvedTransactionIdRaw !== null
+            ? String(resolvedTransactionIdRaw)
+            : '';
+
+        if (!resolvedTransactionId) {
+          throw new Error('Missing transactionId from purchase. Cannot verify with backend.');
+        }
+
         const purchaseDataForBackend: VerifyPurchasePayload = {
           userId: userData.id,
           planId: plan.originalPlan.id,
           platform: Platform.OS as 'android' | 'ios',
           // Android uses orderId for the high-level receipt
-          transactionId:
-            Platform.OS === 'android'
-              ? purchaseAny.orderId || purchase.transactionId
-              : purchase.transactionId,
-          productId: purchase.productId,
+          transactionId: resolvedTransactionId,
+          productId: String(purchase.productId),
           base_plan_id: Platform.OS === 'android' ? plan.originalPlan.base_plan_product_id : null,
           purchaseDate: purchase.transactionDate,
 
           // Android specific
           purchaseToken: purchaseAny.purchaseToken || null,
+          // Some backends validate this as `string` (not `nullable|string`), so avoid null.
+          orderId: Platform.OS === 'android' ? '' : null,
+          packageName: Platform.OS === 'android' ? purchaseAny.packageNameAndroid || null : null,
+          autoRenewing:
+            Platform.OS === 'android' ? (purchaseAny.autoRenewingAndroid ?? null) : null,
 
           // iOS specific
-          transactionReceipt: purchaseAny.transactionReceipt || null,
+          // Some backends validate these as string even on Android; send empty string instead of null.
+          transactionReceipt: Platform.OS === 'ios' ? purchaseAny.transactionReceipt || '' : '',
+          originalTransactionId:
+            Platform.OS === 'ios' ? purchaseAny.originalTransactionIdentifierIOS || '' : '',
         };
+
+        // Persist a "pending verification" snapshot immediately so we don't lose the purchase
+        // if the app is killed before backend verification finishes.
+        try {
+          const pendingSubSnapshot: any = {
+            status: 'pending',
+            platform: Platform.OS as 'android' | 'ios',
+            plan_id: plan.originalPlan.id,
+            planId: plan.originalPlan.id,
+            planName: plan.title,
+            plan_sort_order: (plan.originalPlan as any)?.sort_order ?? null,
+            product_id: purchase.productId,
+            base_plan_id: Platform.OS === 'android' ? plan.originalPlan.base_plan_product_id : null,
+            // keep both for compatibility
+            transaction_id:
+              Platform.OS === 'android'
+                ? purchaseAny.purchaseToken || purchaseAny.orderId || purchase.transactionId
+                : purchase.transactionId,
+            transactionId: purchaseDataForBackend.transactionId,
+            purchaseToken: purchaseDataForBackend.purchaseToken ?? null,
+            packageName: purchaseDataForBackend.packageName ?? null,
+            autoRenewing: purchaseDataForBackend.autoRenewing ?? null,
+            purchaseDate: purchaseDataForBackend.purchaseDate ?? null,
+            last_purchase_payload: purchaseDataForBackend,
+            updated_at: Date.now(),
+          };
+
+          await storage.setUserSubscription(pendingSubSnapshot);
+          setCurrentSubscription(pendingSubSnapshot);
+        } catch (e) {
+          console.warn('[SubscriptionModal] Failed to persist pending purchase snapshot', e);
+        }
+
+        // Add action hint for backend (upgrade vs deferred downgrade) when applicable.
+        try {
+          if (Platform.OS === 'android' && currentSubscription?.transaction_id) {
+            const selectedTier = Number((plan.originalPlan as any)?.sort_order);
+            const currentTier = Number(
+              (currentSubscription as any)?.plan_sort_order ??
+                (currentSubscription as any)?.sortOrder ??
+                (currentSubscription as any)?.plan?.sort_order ??
+                (currentSubscription as any)?.plan?.sortOrder ??
+                NaN
+            );
+            if (Number.isFinite(selectedTier) && Number.isFinite(currentTier)) {
+              if (selectedTier > currentTier) purchaseDataForBackend.action = 'upgrade';
+              else if (selectedTier < currentTier)
+                purchaseDataForBackend.action = 'deferred_downgrade';
+            }
+          }
+        } catch {
+          // ignore
+        }
 
         // 3. Backend Verification
         const verificationResult = await sendPurchaseToBackend(purchaseDataForBackend);
 
         if (verificationResult.success) {
-          // 4. CRITICAL: Finish Transaction
-          // This tells the store the product was delivered so they can close the billing cycle
-          await (RNIap as any).finishTransaction({
-            purchase,
-            isConsumable: false, // Subscriptions are always non-consumable
-          });
+          // Persist verified subscription locally (used by Pricing/Profile flows).
+          // Keep shape backwards-compatible since some screens expect `planId/planName`,
+          // while others expect API-style `plan_id/transaction_id`.
+          try {
+            const verifiedSub: any = verificationResult.data?.subscription ?? null;
+            const normalizedSub: any = verifiedSub
+              ? {
+                  ...verifiedSub,
+                  // ensure both naming conventions exist
+                  plan_id: verifiedSub.plan_id ?? verifiedSub.planId ?? plan.originalPlan.id,
+                  planId: verifiedSub.planId ?? verifiedSub.plan_id ?? plan.originalPlan.id,
+                  planName:
+                    verifiedSub.planName ??
+                    verifiedSub.plan?.name ??
+                    verifiedSub.plan?.title ??
+                    plan.title,
+                  // Persist tier so we can correctly decide upgrade vs downgrade later
+                  plan_sort_order:
+                    verifiedSub.plan_sort_order ??
+                    verifiedSub.plan?.sort_order ??
+                    (plan.originalPlan as any)?.sort_order ??
+                    null,
+                  status: verifiedSub.status ?? 'active',
+                  platform: verifiedSub.platform ?? (Platform.OS as 'android' | 'ios'),
+                  product_id: verifiedSub.product_id ?? purchase.productId,
+                  base_plan_id:
+                    verifiedSub.base_plan_id ??
+                    (Platform.OS === 'android' ? plan.originalPlan.base_plan_product_id : null),
+                  transaction_id:
+                    verifiedSub.transaction_id ??
+                    (Platform.OS === 'android'
+                      ? purchaseAny.purchaseToken || purchaseAny.orderId || purchase.transactionId
+                      : purchase.transactionId),
+                }
+              : {
+                  // Minimal fallback if backend doesn't return subscription object
+                  plan_id: plan.originalPlan.id,
+                  planId: plan.originalPlan.id,
+                  planName: plan.title,
+                  plan_sort_order: (plan.originalPlan as any)?.sort_order ?? null,
+                  status: 'active',
+                  platform: Platform.OS as 'android' | 'ios',
+                  product_id: purchase.productId,
+                  base_plan_id:
+                    Platform.OS === 'android' ? plan.originalPlan.base_plan_product_id : null,
+                  transaction_id:
+                    Platform.OS === 'android'
+                      ? purchaseAny.purchaseToken || purchaseAny.orderId || purchase.transactionId
+                      : purchase.transactionId,
+                };
+
+            await storage.setUserSubscription(normalizedSub);
+            setCurrentSubscription(normalizedSub);
+          } catch (e) {
+            console.warn('[SubscriptionModal] Failed to persist subscription in storage', e);
+          }
+
+          // 4. CRITICAL: Acknowledge / finish the transaction (Android)
+          // This tells Google Play the entitlement was delivered.
+          // If you don't acknowledge, Google can automatically refund and/or show "developer didn't acknowledge" errors.
+          const getAndroidAckInfo = (): { token: string | null; acknowledged: boolean | null } => {
+            if (Platform.OS !== 'android') return { token: null, acknowledged: null };
+            const token: string | null = purchaseAny.purchaseToken || null;
+            const acknowledgedRaw: boolean | null =
+              typeof purchaseAny.isAcknowledgedAndroid === 'boolean'
+                ? purchaseAny.isAcknowledgedAndroid
+                : null;
+
+            if (token && acknowledgedRaw !== null) return { token, acknowledged: acknowledgedRaw };
+
+            if (typeof purchaseAny.dataAndroid === 'string' && purchaseAny.dataAndroid.trim()) {
+              try {
+                const parsed = JSON.parse(purchaseAny.dataAndroid);
+                return {
+                  token:
+                    token ||
+                    (typeof parsed?.purchaseToken === 'string' ? parsed.purchaseToken : null),
+                  acknowledged:
+                    acknowledgedRaw !== null
+                      ? acknowledgedRaw
+                      : typeof parsed?.acknowledged === 'boolean'
+                        ? parsed.acknowledged
+                        : null,
+                };
+              } catch {
+                // ignore parse errors
+              }
+            }
+
+            return { token, acknowledged: acknowledgedRaw };
+          };
+
+          const { token: androidToken, acknowledged: androidAck } = getAndroidAckInfo();
+          if (Platform.OS === 'android' && androidToken && androidAck === false) {
+            try {
+              // Prefer explicit ack when available
+              if (typeof (RNIap as any).acknowledgePurchaseAndroid === 'function') {
+                await (RNIap as any).acknowledgePurchaseAndroid(androidToken);
+              }
+            } catch (ackErr) {
+              console.warn(
+                '[SubscriptionModal] acknowledgePurchaseAndroid failed, will fallback to finishTransaction',
+                ackErr
+              );
+            }
+          }
+
+          // Always attempt finishTransaction as well (handles iOS + acts as fallback for Android)
+          try {
+            await (RNIap as any).finishTransaction({
+              purchase,
+              isConsumable: false, // Subscriptions are always non-consumable
+            });
+          } catch (finishErr: any) {
+            // If already acknowledged/finished, treat as non-fatal.
+            const msg = String(finishErr?.message || '');
+            if (Platform.OS === 'android' && /acknowledged|already|finished/i.test(msg)) {
+              console.warn('[SubscriptionModal] finishTransaction non-fatal on Android:', msg);
+            } else {
+              throw finishErr;
+            }
+          }
 
           Alert.alert('Success!', 'Subscription activated.', [
             { text: 'OK', onPress: () => onClose?.() },
@@ -424,6 +778,7 @@ export default function SubscriptionModal({
         Alert.alert('Verification Failed', 'Please contact support if you were charged.');
       } finally {
         setIsProcessingPurchase(false);
+        setIsLoading(false);
       }
     },
     [plan, onClose]
@@ -466,68 +821,11 @@ export default function SubscriptionModal({
           }
         }
 
-        // 3. Pre-fetch check (optional - helps verify products are available)
-        if (plan?.originalPlan) {
-          const productId =
-            Platform.OS === 'android'
-              ? plan.originalPlan.google_product_id
-              : plan.originalPlan.apple_product_id;
-
-          if (productId) {
-            try {
-              // Try to fetch subscription/product details (optional check)
-              // Using type assertion as getSubscriptions/getProducts might not be in TypeScript definitions
-              // Use more defensive checks to avoid "is not a function" errors
-              const rnIapAny = RNIap as any;
-
-              if (typeof rnIapAny.getProducts === 'function') {
-                const products = await rnIapAny.getProducts({
-                  skus: [productId],
-                });
-                console.log('[SubscriptionModal] Products loaded:', products?.length || 0);
-              } else if (typeof rnIapAny.getSubscriptions === 'function') {
-                const subs = await rnIapAny.getSubscriptions({ skus: [productId] });
-                console.log('[SubscriptionModal] Subscriptions loaded:', subs?.length || 0);
-              } else if (typeof rnIapAny.fetchProducts === 'function') {
-                // Fallback to fetchProducts with type: 'subs'
-                try {
-                  const products = await rnIapAny.fetchProducts({
-                    skus: [productId],
-                    type: 'subs',
-                  });
-                  console.log(
-                    '[SubscriptionModal] Subscriptions loaded (via fetchProducts):',
-                    products?.length || 0
-                  );
-                } catch {
-                  // Try without type parameter
-                  const products = await rnIapAny.fetchProducts({
-                    skus: [productId],
-                  });
-                  console.log(
-                    '[SubscriptionModal] Products loaded (via fetchProducts):',
-                    products?.length || 0
-                  );
-                }
-              } else {
-                console.log(
-                  '[SubscriptionModal] No subscription fetching methods available for pre-fetch'
-                );
-              }
-            } catch (fetchError: unknown) {
-              const errorMessage =
-                fetchError instanceof Error ? fetchError.message : 'Unknown error';
-              console.warn('[SubscriptionModal] Pre-fetch warning:', errorMessage);
-              // Don't block initialization if fetch fails (could be network or product not configured)
-            }
-          }
-        }
+        // 3. Setup Listeners
 
         if (!isMounted) return;
 
-        // 4. Setup Listeners
         purchaseUpdateSubscription = purchaseUpdatedListener(async (purchase: RNIap.Purchase) => {
-          console.log('[SubscriptionModal] Purchase update event received');
           await handlePurchaseUpdate(purchase);
         });
 
@@ -546,7 +844,6 @@ export default function SubscriptionModal({
 
         setIapInitialized(true);
         setIapError(null);
-        console.log('[SubscriptionModal] IAP initialized successfully');
       } catch (error: unknown) {
         console.error('[SubscriptionModal] IAP initialization failed:', error);
         if (!isMounted) return;

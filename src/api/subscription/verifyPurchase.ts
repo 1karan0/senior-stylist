@@ -49,9 +49,33 @@ export const verifyPurchase = async (
       throw new Error('Authentication token missing');
     }
 
+    const toStringOrEmpty = (v: unknown) => (v === undefined || v === null ? '' : String(v));
+
+    // Backend is Laravel-style and commonly validates snake_case fields.
+    // Send both camelCase + snake_case aliases to avoid breaking changes server-side.
+    const payloadForApi: any = {
+      ...payload,
+      // required aliases
+      user_id: payload.userId,
+      plan_id: payload.planId,
+      transaction_id: String(payload.transactionId),
+      product_id: String(payload.productId),
+
+      // optional aliases (keep nulls explicit)
+      purchase_date: payload.purchaseDate ?? null,
+      purchase_token: payload.purchaseToken ?? null,
+      // Some backends validate this as `string` (not `nullable|string`), so avoid null.
+      order_id: toStringOrEmpty(payload.orderId),
+      package_name: payload.packageName ?? null,
+      auto_renewing: payload.autoRenewing ?? null,
+      // Some backends validate these as `string` (not `nullable|string`), so avoid null.
+      transaction_receipt: toStringOrEmpty(payload.transactionReceipt),
+      original_transaction_id: toStringOrEmpty(payload.originalTransactionId),
+    };
+
     const res = await axios.post<VerifyPurchaseResponse>(
       `${BASE_URL}/api/subscriptions/verify-purchase`,
-      payload,
+      payloadForApi,
       {
         headers: {
           Authorization: `Bearer ${token}`,

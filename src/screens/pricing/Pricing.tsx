@@ -1,5 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  Platform,
+} from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -103,7 +111,48 @@ export default function PricingScreen() {
     const filteredPlans = subscriptionPlans.filter((plan) => !plan.slug.includes('-test'));
     const sortedPlans = filteredPlans.sort((a, b) => a.sort_order - b.sort_order);
 
-    const mappedPlans = sortedPlans.map((plan) => {
+    // If backend doesn't return dedicated plan rows for these new Google Play variants,
+    // we still want to show them in UI for testing. So we "clone" existing plans and
+    // only override the Google Play identifiers used for purchase.
+    const withAndroidVariants = (() => {
+      if (Platform.OS !== 'android') return sortedPlans;
+      if (sortedPlans.length === 0) return sortedPlans;
+
+      const alreadyHasV2 = sortedPlans.some(
+        (p: any) => p.google_product_id === 'senior_stylist_subscription_v2'
+      );
+      if (alreadyHasV2) return sortedPlans;
+
+      const baseTemplate = sortedPlans[0]; // use cheapest plan's price UI
+      const premiumTemplate = sortedPlans[sortedPlans.length - 1]; // use highest plan's price UI
+
+      const makeVariant = (
+        template: any,
+        variantKey: string,
+        basePlanId: string,
+        offerId: string,
+        sortOrderOffset: number
+      ) => ({
+        ...template,
+        // unique slug/key so it renders as a distinct card
+        slug: `${template.slug}__${variantKey}`,
+        name: `${template.name} (${variantKey})`,
+        sort_order: (template.sort_order ?? 0) + sortOrderOffset,
+        // Google Play identifiers
+        google_product_id: 'senior_stylist_subscription_v2',
+        base_plan_product_id: basePlanId,
+        offer_plan_id: offerId,
+      });
+
+      return [
+        ...sortedPlans,
+        makeVariant(premiumTemplate, 'v2-base-plan-3', 'base-plan-3', 'offerof-3', 0.01),
+        makeVariant(premiumTemplate, 'v2-base-plan-2', 'base-plan-2', 'offerof-2', 0.02),
+        makeVariant(premiumTemplate, 'v2-base-plan-1', 'base-plan-1', 'offerof-1', 0.03),
+      ];
+    })();
+
+    const mappedPlans = withAndroidVariants.map((plan: any) => {
       // Helper function to remove decimals from price
       const formatPriceWithoutDecimals = (priceString: string): string => {
         const priceMatch = priceString.match(/£?([\d,]+\.?\d*)/);
