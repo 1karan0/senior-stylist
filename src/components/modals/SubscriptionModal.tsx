@@ -490,13 +490,15 @@ export default function SubscriptionModal({
         console.log(subscriptionOffer, 'subscriptionOffer');
 
         // Handle Upgrades/Downgrades (for existing subscriptions)
-        // Billing Library 8.0 uses the same replacement mode constants
-        // Note: purchaseScenario already declared at function start
+        // Use purchase token from getAvailablePurchases if available, otherwise fallback to currentSubscription
+        const oldPurchaseToken =
+          existingPurchaseToken || currentSubscription?.transaction_id || null;
 
-        if (currentSubscription?.transaction_id) {
+        if (oldPurchaseToken) {
           // react-native-iap expects these keys for subscription replacement
-          purchaseRequest.request.android.purchaseTokenAndroid = currentSubscription.transaction_id;
-          // replacementModeAndroid: 1 = CHARGE_PRORATED_PRICE (immediate), 4 = DEFERRED
+          purchaseRequest.request.android.purchaseTokenAndroid = oldPurchaseToken;
+
+          // Determine upgrade vs downgrade
           const selectedTier = Number((plan.originalPlan as any)?.sort_order);
           const currentTier = Number(
             (currentSubscription as any)?.plan_sort_order ??
@@ -510,8 +512,11 @@ export default function SubscriptionModal({
           const isUpgrade = canCompareTiers ? selectedTier > currentTier : false;
           const isDowngrade = canCompareTiers ? selectedTier < currentTier : false;
 
+          // Proration modes (Android Replacement Modes):
+          // 1 = WITH_TIME_PRORATION (for upgrades - immediate with prorated credit)
+          // 6 = DEFERRED (for downgrades - change at next renewal)
           // If we can't compare tiers, default to immediate replacement (safer UX than deferring unexpectedly)
-          purchaseRequest.request.android.replacementModeAndroid = isDowngrade ? 4 : 1;
+          purchaseRequest.request.android.replacementModeAndroid = isDowngrade ? 6 : 1;
 
           if (__DEV__) {
             console.log('[SubscriptionModal][DEBUG] Replacement mode decision', {
@@ -521,6 +526,12 @@ export default function SubscriptionModal({
               isUpgrade,
               isDowngrade,
               replacementModeAndroid: purchaseRequest.request.android.replacementModeAndroid,
+              replacementModeMeaning: isDowngrade
+                ? 'DEFERRED (downgrade) - Value 6'
+                : 'WITH_TIME_PRORATION (upgrade) - Value 1',
+              purchaseTokenSource: existingPurchaseToken
+                ? 'getAvailablePurchases'
+                : 'currentSubscription',
             });
           }
         }
