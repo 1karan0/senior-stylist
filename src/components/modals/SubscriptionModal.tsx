@@ -655,10 +655,13 @@ export default function SubscriptionModal({
           purchaseDate: purchase.transactionDate,
 
           // Android specific
-          purchaseToken: purchaseAny.purchaseToken || null,
+          purchaseToken: Platform.OS === 'android' ? purchaseAny.purchaseToken || null : null,
 
-          // iOS specific
-          transactionReceipt: purchaseAny.transactionReceipt || null,
+          // iOS specific - For Android, use purchaseToken as transactionReceipt since backend expects it
+          transactionReceipt:
+            Platform.OS === 'android'
+              ? purchaseAny.purchaseToken || null // Android uses purchaseToken as receipt
+              : purchaseAny.transactionReceipt || null, // iOS uses actual transactionReceipt
         };
 
         console.log('[SubscriptionModal] 📤 Purchase Data Prepared for Backend:', {
@@ -672,11 +675,18 @@ export default function SubscriptionModal({
           purchaseToken: purchaseDataForBackend.purchaseToken
             ? purchaseDataForBackend.purchaseToken.substring(0, 40) + '...'
             : 'null',
+          transactionReceipt: purchaseDataForBackend.transactionReceipt
+            ? purchaseDataForBackend.transactionReceipt.substring(0, 40) + '...'
+            : 'null',
           base_plan_id: purchaseDataForBackend.base_plan_id,
           purchaseDate: purchaseDataForBackend.purchaseDate,
           isUpgrade: backendPurchaseScenario === 'UPGRADE',
           isDowngrade: backendPurchaseScenario === 'DOWNGRADE',
           isFirstPurchase: backendPurchaseScenario === 'FIRST_TIME_PURCHASE',
+          note:
+            Platform.OS === 'android'
+              ? 'transactionReceipt set from purchaseToken (Android requirement)'
+              : 'transactionReceipt from purchase object (iOS)',
           fullPayload: JSON.stringify(purchaseDataForBackend, null, 2),
         });
 
