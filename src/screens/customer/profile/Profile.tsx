@@ -128,6 +128,58 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    try {
+      setIsCancelling(true);
+
+      // Close the modal first
+      setShowCancelModal(false);
+
+      // Initialize react-native-iap connection
+      try {
+        await initConnection();
+      } catch (err) {
+        // Connection might already be initialized, continue anyway
+        console.log('[Profile] Connection check:', err);
+      }
+
+      // Use react-native-iap's deep link to open platform subscription management
+      try {
+        await deepLinkToSubscriptions();
+        console.log('[Profile] Successfully opened subscription management');
+      } catch (error: any) {
+        console.warn('[Profile] Deep link failed, using fallback:', {
+          code: error.code,
+          message: error.message,
+        });
+
+        // Fallback to web URLs for older devices or unexpected errors
+        const url =
+          Platform.OS === 'android'
+            ? 'https://play.google.com/store/account/subscriptions'
+            : 'https://apps.apple.com/account/subscriptions';
+
+        Linking.openURL(url).catch((err) => {
+          console.error('[Profile] Fallback URL also failed:', err);
+          Alert.alert(
+            'Error',
+            `Could not open ${Platform.OS === 'android' ? 'Google Play' : 'App Store'} subscription settings. Please visit the link manually.`,
+            [{ text: 'OK' }]
+          );
+        });
+      }
+    } catch (error: any) {
+      console.error('[Profile] Cancel subscription error:', error);
+      Alert.alert(
+        'Error',
+        'Failed to open subscription management. Please try again or contact support.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   return (
     <GradientBackground>
       <View className="flex-1 pb-10 ">
@@ -325,7 +377,15 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   text="Manage Subscription"
                   variant="light"
                   onPress={handleManageSubscription}
-                  className={` bg-[#DAE7E0] rounded-[10px]`}
+                  className={` bg-[#DAE7E0] rounded-[10px] mb-3`}
+                />
+                <Button
+                  text="Cancel Subscription"
+                  variant="light"
+                  onPress={() => setShowCancelModal(true)}
+                  icon={<Ionicons name="close-circle" size={20} color="#F22D2D" />}
+                  className="bg-white border border-[#DAE7E0] rounded-[10px]"
+                  textClassName="text-error"
                 />
               </>
             ) : (
@@ -340,7 +400,15 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   text="Subscribe Now"
                   variant="light"
                   onPress={handleManageSubscription}
-                  className={` bg-[#DAE7E0] rounded-[10px]`}
+                  className={` bg-[#DAE7E0] rounded-[10px] mb-3`}
+                />
+                <Button
+                  text="Cancel Subscription"
+                  variant="light"
+                  onPress={() => setShowCancelModal(true)}
+                  icon={<Ionicons name="close-circle" size={20} color="#F22D2D" />}
+                  className="bg-white border border-[#DAE7E0] rounded-[10px]"
+                  textClassName="text-error"
                 />
               </>
             )}
@@ -525,7 +593,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       <CancelSubscriptionModal
         visible={showCancelModal}
         onClose={() => setShowCancelModal(false)}
-        onConfirm={handleManageSubscription}
+        onConfirm={handleCancelSubscription}
         isLoading={isCancelling}
       />
     </GradientBackground>
