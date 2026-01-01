@@ -88,25 +88,17 @@ const formatRelativeTime = (iso: string) => {
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'in_progress':
-      return 'bg-yellow-100 border-yellow-400';
+      return '#E7B008'; // Yellow for Open
     case 'closed':
     case 'resolved':
-      return 'bg-green-100 border-green-400';
+      return '#36D399'; // Light green for Resolved
     default:
-      return 'bg-gray-100 border-gray-400';
+      return '#E7B008';
   }
 };
 
 const getStatusTextColor = (status: string) => {
-  switch (status) {
-    case 'in_progress':
-      return 'text-yellow-700';
-    case 'closed':
-    case 'resolved':
-      return 'text-green-700';
-    default:
-      return 'text-gray-700';
-  }
+  return '#162721'; // Dark text for all status badges
 };
 
 const getStatusLabel = (status: string) => {
@@ -149,9 +141,10 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
   };
 
   const renderDisputeItem = ({ item }: { item: Dispute }) => {
-    const statusColor = getStatusColor(item.status);
+    const statusBgColor = getStatusColor(item.status);
     const statusTextColor = getStatusTextColor(item.status);
     const statusLabel = getStatusLabel(item.status);
+    const DisputeMessage = item.latest_message;
 
     // Format dispute ID like #DIS-001
     const disputeId = `#DIS-${String(item.id).padStart(3, '0')}`;
@@ -173,66 +166,92 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
     };
 
     return (
-      <View className="bg-white rounded-xl p-4 mb-3 border border-[#DAE7E0]">
+      <View
+        className={`rounded-xl p-4 mb-3 border ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white  border-[#DAE7E0]'}`}
+      >
         {/* Header Row with Dispute ID and Status */}
-        <View className="flex-row justify-between items-start mb-3">
-          <View className="flex-1">
-            <Text className="text-base font-poppins-semibold text-textDark mb-1">
-              {disputeId} Consultation Quality Issue
-            </Text>
-          </View>
-          <View className={`px-3 py-1 rounded-full border ${statusColor}`}>
-            <Text className={`text-xs font-urbanist-semibold ${statusTextColor}`}>
-              {statusLabel}
-            </Text>
+        <View>
+          <View className="flex-row justify-between items-start mb-3">
+            <View className="flex-1 mr-3">
+              <Text className="text-base font-poppins-semibold mb-1" style={{ color: '#36D399' }}>
+                {disputeId}
+              </Text>
+              <Text
+                className={`text-xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+              >
+                {DisputeMessage?.message || 'Dispute'}
+              </Text>
+              {/* Date */}
+              <Text
+                className={`text-xs font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'} mb-3`}
+              >
+                {formatDate(item.created_at)}
+              </Text>
+            </View>
+            <View className="px-3 py-1 rounded-lg" style={{ backgroundColor: statusBgColor }}>
+              <Text className="text-xs font-urbanist-semibold text-white">{statusLabel}</Text>
+            </View>
           </View>
         </View>
-
-        {/* Date */}
-        <Text className="text-xs font-urbanist-regular text-textMuted mb-3">
-          {formatDate(item.created_at)}
-        </Text>
+        <View
+          className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-2`}
+        />
 
         {/* Consultation Details */}
         <View className="mb-3">
-          <Text className="text-sm font-poppins-regular text-textDark">
+          <Text
+            className={`text-sm font-poppins-regular ${isDark ? 'text-white' : 'text-textDark'}`}
+          >
             Consultation {item.consultation_id_formatted}
           </Text>
-          <Text className="text-sm font-poppins-regular text-textDark">
+          <Text
+            className={`text-sm font-poppins-regular ${isDark ? 'text-white' : 'text-textDark'}`}
+          >
             Stylist: {item.consultant?.name || 'Unknown'}
           </Text>
         </View>
 
         {/* Update Message */}
-        <View className="flex-row items-center mb-4">
-          {item.status === 'closed' || item.status === 'resolved' ? (
-            <>
-              <Ionicons name="checkmark-circle" size={16} color="#27B07D" />
-              <Text className="text-xs font-urbanist-regular text-green-700 ml-2">
+        <View className="flex-row justify-between items-center">
+          <View className="flex-row items-center mb-4">
+            {item.status === 'closed' || item.status === 'resolved' ? (
+              <>
+                <Ionicons name="checkmark-circle" size={16} color="#36D399" />
+                <Text className="text-xs font-urbanist-semibold ml-2" style={{ color: '#36D399' }}>
+                  {getUpdateMessage()}
+                </Text>
+              </>
+            ) : (
+              <Text
+                className={`text-xs font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
+              >
                 {getUpdateMessage()}
               </Text>
-            </>
-          ) : (
-            <Text className="text-xs font-urbanist-regular text-textMuted">
-              {getUpdateMessage()}
-            </Text>
-          )}
-        </View>
-
-        {/* Footer with Logo and View Details Button */}
-        <View className="flex-row items-center justify-between">
-          {/* Logo placeholder - you can replace with actual logo */}
-          <View className="w-8 h-8 bg-buttonPrimaryBg rounded-full justify-center items-center">
-            <Text className="text-white font-urbanist-bold text-xs">S</Text>
+            )}
           </View>
 
-          <TouchableOpacity
-            onPress={() => handleViewDetails(item.id)}
-            className="bg-buttonPrimaryBg px-4 py-2 rounded-xl"
-            activeOpacity={0.7}
-          >
-            <Text className="text-white font-poppins-semibold text-sm">View Details</Text>
-          </TouchableOpacity>
+          {/* Footer with Logo and View Details Button */}
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              onPress={() => handleViewDetails(item.id)}
+              className="px-4 py-2 rounded-xl"
+              style={{ backgroundColor: '#36D399' }}
+              activeOpacity={0.7}
+            >
+              <Text className="text-white font-poppins-semibold text-sm">View Details</Text>
+            </TouchableOpacity>
+
+            {/* Logo on the right */}
+          </View>
+          <Image
+            source={
+              isDark
+                ? require('@/assets/icons/dark-logo.png')
+                : require('@/assets/icons/colored_logo.png')
+            }
+            className="w-10 h-10"
+            resizeMode="contain"
+          />
         </View>
       </View>
     );
@@ -240,10 +259,10 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
 
   return (
     <GradientBackground>
-      <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
+      <StatusBar translucent backgroundColor="#36D399" barStyle="light-content" />
 
       {/* Header */}
-      <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">
+      <View className="px-6 pt-10 pb-5 rounded-b-2xl" style={{ backgroundColor: '#36D399' }}>
         <View className="flex-row justify-between items-center mb-4">
           <View className="flex-1">
             <Text className="text-white text-2xl font-urbanist-bold mb-1">My Disputes</Text>
@@ -253,38 +272,38 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
           </View>
           <TouchableOpacity
             onPress={handleCreateDispute}
-            className="bg-yellow-300 px-4 py-2 rounded-xl"
+            className="px-4 py-2 rounded-xl"
+            style={{ backgroundColor: '#E7B008' }}
             activeOpacity={0.7}
           >
-            <Text className="text-green-700 font-poppins-semibold">+ Create Dispute</Text>
+            <Text className="text-white font-poppins-semibold">+ Create Dispute</Text>
           </TouchableOpacity>
         </View>
+      </View>
 
+      {/* Content */}
+      <View className="flex-1 px-6 pt-6 pb-5 w-full">
         {/* Filter Tabs */}
-        <View className="flex-row gap-2">
+        <View className="flex-row gap-2 justify-between w-full mb-4">
           {(['all', 'open', 'resolved'] as FilterType[]).map((filter) => (
             <TouchableOpacity
               key={filter}
               onPress={() => setActiveFilter(filter)}
-              className={`px-4 py-2 rounded-xl ${
-                activeFilter === filter ? 'bg-white' : 'bg-white/20'
-              }`}
+              className="px-4 py-2 rounded-xl flex-1"
+              style={{
+                backgroundColor:
+                  activeFilter === filter ? '#36D399' : isDark ? '#273F36' : '#F5F9F7',
+              }}
               activeOpacity={0.7}
             >
               <Text
-                className={`font-poppins-semibold text-sm ${
-                  activeFilter === filter ? 'text-buttonPrimaryBg' : 'text-white'
-                }`}
+                className={`font-poppins-semibold text-sm  text-center ${activeFilter === filter ? 'text-white' : isDark ? 'text-white' : 'text-textDark'}`}
               >
                 {filter === 'all' ? 'All' : filter === 'open' ? 'Open' : 'Resolved'}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
-      </View>
-
-      {/* Content */}
-      <View className="flex-1 px-6 pt-6 pb-5">
         {isLoading && !data ? (
           <View className="flex-1 justify-center items-center">
             <ActivityIndicator size="large" color="#27B07D" />
