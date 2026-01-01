@@ -39,6 +39,8 @@ export type ProfileStackParamList = {
   Settings: undefined;
   CreateDispute: undefined;
   SubmitDispute: { consultationId: number };
+  DisputeList: undefined;
+  DisputeDetails: { disputeId: number };
 };
 
 export type AppStackParamList = {

@@ -322,21 +322,30 @@ const SubmitDispute: React.FC<Props> = ({ navigation, route }) => {
           onRequestClose={handleSuccessModalClose}
         >
           <StatusBar translucent backgroundColor="#000000D1" barStyle="light-content" />
-          <View className="flex-1 justify-center items-center bg-black/80">
+          <View className="flex-1 justify-center items-center bg-black/80 px-6">
             <View
-              className={`${isDark ? 'bg-[#0D1A16]' : 'bg-white'} rounded-xl px-5 py-7 w-[90%]`}
+              className={`${isDark ? 'bg-[#0D1A16]' : 'bg-white'} rounded-2xl px-6 py-7 w-full`}
               style={{ position: 'relative' }}
             >
-              {/* Success Icon */}
-              <View className="items-center mb-4">
-                <View className="w-16 h-16 bg-[#27B07D]/20 rounded-full items-center justify-center mb-4">
-                  <Ionicons name="checkmark-circle" size={48} color="#27B07D" />
-                </View>
-              </View>
+              {/* Close Icon */}
+              <TouchableOpacity
+                onPress={handleSuccessModalClose}
+                activeOpacity={0.6}
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                style={{
+                  position: 'absolute',
+                  right: 16,
+                  top: 16,
+                  zIndex: 10,
+                  padding: 8,
+                }}
+              >
+                <Ionicons name="close" size={22} color={isDark ? '#fff' : '#000'} />
+              </TouchableOpacity>
 
               {/* Title */}
               <Text
-                className={`text-center text-xl font-poppins-semibold mb-3 ${
+                className={`text-start text-xl font-poppins-semibold mb-3 mt-2 pr-10 ${
                   isDark ? 'text-white' : 'text-textDark'
                 }`}
               >
@@ -345,7 +354,7 @@ const SubmitDispute: React.FC<Props> = ({ navigation, route }) => {
 
               {/* Description */}
               <Text
-                className={`text-center font-poppins-regular text-sm mb-6 ${
+                className={`text-start font-poppins-regular text-sm mb-6 ${
                   isDark ? 'text-textSecondary' : 'text-textMuted'
                 }`}
               >
@@ -353,7 +362,7 @@ const SubmitDispute: React.FC<Props> = ({ navigation, route }) => {
               </Text>
 
               {/* OK Button */}
-              <View className="w-full">
+              <View className="w-[50%]">
                 <Button
                   text="OK"
                   variant="gradient"

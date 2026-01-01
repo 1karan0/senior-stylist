@@ -14,7 +14,12 @@ export const useGetPendingReviews = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      return res.data.data;
+      console.log('[useGetPendingReviews] API response:', res.data);
+      // The API returns { data: { consultations: [...] } }
+      // Extract the consultations array
+      return res.data.data?.consultations || [];
     },
+    enabled: true, // Always enable the query
+    retry: 1, // Retry once on failure
   });
 };

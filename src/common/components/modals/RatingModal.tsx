@@ -1,8 +1,18 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, TextInput, StatusBar } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, TextInput, StatusBar, Image } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/common/components/Button';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import { getInitials } from '@/utils/consultationUtils';
+
+interface ConsultationDetails {
+  id?: number;
+  problem_description?: string;
+  completed_at?: string;
+  image_public_url?: string | null;
+  stylistName?: string;
+  stylistImageUrl?: string | null;
+}
 
 interface RatingModalProps {
   visible: boolean;
@@ -10,6 +20,8 @@ interface RatingModalProps {
   onSubmit: (rating: number, review: string) => void;
   isLoading?: boolean;
   consultantName: string;
+  consultationDetails?: ConsultationDetails | null;
+  showConsultationDetails?: boolean; // Show details when opened from ChatHome
 }
 
 const RatingModal: React.FC<RatingModalProps> = ({
@@ -18,6 +30,8 @@ const RatingModal: React.FC<RatingModalProps> = ({
   onSubmit,
   isLoading = false,
   consultantName,
+  consultationDetails,
+  showConsultationDetails = false,
 }) => {
   const { isDark } = useTheme();
   const [rating, setRating] = useState<number>(0);
@@ -62,6 +76,97 @@ const RatingModal: React.FC<RatingModalProps> = ({
           >
             Rate Your Consultation
           </Text>
+
+          {/* Stylist Info - Show when consultation details are available */}
+          {showConsultationDetails &&
+            consultationDetails &&
+            (consultationDetails.stylistName || consultationDetails.stylistImageUrl) && (
+              <View className="flex-row items-center mt-4 mb-3">
+                {consultationDetails.stylistImageUrl ? (
+                  <Image
+                    source={{ uri: consultationDetails.stylistImageUrl }}
+                    className="w-12 h-12 rounded-full mr-3"
+                  />
+                ) : (
+                  <View className="w-12 h-12 rounded-full bg-buttonPrimaryBg items-center justify-center mr-3">
+                    <Text className="text-white text-base font-semibold">
+                      {getInitials(consultationDetails.stylistName || 'Stylist')}
+                    </Text>
+                  </View>
+                )}
+                <View className="flex-1">
+                  <Text
+                    className={`text-sm font-poppins-regular mb-0.5 ${
+                      isDark ? 'text-textSecondary' : 'text-textMuted'
+                    }`}
+                  >
+                    Stylist
+                  </Text>
+                  <Text
+                    className={`text-base font-poppins-semibold ${
+                      isDark ? 'text-white' : 'text-black'
+                    }`}
+                  >
+                    {consultationDetails.stylistName || 'Stylist'}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+          {/* Consultation Details - Show when opened from ChatHome */}
+          {showConsultationDetails && consultationDetails && (
+            <View
+              className={`mt-3 mb-3 p-3 rounded-xl border ${
+                isDark ? 'bg-[#11221D] border-[#1A2E28]' : 'bg-[#F5F5F5] border-[#E0E0E0]'
+              }`}
+            >
+              <View className="flex-row items-center mb-2">
+                <Ionicons
+                  name="document-text-outline"
+                  size={16}
+                  color={isDark ? '#7F8A85' : '#A0A0A0'}
+                />
+                <Text
+                  className={`text-xs font-poppins-semibold ml-2 ${
+                    isDark ? 'text-textSecondary' : 'text-textMuted'
+                  }`}
+                >
+                  Consultation Details
+                </Text>
+              </View>
+              {consultationDetails.problem_description && (
+                <Text
+                  className={`text-sm font-poppins-regular mb-2 ${
+                    isDark ? 'text-white' : 'text-textDark'
+                  }`}
+                  numberOfLines={3}
+                >
+                  {consultationDetails.problem_description}
+                </Text>
+              )}
+              {consultationDetails.completed_at && (
+                <View className="flex-row items-center mt-1">
+                  <Ionicons
+                    name="calendar-outline"
+                    size={12}
+                    color={isDark ? '#7F8A85' : '#A0A0A0'}
+                  />
+                  <Text
+                    className={`text-xs font-poppins-regular ml-1 ${
+                      isDark ? 'text-textSecondary' : 'text-textMuted'
+                    }`}
+                  >
+                    Completed:{' '}
+                    {new Date(consultationDetails.completed_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Subtitle */}
           <Text
