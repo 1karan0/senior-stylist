@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, Pressable, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -145,6 +146,7 @@ export default function PricingScreen() {
       return planDisplay;
     });
 
+    // Return only API plans (no hardcoded plans)
     return mappedPlans;
   }, [subscriptionPlans]);
 
@@ -215,285 +217,261 @@ export default function PricingScreen() {
   }, [plans, currentSubscription, storedSubscription]);
 
   return (
-    <GradientBackground>
+    <LinearGradient
+      colors={['#ECFAF5', '#D1F6E7']} // pick your exact light-green gradient shades
+      start={{ x: 0, y: 0 }}
+      end={{ x: 2, y: 4 }}
+      className="flex-1"
+    >
       <ScrollView
-        showsVerticalScrollIndicator={false}
+        className="flex-1 px-6"
         contentContainerStyle={{ paddingBottom: 20 }}
-        className="flex-1 px-5 py-6"
+        showsVerticalScrollIndicator={false}
       >
-        <View className="">
-          {/* HEADER */}
-          <View className="pt-6 items-center">
-            <Text
-              className={`text-[24px] font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
-            >
-              Choose Your Plan
-            </Text>
-            <Text
-              className={`text-center text-textMuted mt-2 font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-            >
-              Select a subscription to get started with expert{'\n'}consultations
+        {/* HEADER */}
+        <View className="pt-6 items-center">
+          <Text className="text-[24px] font-bold text-textDark">Choose Your Plan</Text>
+          <Text className="text-center text-textMuted mt-2">
+            Select a subscription to get started with expert{'\n'}consultations
+          </Text>
+        </View>
+
+        {/* OFFER BADGE */}
+        <View className="mt-3 items-center">
+          <View className="bg-commonGradientStop10 rounded-xl py-2 px-4 w-60">
+            <Text className="text-center text-base font-urbanist-bold text-white">
+              50% OFF - First 6 Months
             </Text>
           </View>
+          <Text
+            className={`text-sm text-textMuted mt-2 font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+          >
+            Minimum 1 year subscription
+          </Text>
+        </View>
 
-          {/* OFFER BADGE */}
-          <View className="mt-3 items-center">
-            <View className="bg-commonGradientStop10 rounded-xl py-2 px-4 w-60">
-              <Text className="text-center text-base font-urbanist-bold text-white">
-                50% OFF - First 6 Months
+        {/* PLANS */}
+        <View className="mt-8 flex flex-col gap-4">
+          {isLoading ? (
+            <View className="items-center justify-center py-8">
+              <ActivityIndicator size="large" color="#23A76F" />
+              <Text className="text-textMuted mt-4">Loading plans...</Text>
+            </View>
+          ) : error ? (
+            <View className="items-center justify-center py-8">
+              <Text className="text-red-500 text-center">
+                Failed to load subscription plans. Please try again.
               </Text>
             </View>
-            <Text
-              className={`text-sm text-textMuted mt-2 font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-            >
-              Minimum 1 year subscription
-            </Text>
-          </View>
+          ) : plans.length === 0 ? (
+            <View className="items-center justify-center py-8">
+              <Text className="text-textMuted text-center">No subscription plans available.</Text>
+            </View>
+          ) : (
+            plans.map((item) => {
+              const active = selectedPlan?.key === item.key;
+              // Check if this plan is the user's active subscription (from API or storage)
+              // Priority: API subscription > Storage subscription
+              const isCurrentPlan =
+                (currentSubscription?.status === 'active' &&
+                  currentSubscription.plan_id === item.originalPlan.id) ||
+                (storedSubscription?.status === 'active' &&
+                  storedSubscription.planId === item.originalPlan.id);
 
-          {/* PLANS */}
-          <View className="mt-8 flex flex-col gap-4">
-            {isLoading ? (
-              <View className="items-center justify-center py-8">
-                <ActivityIndicator size="large" color="#23A76F" />
-                <Text className="text-textMuted mt-4">Loading plans...</Text>
-              </View>
-            ) : error ? (
-              <View className="items-center justify-center py-8">
-                <Text className="text-red-500 text-center">
-                  Failed to load subscription plans. Please try again.
-                </Text>
-              </View>
-            ) : plans.length === 0 ? (
-              <View className="items-center justify-center py-8">
-                <Text className="text-textMuted text-center">No subscription plans available.</Text>
-              </View>
-            ) : (
-              plans.map((item) => {
-                const active = selectedPlan?.key === item.key;
-                // Check if this plan is the user's active subscription (from API or storage)
-                // Priority: API subscription > Storage subscription
-                const isCurrentPlan =
-                  (currentSubscription?.status === 'active' &&
-                    currentSubscription.plan_id === item.originalPlan.id) ||
-                  (storedSubscription?.status === 'active' &&
-                    storedSubscription.planId === item.originalPlan.id);
+              return (
+                <Pressable
+                  key={item.key}
+                  onPress={() => setSelectedPlan(item)}
+                  className={`rounded-md border-2 px-4 py-4 ${
+                    active ? 'border-[#27B07D]' : isDark ? 'border-[#273F36]' : 'border-[#DAE7E0]'
+                  } ${isDark ? 'bg-[#1A2E26]' : 'bg-white'} ${isCurrentPlan ? 'bg-commonGradientStop1' : ''}`}
+                >
+                  <View className="flex-row items-center gap-3">
+                    {/* Radio Button */}
+                    <View
+                      className={`w-5 h-5 rounded-full border border-[#23A76F] items-center justify-center`}
+                    >
+                      {active && <View className="w-3 h-3 rounded-full bg-commonGradientStop1" />}
+                    </View>
 
-                return (
-                  <Pressable
-                    key={item.key}
-                    onPress={() => setSelectedPlan(item)}
-                    className={`rounded-md border-2 px-4 py-4 ${
-                      active ? 'border-[#27B07D]' : isDark ? 'border-[#273F36]' : 'border-[#DAE7E0]'
-                    } ${isDark ? 'bg-[#1A2E26]' : 'bg-white'} ${isCurrentPlan ? 'bg-commonGradientStop1' : ''}`}
-                  >
-                    <View className="flex-row items-center gap-3">
-                      {/* Radio Button */}
-                      <View
-                        className={`w-5 h-5 rounded-full border border-[#23A76F] items-center justify-center`}
-                      >
-                        {active && <View className="w-3 h-3 rounded-full bg-commonGradientStop1" />}
-                      </View>
-
-                      <View className="flex-1">
-                        <View className="flex-row items-center gap-2">
-                          <Text
-                            className={`font-poppins-medium text-lg ${isDark ? 'text-white' : 'text-textDark'}`}
-                          >
-                            {item.title}
-                          </Text>
-                          {isCurrentPlan && (
-                            <View className="bg-[#23A76F] px-2.5 py-1 rounded-full">
-                              <Text
-                                className={`text-xs font-bold ${isDark ? 'text-white' : 'text-textDark'}`}
-                              >
-                                Current
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-
-                        {/* Price with consultations: "£6/Monthly - 4 consultations" */}
-                        <View className="flex-row items-center justify-between mt-1">
-                          <View className="flex-row items-center flex-1">
+                    <View className="flex-1">
+                      <View className="flex-row items-center gap-2">
+                        <Text
+                          className={`font-poppins-medium text-lg ${isDark ? 'text-white' : 'text-textDark'}`}
+                        >
+                          {item.title}
+                        </Text>
+                        {isCurrentPlan && (
+                          <View className="bg-[#23A76F] px-2.5 py-1 rounded-full">
                             <Text
-                              className={`font-poppins-semibold text-[22px] ${isDark ? 'text-white' : 'text-textDark'}`}
+                              className={`text-xs font-bold ${isDark ? 'text-white' : 'text-textDark'}`}
                             >
-                              {item?.price}
-                            </Text>
-                            <Text
-                              className={`font-poppins-regular text-[15px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-                            >
-                              /
-                            </Text>
-                            <Text
-                              className={`font-poppins-regular text-[15px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-                            >
-                              Monthly
-                            </Text>
-                            <Text
-                              className={`font-poppins-regular text-[15px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-                            >
-                              {`- ${item.consulationPerMonth} consultations`}
+                              Current
                             </Text>
                           </View>
-                          {/* Arrow Icon inside the box, aligned to the right */}
-                          <Ionicons
-                            name="chevron-forward"
-                            size={20}
-                            color={isDark ? '#8AA897' : '#94A3B8'}
-                          />
-                        </View>
-
-                        {/* Description: "Then £12/month after 6 months" */}
-                        <Text
-                          className={`text-[13px] font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-                        >
-                          {item.desc}
-                        </Text>
+                        )}
                       </View>
-                    </View>
-                  </Pressable>
-                );
-              })
-            )}
-          </View>
 
-          {/* Current Subscription Info */}
-          {(currentSubscription?.status === 'active' ||
-            storedSubscription?.status === 'active') && (
-            <View
-              className={`mt-6 p-4 rounded-lg border ${isDark ? 'bg-commonGradientStop1 border-commonGradientStop7' : 'bg-blue-50 border-blue-200'}`}
-            >
-              <View className="flex-row items-center mb-1">
-                <Ionicons
-                  name="information-circle"
-                  size={20}
-                  color={isDark ? '#23A76F' : '#2563EB'}
-                  className="mr-2"
-                />
-                <Text className={`font-semibold ${isDark ? 'text-white' : 'text-blue-800'}`}>
-                  Active Subscription
-                </Text>
-              </View>
-              <Text className={`text-sm mt-1 ${isDark ? 'text-white' : 'text-blue-700'}`}>
-                You have an active{' '}
-                {currentSubscription?.plan?.name || storedSubscription?.planName || 'subscription'}.
-                {currentSubscription?.plan_id !== selectedPlan?.originalPlan.id &&
-                storedSubscription?.planId !== selectedPlan?.originalPlan.id
-                  ? ' Select a different plan to switch your subscription.'
-                  : ' This is your current plan.'}
+                      {/* Price with consultations: "£6/Monthly - 4 consultations" */}
+                      <View className="flex-row items-center justify-between mt-1">
+                        <View className="flex-row items-center flex-1">
+                          <Text
+                            className={`font-poppins-semibold text-[22px] ${isDark ? 'text-white' : 'text-textDark'}`}
+                          >
+                            {item?.price}
+                          </Text>
+                          <Text
+                            className={`font-poppins-regular text-[15px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                          >
+                            /
+                          </Text>
+                          <Text
+                            className={`font-poppins-regular text-[15px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                          >
+                            Monthly
+                          </Text>
+                          <Text
+                            className={`font-poppins-regular text-[15px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                          >
+                            {`- ${item.consulationPerMonth} consultations`}
+                          </Text>
+                        </View>
+                        {/* Arrow Icon inside the box, aligned to the right */}
+                        <Ionicons
+                          name="chevron-forward"
+                          size={20}
+                          color={isDark ? '#8AA897' : '#94A3B8'}
+                        />
+                      </View>
+
+                      {/* Description: "Then £12/month after 6 months" */}
+                      <Text
+                        className={`text-[13px] font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                      >
+                        {item.desc}
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })
+          )}
+        </View>
+
+        {/* Current Subscription Info */}
+        {(currentSubscription?.status === 'active' || storedSubscription?.status === 'active') && (
+          <View
+            className={`mt-6 p-4 rounded-lg border ${isDark ? 'bg-commonGradientStop1 border-commonGradientStop7' : 'bg-blue-50 border-blue-200'}`}
+          >
+            <View className="flex-row items-center mb-1">
+              <Ionicons
+                name="information-circle"
+                size={20}
+                color={isDark ? '#23A76F' : '#2563EB'}
+                className="mr-2"
+              />
+              <Text className={`font-semibold ${isDark ? 'text-white' : 'text-blue-800'}`}>
+                Active Subscription
               </Text>
             </View>
-          )}
-
-          {/* BUTTON */}
-          {(() => {
-            // Determine button state and text
-            const activePlanId =
-              currentSubscription?.status === 'active'
-                ? currentSubscription.plan_id
-                : storedSubscription?.status === 'active'
-                  ? storedSubscription.planId
-                  : null;
-
-            const isCurrentPlan = activePlanId === selectedPlan?.originalPlan.id;
-            const hasActiveSubscription = !!activePlanId;
-
-            // Find current plan's sort order for comparison
-            const currentPlanIndex = hasActiveSubscription
-              ? plans.findIndex((p) => p.originalPlan.id === activePlanId)
-              : -1;
-            const selectedPlanIndex = selectedPlan
-              ? plans.findIndex((p) => p.originalPlan.id === selectedPlan.originalPlan.id)
-              : -1;
-
-            // Determine if upgrade or downgrade based on sort_order
-            // Plans are sorted by sort_order, so higher index = higher tier plan
-            // Upgrade: selected plan has higher index (higher tier)
-            // Downgrade: selected plan has lower index (lower tier)
-            const isUpgrade =
-              hasActiveSubscription &&
-              currentPlanIndex >= 0 &&
-              selectedPlanIndex >= 0 &&
-              selectedPlanIndex > currentPlanIndex;
-            const isDowngrade =
-              hasActiveSubscription &&
-              currentPlanIndex >= 0 &&
-              selectedPlanIndex >= 0 &&
-              selectedPlanIndex < currentPlanIndex;
-
-            let buttonText = 'Continue to Payment';
-            if (isCurrentPlan) {
-              buttonText = 'Current Plan';
-            } else if (isUpgrade) {
-              buttonText = 'Upgrade';
-            } else if (isDowngrade) {
-              buttonText = 'Downgrade';
-            } else if (hasActiveSubscription) {
-              buttonText = 'Switch Plan';
-            }
-
-            return (
-              <Button
-                text={buttonText}
-                onPress={() => {
-                  if (!selectedPlan) {
-                    Alert.alert('No Plan Selected', 'Please select a subscription plan first.');
-                    return;
-                  }
-                  setSubscriptionModal(true);
-                }}
-                variant="gradient"
-                disabled={isLoadingSubscription || isCurrentPlan}
-                loading={isLoadingSubscription}
-                className="mt-10 rounded-xl"
-                textClassName="text-[16px]"
-              />
-            );
-          })()}
-
-          {/* SKIP */}
-          <Pressable
-            className="mt-4"
-            onPress={() => {
-              // If from Profile, navigate back to Profile
-              if (fromProfile) {
-                try {
-                  (navigation as any).navigate('UserTabs', {
-                    screen: 'ProfileTab',
-                    params: {
-                      screen: 'Profile',
-                    },
-                  });
-                } catch (err) {
-                  console.error('[Pricing] Navigation to Profile error:', err);
-                }
-                return;
-              }
-
-              // Otherwise, navigate to ConsultationTab (from signup flow)
-              const userRole = user?.role;
-
-              if (userRole === 'consultant') {
-                // Navigate to ConsultantTabs and then to ChatTab (consultant's consultation equivalent)
-                (navigation as any).navigate('ConsultantTabs', {
-                  screen: 'ChatTab',
-                });
-              } else {
-                // Navigate to UserTabs and then to ConsultationTab
-                (navigation as any).navigate('UserTabs', {
-                  screen: 'ConsultationTab',
-                });
-              }
-            }}
-          >
-            <Text
-              className={`text-center font-poppins-medium text-base ${isDark ? 'text-white' : 'text-textDark'}`}
-            >
-              Skip
+            <Text className={`text-sm mt-1 ${isDark ? 'text-white' : 'text-blue-700'}`}>
+              You have an active{' '}
+              {currentSubscription?.plan?.name || storedSubscription?.planName || 'subscription'}.
+              {currentSubscription?.plan_id !== selectedPlan?.originalPlan.id &&
+              storedSubscription?.planId !== selectedPlan?.originalPlan.id
+                ? ' Select a different plan to switch your subscription.'
+                : ' This is your current plan.'}
             </Text>
-          </Pressable>
-        </View>
+          </View>
+        )}
+
+        {/* BUTTON */}
+        {(() => {
+          // Determine button state and text
+          const activePlanId =
+            currentSubscription?.status === 'active'
+              ? currentSubscription.plan_id
+              : storedSubscription?.status === 'active'
+                ? storedSubscription.planId
+                : null;
+
+          const isCurrentPlan = activePlanId === selectedPlan?.originalPlan.id;
+          const hasActiveSubscription = !!activePlanId;
+
+          // Find current plan's sort order for comparison
+          const currentPlanIndex = hasActiveSubscription
+            ? plans.findIndex((p) => p.originalPlan.id === activePlanId)
+            : -1;
+          const selectedPlanIndex = selectedPlan
+            ? plans.findIndex((p) => p.originalPlan.id === selectedPlan.originalPlan.id)
+            : -1;
+
+          // Determine if upgrade or downgrade based on sort_order
+          // Plans are sorted by sort_order, so higher index = higher tier plan
+          // Upgrade: selected plan has higher index (higher tier)
+          // Downgrade: selected plan has lower index (lower tier)
+          const isUpgrade =
+            hasActiveSubscription &&
+            currentPlanIndex >= 0 &&
+            selectedPlanIndex >= 0 &&
+            selectedPlanIndex > currentPlanIndex;
+          const isDowngrade =
+            hasActiveSubscription &&
+            currentPlanIndex >= 0 &&
+            selectedPlanIndex >= 0 &&
+            selectedPlanIndex < currentPlanIndex;
+
+          let buttonText = 'Continue to Payment';
+          if (isCurrentPlan) {
+            buttonText = 'Current Plan';
+          } else if (isUpgrade) {
+            buttonText = 'Upgrade';
+          } else if (isDowngrade) {
+            buttonText = 'Downgrade';
+          } else if (hasActiveSubscription) {
+            buttonText = 'Switch Plan';
+          }
+
+          return (
+            <Button
+              text={buttonText}
+              onPress={() => {
+                if (!selectedPlan) {
+                  Alert.alert('No Plan Selected', 'Please select a subscription plan first.');
+                  return;
+                }
+                setSubscriptionModal(true);
+              }}
+              variant="gradient"
+              disabled={isLoadingSubscription || isCurrentPlan}
+              loading={isLoadingSubscription}
+              className="mt-10 rounded-xl"
+              textClassName="text-[16px]"
+            />
+          );
+        })()}
+
+        {/* SKIP */}
+        <Pressable
+          className="mt-4 mb-6"
+          onPress={() => {
+            const userRole = user?.role;
+
+            if (userRole === 'consultant') {
+              // Navigate to ConsultantTabs and then to ChatTab (consultant's consultation equivalent)
+              (navigation as any).navigate('ConsultantTabs', {
+                screen: 'ChatTab',
+              });
+            } else {
+              // Navigate to UserTabs and then to ConsultationTab
+              (navigation as any).navigate('UserTabs', {
+                screen: 'ConsultationTab',
+              });
+            }
+          }}
+        >
+          <Text className="text-center text-textDark font-bold text-base">Skip</Text>
+        </Pressable>
       </ScrollView>
       {subscriptionModal && (
         <SubscriptionModal
@@ -556,6 +534,6 @@ export default function PricingScreen() {
           fromProfile={fromProfile}
         />
       )}
-    </GradientBackground>
+    </LinearGradient>
   );
 }

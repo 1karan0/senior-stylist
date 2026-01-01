@@ -154,8 +154,17 @@ dependencies {
     implementation 'androidx.activity:activity:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
-    // ADD THIS LINE FOR GOOGLE PLAY BILLING
-    implementation 'com.android.billingclient:billing:5.0.0'
+      // ===== BILLING LIBRARY 8.x (Latest as of 2025) =====
+    implementation "com.android.billingclient:billing:8.0.0"
+    implementation "com.android.billingclient:billing-ktx:8.0.0"
+    
+    // Required AndroidX dependencies
+    implementation "androidx.core:core-ktx:1.13.1"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    
+    // React Native IAP - v14.5.0+ supports Billing Library 8.0
+    implementation project(':react-native-iap')
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

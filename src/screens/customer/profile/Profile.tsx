@@ -1,12 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, Animated, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Animated,
+  Platform,
+  Alert,
+  Linking,
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { deepLinkToSubscriptions, initConnection } from 'react-native-iap';
 
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
+import { CancelSubscriptionModal } from '@/common/components/modals/CancelSubscriptionModal';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -25,6 +38,8 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const { paddingBottom } = useTabBarSafePadding();
 
   const [isCopied, setIsCopied] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const scaleAnim = useState(new Animated.Value(1))[0];
   const fadeAnim = useState(new Animated.Value(0))[0];
 
@@ -504,6 +519,12 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           </View>
         </ScrollView>
       </View>
+      <CancelSubscriptionModal
+        visible={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleManageSubscription}
+        isLoading={isCancelling}
+      />
     </GradientBackground>
   );
 };
