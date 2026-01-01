@@ -12,6 +12,8 @@ const STORAGE_KEYS = {
   USER_SUBSCRIPTION: 'user_subscription',
   // new signup flag (to show Pricing screen only for new registrations)
   IS_NEW_SIGNUP: 'is_new_signup',
+  // dismissed review modals tracking
+  DISMISSED_REVIEW_MODALS: 'dismissed_review_modals',
 };
 
 export const storage = {
@@ -92,6 +94,37 @@ export const storage = {
 
   removeIsNewSignup: async (): Promise<void> => {
     await AsyncStorage.removeItem(STORAGE_KEYS.IS_NEW_SIGNUP);
+  },
+
+  // dismissed review modals tracking (to reopen after app restart)
+  getDismissedReviewModals: async (): Promise<string[]> => {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.DISMISSED_REVIEW_MODALS);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setDismissedReviewModals: async (consultationIds: string[]): Promise<void> => {
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.DISMISSED_REVIEW_MODALS,
+      JSON.stringify(consultationIds)
+    );
+  },
+
+  addDismissedReviewModal: async (consultationId: string): Promise<void> => {
+    const dismissed = await storage.getDismissedReviewModals();
+    if (!dismissed.includes(consultationId)) {
+      dismissed.push(consultationId);
+      await storage.setDismissedReviewModals(dismissed);
+    }
+  },
+
+  removeDismissedReviewModal: async (consultationId: string): Promise<void> => {
+    const dismissed = await storage.getDismissedReviewModals();
+    const filtered = dismissed.filter((id) => id !== consultationId);
+    await storage.setDismissedReviewModals(filtered);
+  },
+
+  clearDismissedReviewModals: async (): Promise<void> => {
+    await AsyncStorage.removeItem(STORAGE_KEYS.DISMISSED_REVIEW_MODALS);
   },
 
   // clear all auth data (logout)

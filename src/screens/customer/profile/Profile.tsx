@@ -36,6 +36,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const { logout } = useAuth();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
+  console.log('profileData', profileData);
 
   const [isCopied, setIsCopied] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -466,7 +467,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           >
             <TouchableOpacity
               className="flex-row gap-2"
-              onPress={() => navigation.navigate('CreateDispute')}
+              onPress={() => navigation.navigate('DisputeList')}
             >
               <Image
                 source={
