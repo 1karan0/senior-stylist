@@ -77,13 +77,6 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
   const messages: DisputeMessage[] =
     data?.data?.messages || dispute?.messages || dispute?.data?.messages || [];
 
-  // Debug logging (remove in production)
-  if (__DEV__ && data) {
-    console.log('Dispute Details API Response:', JSON.stringify(data, null, 2));
-    console.log('Extracted Dispute:', dispute);
-    console.log('Extracted Messages:', messages);
-  }
-
   useEffect(() => {
     // Scroll to bottom when new messages arrive
     if (messages.length > 0 && scrollViewRef.current) {
@@ -121,46 +114,35 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
     if (isDark) {
       switch (status) {
         case 'in_progress':
-          return 'bg-yellow-500/20 border-yellow-500/50';
+          return 'bg-[#FFF3CD] ';
         case 'closed':
         case 'resolved':
-          return 'bg-green-500/20 border-green-500/50';
+          return 'bg-[#D4EDDA]';
         default:
-          return 'bg-gray-500/20 border-gray-500/50';
+          return 'bg-[#E7B008]';
       }
     }
     switch (status) {
       case 'in_progress':
-        return 'bg-yellow-100 border-yellow-400';
+        return 'bg-[#FFF3CD]';
       case 'closed':
       case 'resolved':
-        return 'bg-green-100 border-green-400';
+        return 'bg-[#D4EDDA]';
       default:
-        return 'bg-gray-100 border-gray-400';
+        return 'bg-[#E7B008]';
     }
   };
 
   const getStatusTextColor = (status: string) => {
-    if (isDark) {
-      switch (status) {
-        case 'in_progress':
-          return 'text-yellow-400';
-        case 'closed':
-        case 'resolved':
-          return 'text-green-400';
-        default:
-          return 'text-gray-400';
-      }
-    }
     switch (status) {
       case 'in_progress':
-        return 'text-yellow-700';
+        return '#856404'; // Yellow for Open
       case 'closed':
       case 'resolved':
-        return 'text-green-700';
+        return '#155724'; // Light green for Resolved
       default:
-        return 'text-gray-700';
-    }
+        return '#FFC107';
+    } // Dark text for all status badges
   };
 
   const getStatusLabel = (status: string) => {
@@ -232,9 +214,9 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
           </View>
           <View className="flex-row items-center">
             <Text className="text-white text-sm font-poppins-regular mr-2">
-              {disputeIdFormatted}
+              {dispute.consultation?.consultation_id_formatted}
             </Text>
-            <View className={`px-3 py-1 rounded-full border ${getStatusColor(dispute.status)}`}>
+            <View className={`px-3 py-1 rounded-full  ${getStatusColor(dispute.status)}`}>
               <Text
                 className={`text-xs font-urbanist-semibold ${getStatusTextColor(dispute.status)}`}
               >
@@ -271,9 +253,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
                   isDark ? 'text-white' : 'text-textDark'
                 }`}
               >
-                Consultation ID{' '}
-                {dispute.consultation_id_formatted ||
-                  (dispute.consultation_id ? `#CONS-${dispute.consultation_id}` : 'N/A')}
+                Consultation ID {dispute.consultation?.consultation_id_formatted}
               </Text>
               <Text
                 className={`text-sm font-poppins-regular mb-2 ${
@@ -293,13 +273,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
           </View>
 
           {/* Conversation Section */}
-          <View
-            className={`rounded-xl p-4 mb-4 border ${
-              isDark
-                ? 'bg-commonGradientStop6 border-commonGradientStop7'
-                : 'bg-white border-[#DAE7E0]'
-            }`}
-          >
+          <View className={`rounded-xl p-4 mb-4 `}>
             <Text
               className={`text-base font-poppins-semibold mb-4 ${
                 isDark ? 'text-white' : 'text-textDark'
@@ -320,43 +294,34 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
               <View>
                 {messages.map((msg) => {
                   const isUser = msg.user_type === 'customer' || msg.user_id === user?.id;
-                  const { date, time } = formatDateTime(msg.created_at);
-                  const displayName = isUser ? 'You' : msg.user_name || 'Admin';
+                  const { time } = formatDateTime(msg.created_at);
 
                   return (
-                    <View key={msg.id} className="mb-4">
-                      <Text
-                        className={`text-xs font-poppins-semibold mb-1 ${
-                          isUser ? 'text-buttonPrimaryBg' : isDark ? 'text-white' : 'text-textDark'
-                        }`}
-                      >
-                        {displayName}
-                      </Text>
-                      <Text
-                        className={`text-xs font-urbanist-regular mb-2 ${
-                          isDark ? 'text-textSecondary' : 'text-textMuted'
-                        }`}
-                      >
-                        {date}, {time}
-                      </Text>
+                    <View
+                      key={msg.id}
+                      className={`my-1 px-4 ${isUser ? 'items-end' : 'items-start'}`}
+                    >
                       <View
-                        className={`rounded-lg p-3 ${
+                        className={`max-w-[75%] p-3 rounded-2xl ${
                           isUser
-                            ? isDark
-                              ? 'bg-buttonPrimaryBg/20'
-                              : 'bg-buttonPrimaryBg/10'
-                            : isDark
-                              ? 'bg-commonGradientStop7/50'
-                              : 'bg-[#F5F9F7]'
+                            ? `bg-commonGradientStop2 ${isDark ? 'border-commonGradientStop5' : 'border-[#DAE7E0]'} border rounded-br-sm`
+                            : `${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} border rounded-bl-sm`
                         }`}
                       >
                         <Text
-                          className={`text-sm font-poppins-regular ${
-                            isDark ? 'text-white' : 'text-textDark'
+                          className={`text-base leading-5 ${
+                            isUser ? `text-white` : `${isDark ? 'text-white' : 'text-[#1C1C1C]'}`
                           }`}
                         >
                           {msg.message}
                         </Text>
+                        <View className="flex-row items-center mt-1 gap-1">
+                          <Text
+                            className={`text-[10px] ${isUser ? 'text-white/70' : 'text-[#8E8E93]'}`}
+                          >
+                            {time}
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   );

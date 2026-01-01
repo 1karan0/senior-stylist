@@ -30,12 +30,18 @@ interface Dispute {
   id: number;
   status: string;
   consultation_id: number;
-  consultation_id_formatted: string;
+  consultation_id_formatted?: string; // May be at root level
   created_at: string;
   consultant: {
     id: number;
     name: string;
     profile_picture_url: string | null;
+  };
+  consultation?: {
+    id: number;
+    consultation_id_formatted: string;
+    problem_description?: string;
+    completed_at?: string;
   };
   message_count: number;
   latest_message: {
@@ -88,17 +94,25 @@ const formatRelativeTime = (iso: string) => {
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'in_progress':
-      return '#E7B008'; // Yellow for Open
+      return '#FFF3CD'; // Yellow for Open
     case 'closed':
     case 'resolved':
-      return '#36D399'; // Light green for Resolved
+      return '#D4EDDA'; // Light green for Resolved
     default:
       return '#E7B008';
   }
 };
 
 const getStatusTextColor = (status: string) => {
-  return '#162721'; // Dark text for all status badges
+  switch (status) {
+    case 'in_progress':
+      return '#856404'; // Yellow for Open
+    case 'closed':
+    case 'resolved':
+      return '#155724'; // Light green for Resolved
+    default:
+      return '#FFC107';
+  } // Dark text for all status badges
 };
 
 const getStatusLabel = (status: string) => {
@@ -146,8 +160,11 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
     const statusLabel = getStatusLabel(item.status);
     const DisputeMessage = item.latest_message;
 
-    // Format dispute ID like #DIS-001
-    const disputeId = `#DIS-${String(item.id).padStart(3, '0')}`;
+    // Get consultation_id_formatted from nested consultation object or root level
+    const consultationIdFormatted =
+      item.consultation?.consultation_id_formatted ||
+      item.consultation_id_formatted ||
+      `#CONS-${item.consultation_id}`;
 
     // Get update message
     const getUpdateMessage = () => {
@@ -173,23 +190,25 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
         <View>
           <View className="flex-row justify-between items-start mb-3">
             <View className="flex-1 mr-3">
-              <Text className="text-base font-poppins-semibold mb-1" style={{ color: '#36D399' }}>
-                {disputeId}
+              <Text className="text-sm font-poppins-semibold mb-1" style={{ color: '#36D399' }}>
+                {consultationIdFormatted}
               </Text>
               <Text
-                className={`text-xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+                className={`text-base font-poppins-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
               >
                 {DisputeMessage?.message || 'Dispute'}
               </Text>
               {/* Date */}
               <Text
-                className={`text-xs font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'} mb-3`}
+                className={`text-xs font-urbanist-semibold ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} mb-3`}
               >
                 {formatDate(item.created_at)}
               </Text>
             </View>
-            <View className="px-3 py-1 rounded-lg" style={{ backgroundColor: statusBgColor }}>
-              <Text className="text-xs font-urbanist-semibold text-white">{statusLabel}</Text>
+            <View className="px-3 py-1 rounded-[10px]" style={{ backgroundColor: statusBgColor }}>
+              <Text className="text-xs font-urbanist-semibold " style={{ color: statusTextColor }}>
+                {statusLabel}
+              </Text>
             </View>
           </View>
         </View>
@@ -198,60 +217,57 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
         />
 
         {/* Consultation Details */}
-        <View className="mb-3">
-          <Text
-            className={`text-sm font-poppins-regular ${isDark ? 'text-white' : 'text-textDark'}`}
-          >
-            Consultation {item.consultation_id_formatted}
-          </Text>
-          <Text
-            className={`text-sm font-poppins-regular ${isDark ? 'text-white' : 'text-textDark'}`}
-          >
-            Stylist: {item.consultant?.name || 'Unknown'}
-          </Text>
-        </View>
 
         {/* Update Message */}
-        <View className="flex-row justify-between items-center">
-          <View className="flex-row items-center mb-4">
+        <View className="flex-row justify-between ">
+          <View className="">
+            <Text
+              className={`text-xs font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+            >
+              Consultation {consultationIdFormatted}
+            </Text>
+            <Text
+              className={`text-xs font-poppins-regular mb-2 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+            >
+              Stylist: {item.consultant?.name || 'Unknown'}
+            </Text>
             {item.status === 'closed' || item.status === 'resolved' ? (
-              <>
+              <View className="flex-row items-center mb-2">
                 <Ionicons name="checkmark-circle" size={16} color="#36D399" />
                 <Text className="text-xs font-urbanist-semibold ml-2" style={{ color: '#36D399' }}>
                   {getUpdateMessage()}
                 </Text>
-              </>
+              </View>
             ) : (
               <Text
-                className={`text-xs font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
+                className={`text-xs font-urbanist-semibold mb-2 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
               >
                 {getUpdateMessage()}
               </Text>
             )}
+            <View className="flex-row justify-start">
+              <TouchableOpacity
+                onPress={() => handleViewDetails(item.id)}
+                className="px-4 py-2 rounded-[10px]"
+                style={{ backgroundColor: '#36D399' }}
+                activeOpacity={0.7}
+              >
+                <Text className="text-white font-urbanist-bold text-xs">View Details</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          {/* Footer with Logo and View Details Button */}
-          <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-              onPress={() => handleViewDetails(item.id)}
-              className="px-4 py-2 rounded-xl"
-              style={{ backgroundColor: '#36D399' }}
-              activeOpacity={0.7}
-            >
-              <Text className="text-white font-poppins-semibold text-sm">View Details</Text>
-            </TouchableOpacity>
-
-            {/* Logo on the right */}
+          <View className="">
+            <Image
+              source={
+                isDark
+                  ? require('@/assets/icons/dark-logo.png')
+                  : require('@/assets/icons/colored_logo.png')
+              }
+              className="w-10 h-10"
+              resizeMode="contain"
+            />
           </View>
-          <Image
-            source={
-              isDark
-                ? require('@/assets/icons/dark-logo.png')
-                : require('@/assets/icons/colored_logo.png')
-            }
-            className="w-10 h-10"
-            resizeMode="contain"
-          />
         </View>
       </View>
     );
@@ -259,25 +275,25 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
 
   return (
     <GradientBackground>
-      <StatusBar translucent backgroundColor="#36D399" barStyle="light-content" />
+      <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
 
       {/* Header */}
-      <View className="px-6 pt-10 pb-5 rounded-b-2xl" style={{ backgroundColor: '#36D399' }}>
-        <View className="flex-row justify-between items-center mb-4">
-          <View className="flex-1">
-            <Text className="text-white text-2xl font-urbanist-bold mb-1">My Disputes</Text>
-            <Text className="text-white font-poppins-regular opacity-90">
-              View and manage your disputes
-            </Text>
+      <View className="px-6 pt-10 pb-5 rounded-b-2xl" style={{ backgroundColor: '#27B07D' }}>
+        <View className="">
+          <View className="flex-row justify-between items-center mb-2">
+            <View className="flex-1">
+              <Text className="text-white text-2xl font-urbanist-bold mb-1">My Disputes</Text>
+            </View>
+            <TouchableOpacity
+              onPress={handleCreateDispute}
+              className="px-2 py-1 rounded-full"
+              style={{ backgroundColor: '#E7B008' }}
+              activeOpacity={0.7}
+            >
+              <Text className="text-white font-poppins-semibold">+ Create Dispute</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={handleCreateDispute}
-            className="px-4 py-2 rounded-xl"
-            style={{ backgroundColor: '#E7B008' }}
-            activeOpacity={0.7}
-          >
-            <Text className="text-white font-poppins-semibold">+ Create Dispute</Text>
-          </TouchableOpacity>
+          <Text className="text-white font-poppins-regular ">View and manage your disputes</Text>
         </View>
       </View>
 
@@ -289,10 +305,10 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity
               key={filter}
               onPress={() => setActiveFilter(filter)}
-              className="px-4 py-2 rounded-xl flex-1"
+              className={`px-4 py-2 rounded-xl flex-1 border ${isDark ? 'border-commonGradientStop7' : 'border-[#DADADA]'} ${activeFilter === filter ? 'bg-buttonPrimaryBg' : 'bg-transparent'}`}
               style={{
                 backgroundColor:
-                  activeFilter === filter ? '#36D399' : isDark ? '#273F36' : '#F5F9F7',
+                  activeFilter === filter ? '#36D399' : isDark ? '#273F36' : '#ffffff',
               }}
               activeOpacity={0.7}
             >
