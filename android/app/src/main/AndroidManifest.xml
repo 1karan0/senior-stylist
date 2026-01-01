@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Network permissions -->
+   
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -14,12 +15,12 @@
     <!-- Media access - Android 13+ (API 33+) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
+    <uses-permission android:name="com.android.vending.BILLING" />
+
     <!-- Media access - Android < 13 (API < 33) -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-
-    <uses-permission android:name="com.android.vending.BILLING" />
 
     <application
         android:name=".MainApplication"
