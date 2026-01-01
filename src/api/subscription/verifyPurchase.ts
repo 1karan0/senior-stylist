@@ -43,25 +43,95 @@ export interface VerifyPurchaseResponse {
 export const verifyPurchase = async (
   payload: VerifyPurchasePayload
 ): Promise<VerifyPurchaseResponse> => {
-  try {
-    const token = await storage.getToken();
-    if (!token) {
-      throw new Error('Authentication token missing');
-    }
-
-    const res = await axios.post<VerifyPurchaseResponse>(
-      `${BASE_URL}/api/subscriptions/verify-purchase`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    return res.data;
-  } catch (err) {
-    throw new Error(parseApiError(err));
+  const token = await storage.getToken();
+  if (!token) {
+    throw new Error('Authentication token missing');
   }
+
+  const maxRetries = 3;
+  let lastError: any = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[verifyPurchase] Attempt ${attempt}/${maxRetries}`, {
+        url: `${BASE_URL}/api/subscriptions/verify-purchase`,
+        hasToken: !!token,
+        payloadKeys: Object.keys(payload),
+      });
+
+      const res = await axios.post<VerifyPurchaseResponse>(
+        `${BASE_URL}/api/subscriptions/verify-purchase`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          timeout: 30000, // 30 seconds timeout
+          validateStatus: (status) => status < 500, // Don't throw on 4xx errors
+        }
+      );
+
+      // Check if response is successful
+      if (res.status >= 200 && res.status < 300) {
+        console.log('[verifyPurchase] Success:', {
+          status: res.status,
+          responseStatus: res.data?.status,
+        });
+        return res.data;
+      }
+
+      // Handle 4xx errors (client errors - don't retry)
+      if (res.status >= 400 && res.status < 500) {
+        const errorMessage = parseApiError({ response: { data: res.data } });
+        throw new Error(errorMessage);
+      }
+
+      // For 5xx errors, throw to trigger retry
+      throw new Error(`Server error: ${res.status}`);
+    } catch (err: any) {
+      lastError = err;
+
+      // Log detailed error information
+      console.error(`[verifyPurchase] Attempt ${attempt} failed:`, {
+        message: err?.message,
+        code: err?.code,
+        responseStatus: err?.response?.status,
+        responseData: err?.response?.data,
+        isNetworkError:
+          err?.code === 'ECONNABORTED' || err?.code === 'ERR_NETWORK' || !err?.response,
+        baseUrl: BASE_URL,
+      });
+
+      // Don't retry on client errors (4xx)
+      if (err?.response?.status >= 400 && err?.response?.status < 500) {
+        throw new Error(parseApiError(err));
+      }
+
+      // Don't retry on authentication errors
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        throw new Error(parseApiError(err));
+      }
+
+      // If this is the last attempt, throw the error
+      if (attempt === maxRetries) {
+        // Provide more helpful error message for network errors
+        if (err?.code === 'ECONNABORTED' || err?.code === 'ERR_NETWORK' || !err?.response) {
+          throw new Error(
+            `Network error: Unable to reach the server. Please check your internet connection and try again. (${BASE_URL})`
+          );
+        }
+        throw new Error(parseApiError(err));
+      }
+
+      // Wait before retrying (exponential backoff)
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // 1s, 2s, 4s max
+      console.log(`[verifyPurchase] Retrying in ${delay}ms...`);
+      await new Promise<void>((resolve) => setTimeout(() => resolve(), delay));
+    }
+  }
+
+  // This should never be reached, but TypeScript needs it
+  throw new Error(parseApiError(lastError));
 };

@@ -23,9 +23,9 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
           Cancel Subscription
         </Text>
         <Text className="text-base font-poppins-regular text-textMuted text-center mb-6">
-          To cancel your subscription, you'll be redirected to your device's subscription management
-          page. Your current subscription will remain active until the end of the current billing
-          cycle, and it will not auto-renew.
+          Are you sure you want to cancel your subscription? Your current subscription will remain
+          active until the end of the current billing cycle and will stop once the billing period is
+          over. It will not auto-renew.
         </Text>
         <View className="flex-row gap-3 w-full">
           <View className="flex-1">
