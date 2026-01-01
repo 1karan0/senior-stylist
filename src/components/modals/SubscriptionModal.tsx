@@ -54,12 +54,16 @@ export default function SubscriptionModal({
   useEffect(() => {
     const loadCurrentSubscription = async () => {
       try {
+        console.log('[SubscriptionModal] ========================================');
+        console.log('[SubscriptionModal] 📂 LOADING SUBSCRIPTION FROM ASYNCSTORAGE');
+        console.log('[SubscriptionModal] ========================================');
+
         const subscription = await storage.getUserSubscription();
         setCurrentSubscription(subscription);
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.error(
-          '[SubscriptionModal] Failed to load subscription from storage:',
+          '[SubscriptionModal] ❌ Failed to load subscription from storage:',
           errorMessage
         );
         // Don't block the flow if we can't load subscription
@@ -82,6 +86,27 @@ export default function SubscriptionModal({
       Alert.alert('Payment Unavailable', iapError || 'Payment system is not available.');
       return;
     }
+
+    // Determine purchase scenario
+    const purchaseScenario =
+      !currentSubscription || !currentSubscription.transaction_id
+        ? 'FIRST_TIME_PURCHASE'
+        : plan.originalPlan.id > (currentSubscription.plan_id || 0)
+          ? 'UPGRADE'
+          : plan.originalPlan.id < (currentSubscription.plan_id || 0)
+            ? 'DOWNGRADE'
+            : 'SAME_PLAN';
+
+    console.log('[SubscriptionModal] ========================================');
+    console.log('[SubscriptionModal] 🛒 PURCHASE SCENARIO DETECTED');
+    console.log('[SubscriptionModal] ========================================');
+    console.log('[SubscriptionModal] Purchase Type:', {
+      scenario: purchaseScenario,
+      currentPlanId: currentSubscription?.plan_id || 'NONE',
+      newPlanId: plan.originalPlan.id,
+      hasCurrentSubscription: !!currentSubscription,
+      hasTransactionId: !!currentSubscription?.transaction_id,
+    });
 
     setIsLoading(true);
     setIsProcessingPurchase(true);
@@ -191,6 +216,31 @@ export default function SubscriptionModal({
               skus: [productId],
               type: 'subs',
             });
+            if (__DEV__) {
+              console.log('[SubscriptionModal][DEBUG] fetchProducts() raw return', {
+                count: Array.isArray(products) ? products.length : null,
+                products: Array.isArray(products)
+                  ? products.map((p: any) => ({
+                      productId: p.productId || p.id,
+                      title: p.title,
+                      type: p.type,
+                      // show both possible fields
+                      subscriptionOfferDetailsCount:
+                        (
+                          p.subscriptionOfferDetailsAndroid ||
+                          p.subscriptionOfferDetails ||
+                          p.subscriptionOffers ||
+                          []
+                        )?.length ?? 0,
+                      subscriptionOfferDetails:
+                        p.subscriptionOfferDetailsAndroid ||
+                        p.subscriptionOfferDetails ||
+                        p.subscriptionOffers ||
+                        null,
+                    }))
+                  : products,
+              });
+            }
             if (__DEV__) {
               console.log('[SubscriptionModal][DEBUG] fetchProducts() raw return', {
                 count: Array.isArray(products) ? products.length : null,
@@ -327,9 +377,7 @@ export default function SubscriptionModal({
         if (!selectedOffer) {
           throw new Error(
             `No offer found for basePlanId: ${basePlanId}. ` +
-              `Available basePlanIds: ${[...new Set(offers.map((o: any) => o.basePlanId))].join(
-                ', '
-              )}`
+              `Available basePlanIds: ${[...new Set(offers.map((o: any) => o.basePlanId))].join(', ')}`
           );
         }
 
@@ -354,15 +402,20 @@ export default function SubscriptionModal({
           type: 'subs',
           request: {
             android: {
-              // Top-level skus array is REQUIRED for Android Billing Library 5+
+              // Top-level skus array is REQUIRED for Android Billing Library 5+ (including 8.0)
               skus: [String(productId)],
-              // subscriptionOffers must be inside android object
+              // subscriptionOffers must be inside android object for Billing Library 8.0
               subscriptionOffers: [subscriptionOffer],
             },
           },
         };
 
+        console.log(subscriptionOffer, 'subscriptionOffer');
+
         // Handle Upgrades/Downgrades (for existing subscriptions)
+        // Billing Library 8.0 uses the same replacement mode constants
+        // Note: purchaseScenario already declared at function start
+
         if (currentSubscription?.transaction_id) {
           // react-native-iap expects these keys for subscription replacement
           purchaseRequest.request.android.purchaseTokenAndroid = currentSubscription.transaction_id;
@@ -397,6 +450,10 @@ export default function SubscriptionModal({
 
         // --- 3. EXECUTE PURCHASE REQUEST ---
         await (RNIap as any).requestPurchase(purchaseRequest);
+
+        console.log(
+          '[SubscriptionModal] ✅ requestPurchase called successfully - waiting for purchase update...'
+        );
       } else {
         // iOS Implementation
         await (RNIap as any).requestPurchase({ sku: productId });
@@ -413,20 +470,116 @@ export default function SubscriptionModal({
       console.error('[SubscriptionModal] Purchase error:', iapErr);
     }
   }, [plan, iapInitialized, iapError, currentSubscription]);
+
   // 3. Handling the Purchase Result
   const handlePurchaseUpdate = useCallback(
     async (purchase: RNIap.Purchase) => {
-      console.log('[SubscriptionModal] Purchase update received', {
+      // Determine purchase scenario for logging
+      const purchaseScenario =
+        !currentSubscription || !currentSubscription.transaction_id
+          ? 'FIRST_TIME_PURCHASE'
+          : plan?.originalPlan?.id && currentSubscription.plan_id
+            ? plan.originalPlan.id > currentSubscription.plan_id
+              ? 'UPGRADE'
+              : plan.originalPlan.id < currentSubscription.plan_id
+                ? 'DOWNGRADE'
+                : 'SAME_PLAN'
+            : 'UNKNOWN';
+
+      console.log('[SubscriptionModal] ========================================');
+      console.log('[SubscriptionModal] 🎉 PURCHASE UPDATE RECEIVED FROM GOOGLE PLAY');
+      console.log('[SubscriptionModal] ========================================');
+      console.log('[SubscriptionModal] Purchase Scenario:', {
+        scenario: purchaseScenario,
+        currentPlanId: currentSubscription?.plan_id || 'NONE',
+        newPlanId: plan?.originalPlan?.id || 'NONE',
+        timestamp: new Date().toISOString(),
+      });
+
+      // Log the complete raw purchase object from Google Play
+      console.log('[SubscriptionModal] 📦 Complete Purchase Object from Google Play:', {
+        // Standard properties
+        productId: purchase.productId,
+        transactionId: purchase.transactionId,
+        transactionDate: purchase.transactionDate,
+        // Full purchase object (all properties)
+        fullPurchaseObject: JSON.stringify(purchase, null, 2),
+      });
+
+      console.log(purchase, 'purchase');
+
+      // Log Android-specific properties
+      const purchaseAny = purchase as any;
+      if (Platform.OS === 'android') {
+        console.log('[SubscriptionModal] 🤖 Android-Specific Purchase Data:', {
+          orderId: purchaseAny.orderId || 'NOT_FOUND',
+          purchaseToken: purchaseAny.purchaseToken || 'NOT_FOUND',
+          purchaseState: purchaseAny.purchaseState || 'NOT_FOUND',
+          purchaseStateAndroid: purchaseAny.purchaseStateAndroid ?? 'NOT_FOUND',
+          purchaseStateMeaning:
+            purchaseAny.purchaseState === 'purchased'
+              ? 'PURCHASED ✅'
+              : purchaseAny.purchaseState === 'pending'
+                ? 'PENDING'
+                : purchaseAny.purchaseState === 'failed'
+                  ? 'FAILED'
+                  : purchaseAny.purchaseState || 'UNKNOWN',
+          signatureAndroid: purchaseAny.signatureAndroid || 'NOT_FOUND',
+          developerPayloadAndroid: purchaseAny.developerPayloadAndroid || 'NOT_FOUND',
+          autoRenewingAndroid: purchaseAny.autoRenewingAndroid ?? 'NOT_FOUND',
+          isAcknowledgedAndroid: purchaseAny.isAcknowledgedAndroid ?? 'NOT_FOUND',
+          // Subscription-specific Android properties
+          subscriptionPurchaseData: purchaseAny.subscriptionPurchaseData || 'NOT_FOUND',
+          basePlanId: purchaseAny.basePlanId || 'NOT_FOUND',
+          offerId: purchaseAny.offerId || 'NOT_FOUND',
+          offerToken: purchaseAny.offerToken || 'NOT_FOUND',
+        });
+      }
+
+      // Log iOS-specific properties
+      if (Platform.OS === 'ios') {
+        console.log('[SubscriptionModal] 🍎 iOS-Specific Purchase Data:', {
+          transactionReceipt: purchaseAny.transactionReceipt || 'NOT_FOUND',
+          transactionStateIOS: purchaseAny.transactionStateIOS ?? 'NOT_FOUND',
+          transactionStateIOSMeaning:
+            purchaseAny.transactionStateIOS === 0
+              ? 'PURCHASING'
+              : purchaseAny.transactionStateIOS === 1
+                ? 'PURCHASED ✅'
+                : purchaseAny.transactionStateIOS === 2
+                  ? 'FAILED'
+                  : purchaseAny.transactionStateIOS === 3
+                    ? 'RESTORED'
+                    : purchaseAny.transactionStateIOS === 4
+                      ? 'DEFERRED'
+                      : 'UNKNOWN',
+          originalTransactionIdentifierIOS:
+            purchaseAny.originalTransactionIdentifierIOS || 'NOT_FOUND',
+        });
+      }
+
+      // Log all available keys in the purchase object
+      console.log('[SubscriptionModal] 🔑 All Available Purchase Object Keys:', {
+        standardKeys: Object.keys(purchase),
+        allKeys: Object.keys(purchaseAny),
+        hasOrderId: 'orderId' in purchaseAny,
+        hasPurchaseToken: 'purchaseToken' in purchaseAny,
+        hasPurchaseState: 'purchaseState' in purchaseAny,
+        hasPurchaseStateAndroid: 'purchaseStateAndroid' in purchaseAny,
+        purchaseStateValue: purchaseAny.purchaseState || 'NOT_FOUND',
+      });
+
+      console.log('[SubscriptionModal] Basic Purchase Info:', {
         productId: purchase.productId,
         transactionId: purchase.transactionId,
         platform: Platform.OS,
+        transactionDate: purchase.transactionDate,
       });
 
       console.log(purchase, 'purchase we have reached here');
 
       // 1. Determine Success State correctly for v14
-      // Using type assertion to access platform-specific properties
-      const purchaseAny = purchase as any;
+      // Using type assertion to access platform-specific properties (purchaseAny already declared above)
       let isPurchaseSuccessful = false;
 
       if (Platform.OS === 'android') {
@@ -543,6 +696,16 @@ export default function SubscriptionModal({
         }
 
         // 2. Build Payload for Backend
+        // Determine purchase scenario for backend payload (reuse from function start)
+        const backendPurchaseScenario =
+          !currentSubscription || !currentSubscription.transaction_id
+            ? 'FIRST_TIME_PURCHASE'
+            : plan.originalPlan.id > (currentSubscription.plan_id || 0)
+              ? 'UPGRADE'
+              : plan.originalPlan.id < (currentSubscription.plan_id || 0)
+                ? 'DOWNGRADE'
+                : 'SAME_PLAN';
+
         // Using type assertion to access platform-specific properties
         const resolvedTransactionIdRaw =
           Platform.OS === 'android'
@@ -640,7 +803,31 @@ export default function SubscriptionModal({
         }
 
         // 3. Backend Verification
+        console.log('[SubscriptionModal] ========================================');
+        console.log('[SubscriptionModal] 📡 SENDING TO BACKEND FOR VERIFICATION');
+        console.log('[SubscriptionModal] ========================================');
+        console.log('[SubscriptionModal] Backend Call Details:', {
+          scenario: backendPurchaseScenario,
+          endpoint: 'verifyPurchase',
+          userId: purchaseDataForBackend.userId,
+          planId: purchaseDataForBackend.planId,
+          transactionId: purchaseDataForBackend.transactionId,
+        });
+        console.log('[SubscriptionModal] 📡 Sending purchase to backend for verification...');
+
         const verificationResult = await sendPurchaseToBackend(purchaseDataForBackend);
+
+        console.log('[SubscriptionModal] ========================================');
+        console.log('[SubscriptionModal] 📥 BACKEND VERIFICATION RESPONSE RECEIVED');
+        console.log('[SubscriptionModal] ========================================');
+        console.log('[SubscriptionModal] Backend Verification Response:', {
+          scenario: backendPurchaseScenario,
+          success: verificationResult.success,
+          code: verificationResult.code,
+          message: verificationResult.message,
+          data: verificationResult.data,
+          verified: verificationResult.success,
+        });
 
         if (verificationResult.success) {
           // Persist verified subscription locally (used by Pricing/Profile flows).
@@ -770,18 +957,24 @@ export default function SubscriptionModal({
             { text: 'OK', onPress: () => onClose?.() },
           ]);
         } else {
+          console.error('[SubscriptionModal] ❌ Backend validation failed:', verificationResult);
           throw new Error('Backend validation failed');
         }
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        console.error('[SubscriptionModal] Error:', errorMessage);
+        console.error('[SubscriptionModal] ❌ Error in handlePurchaseUpdate:', {
+          errorMessage,
+          error: error instanceof Error ? error.stack : error,
+          purchaseProductId: purchase.productId,
+          purchaseTransactionId: purchase.transactionId,
+        });
         Alert.alert('Verification Failed', 'Please contact support if you were charged.');
       } finally {
         setIsProcessingPurchase(false);
         setIsLoading(false);
       }
     },
-    [plan, onClose]
+    [plan, onClose, currentSubscription]
   );
   // 1. Preparation: Initialize IAP and set up listeners
   useEffect(() => {
@@ -828,6 +1021,7 @@ export default function SubscriptionModal({
         purchaseUpdateSubscription = purchaseUpdatedListener(async (purchase: RNIap.Purchase) => {
           await handlePurchaseUpdate(purchase);
         });
+        console.log('[SubscriptionModal] ✅ Purchase update listener established and listening');
 
         purchaseErrorSubscription = purchaseErrorListener((error: any) => {
           console.error('[SubscriptionModal] Purchase error from listener:', error);
@@ -868,10 +1062,28 @@ export default function SubscriptionModal({
 
   // Function to send purchase data to your backend
   const sendPurchaseToBackend = async (purchaseData: VerifyPurchasePayload) => {
-    console.log(purchaseData, 'purchaseData we have reached here');
+    console.log('[SubscriptionModal] ========================================');
+    console.log('[SubscriptionModal] 🌐 BACKEND API CALL');
+    console.log('[SubscriptionModal] ========================================');
+    console.log('[SubscriptionModal] Calling verifyPurchase API with data:', {
+      userId: purchaseData.userId,
+      planId: purchaseData.planId,
+      platform: purchaseData.platform,
+      transactionId: purchaseData.transactionId,
+      hasPurchaseToken: !!purchaseData.purchaseToken,
+      purchaseDate: purchaseData.purchaseDate,
+    });
+    console.log('[SubscriptionModal] Full purchase data:', JSON.stringify(purchaseData, null, 2));
+
     try {
+      console.log('[SubscriptionModal] 📞 Making API request to backend...');
       const result: VerifyPurchaseResponse = await verifyPurchase(purchaseData);
-      console.log('[SubscriptionModal] Backend verification successful', result);
+      console.log('[SubscriptionModal] ✅ Backend API response received:', {
+        status: result.status,
+        code: result.code,
+        message: result.message,
+        hasData: !!result.data,
+      });
 
       return {
         success: result.status === 'success',

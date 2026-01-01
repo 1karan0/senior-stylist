@@ -75,9 +75,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   return (
     <View>
-      <StatusBar translucent backgroundColor="#36D399" barStyle="light-content" />
+      <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
       <View
-        className="bg-commonGradientStop2 pb-7 px-4 rounded-b-3xl"
+        className="bg-buttonPrimaryBg pb-7 px-4 rounded-b-3xl"
         style={{ paddingTop: Platform.OS === 'ios' ? insets.top + 12 : 55 }}
       >
         <View className="flex-row items-center">
