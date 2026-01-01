@@ -49,6 +49,12 @@ export default function SubscriptionModal({
   const [iapError, setIapError] = useState<string | null>(null);
   const [currentSubscription, setCurrentSubscription] = useState<any | null>(null);
   const processedPurchaseKeysRef = useRef<Set<string>>(new Set());
+  const currentSubscriptionRef = useRef<any | null>(null);
+  const lastPurchaseErrorRef = useRef<{ code?: string; message?: string; at: number } | null>(null);
+
+  useEffect(() => {
+    currentSubscriptionRef.current = currentSubscription;
+  }, [currentSubscription]);
 
   // Fetch current subscription from AsyncStorage when modal opens
   useEffect(() => {
@@ -73,6 +79,52 @@ export default function SubscriptionModal({
     if (plan?.originalPlan) {
       loadCurrentSubscription();
     }
+  }, [plan]);
+
+  // Optional: Ask Google/Apple what purchases are currently owned by this account.
+  // NOTE: This is useful for debugging and recovery flows, but your backend should still be the source of truth.
+  useEffect(() => {
+    let cancelled = false;
+    const logAvailablePurchases = async () => {
+      try {
+        if ((RNIap as any).getAvailablePurchases) {
+          const purchases = await (RNIap as any).getAvailablePurchases();
+          console.log('purchases', purchases);
+          if (cancelled) return;
+          console.log('[SubscriptionModal] 🧾 getAvailablePurchases() result', {
+            count: Array.isArray(purchases) ? purchases.length : null,
+            purchases: Array.isArray(purchases)
+              ? purchases.map((p: any) => ({
+                  productId: p.productId,
+                  transactionId: p.transactionId,
+                  purchaseTokenPreview: p.purchaseToken
+                    ? String(p.purchaseToken).slice(0, 12) + '…'
+                    : null,
+                  isAcknowledgedAndroid: p.isAcknowledgedAndroid,
+                  purchaseState: p.purchaseState,
+                  transactionDate: p.transactionDate,
+                  platform: p.platform,
+                }))
+              : purchases,
+          });
+        } else {
+          console.log(
+            '[SubscriptionModal] getAvailablePurchases() not available in this react-native-iap version'
+          );
+        }
+      } catch (e) {
+        console.warn('[SubscriptionModal] getAvailablePurchases() failed', e);
+      }
+    };
+
+    // Only run when modal opens for a plan (keeps noise down).
+    if (plan?.originalPlan) {
+      void logAvailablePurchases();
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [plan]);
 
   // 2. Initiating the Purchase
@@ -474,14 +526,15 @@ export default function SubscriptionModal({
   // 3. Handling the Purchase Result
   const handlePurchaseUpdate = useCallback(
     async (purchase: RNIap.Purchase) => {
+      const currentSub = currentSubscriptionRef.current;
       // Determine purchase scenario for logging
       const purchaseScenario =
-        !currentSubscription || !currentSubscription.transaction_id
+        !currentSub || !currentSub.transaction_id
           ? 'FIRST_TIME_PURCHASE'
-          : plan?.originalPlan?.id && currentSubscription.plan_id
-            ? plan.originalPlan.id > currentSubscription.plan_id
+          : plan?.originalPlan?.id && currentSub.plan_id
+            ? plan.originalPlan.id > currentSub.plan_id
               ? 'UPGRADE'
-              : plan.originalPlan.id < currentSubscription.plan_id
+              : plan.originalPlan.id < currentSub.plan_id
                 ? 'DOWNGRADE'
                 : 'SAME_PLAN'
             : 'UNKNOWN';
@@ -491,7 +544,7 @@ export default function SubscriptionModal({
       console.log('[SubscriptionModal] ========================================');
       console.log('[SubscriptionModal] Purchase Scenario:', {
         scenario: purchaseScenario,
-        currentPlanId: currentSubscription?.plan_id || 'NONE',
+        currentPlanId: currentSub?.plan_id || 'NONE',
         newPlanId: plan?.originalPlan?.id || 'NONE',
         timestamp: new Date().toISOString(),
       });
@@ -783,13 +836,13 @@ export default function SubscriptionModal({
 
         // Add action hint for backend (upgrade vs deferred downgrade) when applicable.
         try {
-          if (Platform.OS === 'android' && currentSubscription?.transaction_id) {
+          if (Platform.OS === 'android' && currentSub?.transaction_id) {
             const selectedTier = Number((plan.originalPlan as any)?.sort_order);
             const currentTier = Number(
-              (currentSubscription as any)?.plan_sort_order ??
-                (currentSubscription as any)?.sortOrder ??
-                (currentSubscription as any)?.plan?.sort_order ??
-                (currentSubscription as any)?.plan?.sortOrder ??
+              (currentSub as any)?.plan_sort_order ??
+                (currentSub as any)?.sortOrder ??
+                (currentSub as any)?.plan?.sort_order ??
+                (currentSub as any)?.plan?.sortOrder ??
                 NaN
             );
             if (Number.isFinite(selectedTier) && Number.isFinite(currentTier)) {
@@ -974,7 +1027,7 @@ export default function SubscriptionModal({
         setIsLoading(false);
       }
     },
-    [plan, onClose, currentSubscription]
+    [plan, onClose]
   );
   // 1. Preparation: Initialize IAP and set up listeners
   useEffect(() => {
@@ -1024,6 +1077,16 @@ export default function SubscriptionModal({
         console.log('[SubscriptionModal] ✅ Purchase update listener established and listening');
 
         purchaseErrorSubscription = purchaseErrorListener((error: any) => {
+          const now = Date.now();
+          const code = error?.code;
+          const message = error?.message;
+          const last = lastPurchaseErrorRef.current;
+          // De-dupe noisy repeated events (common when listeners are accidentally registered multiple times)
+          if (last && last.code === code && last.message === message && now - last.at < 2000) {
+            return;
+          }
+          lastPurchaseErrorRef.current = { code, message, at: now };
+
           console.error('[SubscriptionModal] Purchase error from listener:', error);
           setIsLoading(false);
           setIsProcessingPurchase(false);

@@ -46,6 +46,8 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const user = profileData?.user as ProfileUser;
   const subscription = profileData?.subscription;
 
+  console.log('subscription', subscription);
+
   // Format next billing date
   const formatBillingDate = (dateString: string | number | null | undefined): string => {
     if (!dateString) return 'N/A';
