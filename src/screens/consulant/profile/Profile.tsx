@@ -24,7 +24,8 @@ const Profile: React.FC = () => {
 
   const goToEditProfile = () => navigation.navigate('EditProfile');
   const goToSettings = () => navigation.navigate('Settings');
-
+  const goToMyEarning = () => navigation.navigate('MyEarning');
+  const goToDisputes = () => navigation.navigate('Disputes');
   return (
     <GradientBackground>
       <View className="flex-1 ">
@@ -213,6 +214,50 @@ const Profile: React.FC = () => {
               </View>
             </View>
           </View>
+          <TouchableOpacity
+            onPress={goToMyEarning}
+            className={`rounded-xl p-4 mb-4 shadow-sm flex-row items-center justify-between border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
+            activeOpacity={0.8}
+          >
+            <View className="flex-row items-center">
+              <Image
+                source={
+                  isDark
+                    ? require('@/assets/icons/payment-white.png')
+                    : require('@/assets/icons/payment-black.png')
+                }
+                className="w-6 h-6"
+                resizeMode="contain"
+              />
+              <Text
+                className={`font-urbanist-semibold ml-3 ${isDark ? 'text-white' : 'text-textDark'}`}
+              >
+                Payments
+              </Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={goToDisputes}
+            className={`rounded-xl p-4 mb-4 shadow-sm flex-row items-center justify-between border ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
+            activeOpacity={0.8}
+          >
+            <View className="flex-row items-center">
+              <Image
+                source={
+                  isDark
+                    ? require('@/assets/icons/white-report.png')
+                    : require('@/assets/icons/report.png')
+                }
+                className="w-6 h-6"
+                resizeMode="contain"
+              />
+              <Text
+                className={`font-urbanist-semibold ml-3 ${isDark ? 'text-white' : 'text-textDark'}`}
+              >
+                Reports
+              </Text>
+            </View>
+          </TouchableOpacity>
 
           {/* Settings */}
           <TouchableOpacity
@@ -228,7 +273,6 @@ const Profile: React.FC = () => {
                 Settings
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={isDark ? '#FFFFFF' : '#162721'} />
           </TouchableOpacity>
 
           {/* Sign Out */}

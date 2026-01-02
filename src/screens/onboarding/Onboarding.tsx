@@ -59,7 +59,7 @@ const OnboardingScreen = ({ navigation }: any) => {
           className="flex-row justify-center"
           style={{
             position: 'absolute',
-            top: SCREEN_HEIGHT * 0.78, // Position just below the text section (which ends at ~90%)
+            top: SCREEN_HEIGHT * 0.8, // Position just below the text section (which ends at ~90%)
             left: 0,
             right: 0,
             zIndex: 10,

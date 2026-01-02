@@ -270,3 +270,45 @@ export interface ProfileUser {
   away_since: string | null;
   referral_stats?: ReferralStats;
 }
+
+export interface DisputeResponse {
+  disputes: ConsultantDispute[];
+  total: number;
+  per_page: number;
+  current_page: number;
+  last_page: number;
+  from: number;
+  to: number;
+  total_pages: number;
+}
+
+export interface ConsultantDisputeResolution {
+  resolved_at: string;
+  resolution_notes: string | null;
+  penalty_amount: number | null;
+  penalty_notes: string | null;
+  resolved_by: string;
+}
+
+export interface ConsultantDispute {
+  id: number;
+  consultation_id: number;
+  status: 'in_progress' | 'closed' | 'resolved';
+  created_at: string;
+  resolution: ConsultantDisputeResolution | null;
+}
+
+export interface ConsultantDisputesApiResponse {
+  status: string;
+  code: number;
+  message: string;
+  data: {
+    disputes: ConsultantDispute[];
+    pagination: {
+      current_page: number;
+      per_page: number;
+      total: number;
+      last_page: number;
+    };
+  };
+}

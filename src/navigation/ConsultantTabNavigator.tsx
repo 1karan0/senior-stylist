@@ -13,6 +13,12 @@ import EditProfileScreen from '@/screens/consulant/profile/EditProfile';
 import SettingsScreen from '@/screens/consulant/profile/Settings';
 import { ConsultantTabParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
+import MyEarning from '@/screens/consulant/payment/MyEarning';
+import WithdrawFunds from '@/screens/consulant/payment/WithdrawFunds';
+import EarningStatement from '@/screens/consulant/payment/EarningStatement';
+import PayOutHistory from '@/screens/consulant/payment/PayOutHistory';
+import SetupPayout from '@/screens/consulant/payment/SetupPayout';
+import Disputes from '@/screens/consulant/profile/Disputes';
 
 const Tab = createBottomTabNavigator<ConsultantTabParamList>();
 const ProfileStack = createNativeStackNavigator();
@@ -28,6 +34,12 @@ const ProfileStackNavigator: React.FC = () => {
       <ProfileStack.Screen name="ProfileMain" component={ConsultantProfileScreen} />
       <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
       <ProfileStack.Screen name="Settings" component={SettingsScreen} />
+      <ProfileStack.Screen name="MyEarning" component={MyEarning} />
+      <ProfileStack.Screen name="WithdrawFunds" component={WithdrawFunds} />
+      <ProfileStack.Screen name="EarningStatement" component={EarningStatement} />
+      <ProfileStack.Screen name="PayOutHistory" component={PayOutHistory} />
+      <ProfileStack.Screen name="SetupPayout" component={SetupPayout} />
+      <ProfileStack.Screen name="Disputes" component={Disputes} />
     </ProfileStack.Navigator>
   );
 };
