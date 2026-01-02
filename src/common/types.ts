@@ -244,6 +244,8 @@ export interface ProfileSubscription {
   plan_slug: string;
   store_plan_id: string;
   offer_plan_id: string | null;
+  // Android: purchase token used for subscription replacement (upgrade/downgrade)
+  purchase_token?: string | null;
   expires_at: string | null;
   next_billing_date: string | null;
   auto_renew: boolean;

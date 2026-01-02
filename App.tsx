@@ -12,6 +12,7 @@ import { initializeFirebase } from '@/services/firebase';
 import NotificationHandler from '@/components/notifications/NotificationHandler';
 import ForceUpdateScreen from '@/screens/ForceUpdateScreen';
 import { useAppVersionCheck } from '@/hooks/useAppVersionCheck';
+import PurchaseVerificationRecovery from '@/components/PurchaseVerificationRecovery';
 
 // Verify React Native Firebase is available (auto-initializes from google-services.json)
 initializeFirebase();
@@ -58,6 +59,7 @@ const AppContent = () => {
           <NavigationContainer>
             <View className="flex-1 bg-white dark:bg-black">
               <AppNavigator />
+              <PurchaseVerificationRecovery />
               <NotificationHandler />
             </View>
           </NavigationContainer>

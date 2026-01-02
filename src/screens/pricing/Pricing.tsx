@@ -19,14 +19,10 @@ import {
 import SubscriptionModal from '@/components/modals/SubscriptionModal';
 import { AppStackParamList } from '@/common/types';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  getCurrentSubscription,
-  type CurrentSubscription,
-} from '@/api/subscription/subscriptionManagement';
 import { storage } from '@/services/storage';
 import { useTheme } from '@/contexts/ThemeContext';
-import GradientBackground from '@/common/components/GradientBackground';
 import { Button } from '@/common/components/Button';
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
 
 interface PlanDisplay {
   key: string;
@@ -47,6 +43,8 @@ export default function PricingScreen() {
   const route = useRoute();
   const { user } = useAuth();
   const { isDark } = useTheme();
+  const { data: profileData, isLoading: isProfileLoading } = useGetProfile();
+  const profileSubscription = profileData?.subscription ?? null;
   // Check if this is from signup flow or manage subscription
   // Route params can have: fromSignup (from OTP verification) or fromProfile (from Profile tab)
   const routeParams = (route.params as any) || {};
@@ -82,11 +80,9 @@ export default function PricingScreen() {
             return;
           }
 
-          // Fallback: Check subscription status
-          const subscription = await storage.getUserSubscription();
-          // If no subscription, likely from signup flow
-          setFromSignup(!subscription);
-          setFromProfile(!!subscription);
+          // Fallback: Check subscription via Profile API (source of truth)
+          setFromSignup(!profileSubscription);
+          setFromProfile(!!profileSubscription);
         } catch {
           setFromSignup(false);
           setFromProfile(false);
@@ -94,13 +90,11 @@ export default function PricingScreen() {
       };
       checkIfFromSignup();
     }
-  }, [routeFromSignup, routeFromProfile]);
+  }, [routeFromSignup, routeFromProfile, profileSubscription]);
   const { data: subscriptionPlans, isLoading, error } = useGetSubscriptionPlans();
   const [selectedPlan, setSelectedPlan] = useState<PlanDisplay | null>(null);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
-  const [currentSubscription, setCurrentSubscription] = useState<CurrentSubscription | null>(null);
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
-  const [storedSubscription, setStoredSubscription] = useState<any | null>(null);
 
   // Transform API data to display format and filter out test plans
   const plans = useMemo(() => {
@@ -199,57 +193,16 @@ export default function PricingScreen() {
     return mappedPlans;
   }, [subscriptionPlans]);
 
-  // Fetch current subscription status from both API and storage
+  // Profile API is the source of truth for subscription status.
   useEffect(() => {
-    const fetchCurrentSubscription = async () => {
-      try {
-        setIsLoadingSubscription(true);
-
-        // Try to get from API first
-        try {
-          const subscription = await getCurrentSubscription();
-          setCurrentSubscription(subscription);
-          if (subscription) {
-            console.log('[Pricing] Current subscription found from API', {
-              subscriptionId: subscription.id,
-              planId: subscription.plan_id,
-              status: subscription.status,
-            });
-          }
-        } catch {
-          console.log('[Pricing] No subscription from API, checking storage');
-        }
-
-        // Also check storage for locally saved subscription
-        const storedSub = await storage.getUserSubscription();
-        if (storedSub) {
-          setStoredSubscription(storedSub);
-          console.log('[Pricing] Subscription found in storage', {
-            planId: storedSub.planId,
-            planName: storedSub.planName,
-            status: storedSub.status,
-          });
-        }
-      } catch (error: any) {
-        console.error('[Pricing] Failed to fetch subscription:', error.message);
-      } finally {
-        setIsLoadingSubscription(false);
-      }
-    };
-
-    fetchCurrentSubscription();
-  }, []);
+    setIsLoadingSubscription(isProfileLoading);
+  }, [isProfileLoading]);
 
   // Set default selected plan when plans are loaded
   useEffect(() => {
     if (plans.length > 0 && !selectedPlan) {
-      // Priority: API subscription > Storage subscription
       const activePlanId =
-        currentSubscription?.status === 'active'
-          ? currentSubscription.plan_id
-          : storedSubscription?.status === 'active'
-            ? storedSubscription.planId
-            : null;
+        profileSubscription?.status === 'active' ? profileSubscription.plan_id : null;
 
       if (activePlanId) {
         const currentPlan = plans.find((p) => p.originalPlan.id === activePlanId);
@@ -263,7 +216,7 @@ export default function PricingScreen() {
       setSelectedPlan(defaultPlan);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plans, currentSubscription, storedSubscription]);
+  }, [plans, profileSubscription]);
 
   return (
     <LinearGradient
@@ -319,13 +272,9 @@ export default function PricingScreen() {
           ) : (
             plans.map((item) => {
               const active = selectedPlan?.key === item.key;
-              // Check if this plan is the user's active subscription (from API or storage)
-              // Priority: API subscription > Storage subscription
               const isCurrentPlan =
-                (currentSubscription?.status === 'active' &&
-                  currentSubscription.plan_id === item.originalPlan.id) ||
-                (storedSubscription?.status === 'active' &&
-                  storedSubscription.planId === item.originalPlan.id);
+                profileSubscription?.status === 'active' &&
+                profileSubscription.plan_id === item.originalPlan.id;
 
               return (
                 <Pressable
@@ -352,11 +301,7 @@ export default function PricingScreen() {
                         </Text>
                         {isCurrentPlan && (
                           <View className="bg-[#23A76F] px-2.5 py-1 rounded-full">
-                            <Text
-                              className={`text-xs font-bold ${isDark ? 'text-white' : 'text-textDark'}`}
-                            >
-                              Current
-                            </Text>
+                            <Text className="text-xs font-bold text-white">Current</Text>
                           </View>
                         )}
                       </View>
@@ -407,8 +352,9 @@ export default function PricingScreen() {
           )}
         </View>
 
-        {/* Current Subscription Info */}
-        {(currentSubscription?.status === 'active' || storedSubscription?.status === 'active') && (
+        {/*
+        // Current Subscription Info (commented out per request)
+        {profileSubscription?.status === 'active' && (
           <View
             className={`mt-6 p-4 rounded-lg border ${isDark ? 'bg-commonGradientStop1 border-commonGradientStop7' : 'bg-blue-50 border-blue-200'}`}
           >
@@ -425,24 +371,20 @@ export default function PricingScreen() {
             </View>
             <Text className={`text-sm mt-1 ${isDark ? 'text-white' : 'text-blue-700'}`}>
               You have an active{' '}
-              {currentSubscription?.plan?.name || storedSubscription?.planName || 'subscription'}.
-              {currentSubscription?.plan_id !== selectedPlan?.originalPlan.id &&
-              storedSubscription?.planId !== selectedPlan?.originalPlan.id
+              {profileSubscription?.plan?.name || 'subscription'}.
+              {profileSubscription?.plan_id !== selectedPlan?.originalPlan.id
                 ? ' Select a different plan to switch your subscription.'
                 : ' This is your current plan.'}
             </Text>
           </View>
         )}
+        */}
 
         {/* BUTTON */}
         {(() => {
           // Determine button state and text
           const activePlanId =
-            currentSubscription?.status === 'active'
-              ? currentSubscription.plan_id
-              : storedSubscription?.status === 'active'
-                ? storedSubscription.planId
-                : null;
+            profileSubscription?.status === 'active' ? profileSubscription.plan_id : null;
 
           const isCurrentPlan = activePlanId === selectedPlan?.originalPlan.id;
           const hasActiveSubscription = !!activePlanId;
@@ -527,33 +469,20 @@ export default function PricingScreen() {
           plan={selectedPlan}
           onClose={async () => {
             setSubscriptionModal(false);
-            // Refresh subscription status after modal closes
-            try {
-              const subscription = await getCurrentSubscription();
-              setCurrentSubscription(subscription);
-
-              // Also refresh from storage
-              const storedSub = await storage.getUserSubscription();
-              setStoredSubscription(storedSub);
-
-              // Navigate based on source:
-              // - From signup: Navigate to ConsultationTab after successful subscription
-              // - From Profile: Don't navigate here (handled in onNavigateToProfile callback)
-              if (storedSub && !currentSubscription && fromSignup) {
-                // User just completed first subscription from signup flow
-                // Navigate to ConsultationTab
-                setTimeout(() => {
-                  try {
-                    (navigation as any).navigate('UserTabs', {
-                      screen: 'ConsultationTab',
-                    });
-                  } catch (err) {
-                    console.error('[Pricing] Navigation error:', err);
-                  }
-                }, 500);
-              }
-            } catch (error: any) {
-              console.error('[Pricing] Failed to refresh subscription:', error.message);
+            // Subscription status is sourced from Profile API.
+            // Navigate based on source:
+            // - From signup: Navigate to ConsultationTab after successful subscription
+            // - From Profile: Don't navigate here (handled in onNavigateToProfile callback)
+            if (fromSignup) {
+              setTimeout(() => {
+                try {
+                  (navigation as any).navigate('UserTabs', {
+                    screen: 'ConsultationTab',
+                  });
+                } catch (err) {
+                  console.error('[Pricing] Navigation error:', err);
+                }
+              }, 500);
             }
           }}
           onNavigateToProfile={() => {

@@ -3,7 +3,6 @@ import { Alert, Platform, Linking } from 'react-native';
 import * as RNIap from 'react-native-iap';
 import { initConnection, deepLinkToSubscriptions } from 'react-native-iap';
 import { cancelSubscription as cancelSubscriptionAPI } from '@/api/subscription/subscriptionManagement';
-import { storage } from '@/services/storage';
 
 interface SubscriptionStatus {
   exists: boolean;
@@ -99,9 +98,6 @@ export const useSubscriptionCancellation = () => {
       const response = await cancelSubscriptionAPI();
 
       if (response.status === 'success' && response.data?.subscription) {
-        // Update AsyncStorage with cancelled subscription
-        await storage.setUserSubscription(response.data.subscription);
-
         Alert.alert(
           'Subscription Cancelled',
           'Your subscription has been cancelled successfully. Your current subscription will remain active until the end of the current billing cycle and will not auto-renew.',

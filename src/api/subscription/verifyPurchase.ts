@@ -48,27 +48,90 @@ export const verifyPurchase = async (
     throw new Error('Authentication token missing');
   }
 
+  const mask = (value: unknown, keepStart = 6, keepEnd = 4) => {
+    const s = value === undefined || value === null ? '' : String(value);
+    if (!s) return '';
+    if (s.length <= keepStart + keepEnd + 3) return s;
+    return `${s.slice(0, keepStart)}…${s.slice(-keepEnd)}`;
+  };
+
+  const sanitizePayloadForLog = (obj: any) => {
+    try {
+      const copy = { ...(obj || {}) };
+      // redact/truncate sensitive or huge fields
+      if ('purchase_token' in copy) copy.purchase_token = mask(copy.purchase_token, 6, 6);
+      if ('transaction_receipt' in copy)
+        copy.transaction_receipt = mask(copy.transaction_receipt, 10, 6);
+      if ('original_transaction_id' in copy)
+        copy.original_transaction_id = mask(copy.original_transaction_id, 6, 6);
+      if ('transaction_id' in copy) copy.transaction_id = mask(copy.transaction_id, 6, 6);
+      if ('order_id' in copy) copy.order_id = mask(copy.order_id, 6, 6);
+      return copy;
+    } catch {
+      return { payload: '[unserializable]' };
+    }
+  };
+
   // Backend is Laravel-style and commonly validates snake_case fields.
   // Send snake_case aliases (and ensure "string" fields are never null).
   const toStringOrEmpty = (v: unknown) => (v === undefined || v === null ? '' : String(v));
-  const payloadForApi: any = {
-    ...payload,
-    user_id: payload.userId,
-    plan_id: payload.planId,
-    transaction_id: toStringOrEmpty(payload.transactionId),
-    product_id: toStringOrEmpty(payload.productId),
-    base_plan_id: payload.base_plan_id ?? null,
-    purchase_date: payload.purchaseDate ?? null,
-    purchase_token: payload.purchaseToken ?? null,
-    order_id: toStringOrEmpty(payload.orderId),
-    package_name: payload.packageName ?? null,
-    auto_renewing: payload.autoRenewing ?? null,
-    transaction_receipt: toStringOrEmpty(payload.transactionReceipt),
-    original_transaction_id: toStringOrEmpty(payload.originalTransactionId),
-    action: payload.action ?? null,
-    scheduled_plan_id: payload.scheduledPlanId ?? null,
-    scheduled_start_date: payload.scheduledStartDate ?? null,
+  const toStringOrEmptySafe = (v: unknown) => {
+    if (v === undefined || v === null) return '';
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number' || typeof v === 'boolean' || typeof v === 'bigint') return String(v);
+    try {
+      return JSON.stringify(v);
+    } catch {
+      return String(v);
+    }
   };
+
+  // IMPORTANT:
+  // For Android verification we only need purchaseToken + product/base_plan + user/plan IDs.
+  // Do NOT send orderId/originalTransactionId/packageName/autoRenewing/receipt for Android.
+  // NOTE: Our backend currently validates `platform`, `transactionId` and/or `transaction_id` as required.
+  const basePayloadForApi: any =
+    payload.platform === 'android'
+      ? {
+          // camelCase (some backends validate these exact keys)
+          userId: payload.userId,
+          planId: payload.planId,
+          platform: payload.platform,
+          transactionId: toStringOrEmptySafe(payload.transactionId),
+          productId: toStringOrEmpty(payload.productId),
+          purchaseDate: payload.purchaseDate ?? null,
+          purchaseToken: payload.purchaseToken ?? null,
+
+          // snake_case (Laravel-style)
+          user_id: payload.userId,
+          plan_id: payload.planId,
+          transaction_id: toStringOrEmptySafe(payload.transactionId),
+          product_id: toStringOrEmpty(payload.productId),
+          base_plan_id: payload.base_plan_id ?? null,
+          purchase_date: payload.purchaseDate ?? null,
+          purchase_token: payload.purchaseToken ?? null,
+        }
+      : {
+          user_id: payload.userId,
+          plan_id: payload.planId,
+          transaction_id: toStringOrEmptySafe(payload.transactionId),
+          product_id: toStringOrEmpty(payload.productId),
+          base_plan_id: payload.base_plan_id ?? null,
+          purchase_date: payload.purchaseDate ?? null,
+          purchase_token: payload.purchaseToken ?? null,
+          order_id: toStringOrEmpty(payload.orderId),
+          package_name: payload.packageName ?? null,
+          auto_renewing: payload.autoRenewing ?? null,
+          transaction_receipt: toStringOrEmptySafe(payload.transactionReceipt),
+          original_transaction_id: toStringOrEmptySafe(payload.originalTransactionId),
+        };
+
+  // Only include action/scheduling when explicitly provided (downgrade case).
+  const payloadForApi: any = { ...basePayloadForApi };
+  if (payload.action) payloadForApi.action = payload.action;
+  if (payload.scheduledPlanId != null) payloadForApi.scheduled_plan_id = payload.scheduledPlanId;
+  if (payload.scheduledStartDate != null)
+    payloadForApi.scheduled_start_date = payload.scheduledStartDate;
 
   const maxRetries = 3;
   let lastError: any = null;
@@ -79,6 +142,7 @@ export const verifyPurchase = async (
         url: `${BASE_URL}/api/subscriptions/verify-purchase`,
         hasToken: !!token,
         payloadKeys: Object.keys(payloadForApi),
+        payload: sanitizePayloadForLog(payloadForApi),
       });
 
       const res = await axios.post<VerifyPurchaseResponse>(

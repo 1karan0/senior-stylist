@@ -36,7 +36,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const { logout } = useAuth();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-  console.log('profileData', profileData);
 
   const [isCopied, setIsCopied] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -46,9 +45,9 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
   const user = profileData?.user as ProfileUser;
   const subscription = profileData?.subscription;
+  const hasSubscription = !!subscription;
 
   console.log('subscription', subscription);
-
   // Format next billing date
   const formatBillingDate = (dateString: string | number | null | undefined): string => {
     if (!dateString) return 'N/A';
@@ -402,14 +401,16 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   onPress={handleManageSubscription}
                   className={` bg-[#DAE7E0] rounded-[10px] mb-3`}
                 />
-                <Button
-                  text="Cancel Subscription"
-                  variant="light"
-                  onPress={() => setShowCancelModal(true)}
-                  icon={<Ionicons name="close-circle" size={20} color="#F22D2D" />}
-                  className="bg-white border border-[#DAE7E0] rounded-[10px]"
-                  textClassName="text-error"
-                />
+                {hasSubscription && (
+                  <Button
+                    text="Cancel Subscription"
+                    variant="light"
+                    onPress={() => setShowCancelModal(true)}
+                    icon={<Ionicons name="close-circle" size={20} color="#F22D2D" />}
+                    className="bg-white border border-[#DAE7E0] rounded-[10px]"
+                    textClassName="text-error"
+                  />
+                )}
               </>
             )}
           </View>
