@@ -36,7 +36,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const { logout } = useAuth();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-  console.log('profileData', profileData);
 
   const [isCopied, setIsCopied] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -46,8 +45,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
   const user = profileData?.user as ProfileUser;
   const subscription = profileData?.subscription;
-
-  console.log('subscription', subscription);
 
   // Format next billing date
   const formatBillingDate = (dateString: string | number | null | undefined): string => {

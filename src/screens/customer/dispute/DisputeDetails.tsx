@@ -9,6 +9,7 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -38,6 +39,7 @@ interface DisputeMessage {
   user_id: number;
   user_name: string;
   user_type: 'customer' | 'admin';
+  is_admin: boolean;
 }
 
 const formatDateTime = (dateString: string): { date: string; time: string } => {
@@ -93,6 +95,12 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
   const handleSend = () => {
     if (!message.trim() || isSending) return;
 
+    // Check if dispute is closed/resolved
+    if (dispute?.status === 'closed' || dispute?.status === 'resolved') {
+      Alert.alert('Dispute Closed', 'You cannot send messages to a closed or resolved dispute.');
+      return;
+    }
+
     const messageText = message.trim();
     setMessage('');
 
@@ -104,7 +112,9 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
         },
         onError: (error: any) => {
           console.error('Failed to send message:', error);
-          // Optionally show error alert
+          Alert.alert('Error', error?.message || 'Failed to send message. Please try again.');
+          // Restore message on error
+          setMessage(messageText);
         },
       }
     );
@@ -119,7 +129,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
         case 'resolved':
           return 'bg-[#D4EDDA]';
         default:
-          return 'bg-[#E7B008]';
+          return 'bg-[#FFF3CD]';
       }
     }
     switch (status) {
@@ -129,7 +139,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
       case 'resolved':
         return 'bg-[#D4EDDA]';
       default:
-        return 'bg-[#E7B008]';
+        return 'bg-[#FFF3CD]';
     }
   };
 
@@ -141,7 +151,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
       case 'resolved':
         return '#155724'; // Light green for Resolved
       default:
-        return '#FFC107';
+        return '#856404';
     } // Dark text for all status badges
   };
 
@@ -235,9 +245,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
           {/* Consultation Details Section */}
           <View
             className={`rounded-xl p-4 mb-4 border ${
-              isDark
-                ? 'bg-commonGradientStop6 border-commonGradientStop7'
-                : 'bg-white border-[#DAE7E0]'
+              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
             }`}
           >
             <Text
@@ -248,32 +256,59 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
               Consultation Details
             </Text>
             <View>
-              <Text
-                className={`text-sm font-poppins-regular mb-2 ${
-                  isDark ? 'text-white' : 'text-textDark'
-                }`}
-              >
-                Consultation ID {dispute.consultation?.consultation_id_formatted}
-              </Text>
-              <Text
-                className={`text-sm font-poppins-regular mb-2 ${
-                  isDark ? 'text-white' : 'text-textDark'
-                }`}
-              >
-                Date {dispute.created_at ? formatDateTime(dispute.created_at).date : 'N/A'}
-              </Text>
-              <Text
-                className={`text-sm font-poppins-regular ${
-                  isDark ? 'text-white' : 'text-textDark'
-                }`}
-              >
-                Stylist {dispute.consultant?.name || 'Unknown'}
-              </Text>
+              <View className="flex-row items-center justify-between">
+                <Text
+                  className={`text-sm font-poppins-regular mb-2 ${
+                    isDark ? 'text-white' : 'text-textDark'
+                  }`}
+                >
+                  Consultation ID
+                </Text>
+                <Text
+                  className={`text-sm font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+                >
+                  {dispute.consultation?.consultation_id_formatted}
+                </Text>
+              </View>
+              <View
+                className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-2`}
+              />
+              <View className="flex-row items-center justify-between">
+                <Text
+                  className={`text-sm font-poppins-regular mb-2 ${
+                    isDark ? 'text-white' : 'text-textDark'
+                  }`}
+                >
+                  Date
+                </Text>
+                <Text
+                  className={`text-sm font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+                >
+                  {dispute.created_at ? formatDateTime(dispute.created_at).date : 'N/A'}
+                </Text>
+              </View>
+              <View
+                className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-2`}
+              />
+              <View className="flex-row items-center justify-between">
+                <Text
+                  className={`text-sm font-poppins-regular ${
+                    isDark ? 'text-white' : 'text-textDark'
+                  }`}
+                >
+                  Stylist
+                </Text>
+                <Text
+                  className={`text-sm font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+                >
+                  {dispute.consultant?.name || 'Unknown'}
+                </Text>
+              </View>
             </View>
           </View>
 
           {/* Conversation Section */}
-          <View className={`rounded-xl p-4 mb-4 `}>
+          <View className={`rounded-xl  mb-4 `}>
             <Text
               className={`text-base font-poppins-semibold mb-4 ${
                 isDark ? 'text-white' : 'text-textDark'
@@ -293,35 +328,38 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
             ) : (
               <View>
                 {messages.map((msg) => {
-                  const isUser = msg.user_type === 'customer' || msg.user_id === user?.id;
+                  const isUser = msg.is_admin === false || msg.user_id === user?.id;
                   const { time } = formatDateTime(msg.created_at);
 
                   return (
-                    <View
-                      key={msg.id}
-                      className={`my-1 px-4 ${isUser ? 'items-end' : 'items-start'}`}
-                    >
+                    <View key={msg.id} className={`my-1 ${isUser ? 'items-end' : 'items-start'}`}>
                       <View
-                        className={`max-w-[75%] p-3 rounded-2xl ${
+                        className={`w-full p-3 border rounded-xl ${
                           isUser
-                            ? `bg-commonGradientStop2 ${isDark ? 'border-commonGradientStop5' : 'border-[#DAE7E0]'} border rounded-br-sm`
-                            : `${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} border rounded-bl-sm`
+                            ? `${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0] '} `
+                            : `${isDark ? 'bg-[#233931] border-[#27B07D]' : 'bg-[#E2F2EA] border-[#27B07D]'} `
                         }`}
                       >
+                        <View className="flex-row items-center justify-between">
+                          <Text
+                            className={`text-base font-poppins-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
+                          >
+                            {isUser ? 'You' : 'Admin'}
+                          </Text>
+                          <View className="flex-row items-center mt-1 gap-1">
+                            <Text
+                              className={`text-[10px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                            >
+                              {time}
+                            </Text>
+                          </View>
+                        </View>
                         <Text
-                          className={`text-base leading-5 ${
-                            isUser ? `text-white` : `${isDark ? 'text-white' : 'text-[#1C1C1C]'}`
-                          }`}
+                          className={`text-sm font-poppins-regular leading-5 
+                             ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
                         >
                           {msg.message}
                         </Text>
-                        <View className="flex-row items-center mt-1 gap-1">
-                          <Text
-                            className={`text-[10px] ${isUser ? 'text-white/70' : 'text-[#8E8E93]'}`}
-                          >
-                            {time}
-                          </Text>
-                        </View>
                       </View>
                     </View>
                   );
@@ -333,18 +371,14 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Message Input */}
         <View
-          className={`px-4 pt-2 pb-4 border-t ${
-            isDark
-              ? 'bg-commonGradientStop6 border-commonGradientStop7'
-              : 'bg-white border-[#DAE7E0]'
-          }`}
+          className={`px-4 pt-2 pb-2 mb-16 `}
           style={{
             paddingBottom: Math.max(insets.bottom, 12),
           }}
         >
           <View
-            className={`flex-row items-center rounded-[28px] px-4 min-h-[50px] ${
-              isDark ? 'bg-commonGradientStop7' : 'bg-[#F5F9F7]'
+            className={`flex-row items-center rounded-[28px] px-4 min-h-[50px] shadow-[0px_0px_14px_3px_#0000001F] ${
+              isDark ? 'bg-[#0E1B16]' : 'bg-[#ffffff]'
             }`}
           >
             <TextInput
@@ -355,20 +389,36 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
               }}
               value={message}
               onChangeText={setMessage}
-              placeholder="Type your reply..."
+              placeholder={
+                dispute?.status === 'closed' || dispute?.status === 'resolved'
+                  ? 'Dispute is closed'
+                  : 'Type your reply...'
+              }
               placeholderTextColor="#A1A1A1"
               multiline
               maxLength={2000}
-              editable={!isSending}
+              editable={
+                !isSending && dispute?.status !== 'closed' && dispute?.status !== 'resolved'
+              }
               onSubmitEditing={handleSend}
               returnKeyType="send"
             />
 
             <TouchableOpacity
               onPress={handleSend}
-              disabled={!message.trim() || isSending}
+              disabled={
+                !message.trim() ||
+                isSending ||
+                dispute?.status === 'closed' ||
+                dispute?.status === 'resolved'
+              }
               className={`ml-2 w-10 h-10 rounded-full justify-center items-center ${
-                message.trim() && !isSending ? 'bg-buttonPrimaryBg' : 'bg-gray-300'
+                message.trim() &&
+                !isSending &&
+                dispute?.status !== 'closed' &&
+                dispute?.status !== 'resolved'
+                  ? 'bg-[#36D399]'
+                  : 'bg-gray-300'
               }`}
               activeOpacity={0.7}
             >

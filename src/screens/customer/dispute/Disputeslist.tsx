@@ -99,7 +99,7 @@ const getStatusColor = (status: string) => {
     case 'resolved':
       return '#D4EDDA'; // Light green for Resolved
     default:
-      return '#E7B008';
+      return '#FFF3CD';
   }
 };
 
@@ -111,7 +111,7 @@ const getStatusTextColor = (status: string) => {
     case 'resolved':
       return '#155724'; // Light green for Resolved
     default:
-      return '#FFC107';
+      return '#856404';
   } // Dark text for all status badges
 };
 
@@ -134,7 +134,6 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   const disputes: Dispute[] = data?.data?.disputes || [];
-  console.log('disputes', disputes);
   const filteredDisputes = useMemo(() => {
     if (activeFilter === 'all') return disputes;
     if (activeFilter === 'open') {
@@ -196,7 +195,7 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
               <Text
                 className={`text-base font-poppins-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
               >
-                {DisputeMessage?.message || 'Dispute'}
+                {DisputeMessage?.message.slice(0, 20) + '...'}
               </Text>
               {/* Date */}
               <Text
