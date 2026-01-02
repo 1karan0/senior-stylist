@@ -12,54 +12,13 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { FlashList } from '@shopify/flash-list';
 
-import { useGetDisputes } from '@/api/user/dispute/useGetDisputes';
+import { useGetConsultantDisputes } from '@/api/consultant/useGetDisputes';
 import GradientBackground from '@/common/components/GradientBackground';
-import { ProfileStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
-
-type DisputeListNavigationProp = StackNavigationProp<ProfileStackParamList, 'DisputeList'>;
-
-interface Props {
-  navigation: DisputeListNavigationProp;
-}
+import { ConsultantDispute } from '@/common/types';
 
 type FilterType = 'all' | 'open' | 'resolved';
-
-interface Dispute {
-  id: number;
-  status: string;
-  consultation_id: number;
-  consultation_id_formatted?: string; // May be at root level
-  created_at: string;
-  consultant: {
-    id: number;
-    name: string;
-    profile_picture_url: string | null;
-  };
-  consultation?: {
-    id: number;
-    consultation_id_formatted: string;
-    problem_description?: string;
-    completed_at?: string;
-  };
-  message_count: number;
-  latest_message: {
-    message: string;
-    created_at: string;
-  } | null;
-}
-
-const getInitials = (name: string) => {
-  if (!name) return '??';
-  const initials = name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-  return initials || '??';
-};
 
 const formatDate = (dateString: string): string => {
   try {
@@ -72,23 +31,6 @@ const formatDate = (dateString: string): string => {
   } catch {
     return dateString;
   }
-};
-
-const formatRelativeTime = (iso: string) => {
-  if (!iso) return '';
-  const then = new Date(iso).getTime();
-  if (isNaN(then)) return iso;
-  const now = Date.now();
-  const seconds = Math.floor((now - then) / 1000);
-
-  if (seconds < 60) return 'just now';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return formatDate(iso);
 };
 
 const getStatusColor = (status: string) => {
@@ -112,7 +54,7 @@ const getStatusTextColor = (status: string) => {
       return '#155724'; // Light green for Resolved
     default:
       return '#856404';
-  } // Dark text for all status badges
+  }
 };
 
 const getStatusLabel = (status: string) => {
@@ -127,13 +69,17 @@ const getStatusLabel = (status: string) => {
   }
 };
 
-const DisputeList: React.FC<Props> = ({ navigation }) => {
+interface Props {
+  navigation: StackNavigationProp<any>;
+}
+
+const Disputes: React.FC<Props> = ({ navigation }) => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-  const { data, isLoading, error, refetch, isRefetching } = useGetDisputes();
+  const { data, isLoading, error, refetch, isRefetching } = useGetConsultantDisputes();
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
-  const disputes: Dispute[] = data?.data?.disputes || [];
+  const disputes: ConsultantDispute[] = data?.data?.disputes || [];
   const filteredDisputes = useMemo(() => {
     if (activeFilter === 'all') return disputes;
     if (activeFilter === 'open') {
@@ -145,45 +91,36 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
     return disputes;
   }, [disputes, activeFilter]);
 
-  const handleCreateDispute = () => {
-    navigation.navigate('CreateDispute');
+  const handleBack = () => {
+    navigation.goBack();
   };
 
-  const handleViewDetails = (disputeId: number) => {
-    navigation.navigate('DisputeDetails', { disputeId });
-  };
-
-  const renderDisputeItem = ({ item }: { item: Dispute }) => {
+  const renderDisputeItem = ({ item }: { item: ConsultantDispute }) => {
     const statusBgColor = getStatusColor(item.status);
     const statusTextColor = getStatusTextColor(item.status);
     const statusLabel = getStatusLabel(item.status);
-    const DisputeMessage = item.latest_message;
-
-    // Get consultation_id_formatted from nested consultation object or root level
-    const consultationIdFormatted =
-      item.consultation?.consultation_id_formatted ||
-      item.consultation_id_formatted ||
-      `#CONS-${item.consultation_id}`;
+    const consultationIdFormatted = `#CONS-${String(item.consultation_id).padStart(3, '0')}`;
 
     // Get update message
     const getUpdateMessage = () => {
       if (item.status === 'closed' || item.status === 'resolved') {
-        return `Refunded on ${formatDate(item.created_at)}`;
+        if (item.resolution) {
+          const resolvedDate = formatDate(item.resolution.resolved_at);
+          if (item.resolution.penalty_amount) {
+            return `Resolved on ${resolvedDate} - Penalty: $${item.resolution.penalty_amount}`;
+          }
+          return `Resolved on ${resolvedDate}`;
+        }
+        return `Resolved on ${formatDate(item.created_at)}`;
       }
-      if (item.latest_message) {
-        const daysAgo = Math.floor(
-          (Date.now() - new Date(item.latest_message.created_at).getTime()) / (1000 * 60 * 60 * 24)
-        );
-        if (daysAgo === 0) return 'Admin responded today';
-        if (daysAgo === 1) return 'Admin responded 1 day ago';
-        return `Admin responded ${daysAgo} days ago`;
-      }
-      return 'Waiting for admin response';
+      return 'Dispute in progress';
     };
 
     return (
       <View
-        className={`rounded-xl p-4 mb-3 border ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white  border-[#DAE7E0]'}`}
+        className={`rounded-xl p-4 mb-3 border ${
+          isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+        }`}
       >
         {/* Header Row with Dispute ID and Status */}
         <View>
@@ -195,17 +132,17 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
               <Text
                 className={`text-base font-poppins-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
               >
-                {DisputeMessage?.message.slice(0, 20) + '...'}
+                Dispute #{item.id}
               </Text>
               {/* Date */}
               <Text
                 className={`text-xs font-urbanist-semibold ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} mb-3`}
               >
-                {formatDate(item.created_at)}
+                Created: {formatDate(item.created_at)}
               </Text>
             </View>
             <View className="px-3 py-1 rounded-[10px]" style={{ backgroundColor: statusBgColor }}>
-              <Text className="text-xs font-urbanist-semibold " style={{ color: statusTextColor }}>
+              <Text className="text-xs font-urbanist-semibold" style={{ color: statusTextColor }}>
                 {statusLabel}
               </Text>
             </View>
@@ -215,23 +152,16 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
           className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-2`}
         />
 
-        {/* Consultation Details */}
-
-        {/* Update Message */}
-        <View className="flex-row justify-between ">
-          <View className="">
+        {/* Dispute Details */}
+        <View className="flex-row justify-between">
+          <View className="flex-1">
             <Text
               className={`text-xs font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
             >
               Consultation {consultationIdFormatted}
             </Text>
-            <Text
-              className={`text-xs font-poppins-regular mb-2 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-            >
-              Stylist: {item.consultant?.name || 'Unknown'}
-            </Text>
             {item.status === 'closed' || item.status === 'resolved' ? (
-              <View className="flex-row items-center mb-2">
+              <View className="flex-row items-center mb-2 mt-2">
                 <Ionicons name="checkmark-circle" size={16} color="#36D399" />
                 <Text className="text-xs font-urbanist-semibold ml-2" style={{ color: '#36D399' }}>
                   {getUpdateMessage()}
@@ -239,21 +169,25 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
               </View>
             ) : (
               <Text
-                className={`text-xs font-urbanist-semibold mb-2 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                className={`text-xs font-urbanist-semibold mb-2 mt-2 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
               >
                 {getUpdateMessage()}
               </Text>
             )}
-            <View className="flex-row justify-start">
-              <TouchableOpacity
-                onPress={() => handleViewDetails(item.id)}
-                className="px-4 py-2 rounded-[10px]"
-                style={{ backgroundColor: '#36D399' }}
-                activeOpacity={0.7}
+            {item.resolution?.resolved_by && (
+              <Text
+                className={`text-xs font-poppins-regular mb-2 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
               >
-                <Text className="text-white font-urbanist-bold text-xs">View Details</Text>
-              </TouchableOpacity>
-            </View>
+                Resolved by: {item.resolution.resolved_by}
+              </Text>
+            )}
+            {item.resolution?.resolution_notes && (
+              <Text
+                className={`text-xs font-poppins-regular mb-2 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+              >
+                Notes: {item.resolution.resolution_notes}
+              </Text>
+            )}
           </View>
 
           <View className="">
@@ -277,22 +211,23 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
       <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
 
       {/* Header */}
-      <View className="px-6 pt-10 pb-5 rounded-b-2xl" style={{ backgroundColor: '#27B07D' }}>
+      <View className="px-6 pt-5 pb-5 rounded-b-2xl" style={{ backgroundColor: '#27B07D' }}>
         <View className="">
           <View className="flex-row justify-between items-center mb-2">
             <View className="flex-1">
+              <TouchableOpacity
+                onPress={handleBack}
+                className="mb-2"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
               <Text className="text-white text-2xl font-urbanist-bold mb-1">My Disputes</Text>
             </View>
-            <TouchableOpacity
-              onPress={handleCreateDispute}
-              className="px-2 py-1 rounded-full"
-              style={{ backgroundColor: '#E7B008' }}
-              activeOpacity={0.7}
-            >
-              <Text className="text-white font-poppins-semibold">+ Create Dispute</Text>
-            </TouchableOpacity>
           </View>
-          <Text className="text-white font-poppins-regular ">View and manage your disputes</Text>
+          <Text className="text-white font-poppins-regular">
+            View and manage disputes against you
+          </Text>
         </View>
       </View>
 
@@ -304,7 +239,9 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity
               key={filter}
               onPress={() => setActiveFilter(filter)}
-              className={`px-4 py-2 rounded-xl flex-1 border ${isDark ? 'border-commonGradientStop7' : 'border-[#DADADA]'} ${activeFilter === filter ? 'bg-buttonPrimaryBg' : 'bg-transparent'}`}
+              className={`px-4 py-2 rounded-xl flex-1 border ${
+                isDark ? 'border-commonGradientStop7' : 'border-[#DADADA]'
+              } ${activeFilter === filter ? 'bg-buttonPrimaryBg' : 'bg-transparent'}`}
               style={{
                 backgroundColor:
                   activeFilter === filter ? '#36D399' : isDark ? '#273F36' : '#ffffff',
@@ -312,7 +249,9 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
               activeOpacity={0.7}
             >
               <Text
-                className={`font-poppins-semibold text-sm  text-center ${activeFilter === filter ? 'text-white' : isDark ? 'text-white' : 'text-textDark'}`}
+                className={`font-poppins-semibold text-sm text-center ${
+                  activeFilter === filter ? 'text-white' : isDark ? 'text-white' : 'text-textDark'
+                }`}
               >
                 {filter === 'all' ? 'All' : filter === 'open' ? 'Open' : 'Resolved'}
               </Text>
@@ -357,14 +296,8 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
             <Text
               className={`text-sm font-poppins-regular mt-2 text-center px-8 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
             >
-              You haven't created any disputes. Tap the "New" button to create one.
+              You don't have any disputes or reports against you at the moment.
             </Text>
-            <TouchableOpacity
-              onPress={handleCreateDispute}
-              className="mt-6 px-6 py-3 bg-buttonPrimaryBg rounded-xl"
-            >
-              <Text className="text-white font-poppins-semibold">Create Dispute</Text>
-            </TouchableOpacity>
           </View>
         ) : (
           <FlashList
@@ -383,4 +316,4 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-export default DisputeList;
+export default Disputes;

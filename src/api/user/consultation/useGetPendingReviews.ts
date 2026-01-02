@@ -14,7 +14,6 @@ export const useGetPendingReviews = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log('[useGetPendingReviews] API response:', res.data);
       // The API returns { data: { consultations: [...] } }
       // Extract the consultations array
       return res.data.data?.consultations || [];
