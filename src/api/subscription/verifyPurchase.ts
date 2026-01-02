@@ -48,6 +48,28 @@ export const verifyPurchase = async (
     throw new Error('Authentication token missing');
   }
 
+  // Backend is Laravel-style and commonly validates snake_case fields.
+  // Send snake_case aliases (and ensure "string" fields are never null).
+  const toStringOrEmpty = (v: unknown) => (v === undefined || v === null ? '' : String(v));
+  const payloadForApi: any = {
+    ...payload,
+    user_id: payload.userId,
+    plan_id: payload.planId,
+    transaction_id: toStringOrEmpty(payload.transactionId),
+    product_id: toStringOrEmpty(payload.productId),
+    base_plan_id: payload.base_plan_id ?? null,
+    purchase_date: payload.purchaseDate ?? null,
+    purchase_token: payload.purchaseToken ?? null,
+    order_id: toStringOrEmpty(payload.orderId),
+    package_name: payload.packageName ?? null,
+    auto_renewing: payload.autoRenewing ?? null,
+    transaction_receipt: toStringOrEmpty(payload.transactionReceipt),
+    original_transaction_id: toStringOrEmpty(payload.originalTransactionId),
+    action: payload.action ?? null,
+    scheduled_plan_id: payload.scheduledPlanId ?? null,
+    scheduled_start_date: payload.scheduledStartDate ?? null,
+  };
+
   const maxRetries = 3;
   let lastError: any = null;
 
@@ -56,12 +78,12 @@ export const verifyPurchase = async (
       console.log(`[verifyPurchase] Attempt ${attempt}/${maxRetries}`, {
         url: `${BASE_URL}/api/subscriptions/verify-purchase`,
         hasToken: !!token,
-        payloadKeys: Object.keys(payload),
+        payloadKeys: Object.keys(payloadForApi),
       });
 
       const res = await axios.post<VerifyPurchaseResponse>(
         `${BASE_URL}/api/subscriptions/verify-purchase`,
-        payload,
+        payloadForApi,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -85,13 +107,21 @@ export const verifyPurchase = async (
       // Handle 4xx errors (client errors - don't retry)
       if (res.status >= 400 && res.status < 500) {
         const errorMessage = parseApiError({ response: { data: res.data } });
-        throw new Error(errorMessage);
+        const e: any = new Error(errorMessage);
+        e.noRetry = true;
+        e.status = res.status;
+        throw e;
       }
 
       // For 5xx errors, throw to trigger retry
       throw new Error(`Server error: ${res.status}`);
     } catch (err: any) {
       lastError = err;
+
+      // Validation / client errors we intentionally surfaced should not be retried and should not be treated as network.
+      if (err?.noRetry) {
+        throw err;
+      }
 
       // Log detailed error information
       console.error(`[verifyPurchase] Attempt ${attempt} failed:`, {

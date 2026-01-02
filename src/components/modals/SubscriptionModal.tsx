@@ -2,12 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, Pressable, Alert, Platform, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import {
-  purchaseUpdatedListener,
-  purchaseErrorListener,
-  initConnection,
-  getAvailablePurchases,
-} from 'react-native-iap';
+import { purchaseUpdatedListener, purchaseErrorListener, initConnection } from 'react-native-iap';
 import * as RNIap from 'react-native-iap';
 import { storage } from '@/services/storage';
 import {
@@ -55,7 +50,6 @@ export default function SubscriptionModal({
   const [currentSubscription, setCurrentSubscription] = useState<any | null>(null);
   const processedPurchaseKeysRef = useRef<Set<string>>(new Set());
   const currentSubscriptionRef = useRef<any | null>(null);
-  const lastPurchaseErrorRef = useRef<{ code?: string; message?: string; at: number } | null>(null);
 
   useEffect(() => {
     currentSubscriptionRef.current = currentSubscription;
@@ -65,10 +59,6 @@ export default function SubscriptionModal({
   useEffect(() => {
     const loadCurrentSubscription = async () => {
       try {
-        console.log('[SubscriptionModal] ========================================');
-        console.log('[SubscriptionModal] 📂 LOADING SUBSCRIPTION FROM ASYNCSTORAGE');
-        console.log('[SubscriptionModal] ========================================');
-
         const subscription = await storage.getUserSubscription();
         setCurrentSubscription(subscription);
       } catch (error: unknown) {
@@ -86,52 +76,6 @@ export default function SubscriptionModal({
     }
   }, [plan]);
 
-  // Optional: Ask Google/Apple what purchases are currently owned by this account.
-  // NOTE: This is useful for debugging and recovery flows, but your backend should still be the source of truth.
-  useEffect(() => {
-    let cancelled = false;
-    const logAvailablePurchases = async () => {
-      try {
-        if ((RNIap as any).getAvailablePurchases) {
-          const purchases = await (RNIap as any).getAvailablePurchases();
-          console.log('purchases', purchases);
-          if (cancelled) return;
-          console.log('[SubscriptionModal] 🧾 getAvailablePurchases() result', {
-            count: Array.isArray(purchases) ? purchases.length : null,
-            purchases: Array.isArray(purchases)
-              ? purchases.map((p: any) => ({
-                  productId: p.productId,
-                  transactionId: p.transactionId,
-                  purchaseTokenPreview: p.purchaseToken
-                    ? String(p.purchaseToken).slice(0, 12) + '…'
-                    : null,
-                  isAcknowledgedAndroid: p.isAcknowledgedAndroid,
-                  purchaseState: p.purchaseState,
-                  transactionDate: p.transactionDate,
-                  platform: p.platform,
-                }))
-              : purchases,
-          });
-        } else {
-          console.log(
-            '[SubscriptionModal] getAvailablePurchases() not available in this react-native-iap version'
-          );
-        }
-      } catch (e) {
-        console.warn('[SubscriptionModal] getAvailablePurchases() failed', e);
-      }
-    };
-
-    // Only run when modal opens for a plan (keeps noise down).
-    if (plan?.originalPlan) {
-      void logAvailablePurchases();
-    }
-
-    return () => {
-      cancelled = true;
-    };
-  }, [plan]);
-
   // 2. Initiating the Purchase
   const handleSubscribe = useCallback(async () => {
     if (!plan?.originalPlan) {
@@ -144,26 +88,7 @@ export default function SubscriptionModal({
       return;
     }
 
-    // Determine purchase scenario
-    const purchaseScenario =
-      !currentSubscription || !currentSubscription.transaction_id
-        ? 'FIRST_TIME_PURCHASE'
-        : plan.originalPlan.id > (currentSubscription.plan_id || 0)
-          ? 'UPGRADE'
-          : plan.originalPlan.id < (currentSubscription.plan_id || 0)
-            ? 'DOWNGRADE'
-            : 'SAME_PLAN';
-
-    console.log('[SubscriptionModal] ========================================');
-    console.log('[SubscriptionModal] 🛒 PURCHASE SCENARIO DETECTED');
-    console.log('[SubscriptionModal] ========================================');
-    console.log('[SubscriptionModal] Purchase Type:', {
-      scenario: purchaseScenario,
-      currentPlanId: currentSubscription?.plan_id || 'NONE',
-      newPlanId: plan.originalPlan.id,
-      hasCurrentSubscription: !!currentSubscription,
-      hasTransactionId: !!currentSubscription?.transaction_id,
-    });
+    // Focus on purchase only (no upgrade/downgrade logic here).
 
     setIsLoading(true);
     setIsProcessingPurchase(true);
@@ -226,51 +151,7 @@ export default function SubscriptionModal({
       if (Platform.OS === 'android') {
         const rnIapAny = RNIap as any;
 
-        // --- STEP 1: Check for existing purchases using getAvailablePurchases ---
-        console.log('[SubscriptionModal] 🔍 Checking for existing purchases...');
-        let existingPurchase: RNIap.Purchase | null = null;
-        let existingPurchaseToken: string | null = null;
-        let existingProductId: string | null = null;
-
-        try {
-          const availablePurchases = await getAvailablePurchases();
-          console.log('[SubscriptionModal] Available purchases:', {
-            count: availablePurchases.length,
-            productIds: availablePurchases.map((p) => p.productId),
-          });
-
-          // Find the current subscription purchase
-          if (availablePurchases.length > 0) {
-            // Try to find purchase matching current subscription product ID
-            existingPurchase =
-              availablePurchases.find(
-                (p) => p.productId === productId || p.productId === currentSubscription?.product_id
-              ) || availablePurchases[0]; // Fallback to first purchase if no match
-
-            if (existingPurchase) {
-              const purchaseAny = existingPurchase as any;
-              existingPurchaseToken = purchaseAny.purchaseToken || null;
-              existingProductId = existingPurchase.productId;
-
-              console.log('[SubscriptionModal] ✅ Found existing purchase:', {
-                productId: existingProductId,
-                hasPurchaseToken: !!existingPurchaseToken,
-                purchaseTokenPreview: existingPurchaseToken
-                  ? existingPurchaseToken.substring(0, 40) + '...'
-                  : 'NOT_FOUND',
-              });
-            }
-          } else {
-            console.log(
-              '[SubscriptionModal] ℹ️ No existing purchases found - this is a first-time purchase'
-            );
-          }
-        } catch (err) {
-          console.warn('[SubscriptionModal] ⚠️ Failed to get available purchases:', err);
-          // Continue with purchase flow even if getAvailablePurchases fails
-        }
-
-        // --- STEP 2: Fetch subscription product details ---
+        // --- Fetch subscription product details ---
         let selectedOfferToken: string | null = null;
         let subscriptions: any[] = [];
         let fetchMethod = 'none';
@@ -317,56 +198,7 @@ export default function SubscriptionModal({
               skus: [productId],
               type: 'subs',
             });
-            if (__DEV__) {
-              console.log('[SubscriptionModal][DEBUG] fetchProducts() raw return', {
-                count: Array.isArray(products) ? products.length : null,
-                products: Array.isArray(products)
-                  ? products.map((p: any) => ({
-                      productId: p.productId || p.id,
-                      title: p.title,
-                      type: p.type,
-                      // show both possible fields
-                      subscriptionOfferDetailsCount:
-                        (
-                          p.subscriptionOfferDetailsAndroid ||
-                          p.subscriptionOfferDetails ||
-                          p.subscriptionOffers ||
-                          []
-                        )?.length ?? 0,
-                      subscriptionOfferDetails:
-                        p.subscriptionOfferDetailsAndroid ||
-                        p.subscriptionOfferDetails ||
-                        p.subscriptionOffers ||
-                        null,
-                    }))
-                  : products,
-              });
-            }
-            if (__DEV__) {
-              console.log('[SubscriptionModal][DEBUG] fetchProducts() raw return', {
-                count: Array.isArray(products) ? products.length : null,
-                products: Array.isArray(products)
-                  ? products.map((p: any) => ({
-                      productId: p.productId || p.id,
-                      title: p.title,
-                      type: p.type,
-                      // show both possible fields
-                      subscriptionOfferDetailsCount:
-                        (
-                          p.subscriptionOfferDetailsAndroid ||
-                          p.subscriptionOfferDetails ||
-                          p.subscriptionOffers ||
-                          []
-                        )?.length ?? 0,
-                      subscriptionOfferDetails:
-                        p.subscriptionOfferDetailsAndroid ||
-                        p.subscriptionOfferDetails ||
-                        p.subscriptionOffers ||
-                        null,
-                    }))
-                  : products,
-              });
-            }
+            // (debug logs removed for clarity)
             if (products && products.length > 0) {
               subscriptions = products.map((p: any) => ({
                 productId: p.productId || p.id,
@@ -489,59 +321,12 @@ export default function SubscriptionModal({
 
         console.log(subscriptionOffer, 'subscriptionOffer');
 
-        // Handle Upgrades/Downgrades (for existing subscriptions)
-        // Use purchase token from getAvailablePurchases if available, otherwise fallback to currentSubscription
-        const oldPurchaseToken =
-          existingPurchaseToken || currentSubscription?.transaction_id || null;
-
-        if (oldPurchaseToken) {
-          // react-native-iap expects these keys for subscription replacement
-          purchaseRequest.request.android.purchaseTokenAndroid = oldPurchaseToken;
-
-          // Determine upgrade vs downgrade
-          const selectedTier = Number((plan.originalPlan as any)?.sort_order);
-          const currentTier = Number(
-            (currentSubscription as any)?.plan_sort_order ??
-              (currentSubscription as any)?.sortOrder ??
-              (currentSubscription as any)?.plan?.sort_order ??
-              (currentSubscription as any)?.plan?.sortOrder ??
-              NaN
-          );
-
-          const canCompareTiers = Number.isFinite(selectedTier) && Number.isFinite(currentTier);
-          const isUpgrade = canCompareTiers ? selectedTier > currentTier : false;
-          const isDowngrade = canCompareTiers ? selectedTier < currentTier : false;
-
-          // Proration modes (Android Replacement Modes):
-          // 1 = WITH_TIME_PRORATION (for upgrades - immediate with prorated credit)
-          // 6 = DEFERRED (for downgrades - change at next renewal)
-          // If we can't compare tiers, default to immediate replacement (safer UX than deferring unexpectedly)
-          purchaseRequest.request.android.replacementModeAndroid = isDowngrade ? 6 : 1;
-
-          if (__DEV__) {
-            console.log('[SubscriptionModal][DEBUG] Replacement mode decision', {
-              selectedTier,
-              currentTier,
-              canCompareTiers,
-              isUpgrade,
-              isDowngrade,
-              replacementModeAndroid: purchaseRequest.request.android.replacementModeAndroid,
-              replacementModeMeaning: isDowngrade
-                ? 'DEFERRED (downgrade) - Value 6'
-                : 'WITH_TIME_PRORATION (upgrade) - Value 1',
-              purchaseTokenSource: existingPurchaseToken
-                ? 'getAvailablePurchases'
-                : 'currentSubscription',
-            });
-          }
-        }
+        // No upgrade/downgrade logic here; just initiate purchase.
 
         // --- 3. EXECUTE PURCHASE REQUEST ---
+        // NOTE: This only means the purchase flow was launched successfully.
+        // The actual outcome (success/cancel/failure) is delivered via purchaseUpdatedListener/purchaseErrorListener.
         await (RNIap as any).requestPurchase(purchaseRequest);
-
-        console.log(
-          '[SubscriptionModal] ✅ Purchase request sent successfully - waiting for purchase update...'
-        );
       } else {
         // iOS Implementation
         await (RNIap as any).requestPurchase({ sku: productId });
@@ -940,6 +725,9 @@ export default function SubscriptionModal({
         });
 
         if (verificationResult.success) {
+          console.log(
+            '[SubscriptionModal] ✅ Purchase verified successfully (Google → Backend) and will be acknowledged/finished now.'
+          );
           // Persist verified subscription locally (used by Pricing/Profile flows).
           // Keep shape backwards-compatible since some screens expect `planId/planName`,
           // while others expect API-style `plan_id/transaction_id`.
@@ -1134,24 +922,24 @@ export default function SubscriptionModal({
         console.log('[SubscriptionModal] ✅ Purchase update listener established and listening');
 
         purchaseErrorSubscription = purchaseErrorListener((error: any) => {
-          const now = Date.now();
           const code = error?.code;
-          const message = error?.message;
-          const last = lastPurchaseErrorRef.current;
-          // De-dupe noisy repeated events (common when listeners are accidentally registered multiple times)
-          if (last && last.code === code && last.message === message && now - last.at < 2000) {
+          // User cancellation is expected.
+          if (
+            code === 'user-cancelled' ||
+            code === 'E_USER_CANCELLED' ||
+            code === 'E_USER_CANCELED'
+          ) {
+            setIsLoading(false);
+            setIsProcessingPurchase(false);
             return;
           }
-          lastPurchaseErrorRef.current = { code, message, at: now };
 
           console.error('[SubscriptionModal] Purchase error from listener:', error);
           setIsLoading(false);
           setIsProcessingPurchase(false);
-          const errorCode = error?.code;
-          if (errorCode !== 'E_USER_CANCELLED' && errorCode !== 'E_USER_CANCELED') {
-            const errorMessage = error?.message || 'An error occurred during purchase';
-            Alert.alert('Purchase Error', errorMessage);
-          }
+
+          const errorMessage = error?.message || 'An error occurred during purchase';
+          Alert.alert('Purchase Error', errorMessage);
         });
 
         if (!isMounted) return;
