@@ -193,7 +193,7 @@ const CreateDispute: React.FC<Props> = ({ navigation }) => {
                               isDark ? 'text-white' : 'text-textDark'
                             }`}
                           >
-                            {consultation.problem_description || 'Consultation'}
+                            {consultation.problem_description.slice(0, 20) || 'Consultation'}
                           </Text>
                           <Text className="text-[#27B07D] text-sm font-poppins-semibold mb-1">
                             #{`CONS-${consultation.id}`}
