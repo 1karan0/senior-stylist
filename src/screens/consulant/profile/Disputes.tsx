@@ -207,9 +207,7 @@ const Disputes: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <GradientBackground>
-      <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
-
+    <GradientBackground topOverlayColor="#27B07D">
       {/* Header */}
       <View className="px-6 pt-5 pb-5 rounded-b-2xl" style={{ backgroundColor: '#27B07D' }}>
         <View className="">

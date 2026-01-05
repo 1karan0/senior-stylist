@@ -1,8 +1,13 @@
+import React, { useState } from 'react';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
-import { ScrollView, StatusBar, Text, View, Image, TouchableOpacity } from 'react-native';
+import { ScrollView, StatusBar, Text, View, Image, TouchableOpacity, Alert } from 'react-native';
 import Button from '@/common/components/Button';
+import { useCreateStripAccount } from '@/api/consultant/strip-express/useCreateStripAccount';
+import StripeWebViewModal from '@/screens/consulant/payment/components/StripeWebViewModal';
+import { useGetStripAccount } from '@/api/consultant/strip-express/useGetStripAccount';
+import { useGetOnboardingLink } from '@/api/consultant/strip-express/useGetOnboardingLink';
 
 type StepStatus = 'completed' | 'pending' | 'not_started';
 
@@ -19,6 +24,27 @@ interface SetupStep {
 const SetupPayout = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
+  const { mutateAsync: createStripAccount, isPending: isCreateStripAccountPending } =
+    useCreateStripAccount();
+  const {
+    data: stripAccount,
+    isLoading: isStripAccountLoading,
+    isFetching: isStripAccountFetching,
+    refetch: refetchStripAccount,
+  } = useGetStripAccount();
+  const { refetch: refetchOnboardingLink, isFetching: isOnboardingLinkFetching } =
+    useGetOnboardingLink({
+      enabled: false,
+    });
+  const [stripeUrl, setStripeUrl] = useState<string>('');
+  const [stripeVisible, setStripeVisible] = useState(false);
+  const [isStripeActionLoading, setIsStripeActionLoading] = useState(false);
+
+  const extractStripeUrl = (payload: any): string | undefined => {
+    if (!payload) return undefined;
+    if (typeof payload === 'string') return payload;
+    return payload?.onboarding_url ?? payload?.onboardingUrl ?? payload?.url ?? payload?.link;
+  };
 
   const setupSteps: SetupStep[] = [
     {
@@ -50,8 +76,40 @@ const SetupPayout = () => {
     },
   ];
 
-  const handleContinueToStripe = () => {
-    // Navigate to Stripe onboarding
+  const handleContinueToStripe = async () => {
+    try {
+      setIsStripeActionLoading(true);
+
+      // Always refetch on click to get a fresh onboarding URL (Stripe links can be single-use)
+      const refetched = await refetchStripAccount();
+      const acct: any = refetched?.data;
+
+      if (acct?.has_account) {
+        const urlFromAccount = extractStripeUrl(acct);
+        const url = urlFromAccount || extractStripeUrl((await refetchOnboardingLink())?.data);
+        if (!url) {
+          Alert.alert('Stripe', 'Onboarding link not available right now. Please try again.');
+          return;
+        }
+        setStripeUrl(url);
+        setStripeVisible(true);
+        return;
+      }
+
+      const res: any = await createStripAccount();
+      const url = extractStripeUrl(res);
+      if (!url) {
+        Alert.alert('Stripe', 'Unable to start onboarding. Please try again.');
+        return;
+      }
+      setStripeUrl(url);
+      setStripeVisible(true);
+      refetchStripAccount();
+    } catch (err: any) {
+      Alert.alert('Stripe', err?.message ?? 'Something went wrong. Please try again.');
+    } finally {
+      setIsStripeActionLoading(false);
+    }
   };
 
   const handleLearnMore = () => {
@@ -59,7 +117,7 @@ const SetupPayout = () => {
   };
 
   return (
-    <GradientBackground>
+    <GradientBackground topOverlayColor="#27B07D">
       <View className="flex-1">
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
         <View className="px-5  pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0">
@@ -143,6 +201,13 @@ const SetupPayout = () => {
             <Button
               text="Continue to Stripe Onboarding"
               onPress={handleContinueToStripe}
+              loading={
+                isStripeActionLoading ||
+                isCreateStripAccountPending ||
+                isOnboardingLinkFetching ||
+                isStripAccountLoading ||
+                isStripAccountFetching
+              }
               variant="gradient"
               className="w-full rounded-[10px]"
             />
@@ -175,6 +240,15 @@ const SetupPayout = () => {
           </View>
         </ScrollView>
       </View>
+      <StripeWebViewModal
+        visible={stripeVisible}
+        url={stripeUrl}
+        title="Stripe Onboarding"
+        onClose={() => {
+          setStripeVisible(false);
+          setStripeUrl('');
+        }}
+      />
     </GradientBackground>
   );
 };

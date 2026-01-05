@@ -1,51 +1,73 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StatusBar, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StatusBar, Image, Alert } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import Button from '@/common/components/Button';
+import { useGetMyEarning } from '@/api/consultant/earning/useGetMyEarning';
+import { useGetRecentEarning } from '@/api/consultant/earning/useGetRecentEarning';
+import { useCreateStripAccount } from '@/api/consultant/strip-express/useCreateStripAccount';
+import StripeWebViewModal from '@/screens/consulant/payment/components/StripeWebViewModal';
+import { useGetStripAccount } from '@/api/consultant/strip-express/useGetStripAccount';
+import { useGetOnboardingLink } from '@/api/consultant/strip-express/useGetOnboardingLink';
 
 const MyEarning = () => {
   const navigation = useNavigation<any>();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
+  const { data: myEarning, isLoading: isMyEarningLoading } = useGetMyEarning();
+  const { data: recentEarning, isLoading: isRecentEarningLoading } = useGetRecentEarning();
+  const {
+    data: stripAccount,
+    isLoading: isStripAccountLoading,
+    isFetching: isStripAccountFetching,
+    refetch: refetchStripAccount,
+  } = useGetStripAccount();
+  const { mutateAsync: createStripAccount, isPending: isCreateStripAccountPending } =
+    useCreateStripAccount();
+  const { refetch: refetchOnboardingLink, isFetching: isOnboardingLinkFetching } =
+    useGetOnboardingLink({
+      enabled: false,
+    });
+  const [stripeUrl, setStripeUrl] = useState<string>('');
+  const [stripeVisible, setStripeVisible] = useState(false);
+  const [isStripeActionLoading, setIsStripeActionLoading] = useState(false);
+  const currencySymbol = '£';
 
-  // Mock data - replace with actual data from API
-  const availableBalance = '$245.50';
-  const totalEarnings = '$1,245.50';
-  const totalPayouts = '$1,000.00';
-  const thisMonth = 12;
-  const totalConsultations = 156;
-  const isStripeVerified = true;
+  const extractStripeUrl = (payload: any): string | undefined => {
+    if (!payload) return undefined;
+    if (typeof payload === 'string') return payload;
+    return payload?.onboarding_url ?? payload?.onboardingUrl ?? payload?.url ?? payload?.link;
+  };
 
-  const recentEarnings = [
-    {
-      id: '1',
-      type: 'consultation',
-      description: 'Consultation #CONS-12345',
-      date: 'Feb 5, 2026',
-      amount: '+£1.20',
-      isPositive: true,
-    },
-    {
-      id: '2',
-      type: 'consultation',
-      description: 'Consultation #CONS-12344',
-      date: 'Feb 4, 2026',
-      amount: '+£1.20',
-      isPositive: true,
-    },
-    {
-      id: '3',
-      type: 'payout',
-      description: 'Payout',
-      date: 'Jan 31, 2028',
-      amount: '-£200.00',
-      isPositive: false,
-    },
-  ];
+  const formatMoney = (value: unknown) => {
+    if (value === null || value === undefined) return '—';
+    if (typeof value === 'string') {
+      const asNumber = Number(value);
+      if (Number.isFinite(asNumber)) return `${currencySymbol}${asNumber.toFixed(2)}`;
+      return value;
+    }
+    if (typeof value === 'number' && Number.isFinite(value))
+      return `${currencySymbol}${value.toFixed(2)}`;
+    return '—';
+  };
+
+  const availableBalance = isMyEarningLoading ? '...' : formatMoney(myEarning?.available_balance);
+  const totalPayouts = isMyEarningLoading ? '...' : formatMoney(myEarning?.withdrawn_amount);
+  const totalEarnings = isMyEarningLoading
+    ? '...'
+    : formatMoney(
+        (Number(myEarning?.available_balance || 0) || 0) +
+          (Number(myEarning?.pending_balance || 0) || 0) +
+          (Number(myEarning?.withdrawn_amount || 0) || 0)
+      );
+  const thisMonth = myEarning?.this_month_consultations ?? 0;
+  const totalConsultations = myEarning?.total_consultations ?? 0;
+  const isStripeVerified = Boolean(
+    stripAccount?.has_account && stripAccount?.charges_enabled && stripAccount?.payouts_enabled
+  );
 
   const handleRequestWithdrawal = () => {
     navigation.navigate('WithdrawFunds');
@@ -55,16 +77,52 @@ const MyEarning = () => {
     navigation.navigate('EarningStatement');
   };
 
-  const handleTaxInformation = () => {
+  const handlePayoutHistory = () => {
     // Navigate to tax information screen
+    navigation.navigate('PayOutHistory');
   };
 
-  const handleManagePayoutDetails = () => {
-    navigation.navigate('SetupPayout');
+  const handleManagePayoutDetails = async () => {
+    try {
+      setIsStripeActionLoading(true);
+
+      // Always refetch on click to get a fresh onboarding URL (Stripe links can be single-use)
+      const refetched = await refetchStripAccount();
+      const acct: any = refetched?.data;
+
+      if (acct?.has_account) {
+        const urlFromAccount = extractStripeUrl(acct);
+        const url = urlFromAccount || extractStripeUrl((await refetchOnboardingLink())?.data);
+        if (!url) {
+          Alert.alert('Stripe', 'Onboarding link not available right now. Please try again.');
+          return;
+        }
+        setStripeUrl(url);
+        setStripeVisible(true);
+        return;
+      }
+
+      // No account → create then open onboarding URL
+      const res: any = await createStripAccount();
+      const url = extractStripeUrl(res);
+      if (!url) {
+        Alert.alert('Stripe', 'Unable to start onboarding. Please try again.');
+        return;
+      }
+      setStripeUrl(url);
+      setStripeVisible(true);
+
+      // Keep local state in sync for future presses
+      refetchStripAccount();
+    } catch (err: any) {
+      Alert.alert('Stripe', err?.message ?? 'Something went wrong. Please try again.');
+    } finally {
+      setIsStripeActionLoading(false);
+    }
   };
 
   return (
-    <GradientBackground>
+    <GradientBackground topOverlayColor="#27B07D">
       <View className="flex-1 ">
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
         {/* Header */}
@@ -111,7 +169,7 @@ const MyEarning = () => {
           <View className="flex-row gap-3 mb-4">
             {/* This Month Card */}
             <View
-              className={`flex-1 rounded-2xl p-4 ${
+              className={`flex-1 rounded-2xl items-center justify-center p-4 ${
                 isDark
                   ? 'bg-[#162721] border border-[#273F36]'
                   : 'bg-[#FFFFFF] border border-[#DAE7E0]'
@@ -132,7 +190,7 @@ const MyEarning = () => {
 
             {/* Total Consultations Card */}
             <View
-              className={`flex-1 rounded-2xl p-4 ${
+              className={`flex-1 rounded-2xl items-center justify-center p-4 ${
                 isDark
                   ? 'bg-[#162721] border border-[#273F36]'
                   : 'bg-[#FFFFFF] border border-[#DAE7E0]'
@@ -182,12 +240,21 @@ const MyEarning = () => {
                 </View>
               )}
             </View>
-            <Text className="text-white text-xs font-urbanist-regular opacity-80 mb-4">
+            <Text
+              className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-xs font-urbanist-regular opacity-80 mb-4`}
+            >
               Bank details and verification
             </Text>
             <Button
               text="Manage Payout Details"
               onPress={handleManagePayoutDetails}
+              loading={
+                isStripeActionLoading ||
+                isCreateStripAccountPending ||
+                isOnboardingLinkFetching ||
+                isStripAccountLoading ||
+                isStripAccountFetching
+              }
               variant="light"
               textClassName="text-[#162721]"
               icon={
@@ -219,8 +286,8 @@ const MyEarning = () => {
                 className="w-full rounded-[10px]"
               />
               <Button
-                text="Tax Information"
-                onPress={handleTaxInformation}
+                text="Payout History"
+                onPress={handlePayoutHistory}
                 variant="light"
                 textClassName="text-[#162721]"
                 className="w-full rounded-[10px]"
@@ -229,43 +296,62 @@ const MyEarning = () => {
           </View>
 
           {/* Recent Earnings */}
-          <View className="mb-4">
+          <View
+            className={`mb-4 border  rounded-xl p-4 ${
+              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-[#FFFFFF] border-[#DAE7E0]'
+            }`}
+          >
             <Text
               className={`text-base font-urbanist-bold mb-3 ${isDark ? 'text-white' : 'text-textDark'}`}
             >
               Recent Earnings
             </Text>
-            <View className="gap-2">
-              {recentEarnings.map((earning) => (
-                <View
-                  key={earning.id}
-                  className={`flex-row items-center justify-between py-3 px-4 rounded-xl ${
-                    isDark
-                      ? 'bg-[#162721] border border-[#273F36]'
-                      : 'bg-[#FFFFFF] border border-[#DAE7E0]'
-                  }`}
+            <View className={`gap-2 `}>
+              {isRecentEarningLoading ? (
+                <Text
+                  className={`${isDark ? 'text-white' : 'text-textDark'} text-sm font-urbanist-regular`}
                 >
-                  <View className="flex-1">
-                    <Text
-                      className={`${isDark ? 'text-white' : 'text-black'} text-sm font-urbanist-semibold mb-1`}
-                    >
-                      {earning.description}
-                    </Text>
-                    <Text
-                      className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-xs font-urbanist-regular opacity-70`}
-                    >
-                      {earning.date}
-                    </Text>
-                  </View>
-                  <Text
-                    className={`${isDark ? 'text-white' : 'text-black'} text-base font-urbanist-bold ${
-                      earning.isPositive ? 'text-textPrimary' : 'text-error'
-                    }`}
+                  Loading...
+                </Text>
+              ) : !recentEarning?.length ? (
+                <Text
+                  className={`${isDark ? 'text-white' : 'text-textDark'} text-sm font-urbanist-regular`}
+                >
+                  No recent earnings found.
+                </Text>
+              ) : (
+                recentEarning?.map((earning: any) => (
+                  <View
+                    key={
+                      earning.id ?? `${earning.consultation_id}-${earning.date}-${earning.amount}`
+                    }
                   >
-                    {earning.amount}
-                  </Text>
-                </View>
-              ))}
+                    <View className={`flex-row items-center justify-between py-3 px-4 rounded-xl`}>
+                      <View className="flex-1">
+                        <Text
+                          className={`${isDark ? 'text-white' : 'text-black'} text-sm font-urbanist-semibold mb-1`}
+                        >
+                          {earning?.status ? `${earning.status}` : 'Earning'}{' '}
+                          {earning?.consultation_id ? `• #${earning.consultation_id}` : ''}
+                        </Text>
+                        <Text
+                          className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-xs font-urbanist-regular opacity-70`}
+                        >
+                          {earning?.date ?? '—'}
+                        </Text>
+                      </View>
+                      <Text
+                        className={`${isDark ? 'text-white' : 'text-black'} text-base font-urbanist-bold text-textPrimary`}
+                      >
+                        {formatMoney(earning?.amount)}
+                      </Text>
+                    </View>
+                    <View
+                      className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-2`}
+                    />
+                  </View>
+                ))
+              )}
             </View>
           </View>
 
@@ -274,13 +360,22 @@ const MyEarning = () => {
             <View className="flex-row items-start gap-3">
               <Image source={require('@/assets/icons/yellow-info.png')} className="w-6 h-6" />
               <Text className="text-[#162721] text-xs font-urbanist-regular flex-1">
-                Note: Minimum withdrawal amount is £100. Stripe fees 10.25% + £0.10 will be deducted
+                Note: Minimum withdrawal amount is £100. Stripe fees 0.25% + £0.10 will be deducted
                 from your payout. Monthly account fee (£2) is charged separately.
               </Text>
             </View>
           </View>
         </ScrollView>
       </View>
+      <StripeWebViewModal
+        visible={stripeVisible}
+        url={stripeUrl}
+        title="Stripe Onboarding"
+        onClose={() => {
+          setStripeVisible(false);
+          setStripeUrl('');
+        }}
+      />
     </GradientBackground>
   );
 };
