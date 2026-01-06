@@ -508,6 +508,18 @@ export default function PricingScreen() {
               console.error('[Pricing] Navigation error:', err);
             }
           }}
+          onNavigateToConsultation={() => {
+            try {
+              const userRole = user?.role;
+              if (userRole === 'consultant') {
+                (navigation as any).navigate('ConsultantTabs', { screen: 'ChatTab' });
+              } else {
+                (navigation as any).navigate('UserTabs', { screen: 'ConsultationTab' });
+              }
+            } catch (err) {
+              console.error('[Pricing] Navigation error:', err);
+            }
+          }}
           fromSignup={fromSignup}
           fromProfile={fromProfile}
         />

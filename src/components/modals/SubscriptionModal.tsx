@@ -34,6 +34,7 @@ interface SubscriptionModalProps {
   } | null;
   onClose?: () => void;
   onNavigateToProfile?: () => void; // Callback to navigate (to profile tab or consultation tab based on source)
+  onNavigateToConsultation?: () => void; // Callback to navigate specifically to consultation screen (post-upgrade)
   fromSignup?: boolean; // Indicates if user came from signup flow
   fromProfile?: boolean; // Indicates if user came from Profile/Manage Subscription
 }
@@ -42,11 +43,15 @@ export default function SubscriptionModal({
   plan,
   onClose,
   onNavigateToProfile,
+  onNavigateToConsultation,
   fromSignup = false,
   fromProfile = false,
 }: SubscriptionModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessingPurchase, setIsProcessingPurchase] = useState(false);
+  const [isSyncingWithStore, setIsSyncingWithStore] = useState(false);
+  const [isUpgradeConfirmationPending, setIsUpgradeConfirmationPending] = useState(false);
+  const [isUpgradeAppliedMessageVisible, setIsUpgradeAppliedMessageVisible] = useState(false);
   const [iapInitialized, setIapInitialized] = useState(false);
   const [iapError, setIapError] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -54,12 +59,22 @@ export default function SubscriptionModal({
   const currentSubscription = profileData?.subscription ?? null;
   const processedPurchaseKeysRef = useRef<Set<string>>(new Set());
   const currentSubscriptionRef = useRef<any | null>(null);
+  const upgradeRedirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   console.log('currentSubscription', currentSubscription);
 
   useEffect(() => {
     currentSubscriptionRef.current = currentSubscription;
   }, [currentSubscription]);
+
+  useEffect(() => {
+    return () => {
+      if (upgradeRedirectTimeoutRef.current) {
+        clearTimeout(upgradeRedirectTimeoutRef.current);
+        upgradeRedirectTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Subscription status is sourced from Profile API (no AsyncStorage subscription state).
 
@@ -79,6 +94,7 @@ export default function SubscriptionModal({
 
     setIsLoading(true);
     setIsProcessingPurchase(true);
+    setIsSyncingWithStore(true);
 
     const productId = Platform.select({
       ios: plan.originalPlan.apple_product_id,
@@ -88,6 +104,7 @@ export default function SubscriptionModal({
     if (!productId) {
       setIsLoading(false);
       setIsProcessingPurchase(false);
+      setIsSyncingWithStore(false);
       Alert.alert('Error', `Product ID not configured for ${Platform.OS}`);
       return;
     }
@@ -400,14 +417,19 @@ export default function SubscriptionModal({
             },
           }
         );
+        // We are now handing off to the Store UI.
+        setIsSyncingWithStore(false);
         await (RNIap as any).requestPurchase(purchaseRequest);
       } else {
         // iOS Implementation
+        // We are now handing off to the Store UI.
+        setIsSyncingWithStore(false);
         await (RNIap as any).requestPurchase({ sku: productId });
       }
     } catch (err: unknown) {
       setIsLoading(false);
       setIsProcessingPurchase(false);
+      setIsSyncingWithStore(false);
 
       const iapErr = err as any;
       // Silent return on user cancel
@@ -421,6 +443,8 @@ export default function SubscriptionModal({
   // 3. Handling the Purchase Result
   const handlePurchaseUpdate = useCallback(
     async (purchase: RNIap.Purchase) => {
+      // Ensure we don't show "syncing" once the store has delivered a purchase callback.
+      setIsSyncingWithStore(false);
       const currentSub = currentSubscriptionRef.current;
       // Determine purchase scenario for logging
       const hasActiveSub =
@@ -796,8 +820,15 @@ export default function SubscriptionModal({
           transactionId: purchaseDataForBackend.transactionId,
         });
         console.log('[SubscriptionModal] 📡 Sending purchase to backend for verification...');
-
-        const verificationResult = await sendPurchaseToBackend(purchaseDataForBackend);
+        const shouldShowUpgradeRequestedMessage =
+          purchaseScenario === 'UPGRADE' && Platform.OS === 'android';
+        if (shouldShowUpgradeRequestedMessage) setIsUpgradeConfirmationPending(true);
+        let verificationResult: Awaited<ReturnType<typeof sendPurchaseToBackend>>;
+        try {
+          verificationResult = await sendPurchaseToBackend(purchaseDataForBackend);
+        } finally {
+          if (shouldShowUpgradeRequestedMessage) setIsUpgradeConfirmationPending(false);
+        }
 
         console.log('[SubscriptionModal] ========================================');
         console.log('[SubscriptionModal] 📥 BACKEND VERIFICATION RESPONSE RECEIVED');
@@ -892,6 +923,25 @@ export default function SubscriptionModal({
             }
           }
 
+          // Upgrade UX: backend indicates the purchase is an upgrade.
+          // Show message for 5 seconds then route to Consultation screen.
+          const isUpgradeFromBackend = verificationResult?.data?.is_upgrade === true;
+          if (isUpgradeFromBackend) {
+            setIsUpgradeAppliedMessageVisible(true);
+            if (upgradeRedirectTimeoutRef.current) {
+              clearTimeout(upgradeRedirectTimeoutRef.current);
+              upgradeRedirectTimeoutRef.current = null;
+            }
+            upgradeRedirectTimeoutRef.current = setTimeout(() => {
+              try {
+                onClose?.();
+              } finally {
+                onNavigateToConsultation?.();
+              }
+            }, 5000);
+            return;
+          }
+
           Alert.alert('Success!', 'Subscription activated.', [
             { text: 'OK', onPress: () => onClose?.() },
           ]);
@@ -909,8 +959,11 @@ export default function SubscriptionModal({
         });
         Alert.alert('Verification Failed', 'Please contact support if you were charged.');
       } finally {
+        setIsUpgradeConfirmationPending(false);
+        // Keep upgrade success message visible until redirect triggers or modal closes.
         setIsProcessingPurchase(false);
         setIsLoading(false);
+        setIsSyncingWithStore(false);
       }
     },
     [plan, onClose]
@@ -1092,25 +1145,23 @@ export default function SubscriptionModal({
 
   // Handle modal close with purchase in progress warning
   const handleClose = () => {
-    if (isProcessingPurchase) {
+    // IMPORTANT: Do not allow closing while purchase/verification is in progress.
+    // Closing mid-flow can break Google Play/App Store purchase listeners and leave transactions unverified.
+    if (
+      isProcessingPurchase ||
+      isSyncingWithStore ||
+      isUpgradeConfirmationPending ||
+      isUpgradeAppliedMessageVisible ||
+      isLoading
+    ) {
       Alert.alert(
         'Purchase in Progress',
-        'A purchase is currently being processed. Are you sure you want to close?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Close',
-            onPress: () => {
-              setIsProcessingPurchase(false);
-              setIsLoading(false);
-              onClose?.();
-            },
-          },
-        ]
+        'Please wait while we confirm your payment. Do not close this screen.'
       );
-    } else {
-      onClose?.();
+      return;
     }
+
+    onClose?.();
   };
 
   if (!plan) return null;
@@ -1122,7 +1173,13 @@ export default function SubscriptionModal({
         <Pressable
           onPress={handleClose}
           className="absolute right-4 top-4 z-10"
-          disabled={isProcessingPurchase}
+          disabled={
+            isProcessingPurchase ||
+            isSyncingWithStore ||
+            isUpgradeConfirmationPending ||
+            isUpgradeAppliedMessageVisible ||
+            isLoading
+          }
         >
           <Ionicons name="close" size={28} color="#6B7280" />
         </Pressable>
@@ -1185,17 +1242,44 @@ export default function SubscriptionModal({
             </View>
           )}
 
-        {/* Purchase Status Indicator */}
-        {isProcessingPurchase && (
+        {/* Purchase/Upgrade Status Indicator */}
+        {isUpgradeAppliedMessageVisible ? (
+          <View className="mb-4 p-3 bg-green-50 rounded-lg border border-green-100">
+            <View className="flex-row items-center">
+              <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
+              <Text className="text-green-700 font-medium">
+                Upgrade requested. It will be applied shortly.
+              </Text>
+            </View>
+          </View>
+        ) : isSyncingWithStore ? (
           <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
             <View className="flex-row items-center">
               <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
-              <Text className="text-blue-700 font-medium">Processing your purchase...</Text>
+              <Text className="text-blue-700 font-medium">Syncing with Play Store...</Text>
             </View>
-            <Text className="text-blue-600 text-sm mt-1">
-              Please wait while we confirm your payment.
-            </Text>
           </View>
+        ) : isUpgradeConfirmationPending ? (
+          <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <View className="flex-row items-center">
+              <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
+              <Text className="text-blue-700 font-medium">
+                Upgrade requested. We'll apply it as soon as Google confirms.
+              </Text>
+            </View>
+          </View>
+        ) : (
+          isProcessingPurchase && (
+            <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <View className="flex-row items-center">
+                <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
+                <Text className="text-blue-700 font-medium">Processing your purchase...</Text>
+              </View>
+              <Text className="text-blue-600 text-sm mt-1">
+                Please wait while we confirm your payment.
+              </Text>
+            </View>
+          )
         )}
 
         {/* SUBSCRIBE BUTTON */}
@@ -1204,6 +1288,8 @@ export default function SubscriptionModal({
           disabled={
             isLoading ||
             isProcessingPurchase ||
+            isSyncingWithStore ||
+            isUpgradeAppliedMessageVisible ||
             !iapInitialized ||
             (currentSubscription?.plan_id === plan.originalPlan.id &&
               (currentSubscription.status === 'active' || currentSubscription.is_active))
@@ -1211,6 +1297,8 @@ export default function SubscriptionModal({
           className={`mt-5 rounded-xl overflow-hidden ${
             isLoading ||
             isProcessingPurchase ||
+            isSyncingWithStore ||
+            isUpgradeAppliedMessageVisible ||
             !iapInitialized ||
             (currentSubscription?.plan_id === plan.originalPlan.id &&
               (currentSubscription.status === 'active' || currentSubscription.is_active))
