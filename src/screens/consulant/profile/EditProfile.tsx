@@ -22,6 +22,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import Button from '@/common/components/Button';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
+import ImageModal from '@/components/chat/ImageModal';
 
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';
 import { useEditProfile } from '@/api/user/profile/useEditProfile';
@@ -44,7 +45,10 @@ const EditProfile: React.FC = () => {
 
   // local state
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  // modal to choose camera / gallery
   const [showImageModal, setShowImageModal] = useState(false);
+  // modal to preview image in full screen
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phoneNumber: '',
@@ -222,40 +226,48 @@ const EditProfile: React.FC = () => {
         >
           {/* Profile Image Section */}
           <View className="items-center mb-8">
-            <TouchableOpacity
-              onPress={() => setShowImageModal(true)}
-              activeOpacity={0.8}
-              disabled={isUploading || isSaving}
-            >
-              <View className="w-32 h-32 rounded-full overflow-hidden">
-                {profileImage ? (
-                  <Image
-                    source={{ uri: profileImage }}
-                    className="w-full h-full"
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <LinearGradient
-                    colors={['#27B07D', '#36D399']}
-                    style={{ flex: 1 }}
-                    className="items-center justify-center"
-                  >
-                    <Text className="text-white font-urbanist-semibold text-4xl">
-                      {formData.name?.charAt(0) ?? 'J'}
-                    </Text>
-                  </LinearGradient>
-                )}
-              </View>
+            <View>
+              {/* Tap on image -> preview */}
+              <TouchableOpacity
+                onPress={() => profileImage && setShowPreviewModal(true)}
+                activeOpacity={0.8}
+                disabled={isUploading || isSaving || !profileImage}
+              >
+                <View className="w-32 h-32 rounded-full overflow-hidden">
+                  {profileImage ? (
+                    <Image
+                      source={{ uri: profileImage }}
+                      className="w-full h-full"
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <LinearGradient
+                      colors={['#27B07D', '#36D399']}
+                      style={{ flex: 1 }}
+                      className="items-center justify-center"
+                    >
+                      <Text className="text-white font-urbanist-semibold text-4xl">
+                        {formData.name?.charAt(0) ?? 'J'}
+                      </Text>
+                    </LinearGradient>
+                  )}
+                </View>
+              </TouchableOpacity>
 
-              {/* Plus Button */}
-              <View className="absolute bottom-0 right-0 w-10 h-10 bg-buttonPrimaryBg rounded-full items-center justify-center border-4 border-white shadow-lg">
+              {/* Plus Button -> open picker */}
+              <TouchableOpacity
+                onPress={() => !isUploading && !isSaving && setShowImageModal(true)}
+                activeOpacity={0.8}
+                className="absolute bottom-0 right-0 w-10 h-10 bg-buttonPrimaryBg rounded-full items-center justify-center border-2 border-white shadow-lg"
+                disabled={isUploading || isSaving}
+              >
                 {isUploading ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <Ionicons name="add" size={24} color="#FFFFFF" />
                 )}
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
 
             <Text
               className={`mt-3 text-sm font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
@@ -379,7 +391,15 @@ const EditProfile: React.FC = () => {
           </View>
         </ScrollView>
 
-        {/* Image Picker Modal */}
+        {/* Image Preview Modal (tap on image) */}
+        <ImageModal
+          visible={showPreviewModal}
+          imageUri={profileImage || null}
+          onClose={() => setShowPreviewModal(false)}
+          rounded={true}
+        />
+
+        {/* Image Picker Modal (tap on +) */}
         <Modal
           visible={showImageModal}
           transparent

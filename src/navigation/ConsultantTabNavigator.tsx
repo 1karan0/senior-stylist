@@ -17,7 +17,7 @@ import MyEarning from '@/screens/consulant/payment/MyEarning';
 import WithdrawFunds from '@/screens/consulant/payment/WithdrawFunds';
 import EarningStatement from '@/screens/consulant/payment/EarningStatement';
 import PayOutHistory from '@/screens/consulant/payment/PayOutHistory';
-import SetupPayout from '@/screens/consulant/payment/SetupPayout';
+import RecentEarning from '@/screens/consulant/payment/RecentEarning';
 import Disputes from '@/screens/consulant/profile/Disputes';
 
 const Tab = createBottomTabNavigator<ConsultantTabParamList>();
@@ -38,7 +38,7 @@ const ProfileStackNavigator: React.FC = () => {
       <ProfileStack.Screen name="WithdrawFunds" component={WithdrawFunds} />
       <ProfileStack.Screen name="EarningStatement" component={EarningStatement} />
       <ProfileStack.Screen name="PayOutHistory" component={PayOutHistory} />
-      <ProfileStack.Screen name="SetupPayout" component={SetupPayout} />
+      <ProfileStack.Screen name="RecentEarning" component={RecentEarning} />
       <ProfileStack.Screen name="Disputes" component={Disputes} />
     </ProfileStack.Navigator>
   );

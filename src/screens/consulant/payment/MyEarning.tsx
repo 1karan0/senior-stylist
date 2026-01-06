@@ -7,7 +7,6 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import Button from '@/common/components/Button';
 import { useGetMyEarning } from '@/api/consultant/earning/useGetMyEarning';
-import { useGetRecentEarning } from '@/api/consultant/earning/useGetRecentEarning';
 import { useCreateStripAccount } from '@/api/consultant/strip-express/useCreateStripAccount';
 import StripeWebViewModal from '@/screens/consulant/payment/components/StripeWebViewModal';
 import { useGetStripAccount } from '@/api/consultant/strip-express/useGetStripAccount';
@@ -18,7 +17,6 @@ const MyEarning = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
   const { data: myEarning, isLoading: isMyEarningLoading } = useGetMyEarning();
-  const { data: recentEarning, isLoading: isRecentEarningLoading } = useGetRecentEarning();
   const {
     data: stripAccount,
     isLoading: isStripAccountLoading,
@@ -121,6 +119,10 @@ const MyEarning = () => {
     }
   };
 
+  const handleRecentEarning = () => {
+    navigation.navigate('RecentEarning');
+  };
+
   return (
     <GradientBackground topOverlayColor="#27B07D">
       <View className="flex-1 ">
@@ -136,30 +138,30 @@ const MyEarning = () => {
         >
           {/* Available Balance Card */}
           <View className="mb-5">
-            <Text className={`text-3xl font-urbanist-bold mb-1 text-white`}>My Earnings</Text>
-            <Text className={`text-sm font-urbanist-regular  text-white`}>
+            <Text className={`text-2xl font-urbanist-bold mb-1 text-white`}>My Earnings</Text>
+            <Text className={`text-sm font-poppins-regular  text-white`}>
               Track your consultations and payouts
             </Text>
           </View>
           <View
-            className={`rounded-2xl p-6 mb-4 ${
+            className={`rounded-xl p-5 mb-4 ${
               isDark
                 ? 'bg-[#162721] border border-[#273F36]'
                 : 'bg-[#FFFFFF] border border-[#DAE7E0]'
             }`}
           >
             <Text
-              className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-sm font-urbanist-regular mb-2`}
+              className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-sm font-poppins-regular mb-2`}
             >
               Available Balance
             </Text>
             <Text
-              className={`${isDark ? 'text-white' : 'text-black'} text-4xl font-urbanist-bold mb-3`}
+              className={`${isDark ? 'text-white' : 'text-black'} text-4xl font-urbanist-semibold mb-3`}
             >
               {availableBalance}
             </Text>
             <Text
-              className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-xs font-urbanist-regular opacity-80`}
+              className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-xs font-poppins-regular `}
             >
               Total Earnings: {totalEarnings} | Total Payouts: {totalPayouts}
             </Text>
@@ -177,12 +179,12 @@ const MyEarning = () => {
             >
               <Ionicons name="trending-up" size={24} color="#36D399" style={{ marginBottom: 8 }} />
               <Text
-                className={`${isDark ? 'text-white' : 'text-black'} text-3xl font-urbanist-bold mb-1`}
+                className={`${isDark ? 'text-white' : 'text-black'} text-xl font-urbanist-bold mb-1`}
               >
                 {thisMonth}
               </Text>
               <Text
-                className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-xs font-urbanist-regular opacity-80`}
+                className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-xs font-poppins-regular `}
               >
                 This Month
               </Text>
@@ -203,12 +205,12 @@ const MyEarning = () => {
                 style={{ marginBottom: 8 }}
               />
               <Text
-                className={`${isDark ? 'text-white' : 'text-black'} text-3xl font-urbanist-bold mb-1`}
+                className={`${isDark ? 'text-white' : 'text-black'} text-xl font-urbanist-bold mb-1`}
               >
                 {totalConsultations}
               </Text>
               <Text
-                className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-xs font-urbanist-regular opacity-80`}
+                className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-xs font-poppins-regular `}
               >
                 Total Consultations
               </Text>
@@ -224,19 +226,19 @@ const MyEarning = () => {
             }`}
           >
             <Text
-              className={`${isDark ? 'text-white' : 'text-black'} text-base font-urbanist-bold mb-3`}
+              className={`${isDark ? 'text-white' : 'text-black'} text-lg font-urbanist-semibold mb-3`}
             >
               Payout Status
             </Text>
             <View className="flex-row items-center justify-between mb-2">
               <Text
-                className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-sm font-urbanist-regular`}
+                className={`${isDark ? 'text-[#ffffff]' : 'text-[#000000]'} text-base font-poppins-semibold`}
               >
                 Stripe Account
               </Text>
               {isStripeVerified && (
-                <View className="bg-[#36D399] px-3 py-1 rounded-full">
-                  <Text className="text-white text-xs font-urbanist-bold">Verified</Text>
+                <View className="bg-[#D4EDDA] px-3 py-1 rounded-full">
+                  <Text className="text-[#155724] text-xs font-urbanist-bold">Verified</Text>
                 </View>
               )}
             </View>
@@ -262,6 +264,19 @@ const MyEarning = () => {
               }
               className="w-full rounded-[10px]"
             />
+            <View className="mt-2">
+              {stripAccount?.requirements &&
+                stripAccount.requirements.map((requirement: any, index: number) => (
+                  <View key={index} className="flex-row items-center gap-2 mt-1">
+                    <Image source={require('@/assets/icons/yellow-info.png')} className="w-4 h-4" />
+                    <Text
+                      className={`${isDark ? 'text-white' : 'text-black'} text-xs font-poppins-regular`}
+                    >
+                      {requirement}
+                    </Text>
+                  </View>
+                ))}
+            </View>
           </View>
 
           {/* Payout Status - Actions */}
@@ -292,76 +307,24 @@ const MyEarning = () => {
                 textClassName="text-[#162721]"
                 className="w-full rounded-[10px]"
               />
-            </View>
-          </View>
-
-          {/* Recent Earnings */}
-          <View
-            className={`mb-4 border  rounded-xl p-4 ${
-              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-[#FFFFFF] border-[#DAE7E0]'
-            }`}
-          >
-            <Text
-              className={`text-base font-urbanist-bold mb-3 ${isDark ? 'text-white' : 'text-textDark'}`}
-            >
-              Recent Earnings
-            </Text>
-            <View className={`gap-2 `}>
-              {isRecentEarningLoading ? (
-                <Text
-                  className={`${isDark ? 'text-white' : 'text-textDark'} text-sm font-urbanist-regular`}
-                >
-                  Loading...
-                </Text>
-              ) : !recentEarning?.length ? (
-                <Text
-                  className={`${isDark ? 'text-white' : 'text-textDark'} text-sm font-urbanist-regular`}
-                >
-                  No recent earnings found.
-                </Text>
-              ) : (
-                recentEarning?.map((earning: any) => (
-                  <View
-                    key={
-                      earning.id ?? `${earning.consultation_id}-${earning.date}-${earning.amount}`
-                    }
-                  >
-                    <View className={`flex-row items-center justify-between py-3 px-4 rounded-xl`}>
-                      <View className="flex-1">
-                        <Text
-                          className={`${isDark ? 'text-white' : 'text-black'} text-sm font-urbanist-semibold mb-1`}
-                        >
-                          {earning?.status ? `${earning.status}` : 'Earning'}{' '}
-                          {earning?.consultation_id ? `• #${earning.consultation_id}` : ''}
-                        </Text>
-                        <Text
-                          className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-xs font-urbanist-regular opacity-70`}
-                        >
-                          {earning?.date ?? '—'}
-                        </Text>
-                      </View>
-                      <Text
-                        className={`${isDark ? 'text-white' : 'text-black'} text-base font-urbanist-bold text-textPrimary`}
-                      >
-                        {formatMoney(earning?.amount)}
-                      </Text>
-                    </View>
-                    <View
-                      className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-2`}
-                    />
-                  </View>
-                ))
-              )}
+              <Button
+                text="Recent Earning"
+                onPress={handleRecentEarning}
+                variant="light"
+                textClassName="text-[#162721]"
+                className="w-full rounded-[10px]"
+              />
             </View>
           </View>
 
           {/* Note Section */}
-          <View className="bg-[#FEF3C7] rounded-xl p-4 mb-6 border border-[#FCD34D]">
-            <View className="flex-row items-start gap-3">
+          <View className="bg-[#FFF3CD] rounded-xl p-4 mb-6 border border-[#DAE7E0]">
+            <View className="flex-row gap-3 items-center">
               <Image source={require('@/assets/icons/yellow-info.png')} className="w-6 h-6" />
-              <Text className="text-[#162721] text-xs font-urbanist-regular flex-1">
-                Note: Minimum withdrawal amount is £100. Stripe fees 0.25% + £0.10 will be deducted
-                from your payout. Monthly account fee (£2) is charged separately.
+              <Text className="text-[#856404] text-xs font-urbanist-regular flex-1">
+                <Text className="font-urbanist-bold">Note:</Text> Minimum withdrawal amount is £100.
+                Stripe fees 0.25% + £0.10 will be deducted from your payout. Monthly account fee
+                (£2) is charged separately.
               </Text>
             </View>
           </View>

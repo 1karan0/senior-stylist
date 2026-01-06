@@ -314,3 +314,96 @@ export interface ConsultantDisputesApiResponse {
     };
   };
 }
+
+export interface EarningConsultationRequest {
+  id: number;
+  user_id: number;
+  consultant_id: number;
+  problem_description: string;
+  image_path?: string | null;
+  image_storage_path?: string | null;
+  image_public_url?: string | null;
+  status: string;
+  requested_at: string;
+  assigned_at: string;
+  started_at?: string | null;
+  completed_at: string;
+  expires_at: string;
+  rating?: number | null;
+  user_feedback?: string | null;
+  consultant_notes?: string | null;
+}
+
+export interface EarningMonthlyPot {
+  id: number;
+  year: number;
+  month: number;
+  pot_amount: string;
+  projected_consultations: number;
+  strike_price: string;
+  status: string;
+}
+
+export interface EarningItem {
+  id: number;
+  stylist_id: number;
+  consultation_request_id: number;
+  monthly_pot_id: number;
+  strike_price: string;
+  gross_amount: string;
+  platform_fee: string;
+  net_amount: string;
+  status: string;
+  earned_at: string;
+  hold_until?: string;
+  dispute_until?: string;
+  dispute_id?: number | null;
+  refund_amount?: string | null;
+  refunded_at?: string | null;
+  refunded_by?: number | null;
+  refund_notes?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  consultation_request?: EarningConsultationRequest;
+  monthly_pot?: EarningMonthlyPot;
+}
+
+export interface EarningHistoryPagination {
+  current_page: number;
+  data: EarningItem[];
+  last_page: number;
+  per_page: number;
+  total: number;
+  from?: number | null;
+  to?: number | null;
+}
+
+export interface EarningHistoryResponse {
+  status: string;
+  code: number;
+  message: string;
+  data: EarningHistoryPagination | EarningItem[];
+}
+
+export interface PayoutItem {
+  id?: string | number;
+  type?: string;
+  status?: string;
+  requested_amount?: number | string;
+  processed_amount?: number | string;
+  stripe_fee_amount?: number | string;
+  net_amount?: number | string;
+  stripe_payout_id?: string;
+  created_at?: string;
+  processed_at?: string;
+  failure_reason?: string | null;
+  // Legacy field names for backward compatibility
+  amount?: number | string;
+  netAmount?: number | string;
+  fees?: number | string;
+  transfer_id?: string;
+  transferId?: string;
+  createdAt?: string;
+  date?: string;
+}

@@ -59,7 +59,6 @@ const WithdrawFunds = () => {
   );
 
   const [amountText, setAmountText] = useState<string>('');
-  const [autoMonthlyPayouts, setAutoMonthlyPayouts] = useState<boolean>(true);
   const [activePreset, setActivePreset] = useState<'all' | '100' | '200' | null>(null);
 
   useEffect(() => {
@@ -163,7 +162,7 @@ const WithdrawFunds = () => {
     }`;
 
   const presetTextClass = (selected: boolean) =>
-    `${selected ? 'text-white' : isDark ? 'text-white' : 'text-textDark'} text-sm font-urbanist-bold`;
+    `${selected ? 'text-white' : isDark ? 'text-white' : 'text-textDark'} text-sm font-urbanist-semibold`;
 
   return (
     <GradientBackground topOverlayColor="#27B07D">
@@ -179,18 +178,18 @@ const WithdrawFunds = () => {
         >
           {/* Title */}
           <View className="mb-5">
-            <Text className="text-3xl font-urbanist-bold mb-1 text-white">Withdraw Funds</Text>
-            <Text className="text-sm font-urbanist-regular text-white opacity-80">
+            <Text className="text-2xl font-urbanist-bold mb-1 text-white">Withdraw Funds</Text>
+            <Text className="text-sm font-poppins-regular text-white opacity-80">
               Transfer money to your bank account
             </Text>
           </View>
 
           {/* Available Balance */}
-          <View className={`rounded-2xl p-6 mb-4 ${cardBg}`}>
-            <Text className={`${mutedText} text-sm font-urbanist-regular mb-2`}>
+          <View className={`rounded-xl p-5 mb-4 ${cardBg}`}>
+            <Text className={`${mutedText} text-base font-poppins-regular mb-2`}>
               Available Balance
             </Text>
-            <Text className={`${primaryText} text-4xl font-urbanist-bold`}>
+            <Text className={`${primaryText} text-4xl font-urbanist-semibold`}>
               {availableBalanceLabel}
             </Text>
           </View>
@@ -198,7 +197,7 @@ const WithdrawFunds = () => {
           {/* Withdrawal Amount */}
           <View className="mb-4">
             <Text
-              className={`${isDark ? 'text-white' : 'text-textDark'} text-base font-urbanist-bold mb-2`}
+              className={`${isDark ? 'text-white' : 'text-textDark'} text-base font-poppins-medium mb-2`}
             >
               Withdrawal Amount
             </Text>
@@ -214,7 +213,7 @@ const WithdrawFunds = () => {
                 placeholder={availableBalanceNumber ? availableBalanceNumber.toFixed(2) : '0.00'}
                 placeholderTextColor={isDark ? '#ffffff' : '#9CA3AF'}
                 keyboardType="decimal-pad"
-                className={`${isDark ? 'text-[#8AA897]' : 'text-textDark'} text-base font-urbanist-semibold flex-1`}
+                className={`${isDark ? 'text-[#8AA897]' : 'text-textDark'} text-base font-urbanist-medium flex-1`}
                 returnKeyType="done"
               />
 
@@ -265,15 +264,15 @@ const WithdrawFunds = () => {
 
           {/* Fee Breakdown */}
           <View className={`rounded-2xl p-5 mb-4 ${cardBg}`}>
-            <Text className={`${primaryText} text-base font-urbanist-bold mb-4`}>
+            <Text className={`${primaryText} text-base font-urbanist-semibold mb-4`}>
               Fee Breakdown
             </Text>
 
             <View className="flex-row items-center justify-between mb-3">
-              <Text className={`${mutedText} text-sm font-urbanist-regular`}>
+              <Text className={`${mutedText} text-sm font-urbanist-medium`}>
                 Withdrawal Amount:
               </Text>
-              <Text className="text-[#27B07D] text-sm font-urbanist-bold">
+              <Text className="text-[#27B07D] text-sm font-poppins-semibold">
                 {isMyEarningLoading ? '...' : formatMoney(amountNumber)}
               </Text>
             </View>
@@ -283,42 +282,24 @@ const WithdrawFunds = () => {
             />
 
             <View className="flex-row items-center justify-between mb-3">
-              <Text className={`${mutedText} text-sm font-urbanist-regular`}>
+              <Text className={`${mutedText} text-sm font-urbanist-medium`}>
                 Stripe Fee (0.25% + {CURRENCY_SYMBOL}0.10):
               </Text>
-              <Text className="text-red-500 text-sm font-urbanist-bold">
+              <Text className="text-red-500 text-sm font-poppins-semibold">
                 -{formatMoney(stripeFee)}
               </Text>
             </View>
+            <View
+              className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-3`}
+            />
 
-            <Text className={`${primaryText} text-lg font-urbanist-bold mt-2`}>
-              You'll Receive:
-            </Text>
-            <View className="flex-row items-center justify-between mt-2">
-              <View />
-              <Text className="text-[#27B07D] text-lg font-urbanist-bold">
+            <View className="flex-row items-center justify-between ">
+              <Text className={`${primaryText} text-lg font-urbanist-semibold mt-2`}>
+                You'll Receive:
+              </Text>
+              <Text className="text-[#27B07D] text-sm font-poppins-semibold">
                 {formatMoney(willReceive)}
               </Text>
-            </View>
-          </View>
-
-          {/* Auto payouts */}
-          <View className={`rounded-2xl p-4 mb-4 ${cardBg}`}>
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1 pr-4">
-                <Text className={`${primaryText} text-base font-urbanist-bold mb-1`}>
-                  Automatic Monthly Payouts
-                </Text>
-                <Text className={`${mutedText} text-xs font-urbanist-regular`}>
-                  Receive your balance automatically on the 1st of each month
-                </Text>
-              </View>
-              <Switch
-                value={autoMonthlyPayouts}
-                onValueChange={setAutoMonthlyPayouts}
-                trackColor={{ false: '#DAE7E0', true: '#27B07D' }}
-                thumbColor="#FFFFFF"
-              />
             </View>
           </View>
 

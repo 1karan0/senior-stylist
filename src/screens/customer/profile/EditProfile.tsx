@@ -410,6 +410,7 @@ const EditProfile = () => {
           visible={showImagePreview}
           imageUri={profilePic || null}
           onClose={() => setShowImagePreview(false)}
+          rounded={true}
         />
       </View>
     </GradientBackground>

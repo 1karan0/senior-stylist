@@ -6,14 +6,19 @@ interface ImageModalProps {
   visible: boolean;
   imageUri: string | null;
   onClose: () => void;
+  rounded?: boolean;
 }
 
 const { width, height } = Dimensions.get('window');
 
-const ImageModal: React.FC<ImageModalProps> = ({ visible, imageUri, onClose }) => {
+const ImageModal: React.FC<ImageModalProps> = ({ visible, imageUri, onClose, rounded = false }) => {
   if (!imageUri) {
     return null;
   }
+
+  const imageStyle = rounded
+    ? [styles.image, { borderRadius: (width - 40) / 2, width: width - 40, height: width - 40 }]
+    : styles.image;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -21,7 +26,11 @@ const ImageModal: React.FC<ImageModalProps> = ({ visible, imageUri, onClose }) =
         <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.8}>
           <Ionicons name="close" size={28} color="#FFFFFF" />
         </TouchableOpacity>
-        <Image source={{ uri: imageUri }} style={styles.image} resizeMode="contain" />
+        <Image
+          source={{ uri: imageUri }}
+          style={imageStyle}
+          resizeMode={rounded ? 'cover' : 'contain'}
+        />
       </View>
     </Modal>
   );

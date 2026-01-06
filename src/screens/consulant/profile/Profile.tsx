@@ -171,12 +171,6 @@ const Profile: React.FC = () => {
             >
               Performance Overview
             </Text>
-            {/* <Text
-              className={`text-sm font-poppins-regular mb-4 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-            >
-              Pro Plan - $19.99/month
-            </Text> */}
-
             {/* Stats Row */}
             <View className="flex-row mb-4">
               {/* Total Sessions */}
@@ -200,7 +194,11 @@ const Profile: React.FC = () => {
               <View
                 className={`flex-1 items-center border rounded-xl p-4 ml-1.5 ${isDark ? 'border-commonGradientStop7' : 'border-[#DAE7E0] bg-[#F5F9F7]'}`}
               >
-                <Ionicons name="star" size={28} color="#fbbf24" />
+                <Image
+                  source={require('@/assets/icons/Star.png')}
+                  className="w-6 h-6"
+                  resizeMode="contain"
+                />
                 <Text
                   className={`text-xl font-urbanist-bold mt-2 ${isDark ? 'text-white' : 'text-textDark'}`}
                 >
