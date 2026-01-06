@@ -13,6 +13,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import ConversationItem from '@/components/chat/ConversationItem';
 import ConsultantChatHomeHeader from '@/components/chat/ConsultantChatHomeHeader';
 import { createConsultantPreview, filterConsultantConversations } from '@/utils/consultationUtils';
+import ConversationSkeleton from '@/common/components/skeletons/ConversationSkeleton';
 
 type FilterKey = 'all' | 'unread';
 
@@ -72,10 +73,13 @@ const ChatHome: React.FC = () => {
         />
 
         {loading && consultations.length === 0 ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" />
-            <Text className="mt-3 font-poppins text-sm">Loading your conversations...</Text>
-          </View>
+          <FlatList
+            data={[1, 2, 3, 4, 5, 6, 7, 8]}
+            keyExtractor={(item) => String(item)}
+            renderItem={() => <ConversationSkeleton />}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom }}
+          />
         ) : (
           <FlatList
             data={filteredConversations}

@@ -14,6 +14,7 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useGetEarningHistory } from '@/api/consultant/earning/useGetEarningHistory';
 import { EarningItem, EarningHistoryResponse } from '@/common/types';
+import { EarningListSkeleton } from '@/common/components/skeletons/EarningItemSkeleton';
 
 const formatDate = (dateString: string): string => {
   try {
@@ -274,19 +275,6 @@ const RecentEarning = () => {
   };
 
   const renderEmpty = () => {
-    if (isLoading) {
-      return (
-        <View className="items-center justify-center py-20">
-          <ActivityIndicator size="large" color="#27B07D" />
-          <Text
-            className={`${isDark ? 'text-white' : 'text-textDark'} text-sm font-urbanist-regular mt-3`}
-          >
-            Loading earnings...
-          </Text>
-        </View>
-      );
-    }
-
     return (
       <View className="items-center justify-center py-20 px-8">
         <Ionicons
@@ -319,29 +307,43 @@ const RecentEarning = () => {
 
         {/* Content */}
         <View className="flex-1 px-5 absolute top-5 left-0 right-0 bottom-5 z-10">
-          <FlatList
-            data={earnings}
-            keyExtractor={(item) => String(item.id)}
-            renderItem={renderEarningItem}
-            ListHeaderComponent={
+          {isLoading && earnings.length === 0 ? (
+            <View>
               <View className="mb-5">
                 <Text className="text-2xl font-urbanist-bold mb-1 text-white">Recent Earnings</Text>
                 <Text className="text-sm font-poppins-regular text-white">
                   Your recent consultation earnings
                 </Text>
               </View>
-            }
-            ListEmptyComponent={renderEmpty}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom }}
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefetching}
-                onRefresh={handleRefresh}
-                tintColor="#27B07D"
-              />
-            }
-          />
+              <EarningListSkeleton />
+            </View>
+          ) : (
+            <FlatList
+              data={earnings}
+              keyExtractor={(item) => String(item.id)}
+              renderItem={renderEarningItem}
+              ListHeaderComponent={
+                <View className="mb-5">
+                  <Text className="text-2xl font-urbanist-bold mb-1 text-white">
+                    Recent Earnings
+                  </Text>
+                  <Text className="text-sm font-poppins-regular text-white">
+                    Your recent consultation earnings
+                  </Text>
+                </View>
+              }
+              ListEmptyComponent={renderEmpty}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom }}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefetching}
+                  onRefresh={handleRefresh}
+                  tintColor="#27B07D"
+                />
+              }
+            />
+          )}
         </View>
       </View>
     </GradientBackground>

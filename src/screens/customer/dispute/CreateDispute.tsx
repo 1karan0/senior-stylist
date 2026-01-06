@@ -16,6 +16,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { ProfileStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import LinearGradient from 'react-native-linear-gradient';
+import { ConsultationListSkeleton } from '@/common/components/skeletons/ConsultationItemSkeleton';
 
 type CreateDisputeNavigationProp = StackNavigationProp<ProfileStackParamList, 'CreateDispute'>;
 
@@ -97,13 +98,43 @@ const CreateDispute: React.FC<Props> = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <View className="flex-1">
-        <GradientBackground>
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#27B07D" />
+      <GradientBackground>
+        <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
+        {/* Header Section with Green Background */}
+        <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">
+          <Text className="text-white text-2xl font-urbanist-bold">Create Dispute</Text>
+          <Text className="text-white  font-poppins-regular opacity-90">
+            Report an issue with your consultation
+          </Text>
+        </View>
+
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          <View className="px-6 pt-6 pb-24">
+            {/* Step 1 Section */}
+            <View className="mb-6">
+              <Text
+                className={`text-base font-poppins-semibold mb-2 ${isDark ? 'text-white' : 'text-textDark'}`}
+              >
+                Step 1: Select Consultation
+              </Text>
+              <Text
+                className={` font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+              >
+                Choose the consultation you want to dispute
+              </Text>
+            </View>
+
+            {/* Recent Consultations */}
+            <Text
+              className={`text-base font-poppins-semibold mb-4 ${isDark ? 'text-white' : 'text-textDark'}`}
+            >
+              Recent Consultations
+            </Text>
+
+            <ConsultationListSkeleton />
           </View>
-        </GradientBackground>
-      </View>
+        </ScrollView>
+      </GradientBackground>
     );
   }
 

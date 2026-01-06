@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
+import DeviceInfo from 'react-native-device-info';
 
 import GradientBackground from '@/common/components/GradientBackground';
 import DeleteAccountModal from '@/common/components/modals/DeleteAccountModal';
@@ -28,11 +29,17 @@ const Settings: React.FC = () => {
   const deleteAccountMutation = useDeleteAccount();
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [appVersion, setAppVersion] = useState<string>('');
   const [toast, setToast] = useState({
     visible: false,
     message: '',
     type: 'info' as any,
   });
+
+  useEffect(() => {
+    const version = DeviceInfo.getVersion();
+    setAppVersion(version);
+  }, []);
 
   // ---- THEME LOGIC FIXED ---- //
 
@@ -258,7 +265,7 @@ const Settings: React.FC = () => {
                 <Text
                   className={`font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
                 >
-                  1.0.0
+                  {appVersion || 'Loading...'}
                 </Text>
               </View>
               <TouchableOpacity

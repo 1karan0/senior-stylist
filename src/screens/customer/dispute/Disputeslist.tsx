@@ -17,6 +17,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { ProfileStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
+import { DisputeListSkeleton } from '@/common/components/skeletons/DisputeItemSkeleton';
 
 type DisputeListNavigationProp = StackNavigationProp<ProfileStackParamList, 'DisputeList'>;
 
@@ -320,8 +321,8 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
           ))}
         </View>
         {isLoading && !data ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#27B07D" />
+          <View className="flex-1">
+            <DisputeListSkeleton />
           </View>
         ) : error ? (
           <View className="flex-1 justify-center items-center">

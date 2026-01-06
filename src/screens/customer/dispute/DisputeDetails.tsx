@@ -23,6 +23,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { ProfileStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import DisputeDetailsSkeleton from '@/common/components/skeletons/DisputeDetailsSkeleton';
 
 type DisputeDetailsNavigationProp = StackNavigationProp<ProfileStackParamList, 'DisputeDetails'>;
 type DisputeDetailsRouteProp = RouteProp<ProfileStackParamList, 'DisputeDetails'>;
@@ -171,8 +172,45 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
     return (
       <GradientBackground>
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#27B07D" />
+        {/* Header */}
+        <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">
+          <View className="flex-row items-center mb-2">
+            <TouchableOpacity
+              onPress={handleBack}
+              className="mr-3 p-1"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text className="text-white text-2xl font-urbanist-bold flex-1">Dispute Details</Text>
+          </View>
+          <View className="flex-row items-center">
+            <View className="w-24 h-6 rounded-full bg-white/20" />
+            <View className="w-20 h-6 rounded-full bg-white/20 ml-2" />
+          </View>
+        </View>
+        <DisputeDetailsSkeleton />
+        {/* Message Input Skeleton */}
+        <View
+          className={`px-4 pt-2 pb-2 mb-16`}
+          style={{
+            paddingBottom: Math.max(insets.bottom, 12),
+          }}
+        >
+          <View
+            className={`flex-row items-center rounded-[28px] px-4 min-h-[50px] shadow-[0px_0px_14px_3px_#0000001F] ${
+              isDark ? 'bg-[#0E1B16]' : 'bg-[#ffffff]'
+            }`}
+          >
+            <View
+              className={`flex-1 h-8 rounded-lg ${isDark ? 'bg-[#1E3A33]' : 'bg-[#E0E0E0]'}`}
+              style={{ opacity: 0.5 }}
+            />
+            <View
+              className={`ml-2 w-10 h-10 rounded-full ${isDark ? 'bg-[#1E3A33]' : 'bg-[#E0E0E0]'}`}
+              style={{ opacity: 0.5 }}
+            />
+          </View>
         </View>
       </GradientBackground>
     );

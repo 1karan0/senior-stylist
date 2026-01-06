@@ -7,6 +7,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import Button from '@/common/components/Button';
 import { useGetPayouts } from '@/api/consultant/earning/useGetPayouts';
 import { PayoutItem } from '@/common/types';
+import { PayoutListSkeleton } from '@/common/components/skeletons/PayoutItemSkeleton';
 
 const formatDate = (dateString: string): string => {
   try {
@@ -201,19 +202,6 @@ const PayOutHistory = () => {
   };
 
   const renderEmpty = () => {
-    if (isLoading) {
-      return (
-        <View className="items-center justify-center py-20">
-          <ActivityIndicator size="large" color="#27B07D" />
-          <Text
-            className={`${isDark ? 'text-white' : 'text-textDark'} text-sm font-urbanist-regular mt-3`}
-          >
-            Loading payouts...
-          </Text>
-        </View>
-      );
-    }
-
     return (
       <View className="items-center justify-center py-20 px-8">
         <Ionicons
@@ -268,41 +256,58 @@ const PayOutHistory = () => {
 
         {/* Content */}
         <View className="flex-1 px-5 absolute top-5 left-0 right-0 bottom-5 z-10">
-          <FlatList
-            data={payouts}
-            keyExtractor={(item, index) =>
-              String(item.id || item.transfer_id || item.transferId || index)
-            }
-            renderItem={renderPayoutItem}
-            ListHeaderComponent={
-              <>
-                {/* Header Text */}
-                <View className="flex-row items-center justify-between mb-5">
-                  <View className="flex-1">
-                    <Text className="text-3xl font-urbanist-bold mb-1 text-white">
-                      Payout History
-                    </Text>
-                    <Text className="text-sm font-urbanist-regular text-white opacity-80">
-                      All your payouts and transfers
-                    </Text>
-                  </View>
+          {isLoading && payouts.length === 0 ? (
+            <View>
+              {/* Header Text */}
+              <View className="flex-row items-center justify-between mb-5">
+                <View className="flex-1">
+                  <Text className="text-3xl font-urbanist-bold mb-1 text-white">
+                    Payout History
+                  </Text>
+                  <Text className="text-sm font-urbanist-regular text-white opacity-80">
+                    All your payouts and transfers
+                  </Text>
                 </View>
-              </>
-            }
-            ListEmptyComponent={renderEmpty}
-            ListFooterComponent={renderFooter}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom }}
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefetching}
-                onRefresh={handleRefresh}
-                tintColor="#27B07D"
-              />
-            }
-            onEndReached={handleLoadMore}
-            onEndReachedThreshold={0.5}
-          />
+              </View>
+              <PayoutListSkeleton />
+            </View>
+          ) : (
+            <FlatList
+              data={payouts}
+              keyExtractor={(item, index) =>
+                String(item.id || item.transfer_id || item.transferId || index)
+              }
+              renderItem={renderPayoutItem}
+              ListHeaderComponent={
+                <>
+                  {/* Header Text */}
+                  <View className="flex-row items-center justify-between mb-5">
+                    <View className="flex-1">
+                      <Text className="text-3xl font-urbanist-bold mb-1 text-white">
+                        Payout History
+                      </Text>
+                      <Text className="text-sm font-urbanist-regular text-white opacity-80">
+                        All your payouts and transfers
+                      </Text>
+                    </View>
+                  </View>
+                </>
+              }
+              ListEmptyComponent={renderEmpty}
+              ListFooterComponent={renderFooter}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom }}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefetching}
+                  onRefresh={handleRefresh}
+                  tintColor="#27B07D"
+                />
+              }
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.5}
+            />
+          )}
         </View>
       </View>
     </GradientBackground>

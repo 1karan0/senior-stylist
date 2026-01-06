@@ -17,6 +17,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { ConsultantDispute } from '@/common/types';
+import { DisputeListSkeleton } from '@/common/components/skeletons/DisputeItemSkeleton';
 
 type FilterType = 'all' | 'open' | 'resolved';
 
@@ -208,20 +209,15 @@ const Disputes: React.FC<Props> = ({ navigation }) => {
 
   return (
     <GradientBackground topOverlayColor="#27B07D">
+      <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
       {/* Header */}
-      <View className="px-6 pt-5 pb-5 rounded-b-2xl" style={{ backgroundColor: '#27B07D' }}>
+      <View className="px-6 pt-5 pb-5 rounded-b-2xl " style={{ backgroundColor: '#27B07D' }}>
         <View className="">
-          <View className="flex-row justify-between items-center mb-2">
-            <View className="flex-1">
-              <TouchableOpacity
-                onPress={handleBack}
-                className="mb-2"
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-              <Text className="text-white text-2xl font-urbanist-bold mb-1">My Disputes</Text>
-            </View>
+          <View className="flex-row gap-3 items-center mb-2">
+            <TouchableOpacity onPress={handleBack}>
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text className="text-white text-2xl font-urbanist-bold">My Disputes</Text>
           </View>
           <Text className="text-white font-poppins-regular">
             View and manage disputes against you
@@ -257,8 +253,8 @@ const Disputes: React.FC<Props> = ({ navigation }) => {
           ))}
         </View>
         {isLoading && !data ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#27B07D" />
+          <View className="flex-1">
+            <DisputeListSkeleton />
           </View>
         ) : error ? (
           <View className="flex-1 justify-center items-center">

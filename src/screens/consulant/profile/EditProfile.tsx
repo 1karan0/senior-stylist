@@ -17,12 +17,14 @@ import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
+import { useForm, Controller } from 'react-hook-form';
 
 import GradientBackground from '@/common/components/GradientBackground';
 import Button from '@/common/components/Button';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import ImageModal from '@/components/chat/ImageModal';
+import TextInputField from '@/common/components/TextInputField';
 
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';
 import { useEditProfile } from '@/api/user/profile/useEditProfile';
@@ -53,13 +55,26 @@ const EditProfile: React.FC = () => {
     name: '',
     phoneNumber: '',
     email: '',
-    password: '',
     address: '',
   });
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
 
   // mutations
   const uploadMutation = useUploadProfilePicture();
   const editProfileMutation = useEditProfile();
+
+  // react-hook-form for password fields
+  const {
+    control,
+    handleSubmit: handlePasswordSubmit,
+    formState: { errors: passwordErrors },
+    reset: resetPasswordForm,
+  } = useForm({
+    defaultValues: {
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
 
   // reflect fetched profile into local state when available
   useEffect(() => {
@@ -68,7 +83,6 @@ const EditProfile: React.FC = () => {
         name: user.name ?? '',
         phoneNumber: user.phone ?? '',
         email: user.email ?? '',
-        password: '',
         address: user.address ?? '',
       });
       setProfileImage(user.profile_picture_url ?? null);
@@ -148,7 +162,10 @@ const EditProfile: React.FC = () => {
     }
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = (passwordValues?: {
+    newPassword?: string;
+    confirmPassword?: string;
+  }) => {
     // basic validation
     if (!formData.name || formData.name.trim().length === 0) {
       Alert.alert('Validation', 'Please enter your name.');
@@ -160,6 +177,7 @@ const EditProfile: React.FC = () => {
       address: formData.address ?? '',
       profile_picture_url: profileImage ?? '',
       phone: formData.phoneNumber,
+      ...(passwordValues?.newPassword && { password: passwordValues.newPassword }),
     };
 
     editProfileMutation.mutate(payload, {
@@ -168,7 +186,11 @@ const EditProfile: React.FC = () => {
         Alert.alert('Success', 'Profile updated successfully!', [
           {
             text: 'OK',
-            onPress: () => navigation.goBack(),
+            onPress: () => {
+              resetPasswordForm();
+              setShowPasswordSection(false);
+              navigation.goBack();
+            },
           },
         ]);
       },
@@ -177,6 +199,18 @@ const EditProfile: React.FC = () => {
         Alert.alert('Error', err?.message ?? 'Failed to update profile. Try again.');
       },
     });
+  };
+
+  const onFormSubmit = () => {
+    // If password section is shown, validate password fields first
+    if (showPasswordSection) {
+      handlePasswordSubmit((passwordValues) => {
+        handleSaveChanges(passwordValues);
+      })();
+    } else {
+      // If password section is not shown, just save without password
+      handleSaveChanges();
+    }
   };
 
   const handleCancel = () => {
@@ -203,9 +237,9 @@ const EditProfile: React.FC = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1">
+      <View className="flex-1  px-5 py-6">
         {/* Header */}
-        <View className="px-5 py-6">
+        <View className=" mb-2">
           <View className="flex-row items-center">
             <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
               <Ionicons name="arrow-back" size={24} color={isDark ? '#FFFFFF' : '#162721'} />
@@ -220,7 +254,7 @@ const EditProfile: React.FC = () => {
 
         {/* Content */}
         <ScrollView
-          className="flex-1 px-5"
+          className="flex-1"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}
         >
@@ -342,39 +376,105 @@ const EditProfile: React.FC = () => {
                 </Text>
               </View>
             </View>
+          </View>
 
-            {/* Change Password */}
-            <View className="mb-2">
+          {/* Change Password Section - Instagram Style */}
+          <View
+            className={`${
+              isDark
+                ? 'bg-buttonSecondaryText border-commonGradientStop7'
+                : 'bg-white border-[#DAE7E0]'
+            } rounded-2xl border overflow-hidden`}
+          >
+            <TouchableOpacity
+              onPress={() => setShowPasswordSection(!showPasswordSection)}
+              activeOpacity={0.7}
+              className="flex-row items-center justify-between px-4 py-4"
+            >
               <Text
-                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                className={`text-base font-urbanist-semibold ${
+                  isDark ? 'text-white' : 'text-textDark'
+                }`}
               >
                 Change Password
               </Text>
-              <TextInput
-                value={formData.password}
-                onChangeText={(text) => setFormData({ ...formData, password: text })}
-                secureTextEntry
-                placeholder="Enter new password"
-                className={`border rounded-xl px-4 py-3 font-poppins-regular ${
+              <Image
+                source={
                   isDark
-                    ? 'bg-[#0F1F1A] border-commonGradientStop7 text-white'
-                    : 'bg-white border-[#DAE7E0] text-textDark'
-                }`}
-                placeholderTextColor={isDark ? '#8AA897' : '#658176'}
-                editable={!isSaving}
+                    ? require('@/assets/icons/green-back.png')
+                    : require('@/assets/icons/back.png')
+                }
+                style={{
+                  width: 16,
+                  height: 16,
+                  transform: [{ rotate: showPasswordSection ? '90deg' : '-90deg' }],
+                }}
               />
-            </View>
+            </TouchableOpacity>
+
+            {showPasswordSection && (
+              <View
+                className="px-4 pb-4 border-t"
+                style={{ borderTopColor: isDark ? '#1a3a2e' : '#DAE7E0' }}
+              >
+                <View className="pt-4 gap-3">
+                  <Controller
+                    control={control}
+                    name="newPassword"
+                    rules={{
+                      validate: (value) => {
+                        if (value && value.length < 6)
+                          return 'Password must be at least 6 characters';
+                        return true;
+                      },
+                    }}
+                    render={({ field: { onChange, value } }) => (
+                      <TextInputField
+                        label="NEW PASSWORD"
+                        placeholder="Enter new password"
+                        value={value || ''}
+                        onChangeText={onChange}
+                        isPassword={true}
+                        error={passwordErrors.newPassword?.message as string}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="confirmPassword"
+                    rules={{
+                      validate: (value, formValues) => {
+                        if (formValues.newPassword && !value) return 'Please confirm your password';
+                        if (formValues.newPassword && value !== formValues.newPassword)
+                          return 'Passwords do not match';
+                        return true;
+                      },
+                    }}
+                    render={({ field: { onChange, value } }) => (
+                      <TextInputField
+                        label="CONFIRM NEW PASSWORD"
+                        placeholder="Confirm new password"
+                        value={value || ''}
+                        onChangeText={onChange}
+                        isPassword={true}
+                        error={passwordErrors.confirmPassword?.message as string}
+                      />
+                    )}
+                  />
+                </View>
+              </View>
+            )}
           </View>
 
           {/* Save Changes Button */}
-          <View className="mb-4">
+          <View className="mb-4 mt-5">
             <Button
               text="Save Changes"
-              onPress={handleSaveChanges}
+              onPress={onFormSubmit}
               disabled={isUploading || isSaving}
               loading={isSaving}
               variant="gradient"
-              className="rounded-xl py-4"
             />
           </View>
 
@@ -385,8 +485,7 @@ const EditProfile: React.FC = () => {
               onPress={handleCancel}
               disabled={isUploading || isSaving}
               variant="light"
-              className={`border rounded-xl py-4 ${isDark ? 'border-commonGradientStop7 bg-transparent' : 'border-[#DAE7E0] bg-white'}`}
-              textClassName={isDark ? 'text-white' : 'text-textDark'}
+              className="rounded-[14px]"
             />
           </View>
         </ScrollView>

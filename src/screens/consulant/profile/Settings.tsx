@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Switch, Platform, Linking } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
+import DeviceInfo from 'react-native-device-info';
 
 import GradientBackground from '@/common/components/GradientBackground';
 import DeleteAccountModal from '@/common/components/modals/DeleteAccountModal';
@@ -27,11 +28,17 @@ const Settings: React.FC = () => {
   const isApproved = user?.consultant_details?.is_approved ?? false;
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [appVersion, setAppVersion] = useState<string>('');
   const [toast, setToast] = useState({
     visible: false,
     message: '',
     type: 'info' as any,
   });
+
+  useEffect(() => {
+    const version = DeviceInfo.getVersion();
+    setAppVersion(version);
+  }, []);
 
   // ---- THEME LOGIC FIXED ---- //
 
@@ -118,7 +125,7 @@ const Settings: React.FC = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1 pb-5">
+      <View className="flex-1  px-5 py-6">
         <Toast
           visible={toast.visible}
           message={toast.message}
@@ -126,7 +133,7 @@ const Settings: React.FC = () => {
           onClose={() => setToast({ ...toast, visible: false })}
         />
         {/* Header */}
-        <View className="px-5 py-6">
+        <View className="mb-4">
           <View className="flex-row items-center">
             <TouchableOpacity onPress={handleBack} className="mr-3">
               <Ionicons name="arrow-back" size={24} color={isDark ? '#FFFFFF' : '#162721'} />
@@ -141,7 +148,7 @@ const Settings: React.FC = () => {
 
         {/* Content */}
         <ScrollView
-          className="flex-1 px-5"
+          className="flex-1"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}
         >
@@ -342,7 +349,7 @@ const Settings: React.FC = () => {
                 <Text
                   className={`font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
                 >
-                  1.0.0
+                  {appVersion || 'Loading...'}
                 </Text>
               </View>
               <TouchableOpacity
