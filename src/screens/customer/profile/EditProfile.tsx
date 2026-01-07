@@ -21,6 +21,7 @@ import {
   showPermissionDeniedAlert,
 } from '@/utils/imagePermissions';
 import { Platform } from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 const EditProfile = () => {
   const navigation = useNavigation();
@@ -241,9 +242,9 @@ const EditProfile = () => {
                 }}
                 activeOpacity={0.7}
                 className={`absolute bottom-0 right-0 bg-green-600 w-10 h-10 rounded-full 
-                items-center justify-center border-2 ${isDark ? 'dark:border-[#11211c]' : 'border-white'}  `}
+                items-center justify-center border-2 border-white `}
               >
-                <Text className="text-white text-xl">+</Text>
+                <Ionicons name="add" size={20} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 

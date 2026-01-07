@@ -25,11 +25,12 @@ import GradientBackground from '@/common/components/GradientBackground';
 import MessageListSkeleton from '@/common/components/skeletons/MessageSkeleton';
 import FinishConsultationModal from '@/common/components/modals/FinishConsultationModal';
 import RatingModal from '@/common/components/modals/RatingModal';
+import InfoModal from '@/common/components/modals/InfoModal';
 
 type RouteProps = RouteProp<AppStackParamList, 'ConsultantChat'>;
 
 const ConsultantChatScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const route = useRoute<RouteProps>();
   const { consultationId, asCustomer } = route.params;
   const { user } = useAuth();
@@ -65,6 +66,8 @@ const ConsultantChatScreen: React.FC = () => {
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [isModalFromBackButton, setIsModalFromBackButton] = useState(false);
+  const [showRatingSuccessModal, setShowRatingSuccessModal] = useState(false);
+  const [ratingSuccessMessage, setRatingSuccessMessage] = useState<string>('');
 
   const finishMutation = useFinishConsultation();
   const ratingMutation = useRatingConsultation();
@@ -73,6 +76,32 @@ const ConsultantChatScreen: React.FC = () => {
   const scrollOffsetRef = useRef(0);
   const canNavigateRef = useRef(false);
   const isConsultationFinishedRef = useRef(false);
+
+  const goToChatHome = useCallback(() => {
+    // Consultant: go back to ConsultantTabs -> ChatTab
+    if (isConsultant) {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'ConsultantTabs', params: { screen: 'ChatTab' } }],
+        })
+      );
+      return;
+    }
+
+    // Customer: go back to UserTabs -> ConsultationTab -> ConsultationHome
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'UserTabs',
+            params: { screen: 'ConsultationTab', params: { screen: 'ConsultationHome' } },
+          },
+        ],
+      })
+    );
+  }, [isConsultant, navigation]);
 
   // Set active chat when screen opens, clear when screen closes
   useEffect(() => {
@@ -104,7 +133,7 @@ const ConsultantChatScreen: React.FC = () => {
   useEffect(() => {
     if (!consultation || isConsultant) return;
 
-    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
       // If we're already allowed to navigate (after cancel), don't intercept
       if (canNavigateRef.current) {
         canNavigateRef.current = false;
@@ -220,10 +249,10 @@ const ConsultantChatScreen: React.FC = () => {
       setIsModalFromBackButton(true);
       setShowFinishModal(true);
     } else {
-      // Otherwise, allow navigation
-      navigation.goBack();
+      // Otherwise, go to the correct chat home (customer vs consultant)
+      goToChatHome();
     }
-  }, [isConsultant, consultation, navigation]);
+  }, [isConsultant, consultation, goToChatHome]);
 
   const handleCancelFinish = useCallback(() => {
     // Close modal
@@ -233,12 +262,12 @@ const ConsultantChatScreen: React.FC = () => {
     if (isModalFromBackButton) {
       setIsModalFromBackButton(false);
       canNavigateRef.current = true;
-      navigation.dispatch(CommonActions.goBack());
+      goToChatHome();
     } else {
       // Otherwise, just close the modal (opened from finish button)
       setIsModalFromBackButton(false);
     }
-  }, [navigation, isModalFromBackButton]);
+  }, [goToChatHome, isModalFromBackButton]);
 
   const handleSubmitRating = useCallback(
     (rating: number, feedback: string) => {
@@ -255,16 +284,8 @@ const ConsultantChatScreen: React.FC = () => {
             setShowRatingModal(false);
             // Refetch consultation to get updated status
             await reloadConsultation();
-            Alert.alert(
-              'Thank you!',
-              `Thank you for rating this consultation with ${rating} stars!`,
-              [
-                {
-                  text: 'OK',
-                  onPress: () => navigation.goBack(),
-                },
-              ]
-            );
+            setRatingSuccessMessage(`Thank you for rating this consultation with ${rating} stars!`);
+            setShowRatingSuccessModal(true);
           },
           onError: (error) => {
             Alert.alert('Error', (error as any)?.message || 'Failed to submit rating');
@@ -272,7 +293,7 @@ const ConsultantChatScreen: React.FC = () => {
         }
       );
     },
-    [consultation, ratingMutation, navigation, reloadConsultation]
+    [consultation, ratingMutation, reloadConsultation]
   );
 
   const renderMessage = useCallback(
@@ -302,7 +323,7 @@ const ConsultantChatScreen: React.FC = () => {
   };
 
   if (!consultation) {
-    return <ChatLoadingScreen onBack={() => navigation.goBack()} />;
+    return <ChatLoadingScreen onBack={() => goToChatHome()} />;
   }
 
   const chatWindowOpen =
@@ -406,6 +427,21 @@ const ConsultantChatScreen: React.FC = () => {
         }}
         onSubmit={handleSubmitRating}
         isLoading={ratingMutation.isPending}
+      />
+
+      <InfoModal
+        visible={showRatingSuccessModal}
+        title="Thank you!"
+        message={ratingSuccessMessage}
+        variant="success"
+        onConfirm={() => {
+          setShowRatingSuccessModal(false);
+          goToChatHome();
+        }}
+        onClose={() => {
+          setShowRatingSuccessModal(false);
+          goToChatHome();
+        }}
       />
     </GradientBackground>
   );

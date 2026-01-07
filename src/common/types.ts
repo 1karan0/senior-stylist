@@ -16,7 +16,6 @@ export type ConsultationStackParamList = {
   ConsultationChat: undefined;
   NoConsultant: undefined;
   NewConsultant: undefined;
-  FindingStylist: { consultationId: number };
 };
 
 export type NewsStackParamList = {

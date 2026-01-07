@@ -298,7 +298,7 @@ const EditProfile: React.FC = () => {
                 {isUploading ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Ionicons name="add" size={24} color="#FFFFFF" />
+                  <Ionicons name="add" size={20} color="#FFFFFF" />
                 )}
               </TouchableOpacity>
             </View>

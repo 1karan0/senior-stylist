@@ -23,6 +23,7 @@ import type {
   ConversationPreview,
 } from '@/common/types';
 import { createPreview, filterConversations } from '@/utils/consultationUtils';
+import InfoModal from '@/common/components/modals/InfoModal';
 
 type NavParamList = AppStackParamList & ConsultationStackParamList;
 
@@ -38,6 +39,8 @@ const CustomerChatHome: React.FC = () => {
   const [currentReviewIndex, setCurrentReviewIndex] = useState<number | null>(null);
   const [dismissedReviewIds, setDismissedReviewIds] = useState<string[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [showRatingSuccessModal, setShowRatingSuccessModal] = useState(false);
+  const [ratingSuccessMessage, setRatingSuccessMessage] = useState<string>('');
 
   const { consultations, loading, refreshing, isRealtimeConnected, refreshConversations } =
     useConsultations({ userKey });
@@ -134,8 +137,8 @@ const CustomerChatHome: React.FC = () => {
             // Refetch pending reviews
             await refetchPendingReviews();
             queryClient.invalidateQueries({ queryKey: ['pending-reviews'] });
-
-            Alert.alert('Thank you!', 'Your review has been submitted successfully.');
+            setShowRatingSuccessModal(true);
+            setRatingSuccessMessage('Thank you for your review!');
           },
           onError: (error: any) => {
             Alert.alert('Error', error?.message || 'Failed to submit review. Please try again.');
@@ -268,6 +271,19 @@ const CustomerChatHome: React.FC = () => {
           showConsultationDetails={true}
         />
       )}
+
+      <InfoModal
+        visible={showRatingSuccessModal}
+        title="Thank you!"
+        message={ratingSuccessMessage}
+        variant="success"
+        onConfirm={() => {
+          setShowRatingSuccessModal(false);
+        }}
+        onClose={() => {
+          setShowRatingSuccessModal(false);
+        }}
+      />
     </GradientBackground>
   );
 };

@@ -20,6 +20,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAds } from '@/contexts/AdContext';
 import { storage } from '@/services/storage';
 import { requestPhotoLibraryPermission, showPermissionDeniedAlert } from '@/utils/imagePermissions';
+import { useFindingStylistModal } from '@/contexts/FindingStylistModalContext';
 
 const NewConsultant = ({ navigation }: any) => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
@@ -32,6 +33,7 @@ const NewConsultant = ({ navigation }: any) => {
 
   const { isDark } = useTheme();
   const { isAdsEnabled, preloadAd } = useAds();
+  const { open: openFindingStylistModal } = useFindingStylistModal();
 
   // Preload ad when component mounts (so it's ready when user taps "Find Stylist")
   useEffect(() => {
@@ -138,7 +140,7 @@ const NewConsultant = ({ navigation }: any) => {
         return;
       }
 
-      navigation.replace('FindingStylist', { consultationId });
+      openFindingStylistModal(consultationId);
     } catch (err: any) {
       showToast(err?.message || 'Something went wrong', 'error');
       // Draft stays in storage for retry

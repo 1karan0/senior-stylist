@@ -1,13 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { createConsultation } from '@/api/user/consultation/useCreateConsultation';
 import { useCancelConsultaion } from '@/api/user/consultation/useCancelConsultaion';
 import { customerConsultationsApi } from '@/api/customer/consultations';
-import type { AppStackParamList, ConsultationStackParamList } from '@/common/types';
 import Toast from '@/common/components/Toast';
 import { useTheme } from '@/contexts/ThemeContext';
 import { storage } from '@/services/storage';
@@ -15,19 +13,17 @@ import { useAds } from '@/contexts/AdContext';
 import AdModal from '@/components/ads/AdModal';
 import type { ConsultantConsultation } from '@/api/consultant/consultations';
 import CancelConsultationModal from '@/common/components/modals/CancelConsultationModal';
-
-type CombinedStackParamList = AppStackParamList & ConsultationStackParamList;
-type FindingRoute = RouteProp<CombinedStackParamList, 'FindingStylist'>;
+import { ModalWrapper } from '@/common/components/ModalWrapper';
+import { useFindingStylistModal } from '@/contexts/FindingStylistModalContext';
 
 const STATUS_POLL_INTERVAL = 3000;
 const PROGRESS_INTERVAL = 500;
 const INITIAL_AD_DELAY = 2500; // 2.5 seconds before showing first ad
 const FOLLOW_UP_AD_DELAY = 3000; // 3 seconds delay before showing follow-up ad
 
-const FindingStylist: React.FC = () => {
-  const route = useRoute<FindingRoute>();
+const FindingStylistModal: React.FC = () => {
   const navigation = useNavigation<any>();
-  const consultationId = route.params?.consultationId;
+  const { visible, consultationId, close, setConsultationId } = useFindingStylistModal();
 
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -58,11 +54,9 @@ const FindingStylist: React.FC = () => {
   const statusIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const initialAdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const profileTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nextAdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showStylistProfileRef = useRef(false);
   const adLoopActiveRef = useRef(false);
-  const canNavigateRef = useRef(false); // Track if navigation is allowed (after cancel)
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     setToast({
@@ -85,49 +79,56 @@ const FindingStylist: React.FC = () => {
       clearTimeout(initialAdTimerRef.current);
       initialAdTimerRef.current = null;
     }
-    if (profileTimerRef.current) {
-      clearTimeout(profileTimerRef.current);
-      profileTimerRef.current = null;
-    }
     if (nextAdTimerRef.current) {
       clearTimeout(nextAdTimerRef.current);
       nextAdTimerRef.current = null;
     }
   }, []);
 
-  const navigateToChat = useCallback(() => {
+  const closeAllAndDismiss = useCallback(() => {
     stopAllTimers();
+    setShowAd(false);
+    setCurrentAd(null);
+    setAdLoopActive(false);
+    adLoopActiveRef.current = false;
+    close();
+  }, [close, stopAllTimers]);
 
-    // Reset the inner Consultation stack so that when the user comes back
-    // from the chat screen, they land on the consultations list, not on this
-    // transient "Finding stylist" screen.
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'ConsultationHome' as never }],
-    });
+  const findNavigatorWithRoute = useCallback(
+    (routeName: string) => {
+      let current: any = navigation;
+      for (let i = 0; i < 10; i++) {
+        const state = current?.getState?.();
+        if (state?.routeNames?.includes?.(routeName)) {
+          return current;
+        }
+        const parent = current?.getParent?.();
+        if (!parent) break;
+        current = parent;
+      }
+      return navigation;
+    },
+    [navigation]
+  );
 
-    const parent = navigation.getParent?.();
-    if (parent) {
-      parent.navigate('ConsultantChat', { consultationId, asCustomer: true });
-    } else {
-      navigation.navigate('ConsultantChat', { consultationId, asCustomer: true });
-    }
-  }, [consultationId, navigation, stopAllTimers]);
+  const navigateToChat = useCallback(() => {
+    if (!consultationId) return;
+    stopAllTimers();
+    close();
+
+    const nav = findNavigatorWithRoute('ConsultantChat');
+    nav.navigate('ConsultantChat', { consultationId, asCustomer: true });
+  }, [consultationId, stopAllTimers, close, findNavigatorWithRoute]);
 
   // Handle Ad #1 (initial search ad) - starts the ad loop
   const showInitialAd = useCallback(async () => {
     if (hasShownInitialAd || !isAdsEnabled) return;
-
-    // Preload if not already loaded
     await preloadAd('small');
-
-    // Get and show the ad
     const ad = getAndConsumeAd('small');
     if (ad) {
       setCurrentAd(ad);
       setShowAd(true);
       setHasShownInitialAd(true);
-      // Start the ad loop
       setAdLoopActive(true);
       adLoopActiveRef.current = true;
     }
@@ -135,26 +136,20 @@ const FindingStylist: React.FC = () => {
 
   // Handle Ad #2 (when user clicks "Go to Chat" button)
   const showSecondAd = useCallback(async () => {
-    // Hide profile first
     setShowStylistProfile(false);
 
     if (!isAdsEnabled) {
-      // If ads disabled, go straight to chat
       navigateToChat();
       return;
     }
 
-    // Preload if not already loaded
     await preloadAd('small');
-
-    // Get and show the ad
     const ad = getAndConsumeAd('small');
     if (ad) {
       setCurrentAd(ad);
       setShowAd(true);
       setIsWaitingForAd2(true);
     } else {
-      // No ad available, go to chat
       navigateToChat();
     }
   }, [isAdsEnabled, preloadAd, getAndConsumeAd, navigateToChat]);
@@ -171,7 +166,6 @@ const FindingStylist: React.FC = () => {
       setSearchFailedMessage(
         message || 'This is a very busy period for our stylists. Please try again in a few minutes.'
       );
-      // Stop ad loop when search fails - no ads at try again stage
       setAdLoopActive(false);
       adLoopActiveRef.current = false;
       setShowAd(false);
@@ -182,11 +176,6 @@ const FindingStylist: React.FC = () => {
 
   // Show next ad in the loop (after 3 second break)
   const showNextAd = useCallback(async () => {
-    // Don't show if:
-    // - Consultation is already selected
-    // - Ads are disabled
-    // - Search has failed (try again stage)
-    // - Ad loop is not active
     if (
       showStylistProfileRef.current ||
       !isAdsEnabled ||
@@ -196,10 +185,7 @@ const FindingStylist: React.FC = () => {
       return;
     }
 
-    // Preload if not already loaded
     await preloadAd('small');
-
-    // Get and show the ad
     const ad = getAndConsumeAd('small');
     if (ad) {
       setCurrentAd(ad);
@@ -207,28 +193,19 @@ const FindingStylist: React.FC = () => {
     }
   }, [isAdsEnabled, searchFailedMessage, preloadAd, getAndConsumeAd]);
 
-  // Handle ad finished
   const handleAdFinished = useCallback(() => {
     setShowAd(false);
     setCurrentAd(null);
 
     if (isWaitingForAd2) {
-      // Ad #2 finished (after clicking Go to Chat), navigate to chat
       setIsWaitingForAd2(false);
       navigateToChat();
       return;
     }
 
-    // For loop ads: If consultation not selected and search hasn't failed, schedule next ad after 3 seconds
     if (adLoopActiveRef.current && !showStylistProfileRef.current && searchFailedMessage === null) {
-      // Clear any existing next ad timer
-      if (nextAdTimerRef.current) {
-        clearTimeout(nextAdTimerRef.current);
-      }
-
-      // Schedule next ad after 3 second break
+      if (nextAdTimerRef.current) clearTimeout(nextAdTimerRef.current);
       nextAdTimerRef.current = setTimeout(() => {
-        // Double-check conditions before showing ad
         if (
           adLoopActiveRef.current &&
           !showStylistProfileRef.current &&
@@ -256,22 +233,18 @@ const FindingStylist: React.FC = () => {
           (updated.status === 'assigned' && updated.consultant_id) ||
           updated.status === 'active'
         ) {
-          // Stylist accepted - stop ad loop and show profile
           if (!showStylistProfile && !isWaitingForAd2) {
             setAcceptedConsultation(updated);
             setShowStylistProfile(true);
-            showStylistProfileRef.current = true; // Update ref
-            stopAllTimers(); // Stop polling
+            showStylistProfileRef.current = true;
+            stopAllTimers();
 
-            // Stop ad loop
             setAdLoopActive(false);
             adLoopActiveRef.current = false;
 
-            // Close any open ad
             setShowAd(false);
             setCurrentAd(null);
 
-            // Cancel any pending next ad
             if (nextAdTimerRef.current) {
               clearTimeout(nextAdTimerRef.current);
               nextAdTimerRef.current = null;
@@ -290,102 +263,95 @@ const FindingStylist: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [
-    consultationId,
-    handleSearchFailure,
-    showStylistProfile,
-    isWaitingForAd2,
-    stopAllTimers,
-    showSecondAd,
-  ]);
+  }, [consultationId, handleSearchFailure, showStylistProfile, isWaitingForAd2, stopAllTimers]);
 
-  // Keep refs in sync with state
+  // Reset modal state when opened / consultationId changes
   useEffect(() => {
-    showStylistProfileRef.current = showStylistProfile;
-    adLoopActiveRef.current = adLoopActive;
-  }, [showStylistProfile, adLoopActive]);
+    if (!visible) return;
+
+    setLoading(true);
+    setProgress(0);
+    setSearchFailedMessage(null);
+    setConsultationStatus(null);
+    setShowStylistProfile(false);
+    setAcceptedConsultation(null);
+    setHasShownInitialAd(false);
+    setIsWaitingForAd2(false);
+    setAdLoopActive(false);
+    adLoopActiveRef.current = false;
+    setShowAd(false);
+    setCurrentAd(null);
+
+    return () => {
+      stopAllTimers();
+    };
+  }, [visible, consultationId, stopAllTimers]);
 
   useEffect(() => {
+    if (!visible) return;
+    if (!consultationId || !Number.isFinite(consultationId)) return;
+
     checkConsultationStatus();
     statusIntervalRef.current = setInterval(checkConsultationStatus, STATUS_POLL_INTERVAL);
     progressIntervalRef.current = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 95) return prev;
-        return prev + 2;
-      });
+      setProgress((prev) => (prev >= 95 ? prev : prev + 2));
     }, PROGRESS_INTERVAL);
 
-    // Schedule initial ad (Ad #1) after delay
     if (isAdsEnabled && !hasShownInitialAd) {
       initialAdTimerRef.current = setTimeout(() => {
         showInitialAd();
       }, INITIAL_AD_DELAY);
     }
 
-    return () => {
-      stopAllTimers();
-    };
-  }, [checkConsultationStatus, stopAllTimers, isAdsEnabled, hasShownInitialAd, showInitialAd]);
+    return () => stopAllTimers();
+  }, [
+    visible,
+    consultationId,
+    checkConsultationStatus,
+    stopAllTimers,
+    isAdsEnabled,
+    hasShownInitialAd,
+    showInitialAd,
+  ]);
 
-  // handleTryAgain: stop timers, load saved draft, and re-run the same submission flow
   const handleTryAgain = async () => {
     stopAllTimers();
-
     setLoading(true);
     try {
       const draft = await storage.getConsultationDraft();
-
       if (!draft) {
         showToast('No saved consultation to retry. Please enter details again.', 'warning');
-        navigation.replace('NewConsultant');
+        closeAllAndDismiss();
         return;
       }
 
-      // Validate draft shape
       if (!draft.description || !draft.description.trim()) {
-        // corrupted or incomplete draft — clear and ask user to re-enter
         await storage.removeConsultationDraft();
         showToast('Saved consultation is incomplete. Please re-enter your details.', 'error');
-        navigation.replace('NewConsultant');
+        closeAllAndDismiss();
         return;
       }
 
-      // Use draft.selectedImage if present; fallback to current selectedImage (if your component keeps it)
-      // Only use image if it exists in the draft
       const imageToUse = draft.selectedImage ? draft.selectedImage : null;
-
-      // Re-run the createConsultation call (same shape as onSubmit)
       const response = await createConsultation(draft.description, imageToUse);
-
       const newId =
         response?.data?.consultation?.id ??
         response?.consultation?.id ??
         response?.data?.id ??
         response?.id;
 
-      if (!newId) {
+      if (!newId || !Number.isFinite(Number(newId))) {
         showToast('Retry failed to open chat automatically. Please try again.', 'warning');
-        // keep draft for further retries
         return;
       }
 
-      // Success: clear draft and navigate
       await storage.removeConsultationDraft();
-      navigation.replace('FindingStylist', { consultationId: Number(newId) });
+      setConsultationId(Number(newId));
     } catch (err: any) {
       showToast(err?.message || 'Retry failed. Please try again.', 'error');
-      // keep draft so user can retry again
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleViewConsultations = () => {
-    stopAllTimers();
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'ConsultationHome' as keyof CombinedStackParamList }],
-    });
   };
 
   const handleCancelConsultation = useCallback(async () => {
@@ -394,7 +360,6 @@ const FindingStylist: React.FC = () => {
       return;
     }
 
-    // Check if consultation can be cancelled (not accepted/assigned/active)
     if (consultationStatus === 'assigned' || consultationStatus === 'active') {
       showToast('This consultation has already been accepted and cannot be cancelled.', 'warning');
       return;
@@ -405,17 +370,8 @@ const FindingStylist: React.FC = () => {
       setLoading(true);
       await cancelConsultationMutation.mutateAsync(String(consultationId));
       showToast('Consultation cancelled successfully.', 'success');
-
-      // Clear draft and navigate back
       await storage.removeConsultationDraft();
-      // Allow navigation after cancel
-      canNavigateRef.current = true;
-      setTimeout(() => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'ConsultationHome' as keyof CombinedStackParamList }],
-        });
-      }, 1500);
+      closeAllAndDismiss();
     } catch (err: any) {
       showToast(err?.message || 'Failed to cancel consultation. Please try again.', 'error');
       setLoading(false);
@@ -424,52 +380,16 @@ const FindingStylist: React.FC = () => {
     consultationId,
     consultationStatus,
     cancelConsultationMutation,
-    navigation,
+    closeAllAndDismiss,
     stopAllTimers,
-    showToast,
   ]);
 
-  // Check if consultation can be cancelled (not accepted yet)
   const canCancelConsultation =
     consultationStatus &&
     consultationStatus !== 'assigned' &&
     consultationStatus !== 'active' &&
     consultationStatus !== 'cancelled' &&
     consultationStatus !== 'expired';
-
-  // Check if consultation is still in "finding" state (should block navigation)
-  const isFindingConsultation =
-    consultationStatus &&
-    consultationStatus !== 'assigned' &&
-    consultationStatus !== 'active' &&
-    consultationStatus !== 'cancelled' &&
-    consultationStatus !== 'expired' &&
-    consultationStatus !== 'completed' &&
-    !searchFailedMessage &&
-    !showStylistProfile;
-
-  // Prevent navigation away from this screen when finding consultation
-  useEffect(() => {
-    if (!isFindingConsultation) {
-      return;
-    }
-
-    const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
-      // If we're already allowed to navigate (after cancel), don't intercept
-      if (canNavigateRef.current) {
-        canNavigateRef.current = false;
-        return;
-      }
-
-      // Prevent default navigation
-      e.preventDefault();
-
-      // Show modal asking user to cancel consultation
-      setShowCancelModal(true);
-    });
-
-    return unsubscribe;
-  }, [navigation, isFindingConsultation]);
 
   const renderSearchingState = () => (
     <>
@@ -512,7 +432,6 @@ const FindingStylist: React.FC = () => {
     const yearsExperience = consultantDetails?.years_experience;
     const averageRating = consultantDetails?.average_rating;
 
-    // Format rating - handle both string and number types
     const formattedRating =
       averageRating && parseFloat(String(averageRating)) > 0
         ? typeof averageRating === 'number'
@@ -585,56 +504,39 @@ const FindingStylist: React.FC = () => {
       </TouchableOpacity>
       <TouchableOpacity
         className="mt-2.5 w-full rounded-xl border border-[#DAE7E0] py-3.5 items-center"
-        onPress={handleViewConsultations}
+        onPress={closeAllAndDismiss}
       >
-        <Text className="text-commonGradientStop6 text-[15px] font-semibold">
-          View my consultations
-        </Text>
+        <Text className="text-commonGradientStop6 text-[15px] font-semibold">Close</Text>
       </TouchableOpacity>
     </>
   );
 
-  // Early return if consultationId is missing
-  if (!consultationId || !Number.isFinite(consultationId)) {
-    return (
-      <View className="flex-1" style={{ backgroundColor: '#0E1B16' }}>
-        <SafeAreaView className="flex-1 px-5 justify-center items-center">
-          <Text className="text-white text-lg mb-4">Invalid consultation reference</Text>
-          <TouchableOpacity
-            className="rounded-xl bg-buttonPrimaryBg py-3.5 px-6"
-            onPress={() => navigation.goBack()}
-          >
-            <Text className="text-white text-[15px] font-bold">Go Back</Text>
-          </TouchableOpacity>
-        </SafeAreaView>
-      </View>
-    );
-  }
+  if (!visible) return null;
 
   return (
-    <View className="flex-1" style={{ backgroundColor: '#0E1B16' }}>
+    <>
       <Toast
         visible={toast.visible}
         message={toast.message}
         type={toast.type}
         onClose={() => setToast({ ...toast, visible: false })}
       />
-      <SafeAreaView className="flex-1 px-5">
-        <TouchableOpacity
-          className="w-10 h-10 rounded-full border border-white/20 justify-center items-center mt-4"
-          onPress={() => {
-            if (isFindingConsultation) {
-              setShowCancelModal(true);
-            } else {
-              navigation.goBack();
-            }
-          }}
-        >
-          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
 
-        <ScrollView contentContainerClassName="flex-grow justify-center" bounces={false}>
-          <View className="bg-white rounded-[5px] p-6 items-center">
+      <ModalWrapper
+        visible={visible}
+        onClose={() => {
+          // While searching, don't allow dismiss — show cancel modal instead.
+          if (!searchFailedMessage && !showStylistProfile) {
+            setShowCancelModal(true);
+            return;
+          }
+          closeAllAndDismiss();
+        }}
+        dismissOnBackdropPress={false}
+        containerClassName={isDark ? 'bg-buttonSecondaryText' : 'bg-white'}
+      >
+        <ScrollView contentContainerClassName="items-center" bounces={false}>
+          <View className="w-full items-center">
             {showStylistProfile
               ? renderStylistProfile()
               : searchFailedMessage
@@ -648,7 +550,6 @@ const FindingStylist: React.FC = () => {
               </View>
             )}
 
-            {/* Cancel Button - Only show when consultation is not accepted */}
             {!searchFailedMessage && canCancelConsultation && (
               <TouchableOpacity
                 className="mt-4 w-full rounded-xl border border-red-300 py-3.5 items-center"
@@ -662,17 +563,14 @@ const FindingStylist: React.FC = () => {
             )}
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </ModalWrapper>
 
-      {/* Ad Modal */}
       <AdModal visible={showAd} ad={currentAd} onFinished={handleAdFinished} />
 
-      {/* Cancel Consultation Modal */}
       <CancelConsultationModal
         visible={showCancelModal}
         onConfirm={() => {
           setShowCancelModal(false);
-          canNavigateRef.current = true;
           handleCancelConsultation();
         }}
         onCancel={() => {
@@ -680,8 +578,8 @@ const FindingStylist: React.FC = () => {
         }}
         isLoading={cancelConsultationMutation.isPending}
       />
-    </View>
+    </>
   );
 };
 
-export default FindingStylist;
+export default FindingStylistModal;
