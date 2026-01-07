@@ -47,7 +47,6 @@ export const useSignupApi = () => {
           const res = await axios.post(`${BASE_URL}/api/consultant/register`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
-          console.log('res======>', res.data);
           return res.data;
         } else {
           // Customer signup with JSON payload
@@ -63,7 +62,6 @@ export const useSignupApi = () => {
           }
 
           const res = await axios.post(`${BASE_URL}/api/register`, payload);
-          console.log('res======>', res.data);
           return res.data;
         }
       } catch (err) {
