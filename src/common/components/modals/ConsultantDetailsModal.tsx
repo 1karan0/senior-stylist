@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { ModalWrapper } from '../ModalWrapper';
 import { ConsultantConsultation } from '@/api/consultant/consultations';
 import Button from '../Button';
+import ImageModal from '@/common/components/modals/ImageModal';
 
 interface ConsultantDetailsProps {
   visible: boolean;
@@ -26,6 +27,12 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
   consultation,
   isConsultant = false,
 }: ConsultantDetailsProps) => {
+  const [showImageModal, setShowImageModal] = useState(false);
+
+  const handleShowImageModal = () => {
+    setShowImageModal(true);
+  };
+
   if (!consultation) {
     return null;
   }
@@ -68,13 +75,17 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
         >
           <View className="flex-row justify-end">
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#162721" />
+              <Text>
+                <Ionicons name="close" size={24} color="#162721" />
+              </Text>
             </TouchableOpacity>
           </View>
           {/* Header */}
           <View className="flex-row items-center justify-start mb-4 px-4 ">
             <TouchableOpacity onPress={onClose} className="">
-              <Ionicons name="arrow-back" size={24} color="#162721" />
+              <Text>
+                <Ionicons name="arrow-back" size={24} color="#162721" />
+              </Text>
             </TouchableOpacity>
             <Text className="text-[18px] w-[90%] text-center font-urbanist-bold text-textDark">
               {personProfile.name || ''}
@@ -84,13 +95,19 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
           {/* Profile Image */}
           <View className="px-4 h-[225px]">
             {personProfile.profile_picture_url ? (
-              <View className="w-full h-full rounded-[10px] overflow-hidden bg-gray-100 items-center justify-center">
-                <Image
-                  source={{ uri: personProfile.profile_picture_url }}
-                  className="w-full h-full rounded-[10px]"
-                  resizeMode="cover"
-                />
-              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  handleShowImageModal();
+                }}
+              >
+                <View className="w-full h-full rounded-[10px] overflow-hidden bg-gray-100 items-center justify-center">
+                  <Image
+                    source={{ uri: personProfile.profile_picture_url }}
+                    className="w-full h-full rounded-[10px]"
+                    resizeMode="cover"
+                  />
+                </View>
+              </TouchableOpacity>
             ) : (
               <View className="w-full h-[225px] rounded-[10px] bg-buttonPrimaryBg items-center justify-center">
                 <Text className="text-white text-5xl font-urbanist-bold">
@@ -117,7 +134,9 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
             {/* Rating - Only show for consultants */}
             {isShowingConsultant && hasRating && averageRating && (
               <View className="flex-row items-center mt-2">
-                <Ionicons name="star" size={17} color="#FFD700" />
+                <Text>
+                  <Ionicons name="star" size={17} color="#FFD700" />
+                </Text>
                 <Text className="text-[14px] ml-1 font-poppins-medium text-textDark">
                   {`${
                     typeof averageRating === 'number'
@@ -134,7 +153,9 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
                 <View className="mt-4">
                   {hasSessions && (
                     <View className="flex-row items-center mb-2">
-                      <Ionicons name="people-outline" size={18} color="#162721" />
+                      <Text>
+                        <Ionicons name="people-outline" size={18} color="#162721" />
+                      </Text>
                       <Text className="text-sm text-textDark ml-2">
                         {totalSessions} consultations
                       </Text>
@@ -142,23 +163,31 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
                   )}
 
                   <View className="flex-row items-center mb-2">
-                    <Ionicons name="time-outline" size={18} color="#162721" />
+                    <Text>
+                      <Ionicons name="time-outline" size={18} color="#162721" />
+                    </Text>
                     <Text className="text-sm text-textDark ml-2">responds in less than a day</Text>
                   </View>
 
                   <View className="flex-row items-center mb-2">
-                    <Ionicons name="checkmark-circle-outline" size={18} color="#162721" />
+                    <Text>
+                      <Ionicons name="checkmark-circle-outline" size={18} color="#162721" />
+                    </Text>
                     <Text className="text-sm text-textDark ml-2">93% response rate</Text>
                   </View>
 
                   <View className="flex-row items-center mb-2">
-                    <Ionicons name="eye-outline" size={18} color="#162721" />
+                    <Text>
+                      <Ionicons name="eye-outline" size={18} color="#162721" />
+                    </Text>
                     <Text className="text-sm text-textDark ml-2">1677 profile views</Text>
                   </View>
 
                   {yearsExperience && yearsExperience > 0 && (
                     <View className="flex-row items-center mb-2">
-                      <Ionicons name="briefcase-outline" size={18} color="#162721" />
+                      <Text>
+                        <Ionicons name="briefcase-outline" size={18} color="#162721" />
+                      </Text>
                       <Text className="text-sm text-textDark ml-2">
                         {yearsExperience} years experience
                       </Text>
@@ -169,7 +198,9 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
             ) : (
               <View className="mt-4">
                 <View className="flex-row items-center mb-2">
-                  <Ionicons name="person-outline" size={18} color="#162721" />
+                  <Text>
+                    <Ionicons name="person-outline" size={18} color="#162721" />
+                  </Text>
                   <Text className="text-sm text-textDark ml-2">Client</Text>
                 </View>
                 {consultation.problem_description && (
@@ -205,7 +236,9 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
                   </Text>
                   <View className="flex-row">
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <Ionicons key={star} name="star" size={14} color="#FFD700" />
+                      <Text key={star}>
+                        <Ionicons name="star" size={14} color="#FFD700" />
+                      </Text>
                     ))}
                   </View>
                 </View>
@@ -226,6 +259,11 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
           />
         </View>
       </View>
+      <ImageModal
+        visible={showImageModal}
+        imageUri={personProfile.profile_picture_url || ''}
+        onClose={() => setShowImageModal(false)}
+      />
     </ModalWrapper>
   );
 };

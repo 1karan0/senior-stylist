@@ -13,7 +13,7 @@ import { useRatingConsultation } from '@/api/user/consultation/useRatingConsulta
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatInput from '@/components/chat/ChatInput';
 import MessageBubble from '@/components/chat/MessageBubble';
-import ImageModal from '@/components/chat/ImageModal';
+import ImageModal from '@/common/components/modals/ImageModal';
 import ScrollToBottomButton from '@/components/chat/ScrollToBottomButton';
 import ChatClosedBanner from '@/components/chat/ChatClosedBanner';
 import ChatLoadingScreen from '@/components/chat/ChatLoadingScreen';

@@ -23,7 +23,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import Button from '@/common/components/Button';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
-import ImageModal from '@/components/chat/ImageModal';
+import ImageModal from '@/common/components/modals/ImageModal';
 import TextInputField from '@/common/components/TextInputField';
 
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';

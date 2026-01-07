@@ -157,6 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await Promise.all([storage.setToken(token), storage.setUserData(userData)]);
 
       setUser(userData);
+      console.log('userData======>', userData);
 
       // Initialize Firebase session
       if (firebaseToken) {

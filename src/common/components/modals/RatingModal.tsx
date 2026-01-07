@@ -44,8 +44,11 @@ const RatingModal: React.FC<RatingModalProps> = ({
   const handleSubmit = () => {
     if (rating === 0) return;
     onSubmit(rating, review);
-    setRating(0);
-    setReview('');
+    if (!isLoading) {
+      setRating(0);
+      setReview('');
+      onClose();
+    }
   };
 
   const handleClose = () => {
