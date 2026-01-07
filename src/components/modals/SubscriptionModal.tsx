@@ -61,7 +61,8 @@ export default function SubscriptionModal({
   const currentSubscriptionRef = useRef<any | null>(null);
   const upgradeRedirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  console.log('currentSubscription', currentSubscription);
+  // Removed debug console.logs and fixed UserId assignment to comply with ProfileUser type
+  const userId = profileData?.user?.id;
 
   useEffect(() => {
     currentSubscriptionRef.current = currentSubscription;
@@ -355,6 +356,11 @@ export default function SubscriptionModal({
         const isDowngrade =
           isPlanChange && Number(plan.originalPlan.id) < Number(currentSub.plan_id);
 
+        console.log(shouldApplyReplacement, 'shouldApplyReplacement');
+        console.log(isPlanChange, 'isPlanChange');
+        console.log(isUpgrade, 'isUpgrade');
+        console.log(isDowngrade, 'isDowngrade');
+
         if (shouldApplyReplacement && isPlanChange) {
           // replacementModeAndroid:
           // - upgrade: 2 (IMMEDIATE_AND_CHARGE_PRORATED_PRICE)
@@ -382,6 +388,8 @@ export default function SubscriptionModal({
               },
             }
           );
+
+          console.log(purchaseRequest, 'purchaseRequest for reprlacement mode');
 
           await (RNIap as any).requestPurchase(purchaseRequest);
           return;
@@ -417,12 +425,17 @@ export default function SubscriptionModal({
             },
           }
         );
+
+        purchaseRequest.request.android.purchaseTokenAndroid = oldPurchaseToken;
+        purchaseRequest.request.android.replacementModeAndroid = 6;
         // We are now handing off to the Store UI.
+        console.log(purchaseRequest, 'purchaseRequest for Android');
         setIsSyncingWithStore(false);
         await (RNIap as any).requestPurchase(purchaseRequest);
       } else {
         // iOS Implementation
         // We are now handing off to the Store UI.
+        // console.log(purchaseRequest, 'purchaseRequest for iOS');
         setIsSyncingWithStore(false);
         await (RNIap as any).requestPurchase({ sku: productId });
       }
