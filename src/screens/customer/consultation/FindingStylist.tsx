@@ -14,6 +14,7 @@ import { storage } from '@/services/storage';
 import { useAds } from '@/contexts/AdContext';
 import AdModal from '@/components/ads/AdModal';
 import type { ConsultantConsultation } from '@/api/consultant/consultations';
+import CancelConsultationModal from '@/common/components/modals/CancelConsultationModal';
 
 type CombinedStackParamList = AppStackParamList & ConsultationStackParamList;
 type FindingRoute = RouteProp<CombinedStackParamList, 'FindingStylist'>;
@@ -48,6 +49,7 @@ const FindingStylist: React.FC = () => {
   const [hasShownInitialAd, setHasShownInitialAd] = useState(false);
   const [isWaitingForAd2, setIsWaitingForAd2] = useState(false);
   const [adLoopActive, setAdLoopActive] = useState(false); // Track if ad loop is active
+  const [showCancelModal, setShowCancelModal] = useState(false); // Modal for cancel consultation
 
   const { isDark } = useTheme();
   const cancelConsultationMutation = useCancelConsultaion();
@@ -60,6 +62,7 @@ const FindingStylist: React.FC = () => {
   const nextAdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showStylistProfileRef = useRef(false);
   const adLoopActiveRef = useRef(false);
+  const canNavigateRef = useRef(false); // Track if navigation is allowed (after cancel)
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     setToast({
@@ -385,7 +388,7 @@ const FindingStylist: React.FC = () => {
     });
   };
 
-  const handleCancelConsultation = async () => {
+  const handleCancelConsultation = useCallback(async () => {
     if (!consultationId) {
       showToast('Invalid consultation reference.', 'error');
       return;
@@ -405,6 +408,8 @@ const FindingStylist: React.FC = () => {
 
       // Clear draft and navigate back
       await storage.removeConsultationDraft();
+      // Allow navigation after cancel
+      canNavigateRef.current = true;
       setTimeout(() => {
         navigation.reset({
           index: 0,
@@ -415,7 +420,14 @@ const FindingStylist: React.FC = () => {
       showToast(err?.message || 'Failed to cancel consultation. Please try again.', 'error');
       setLoading(false);
     }
-  };
+  }, [
+    consultationId,
+    consultationStatus,
+    cancelConsultationMutation,
+    navigation,
+    stopAllTimers,
+    showToast,
+  ]);
 
   // Check if consultation can be cancelled (not accepted yet)
   const canCancelConsultation =
@@ -424,6 +436,40 @@ const FindingStylist: React.FC = () => {
     consultationStatus !== 'active' &&
     consultationStatus !== 'cancelled' &&
     consultationStatus !== 'expired';
+
+  // Check if consultation is still in "finding" state (should block navigation)
+  const isFindingConsultation =
+    consultationStatus &&
+    consultationStatus !== 'assigned' &&
+    consultationStatus !== 'active' &&
+    consultationStatus !== 'cancelled' &&
+    consultationStatus !== 'expired' &&
+    consultationStatus !== 'completed' &&
+    !searchFailedMessage &&
+    !showStylistProfile;
+
+  // Prevent navigation away from this screen when finding consultation
+  useEffect(() => {
+    if (!isFindingConsultation) {
+      return;
+    }
+
+    const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+      // If we're already allowed to navigate (after cancel), don't intercept
+      if (canNavigateRef.current) {
+        canNavigateRef.current = false;
+        return;
+      }
+
+      // Prevent default navigation
+      e.preventDefault();
+
+      // Show modal asking user to cancel consultation
+      setShowCancelModal(true);
+    });
+
+    return unsubscribe;
+  }, [navigation, isFindingConsultation]);
 
   const renderSearchingState = () => (
     <>
@@ -576,7 +622,13 @@ const FindingStylist: React.FC = () => {
       <SafeAreaView className="flex-1 px-5">
         <TouchableOpacity
           className="w-10 h-10 rounded-full border border-white/20 justify-center items-center mt-4"
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            if (isFindingConsultation) {
+              setShowCancelModal(true);
+            } else {
+              navigation.goBack();
+            }
+          }}
         >
           <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
         </TouchableOpacity>
@@ -614,6 +666,20 @@ const FindingStylist: React.FC = () => {
 
       {/* Ad Modal */}
       <AdModal visible={showAd} ad={currentAd} onFinished={handleAdFinished} />
+
+      {/* Cancel Consultation Modal */}
+      <CancelConsultationModal
+        visible={showCancelModal}
+        onConfirm={() => {
+          setShowCancelModal(false);
+          canNavigateRef.current = true;
+          handleCancelConsultation();
+        }}
+        onCancel={() => {
+          setShowCancelModal(false);
+        }}
+        isLoading={cancelConsultationMutation.isPending}
+      />
     </View>
   );
 };

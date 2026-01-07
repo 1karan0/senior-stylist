@@ -13,7 +13,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { ProfileUser } from '@/common/types';
 import TextInputField from '@/common/components/TextInputField';
 import ImagePickerModal from '@/common/components/modals/ImagePickerModal';
-import ImageModal from '@/components/chat/ImageModal';
+import ImageModal from '@/common/components/modals/ImageModal';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
   requestCameraPermission,
