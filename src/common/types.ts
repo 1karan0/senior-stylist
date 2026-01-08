@@ -259,6 +259,7 @@ export interface ProfileSubscription {
 
 export interface ProfileUser {
   id: number;
+  uuid: string;
   name: string;
   email: string;
   phone: string;
