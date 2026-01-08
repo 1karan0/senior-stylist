@@ -2,7 +2,12 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, Pressable, Alert, Platform, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { purchaseUpdatedListener, purchaseErrorListener, initConnection } from 'react-native-iap';
+import {
+  purchaseUpdatedListener,
+  purchaseErrorListener,
+  initConnection,
+  MutationRequestPurchaseArgs,
+} from 'react-native-iap';
 import * as RNIap from 'react-native-iap';
 import { storage, type PendingPurchaseVerification } from '@/services/storage';
 import {
@@ -61,8 +66,7 @@ export default function SubscriptionModal({
   const currentSubscriptionRef = useRef<any | null>(null);
   const upgradeRedirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Removed debug console.logs and fixed UserId assignment to comply with ProfileUser type
-  const userId = profileData?.user?.id;
+  console.log(plan, 'plan');
 
   useEffect(() => {
     currentSubscriptionRef.current = currentSubscription;
@@ -81,377 +85,144 @@ export default function SubscriptionModal({
 
   // 2. Initiating the Purchase
   const handleSubscribe = useCallback(async () => {
-    if (!plan?.originalPlan) {
-      Alert.alert('Error', 'Plan information is missing.');
-      return;
-    }
-
     if (!iapInitialized) {
-      Alert.alert('Payment Unavailable', iapError || 'Payment system is not available.');
+      Alert.alert('Payment Unavailable', iapError || 'Payment not available.');
       return;
     }
 
-    // Focus on purchase only (no upgrade/downgrade logic here).
+    if (!plan?.originalPlan) {
+      Alert.alert('Error', 'Plan data missing.');
+      return;
+    }
 
-    setIsLoading(true);
-    setIsProcessingPurchase(true);
-    setIsSyncingWithStore(true);
-
-    const productId = Platform.select({
-      ios: plan.originalPlan.apple_product_id,
-      android: plan.originalPlan.google_product_id,
-    });
+    const productId =
+      Platform.OS === 'ios'
+        ? plan.originalPlan.apple_product_id
+        : plan.originalPlan.google_product_id;
 
     if (!productId) {
-      setIsLoading(false);
-      setIsProcessingPurchase(false);
-      setIsSyncingWithStore(false);
-      Alert.alert('Error', `Product ID not configured for ${Platform.OS}`);
+      Alert.alert('Error', `Product ID missing for ${Platform.OS}`);
       return;
     }
 
-    /**
-     * Google Play subscriptions model:
-     * - productId: subscription product id (e.g. "senior_stylist_subscription")
-     * - basePlanId: base plan id (e.g. "basic-monthly", "premium-monthly", "pro-monthly")
-     * - offerId: offer id under that base plan (e.g. "basic-intro-6m")
-     *
-     * Our API currently doesn't always provide `offer_plan_id`, and `base_plan_product_id`
-     * may not be present on every plan row. So we derive safely from the plan slug.
-     */
-    const deriveAndroidBasePlanId = (): string | null => {
-      const anyPlan = plan.originalPlan as any;
-      // Prefer explicit field when present
-      if (typeof anyPlan.base_plan_product_id === 'string' && anyPlan.base_plan_product_id.trim()) {
-        return anyPlan.base_plan_product_id.trim();
-      }
-      // Fallback: slug matches Play Console basePlanId in your structure (basic-monthly, etc.)
-      if (typeof anyPlan.slug === 'string' && anyPlan.slug.trim()) {
-        return anyPlan.slug.trim();
-      }
-      return null;
-    };
-
-    const deriveAndroidOfferId = (basePlanId: string | null): string | null => {
-      const anyPlan = plan.originalPlan as any;
-      // Prefer explicit field when present
-      if (typeof anyPlan.offer_plan_id === 'string' && anyPlan.offer_plan_id.trim()) {
-        return anyPlan.offer_plan_id.trim();
-      }
-
-      // If discount is configured (e.g. 6 months), derive offerId like: basic-intro-6m
-      const months =
-        typeof anyPlan.discount_duration_months === 'number' ? anyPlan.discount_duration_months : 0;
-      if (!basePlanId || !months || months <= 0) return null;
-
-      const prefix = basePlanId.replace(/-monthly$/i, '').trim();
-      if (!prefix) return null;
-      return `${prefix}-intro-${months}m`;
-    };
-
-    const basePlanId = Platform.OS === 'android' ? deriveAndroidBasePlanId() : null;
-    const offerPlanId = Platform.OS === 'android' ? deriveAndroidOfferId(basePlanId) : null;
+    setIsLoading(true);
 
     try {
-      if (Platform.OS === 'android') {
-        const rnIapAny = RNIap as any;
+      // 1. Current user plan from Google
+      const activeSubs = await RNIap.getActiveSubscriptions();
+      const currentSub = activeSubs?.[0] ?? null;
 
-        // --- Fetch subscription product details ---
-        let selectedOfferToken: string | null = null;
-        let subscriptions: any[] = [];
-        let fetchMethod = 'none';
+      console.log('currentSub', currentSub);
 
-        // Try getProducts first (most commonly available in v14+)
-        if (typeof rnIapAny.getProducts === 'function') {
-          try {
-            const products = await rnIapAny.getProducts({
-              skus: [productId],
-              type: 'subs',
-            });
-            if (products && products.length > 0) {
-              subscriptions = products.map((p: any) => ({
-                productId: p.productId || p.id,
-                subscriptionOfferDetails:
-                  p.subscriptionOfferDetailsAndroid ||
-                  p.subscriptionOfferDetails ||
-                  p.subscriptionOffers ||
-                  null,
-              }));
-              fetchMethod = 'getProducts';
-            }
-          } catch (err) {
-            console.warn('[SubscriptionModal] getProducts failed, trying alternatives:', err);
-          }
-        }
+      let currentBasePlanId: string | null = null;
 
-        // Try getSubscriptions if getProducts didn't work
-        if (subscriptions.length === 0 && typeof rnIapAny.getSubscriptions === 'function') {
-          try {
-            subscriptions = await rnIapAny.getSubscriptions({ skus: [productId] });
-            if (subscriptions && subscriptions.length > 0) {
-              fetchMethod = 'getSubscriptions';
-            }
-          } catch (err) {
-            console.warn('[SubscriptionModal] getSubscriptions failed, trying fetchProducts:', err);
-          }
-        }
+      const sub: any = currentSub; // override bad type from RNIap
 
-        // Try fetchProducts as final fallback
-        if (subscriptions.length === 0 && typeof rnIapAny.fetchProducts === 'function') {
-          try {
-            const products = await rnIapAny.fetchProducts({
-              skus: [productId],
-              type: 'subs',
-            });
-            // (debug logs removed for clarity)
-            if (products && products.length > 0) {
-              subscriptions = products.map((p: any) => ({
-                productId: p.productId || p.id,
-                subscriptionOfferDetails:
-                  p.subscriptionOfferDetailsAndroid ||
-                  p.subscriptionOfferDetails ||
-                  p.subscriptionOffers ||
-                  null,
-              }));
-              fetchMethod = 'fetchProducts';
-            }
-          } catch (err) {
-            console.warn('[SubscriptionModal] fetchProducts failed:', err);
-          }
-        }
-
-        // If all methods failed, throw error
-        if (subscriptions.length === 0) {
-          throw new Error(
-            'Could not fetch subscription details from Google Play Store. ' +
-              'Please ensure you are connected to the internet and Google Play Services is available.'
-          );
-        }
-
-        const product = subscriptions.find((s: any) => (s.productId || s.id) === productId);
-
-        if (!product) {
-          throw new Error(
-            `Product ${productId} not found in Google Play Store. ` +
-              'Please verify the product ID matches your Google Play Console configuration.'
-          );
-        }
-
-        if (!product.subscriptionOfferDetails || product.subscriptionOfferDetails.length === 0) {
-          throw new Error(
-            `No subscription offers found for product ${productId}. ` +
-              'Please check your Google Play Console subscription configuration.'
-          );
-        }
-
-        const offers = product.subscriptionOfferDetails;
-
-        if (!basePlanId) {
-          throw new Error(
-            `Android basePlanId is missing for plan "${plan.title}". ` +
-              `Expected basePlanId like "basic-monthly". ` +
-              `Fix: ensure API returns base_plan_product_id OR plan.slug matches your Play base plan id.`
-          );
-        }
-
-        // Select offer deterministically:
-        // 1) If offerPlanId provided/derived, prefer exact basePlanId+offerId match
-        // 2) Else prefer "promo" offer (offerId present OR multiple pricing phases)
-        // 3) Else fallback to the first offer for that basePlanId
-        let selectedOffer: any =
-          (offerPlanId
-            ? offers.find((o: any) => o.basePlanId === basePlanId && o.offerId === offerPlanId)
-            : null) ||
-          offers.find(
-            (o: any) =>
-              o.basePlanId === basePlanId &&
-              (!!o.offerId ||
-                ((o.pricingPhases?.pricingPhaseList?.length || 0) > 1 &&
-                  o.pricingPhases?.pricingPhaseList?.[0]?.billingCycleCount > 0))
-          ) ||
-          offers.find((o: any) => o.basePlanId === basePlanId);
-
-        if (__DEV__) {
-          console.log('[SubscriptionModal][DEBUG] selectedOffer details', {
-            basePlanId,
-            desiredOfferPlanId: offerPlanId,
-            selectedOfferBasePlanId: selectedOffer?.basePlanId,
-            selectedOfferOfferId: selectedOffer?.offerId,
-            hasOfferIdKey: selectedOffer
-              ? Object.prototype.hasOwnProperty.call(selectedOffer, 'offerId')
-              : null,
-            selectedOfferKeys: selectedOffer ? Object.keys(selectedOffer) : null,
-            selectedOfferTokenPreview: selectedOffer?.offerToken
-              ? String(selectedOffer.offerToken).slice(0, 16) + '…'
-              : null,
-            selectedOfferRaw: selectedOffer ?? null,
-          });
-        }
-
-        if (!selectedOffer) {
-          throw new Error(
-            `No offer found for basePlanId: ${basePlanId}. ` +
-              `Available basePlanIds: ${[...new Set(offers.map((o: any) => o.basePlanId))].join(', ')}`
-          );
-        }
-
-        if (!selectedOffer.offerToken) {
-          throw new Error(
-            `Offer token is missing for basePlanId: ${basePlanId}. ` +
-              'Please check your Google Play Console subscription offer configuration.'
-          );
-        }
-
-        selectedOfferToken = selectedOffer.offerToken;
-
-        // --- 2. PREPARE THE CORRECT REQUEST STRUCTURE FOR v14+ ---
-        const subscriptionOffer: any = {
-          sku: String(productId), // Must match the productId in skus array
-          offerToken: selectedOfferToken, // REQUIRED: The token from Google Play
-        };
-
-        const purchaseRequest: any = {
-          // CRITICAL: If `type` is not set to 'subs', react-native-iap treats this as an in-app purchase,
-          // and will ignore `subscriptionOffers` => Google Play can default to the first base plan.
-          type: 'subs',
-          request: {
-            android: {
-              // Top-level skus array is REQUIRED for Android Billing Library 5+ (including 8.0)
-              skus: [String(productId)],
-              // subscriptionOffers must be inside android object for Billing Library 8.0
-              subscriptionOffers: [subscriptionOffer],
-            },
-          },
-        };
-
-        console.log(subscriptionOffer, 'subscriptionOffer');
-
-        // Plan change support (upgrade/downgrade):
-        // In react-native-iap@14.x, subscriptions are requested via requestPurchase({ type:'subs', request:{ android: ... } })
-        // and replacements are configured with:
-        // - purchaseTokenAndroid: old subscription purchase token
-        // - replacementModeAndroid: number (Play Billing replacement mode)
-        //
-        // NOTE: Wrong keys/nesting can trigger: "developer-error: Invalid arguments provided to the API".
-        const currentSub: any = currentSubscriptionRef.current;
-        const currentStoreProductId = String(currentSub?.store_plan_id || '').trim();
-        const oldPurchaseToken =
-          Platform.OS === 'android' ? String(currentSub?.purchase_token || '').trim() : '';
-
-        const isProbablyGooglePurchaseToken = (t: string) =>
-          !!t && t.length >= 10 && !t.startsWith('GPA.') && !/\s/.test(t);
-
-        const shouldApplyReplacement =
-          Platform.OS === 'android' &&
-          !!oldPurchaseToken &&
-          isProbablyGooglePurchaseToken(oldPurchaseToken) &&
-          !!currentStoreProductId &&
-          currentStoreProductId === String(productId);
-
-        const isPlanChange =
-          !!currentSub?.plan_id &&
-          !!plan?.originalPlan?.id &&
-          Number(currentSub.plan_id) !== Number(plan.originalPlan.id);
-        const isUpgrade = isPlanChange && Number(plan.originalPlan.id) > Number(currentSub.plan_id);
-        const isDowngrade =
-          isPlanChange && Number(plan.originalPlan.id) < Number(currentSub.plan_id);
-
-        console.log(shouldApplyReplacement, 'shouldApplyReplacement');
-        console.log(isPlanChange, 'isPlanChange');
-        console.log(isUpgrade, 'isUpgrade');
-        console.log(isDowngrade, 'isDowngrade');
-
-        if (shouldApplyReplacement && isPlanChange) {
-          // replacementModeAndroid:
-          // - upgrade: 2 (IMMEDIATE_AND_CHARGE_PRORATED_PRICE)
-          // - downgrade: 6 (DEFERRED)  <-- per react-native-iap docs shown by you
-          const replacementModeAndroid = isDowngrade ? 6 : 2;
-
-          purchaseRequest.request.android.purchaseTokenAndroid = oldPurchaseToken;
-          purchaseRequest.request.android.replacementModeAndroid = replacementModeAndroid;
-
-          console.log(
-            '[SubscriptionModal][PLAN_CHANGE] Using requestPurchase() with replacement params',
-            {
-              productId,
-              currentStoreProductId,
-              changeType: isDowngrade ? 'DOWNGRADE' : isUpgrade ? 'UPGRADE' : 'UNKNOWN',
-              replacementModeAndroid,
-              purchaseTokenAndroidPreview: `${oldPurchaseToken.slice(0, 6)}…${oldPurchaseToken.slice(
-                -4
-              )}`,
-              subscriptionOffer: {
-                sku: subscriptionOffer?.sku,
-                offerTokenPreview: subscriptionOffer?.offerToken
-                  ? String(subscriptionOffer.offerToken).slice(0, 16) + '…'
-                  : null,
-              },
-            }
-          );
-
-          console.log(purchaseRequest, 'purchaseRequest for reprlacement mode');
-
-          await (RNIap as any).requestPurchase(purchaseRequest);
-          return;
-        } else if (Platform.OS === 'android' && oldPurchaseToken) {
-          console.log('[SubscriptionModal][PLAN_CHANGE] Not applying replacement params', {
-            reason: {
-              hasOldToken: !!oldPurchaseToken,
-              tokenLooksValid: isProbablyGooglePurchaseToken(oldPurchaseToken),
-              currentStoreProductId,
-              productId,
-              sameProduct: currentStoreProductId === String(productId),
-              isPlanChange,
-              isUpgrade,
-              isDowngrade,
-            },
-          });
-        }
-
-        // --- 3. EXECUTE PURCHASE REQUEST ---
-        // NOTE: This only means the purchase flow was launched successfully.
-        // The actual outcome (success/cancel/failure) is delivered via purchaseUpdatedListener/purchaseErrorListener.
-        console.log(
-          '[SubscriptionModal][PURCHASE] Using requestPurchase() (initial purchase path)',
-          {
-            productId,
-            basePlanId,
-            offerPlanId,
-            subscriptionOffer: {
-              sku: subscriptionOffer?.sku,
-              offerTokenPreview: subscriptionOffer?.offerToken
-                ? String(subscriptionOffer.offerToken).slice(0, 16) + '…'
-                : null,
-            },
-          }
-        );
-
-        purchaseRequest.request.android.purchaseTokenAndroid = oldPurchaseToken;
-        purchaseRequest.request.android.replacementModeAndroid = 6;
-        // We are now handing off to the Store UI.
-        console.log(purchaseRequest, 'purchaseRequest for Android');
-        setIsSyncingWithStore(false);
-        await (RNIap as any).requestPurchase(purchaseRequest);
-      } else {
-        // iOS Implementation
-        // We are now handing off to the Store UI.
-        // console.log(purchaseRequest, 'purchaseRequest for iOS');
-        setIsSyncingWithStore(false);
-        await (RNIap as any).requestPurchase({ sku: productId });
+      if (sub?.subscriptionOfferDetails?.length) {
+        currentBasePlanId = sub.subscriptionOfferDetails[0].basePlanId ?? null;
       }
-    } catch (err: unknown) {
+
+      // 2. Fetch product + all base-plan offers
+      const products = await RNIap.fetchProducts({
+        skus: [productId],
+        type: 'subs',
+      });
+
+      if (!products?.length) {
+        throw new Error(`Product ${productId} not found on Google Play`);
+      }
+
+      const product: any = products[0];
+
+      const offers =
+        product.subscriptionOfferDetailsAndroid ||
+        product.subscriptionOfferDetails ||
+        product.subscriptionOffers;
+
+      if (!offers || offers.length === 0) {
+        throw new Error(`No subscription offers found for ${productId}`);
+      }
+
+      // 3. Filter only the offers belonging to THE SELECTED PLAN
+      const selectedBasePlanId = plan.originalPlan.base_plan_product_id as string;
+
+      const matchingOffers = offers.filter((o: any) => o.basePlanId === selectedBasePlanId);
+
+      console.log('matchingOffers', matchingOffers);
+
+      if (matchingOffers.length === 0) {
+        throw new Error(`No offer found for basePlanId=${selectedBasePlanId}. Check Play Console.`);
+      }
+
+      // Choose offer matching backend offer_plan_id OR fallback to first
+      const selectedOfferId = plan.originalPlan.offer_plan_id;
+
+      const targetOffer =
+        matchingOffers.find((o: any) => o.offerId === selectedOfferId) || matchingOffers[0];
+
+      console.log('targetOffer', targetOffer);
+
+      if (!targetOffer.offerToken) {
+        throw new Error(`OfferToken missing for ${selectedBasePlanId}`);
+      }
+
+      // ---------------------------------------------------------
+      // 4. Determine upgrade/downgrade using numeric base plan index
+      // ---------------------------------------------------------
+
+      const planIndex = Number(selectedBasePlanId.split('-').pop());
+      const currentIndex = currentBasePlanId ? Number(currentBasePlanId.split('-').pop()) : null;
+
+      let purchaseTokenAndroid: string | undefined;
+      let replacementModeAndroid: number | undefined;
+
+      if (currentIndex && currentSub?.purchaseToken) {
+        if (planIndex > currentIndex) {
+          // UPGRADE
+          purchaseTokenAndroid = currentSub.purchaseToken;
+          replacementModeAndroid = 2; // IMMEDIATE_WITHOUT_PRORATION
+        } else if (planIndex < currentIndex) {
+          // DOWNGRADE
+          purchaseTokenAndroid = currentSub.purchaseToken;
+          replacementModeAndroid = 2; // IMMEDIATE_WITHOUT_PRORATION
+        }
+        // if equal → normal purchase → no replacementMode
+      }
+
+      console.log(purchaseTokenAndroid, currentSub?.purchaseTokenAndroid, 'purchaseTokenAndroid');
+
+      // ---------------------------------------------------------
+      // 5. Build purchase request
+      // ---------------------------------------------------------
+      const requestObj: MutationRequestPurchaseArgs = {
+        request: {
+          android: {
+            skus: [productId],
+            subscriptionOffers: [
+              {
+                sku: productId,
+                offerToken: targetOffer.offerToken,
+              },
+            ],
+            ...(currentSub?.purchaseTokenAndroid && {
+              purchaseTokenAndroid: currentSub?.purchaseTokenAndroid,
+              replacementModeAndroid: 2,
+            }),
+          },
+        },
+        type: 'subs',
+      };
+
+      console.log('requestObj', requestObj);
+
+      await RNIap.requestPurchase(requestObj);
+    } catch (err: any) {
+      console.error('Subscription error:', err);
+      Alert.alert('Error', err.message || 'Unable to process subscription.');
+    } finally {
       setIsLoading(false);
-      setIsProcessingPurchase(false);
-      setIsSyncingWithStore(false);
-
-      const iapErr = err as any;
-      // Silent return on user cancel
-      if (iapErr.code === 'E_USER_CANCELLED' || iapErr.code === 'E_USER_CANCELED') return;
-
-      Alert.alert('Purchase Failed', iapErr.message || 'An unknown error occurred');
-      console.error('[SubscriptionModal] Purchase error:', iapErr);
     }
-  }, [plan, iapInitialized, iapError, currentSubscription]);
+  }, [plan, iapInitialized, iapError]);
 
   // 3. Handling the Purchase Result
   const handlePurchaseUpdate = useCallback(
