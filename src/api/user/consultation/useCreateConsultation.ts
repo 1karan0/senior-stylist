@@ -2,6 +2,9 @@ import axios from 'axios';
 import { BASE_URL } from '@/config';
 import { storage } from '@/services/storage';
 
+// Type declaration for atob (available in React Native but not in TypeScript types)
+declare const atob: ((encoded: string) => string) | undefined;
+
 // Upload image to Firebase Storage using Laravel signed URL
 // Uses XMLHttpRequest for maximum control over headers (fetch may add extra headers)
 // CRITICAL: For GCS signed URLs, we must ONLY set headers that are part of the signature
@@ -141,8 +144,19 @@ export const createConsultation = async (problem_description: string, image: any
 
       if (__DEV__) {
         // Log full URL to debug signature issues (truncate for security)
-        const urlObj = new URL(upload_url);
-        const queryParams = Array.from(urlObj.searchParams.keys());
+        // Extract query parameter keys manually from URL string
+        const queryParams: string[] = [];
+        const queryIndex = upload_url.indexOf('?');
+        if (queryIndex !== -1) {
+          const searchString = upload_url.substring(queryIndex + 1);
+          const pairs = searchString.split('&');
+          for (const pair of pairs) {
+            const key = pair.split('=')[0];
+            if (key && !queryParams.includes(key)) {
+              queryParams.push(key);
+            }
+          }
+        }
         console.log('[consultation] got signed URL, uploading image...', {
           uploadUrl: upload_url.substring(0, 100) + '...',
           hasHeaders: !!uploadHeaders,
@@ -172,7 +186,9 @@ export const createConsultation = async (problem_description: string, image: any
         console.error('[consultation] failed to upload image:', error);
       }
       throw new Error(
-        error?.response?.data?.message || error?.message || 'Failed to upload image. Please try again.'
+        error?.response?.data?.message ||
+          error?.message ||
+          'Failed to upload image. Please try again.'
       );
     }
   }

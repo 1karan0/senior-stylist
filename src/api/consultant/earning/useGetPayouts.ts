@@ -12,7 +12,7 @@ export interface UseGetPayoutsParams {
 }
 
 export const useGetPayouts = (params?: UseGetPayoutsParams) => {
-  const { status, page = 1, per_page = 20 } = params || {};
+  const { status, page, per_page } = params || {};
 
   return useQuery({
     queryKey: ['payouts', status, page, per_page],

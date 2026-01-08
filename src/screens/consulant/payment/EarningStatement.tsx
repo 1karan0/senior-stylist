@@ -1,34 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import {
-  Alert,
-  Modal,
-  ScrollView,
-  Share,
-  StatusBar,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, ScrollView, StatusBar, Text, View } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 
 import GradientBackground from '@/common/components/GradientBackground';
 import Button from '@/common/components/Button';
+import SelectField from '@/common/components/SelectField';
+import DownloadSuccessModal from '@/common/components/modals/DownloadSuccessModal';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useDownloadStatement } from '@/api/consultant/earning/useGetStatementDownload';
+import { downloadFile } from '@/utils/fileDownload';
 
 const EarningStatement = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-
-  // Safely import react-native-fs (mirrors pattern used elsewhere in the app)
-  let RNFS: any = null;
-  try {
-    RNFS = require('react-native-fs');
-    if (!RNFS || !RNFS.CachesDirectoryPath) RNFS = null;
-  } catch {
-    RNFS = null;
-  }
 
   const getUkTaxYearStartYear = (d: Date) => {
     // UK tax year starts on Apr 6
@@ -48,28 +33,6 @@ const EarningStatement = () => {
     return `${formatTaxYearLabel(startYear)} (Apr 6, ${startYear} - Apr 5, ${endYear})`;
   };
 
-  const getTaxYearEndYear = (taxYearLabel: string): string | undefined => {
-    // Expected "2025-26" or "2025-2026"
-    const [startRaw, endRaw] = String(taxYearLabel || '')
-      .split('-')
-      .map((s) => s.trim());
-    const startYear = Number(startRaw);
-    if (!Number.isFinite(startYear)) return undefined;
-    if (!endRaw) return String(startYear + 1);
-
-    const endNum = Number(endRaw);
-    if (!Number.isFinite(endNum)) return String(startYear + 1);
-
-    if (endRaw.length === 2) {
-      // e.g. 2025-26 -> 2026, 1999-00 -> 2000
-      let endYear = Math.floor(startYear / 100) * 100 + endNum;
-      if (endYear < startYear) endYear += 100;
-      return String(endYear);
-    }
-
-    return String(endNum);
-  };
-
   const defaultStartYear = useMemo(() => getUkTaxYearStartYear(new Date()), []);
   const taxYearOptions = useMemo(() => {
     const opts: { value: string; label: string; startYear: number }[] = [];
@@ -87,85 +50,62 @@ const EarningStatement = () => {
 
   const [selectedTaxYear, setSelectedTaxYear] = useState<string>(taxYearOptions[0]?.value ?? '');
   const [filterType, setFilterType] = useState<'tax_year' | 'month' | 'year'>('tax_year');
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
   const selectedTaxYearLabel =
     taxYearOptions.find((o) => o.value === selectedTaxYear)?.label ?? selectedTaxYear;
 
+  const monthOptions = Array.from({ length: 12 }, (_, i) => ({
+    value: i + 1,
+    label: new Date(2000, i, 1).toLocaleString('en-US', { month: 'long' }),
+  }));
+
+  const yearOptions = Array.from({ length: 10 }, (_, i) => {
+    const year = new Date().getFullYear() - i;
+    return { value: year, label: String(year) };
+  });
+
   const { mutateAsync: downloadStatement } = useDownloadStatement();
 
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
-
-  const extractDownloadPayload = (
-    payload: any
-  ): { url?: string; base64?: string; mime?: string } => {
-    if (!payload) return {};
-    if (typeof payload === 'string') {
-      if (payload.startsWith('http')) return { url: payload };
-      if (payload.startsWith('data:')) return { base64: payload.split(',')[1] };
-      return { url: payload };
-    }
-    const url =
-      payload?.url ??
-      payload?.file_url ??
-      payload?.fileUrl ??
-      payload?.download_url ??
-      payload?.downloadUrl ??
-      payload?.link;
-    const base64 = payload?.base64 ?? payload?.content_base64 ?? payload?.content;
-    const mime = payload?.mime ?? payload?.mime_type ?? payload?.contentType;
-    return { url, base64, mime };
-  };
-
-  const saveAndShare = async (payload: any, filename: string, fallbackMime: string) => {
-    if (!RNFS) throw new Error('File system is not available on this device.');
-
-    const { url, base64, mime } = extractDownloadPayload(payload);
-    const outMime = mime || fallbackMime;
-    const dir = RNFS.CachesDirectoryPath ?? RNFS.DocumentDirectoryPath;
-    const path = `${dir}/${filename}`;
-
-    if (url) {
-      const res = RNFS.downloadFile({
-        fromUrl: url,
-        toFile: path,
-      });
-      await res.promise;
-    } else if (base64) {
-      await RNFS.writeFile(path, base64, 'base64');
-    } else {
-      throw new Error('Download data was not in a supported format.');
-    }
-
-    const fileUrl = `file://${path}`;
-    await Share.share({
-      title: 'Earnings Statement',
-      url: fileUrl,
-      message: 'Earnings statement',
-    });
-
-    // Best-effort cleanup (don’t block UX if it fails)
-    RNFS.unlink(path).catch(() => undefined);
-  };
-
-  const handleDownload = async (params: {
-    key: string;
-    type: 'pdf' | 'csv';
-    period: 'tax_year' | 'month' | 'year';
-    month?: string;
-    year?: string;
+  const [showDownloadSuccess, setShowDownloadSuccess] = useState(false);
+  const [downloadInfo, setDownloadInfo] = useState<{
     filename: string;
-    mime: string;
-  }) => {
+    directoryName: string;
+  } | null>(null);
+
+  const handleDownload = async () => {
     try {
-      setDownloadingKey(params.key);
-      const data = await downloadStatement({
-        taxYear: selectedTaxYear,
-        type: params.type,
-        period: params.period,
-        month: params.month,
-        year: params.year,
+      const key = `${filterType}-csv`;
+      setDownloadingKey(key);
+
+      const params: {
+        type: 'csv';
+        period: 'tax_year' | 'month' | 'year';
+        tax_year?: string;
+        month?: number;
+        year?: number;
+      } = {
+        type: 'csv',
+        period: filterType,
+      };
+
+      if (filterType === 'tax_year') {
+        params.tax_year = selectedTaxYear;
+      } else if (filterType === 'month') {
+        params.month = selectedMonth;
+        params.year = selectedYear;
+      } else {
+        // period === 'year'
+        params.year = selectedYear;
+      }
+
+      const data = await downloadStatement(params);
+      await downloadFile(data, data.filename || `statement-${Date.now()}.csv`, (result) => {
+        setDownloadInfo(result);
+        setShowDownloadSuccess(true);
       });
-      await saveAndShare(data, params.filename, params.mime);
     } catch (e: any) {
       Alert.alert('Download', e?.message ?? 'Unable to download statement. Please try again.');
     } finally {
@@ -178,97 +118,6 @@ const EarningStatement = () => {
     : 'bg-[#FFFFFF] border border-[#DAE7E0]';
   const muted = isDark ? 'text-[#8AA897]' : 'text-[#658176]';
   const textMain = isDark ? 'text-white' : 'text-black';
-
-  // Simple select (modal) to avoid adding a new dependency
-  const SelectField = ({
-    label,
-    valueLabel,
-    options,
-    onSelect,
-    testId,
-  }: {
-    label: string;
-    valueLabel: string;
-    options: { label: string; value: string }[];
-    onSelect: (v: string) => void;
-    testId?: string;
-  }) => {
-    const [open, setOpen] = useState(false);
-    return (
-      <>
-        <Text
-          className={`text-sm font-urbanist-semibold mb-2 ${isDark ? 'text-white' : 'text-textDark'}`}
-        >
-          {label}
-        </Text>
-        <TouchableOpacity
-          testID={testId}
-          activeOpacity={0.8}
-          onPress={() => setOpen(true)}
-          className={`rounded-xl px-4 py-3 flex-row items-center justify-between ${
-            isDark ? 'bg-[#0E1B16] border border-[#273F36]' : 'bg-white border border-[#DAE7E0]'
-          }`}
-        >
-          <Text className={`${muted} text-sm font-urbanist-regular`} numberOfLines={1}>
-            {valueLabel}
-          </Text>
-          <Ionicons name="chevron-down" size={18} color={isDark ? '#8AA897' : '#658176'} />
-        </TouchableOpacity>
-
-        <Modal
-          visible={open}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setOpen(false)}
-        >
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={() => setOpen(false)}
-            className="flex-1 bg-black/40 justify-end"
-          >
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => undefined}
-              className={`rounded-t-3xl p-5 ${isDark ? 'bg-[#0E1B16]' : 'bg-white'}`}
-            >
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className={`${textMain} text-base font-urbanist-bold`}>{label}</Text>
-                <TouchableOpacity onPress={() => setOpen(false)}>
-                  <Ionicons name="close" size={22} color={isDark ? '#ffffff' : '#000000'} />
-                </TouchableOpacity>
-              </View>
-
-              <View className="gap-2">
-                {options.map((opt) => (
-                  <TouchableOpacity
-                    key={opt.value}
-                    onPress={() => {
-                      onSelect(opt.value);
-                      setOpen(false);
-                    }}
-                    className={`rounded-xl px-4 py-3 ${
-                      opt.label === valueLabel
-                        ? 'bg-[#27B07D]/15 border border-[#27B07D]'
-                        : isDark
-                          ? 'bg-[#162721]'
-                          : 'bg-[#F7FAF8]'
-                    }`}
-                  >
-                    <Text
-                      className={`${textMain} text-sm font-urbanist-semibold`}
-                      numberOfLines={2}
-                    >
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </Modal>
-      </>
-    );
-  };
 
   return (
     <GradientBackground topOverlayColor="#27B07D">
@@ -294,7 +143,7 @@ const EarningStatement = () => {
             </View>
           </View>
 
-          {/* Download statement (CSV only) */}
+          {/* Download statement */}
           <View className={`rounded-2xl p-5 mb-4 ${cardBg}`}>
             <Text className={`${textMain} text-base font-urbanist-bold mb-3`}>
               Download Statement
@@ -302,7 +151,7 @@ const EarningStatement = () => {
 
             <View className="mb-4">
               <SelectField
-                label="Filter Type"
+                label="Period"
                 valueLabel={
                   filterType === 'tax_year'
                     ? 'Financial Year (Tax Year)'
@@ -319,40 +168,75 @@ const EarningStatement = () => {
                 testId="statement-filter-type"
               />
             </View>
-            <View className="mb-4">
-              <SelectField
-                label="Select Financial Year"
-                valueLabel={selectedTaxYearLabel}
-                options={taxYearOptions.map((o) => ({ label: o.label, value: o.value }))}
-                onSelect={(v) => setSelectedTaxYear(v)}
-                testId="statement-tax-year"
-              />
-            </View>
+
+            {filterType === 'tax_year' && (
+              <View className="mb-4">
+                <SelectField
+                  label="Select Financial Year"
+                  valueLabel={selectedTaxYearLabel}
+                  options={taxYearOptions.map((o) => ({ label: o.label, value: o.value }))}
+                  onSelect={(v) => setSelectedTaxYear(v)}
+                  testId="statement-tax-year"
+                />
+              </View>
+            )}
+
+            {filterType === 'month' && (
+              <>
+                <View className="mb-4">
+                  <SelectField
+                    label="Select Month"
+                    valueLabel={monthOptions[selectedMonth - 1]?.label || String(selectedMonth)}
+                    options={monthOptions.map((o) => ({ label: o.label, value: String(o.value) }))}
+                    onSelect={(v) => setSelectedMonth(Number(v))}
+                    testId="statement-month"
+                  />
+                </View>
+                <View className="mb-4">
+                  <SelectField
+                    label="Select Year"
+                    valueLabel={String(selectedYear)}
+                    options={yearOptions.map((o) => ({ label: o.label, value: String(o.value) }))}
+                    onSelect={(v) => setSelectedYear(Number(v))}
+                    testId="statement-year-month"
+                  />
+                </View>
+              </>
+            )}
+
+            {filterType === 'year' && (
+              <View className="mb-4">
+                <SelectField
+                  label="Select Year"
+                  valueLabel={String(selectedYear)}
+                  options={yearOptions.map((o) => ({ label: o.label, value: String(o.value) }))}
+                  onSelect={(v) => setSelectedYear(Number(v))}
+                  testId="statement-year"
+                />
+              </View>
+            )}
+
             <Text className={`${muted} text-xs font-urbanist-regular mb-3`}>
-              Download Statement for {selectedTaxYearLabel}
+              Download Statement for{' '}
+              {filterType === 'tax_year'
+                ? selectedTaxYearLabel
+                : filterType === 'month'
+                  ? `${monthOptions[selectedMonth - 1]?.label || selectedMonth} ${selectedYear}`
+                  : selectedYear}
             </Text>
 
             <Button
               text="Download CSV"
               variant="gradient"
               className="w-full rounded-[10px]"
-              loading={downloadingKey === `year-${selectedTaxYear}-csv`}
-              onPress={() =>
-                handleDownload({
-                  key: `year-${selectedTaxYear}-csv`,
-                  type: 'csv',
-                  period: filterType,
-                  year: filterType === 'year' ? getTaxYearEndYear(selectedTaxYear) : undefined,
-                  filename: `statement-${selectedTaxYear}.csv`,
-                  mime: 'text/csv',
-                })
-              }
+              loading={downloadingKey === `${filterType}-csv`}
+              onPress={handleDownload}
             />
           </View>
 
           {/* Note */}
           <View className="bg-[#D7E8FF] rounded-xl p-4 mb-6 border border-[#A8C6FF]">
-            <View className="flex-row items-start gap-3">
+            <View className="flex-row items-center gap-3">
               <Ionicons name="information-circle-outline" size={22} color="#1D4ED8" />
               <Text className="text-[#0B2A57] text-xs font-urbanist-regular flex-1">
                 <Text className="font-urbanist-bold">For Self Assessment:</Text> These statements
@@ -363,6 +247,13 @@ const EarningStatement = () => {
           </View>
         </ScrollView>
       </View>
+
+      <DownloadSuccessModal
+        visible={showDownloadSuccess}
+        onClose={() => setShowDownloadSuccess(false)}
+        filename={downloadInfo?.filename}
+        directoryName={downloadInfo?.directoryName}
+      />
     </GradientBackground>
   );
 };

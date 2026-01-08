@@ -140,6 +140,112 @@ export const requestStoragePermission = async (): Promise<boolean> => {
 };
 
 /**
+ * Check and request write storage permission for downloading files
+ * Used for saving files to device storage (Downloads folder, etc.)
+ * @returns Promise<boolean> - true if permission granted or will be requested, false otherwise
+ */
+export const requestWriteStoragePermission = async (): Promise<boolean> => {
+  try {
+    if (Platform.OS === 'ios') {
+      // iOS: No explicit permission needed for saving to Documents/Downloads
+      return true;
+    } else {
+      // Android: Handle version-specific permissions
+      const androidVersion =
+        typeof Platform.Version === 'number'
+          ? Platform.Version
+          : parseInt(String(Platform.Version), 10);
+
+      // For Android 13+ (API 33+), we don't need WRITE_EXTERNAL_STORAGE for app-specific directories
+      // But we still request it for compatibility and for accessing public Downloads folder
+      if (androidVersion >= 33) {
+        // Android 13+: Scoped storage is fully enforced
+        // App-specific directories don't need permission
+        // For public Downloads, we'd need MANAGE_EXTERNAL_STORAGE (not recommended)
+        // So we'll use app-specific directories which don't need permission
+        return true;
+      } else if (androidVersion >= 29) {
+        // Android 10-12 (API 29-32): Scoped storage is partially enforced
+        // WRITE_EXTERNAL_STORAGE is deprecated but can still be requested
+        // However, it won't grant access to public directories
+        // We'll use app-specific directories which don't need permission
+        // But we can still try to request it for compatibility
+        const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
+
+        try {
+          const hasPermission = await PermissionsAndroid.check(permission);
+          if (hasPermission) {
+            return true;
+          }
+
+          // Try to request, but don't fail if it's denied (we'll use app-specific dir)
+          const result = await PermissionsAndroid.request(permission, {
+            title: 'Storage Permission',
+            message: 'This app needs access to storage to download files to your device.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          });
+
+          return result === PermissionsAndroid.RESULTS.GRANTED;
+        } catch (permError: any) {
+          console.log(
+            '[permissions] Permission request failed on Android 10+, using app-specific directory'
+          );
+          // On Android 10+, we can use app-specific directories without permission
+          return false; // Return false but we'll handle it in the download function
+        }
+      } else {
+        // Android < 10: Need WRITE_EXTERNAL_STORAGE
+        const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
+
+        try {
+          // Check if permission is already granted
+          const hasPermission = await PermissionsAndroid.check(permission);
+
+          if (hasPermission) {
+            console.log('[permissions] Storage permission already granted');
+            return true;
+          }
+
+          console.log('[permissions] Requesting storage permission...');
+          // Request permission - this will show the system dialog
+          const result = await PermissionsAndroid.request(permission, {
+            title: 'Storage Permission',
+            message: 'This app needs access to storage to download files to your device.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          });
+
+          console.log('[permissions] Permission request result:', result);
+
+          if (result === PermissionsAndroid.RESULTS.GRANTED) {
+            console.log('[permissions] Storage permission granted');
+            return true;
+          } else if (result === PermissionsAndroid.RESULTS.DENIED) {
+            console.log('[permissions] Storage permission denied by user');
+            return false;
+          } else if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+            console.log('[permissions] Storage permission denied permanently');
+            return false;
+          } else {
+            console.log('[permissions] Storage permission unknown result:', result);
+            return false;
+          }
+        } catch (permError: any) {
+          console.error('[permissions] Error during write storage permission request:', permError);
+          return false;
+        }
+      }
+    }
+  } catch (error) {
+    console.error('[permissions] Error requesting write storage permission:', error);
+    return false;
+  }
+};
+
+/**
  * Show alert to guide user to settings if permission is denied
  */
 export const showPermissionDeniedAlert = (permissionType: 'camera' | 'photo' | 'storage') => {

@@ -3,7 +3,10 @@ import { storage } from '@/services/storage';
 import axios from 'axios';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
-const buildQueryString = (params: Record<string, string | undefined>) => {
+// Type declaration for btoa (available in React Native but not in TypeScript types)
+declare const btoa: ((str: string) => string) | undefined;
+
+const buildQueryString = (params: Record<string, string | number | undefined>) => {
   return Object.entries(params)
     .filter(([, v]) => v !== undefined && v !== '')
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
@@ -18,11 +21,11 @@ export const useGetStatementDownload = (
   taxYear: string,
   type: string,
   period: string,
-  month?: string,
-  year?: string
+  month?: number,
+  year?: number
 ) => {
   return useQuery({
-    queryKey: ['statement-download', taxYear, type, period, month ?? '', year ?? ''],
+    queryKey: ['statement-download', taxYear, type, period, month ?? undefined, year ?? undefined],
     queryFn: async () => {
       const token = await storage.getToken();
       if (!token) throw new Error('Token not found');
@@ -46,11 +49,11 @@ export const useGetStatementDownload = (
 };
 
 export type StatementDownloadParams = {
-  taxYear: string; // UK tax year label like "2025-26"
-  type: 'pdf' | 'csv';
+  type: 'csv';
   period: 'tax_year' | 'month' | 'year';
-  month?: string; // "1".."12" (required when period="month")
-  year?: string; // "2026" (required when period="month" or "year")
+  tax_year?: string; // "2025-26" (required when period="tax_year")
+  month?: number; // 1-12 (required when period="month")
+  year?: number; // e.g., 2026 (required when period="month" or "year")
 };
 
 /**
@@ -63,21 +66,61 @@ export const useDownloadStatement = () => {
       const token = await storage.getToken();
       if (!token) throw new Error('Token not found');
 
-      const { taxYear, type, period, month, year } = params;
-      const qs = buildQueryString({
-        tax_year: taxYear,
+      const { type, period, tax_year, month, year } = params;
+
+      // Build query params based on period type
+      const queryParams: Record<string, string | number | undefined> = {
         type,
         period,
-        month,
-        year,
-      });
+      };
 
+      if (period === 'tax_year') {
+        queryParams.tax_year = tax_year;
+      } else if (period === 'month') {
+        queryParams.month = month;
+        queryParams.year = year;
+      } else if (period === 'year') {
+        queryParams.year = year;
+      }
+
+      const qs = buildQueryString(queryParams);
+
+      // Request file as arraybuffer to handle binary data
       const res = await axios.get(`${BASE_URL}/api/stylist/statements/download?${qs}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        responseType: 'arraybuffer', // Get raw binary data
+        // axios automatically handles gzip decompression by default
       });
-      return res.data.data;
+
+      // Extract filename from content-disposition header
+      const contentDisposition =
+        res.headers['content-disposition'] || res.headers['Content-Disposition'] || '';
+      let filename = 'statement.csv';
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+
+      // Convert arraybuffer to base64 for React Native File System
+      const arrayBuffer = res.data;
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+
+      if (typeof btoa === 'undefined') {
+        throw new Error('Base64 encoding not available');
+      }
+      const base64 = btoa(binary);
+
+      return {
+        base64,
+        filename,
+        mime: res.headers['content-type'] || 'text/csv',
+      };
     },
   });
 };

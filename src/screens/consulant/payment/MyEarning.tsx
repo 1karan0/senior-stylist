@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StatusBar, Image, Alert } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StatusBar,
+  Image,
+  Alert,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
 import GradientBackground from '@/common/components/GradientBackground';
@@ -11,6 +20,16 @@ import { useCreateStripAccount } from '@/api/consultant/strip-express/useCreateS
 import StripeWebViewModal from '@/screens/consulant/payment/components/StripeWebViewModal';
 import { useGetStripAccount } from '@/api/consultant/strip-express/useGetStripAccount';
 import { useGetOnboardingLink } from '@/api/consultant/strip-express/useGetOnboardingLink';
+import { useGetRecentEarnings } from '@/api/consultant/earning/useGetrecentEarnings';
+
+interface RecentEarningItem {
+  id: number;
+  consultation_id: number;
+  date: string;
+  amount: number;
+  status: string;
+  hold_until: string;
+}
 
 const MyEarning = () => {
   const navigation = useNavigation<any>();
@@ -29,10 +48,17 @@ const MyEarning = () => {
     useGetOnboardingLink({
       enabled: false,
     });
+  const { data: recentEarnings, isLoading: isRecentEarningsLoading } = useGetRecentEarnings();
   const [stripeUrl, setStripeUrl] = useState<string>('');
   const [stripeVisible, setStripeVisible] = useState(false);
   const [isStripeActionLoading, setIsStripeActionLoading] = useState(false);
   const currencySymbol = '£';
+
+  // Limit recent earnings to 3-4 items
+  const displayedRecentEarnings: RecentEarningItem[] = useMemo(() => {
+    if (!recentEarnings || !Array.isArray(recentEarnings)) return [];
+    return recentEarnings.slice(0, 3);
+  }, [recentEarnings]);
 
   const extractStripeUrl = (payload: any): string | undefined => {
     if (!payload) return undefined;
@@ -50,6 +76,19 @@ const MyEarning = () => {
     if (typeof value === 'number' && Number.isFinite(value))
       return `${currencySymbol}${value.toFixed(2)}`;
     return '—';
+  };
+
+  const formatDate = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return dateString;
+    }
   };
 
   const availableBalance = isMyEarningLoading ? '...' : formatMoney(myEarning?.available_balance);
@@ -307,14 +346,80 @@ const MyEarning = () => {
                 textClassName="text-[#162721]"
                 className="w-full rounded-[10px]"
               />
-              <Button
-                text="Recent Earning"
-                onPress={handleRecentEarning}
-                variant="light"
-                textClassName="text-[#162721]"
-                className="w-full rounded-[10px]"
-              />
             </View>
+          </View>
+
+          {/* Recent Earnings Section */}
+          <View className="mb-4">
+            {isRecentEarningsLoading ? (
+              <View className="items-center justify-center py-8">
+                <ActivityIndicator size="large" color="#27B07D" />
+              </View>
+            ) : displayedRecentEarnings.length > 0 ? (
+              <View
+                className={`bg-[#162721] border border-[#273F36] rounded-[10px] px-5 py-4 ${isDark ? 'bg-[#162721] border border-[#273F36]' : 'bg-[#FFFFFF] border border-[#DAE7E0]'}`}
+              >
+                <Text
+                  className={`text-lg mb-2 font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
+                >
+                  Recent Earnings
+                </Text>
+                {displayedRecentEarnings.map((item) => {
+                  const textMuted = isDark ? 'text-[#8AA897]' : 'text-[#658176]';
+
+                  return (
+                    <View key={item.id} className={`mb-2`}>
+                      <View className="flex-row items-start justify-between mb-2">
+                        <View className="flex-1">
+                          <View className="flex-row items-center justify-between">
+                            <Text
+                              className={`${isDark ? 'text-white' : 'text-textDark'} text-sm font-urbanist-bold`}
+                            >
+                              consultaion {item.consultation_id}
+                            </Text>
+                            <Text className={`text-[#27B07D] text-sm font-poppins-semibold`}>
+                              {formatMoney(item.amount)}
+                            </Text>
+                          </View>
+                          <Text className={`${textMuted} text-sm font-poppins-regular`}>
+                            {formatDate(item.date)}
+                          </Text>
+                        </View>
+                      </View>
+                      <View
+                        className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-3`}
+                      />
+                    </View>
+                  );
+                })}
+
+                <View className="flex-row items-center justify-center mb-2">
+                  <TouchableOpacity onPress={handleRecentEarning}>
+                    <Text
+                      className={`${isDark ? 'text-white' : 'text-textDark'} text-sm font-poppins-semibold`}
+                    >
+                      See More
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View
+                className={`rounded-[10px] p-6 items-center justify-center ${isDark ? 'bg-[#162721] border border-[#273F36]' : 'bg-[#FFFFFF] border border-[#DAE7E0]'}`}
+              >
+                <Ionicons
+                  name="cash-outline"
+                  size={48}
+                  color={isDark ? '#8AA897' : '#658176'}
+                  style={{ marginBottom: 12 }}
+                />
+                <Text
+                  className={`${isDark ? 'text-[#8AA897]' : 'text-[#658176]'} text-sm font-poppins-regular`}
+                >
+                  No recent earnings found
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Note Section */}

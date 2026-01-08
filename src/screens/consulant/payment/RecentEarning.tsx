@@ -1,13 +1,6 @@
-import React, { useMemo } from 'react';
-import {
-  StatusBar,
-  Text,
-  View,
-  FlatList,
-  ActivityIndicator,
-  RefreshControl,
-  Image,
-} from 'react-native';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { StatusBar, Text, View, RefreshControl, Image, ActivityIndicator } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
@@ -58,12 +51,12 @@ const getStatusBadgeStyle = (status: string) => {
         text: 'text-[#991B1B]',
         label: 'Refunded',
       };
-    case 'pending':
-    case 'on_hold':
+
+    case 'held':
       return {
         bg: 'bg-[#FFF3CD]',
         text: 'text-[#856404]',
-        label: status?.toLowerCase() === 'on_hold' ? 'On Hold' : 'Pending',
+        label: status?.toLowerCase(),
       };
     case 'disputed':
       return {
@@ -83,20 +76,29 @@ const getStatusBadgeStyle = (status: string) => {
 const RecentEarning = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
+  const [page, setPage] = useState(1);
+  const [allEarnings, setAllEarnings] = useState<EarningItem[]>([]);
+  const perPage = 10;
+
   const {
     data: earningHistoryData,
     isLoading,
+    isFetching,
     refetch,
     isRefetching,
-  } = useGetEarningHistory() as {
+  } = useGetEarningHistory({
+    page,
+    per_page: perPage,
+  }) as {
     data: EarningHistoryResponse | EarningItem[] | undefined;
     isLoading: boolean;
+    isFetching: boolean;
     refetch: () => void;
     isRefetching: boolean;
   };
 
-  // Extract earnings array from API response
-  const earnings: EarningItem[] = useMemo(() => {
+  // Extract earnings array from current page API response
+  const currentPageEarnings: EarningItem[] = useMemo(() => {
     if (!earningHistoryData) return [];
 
     // Case 1: Hook returned a flat array of earnings
@@ -104,7 +106,7 @@ const RecentEarning = () => {
       return earningHistoryData as EarningItem[];
     }
 
-    const innerData = earningHistoryData.data;
+    const innerData = (earningHistoryData as EarningHistoryResponse).data;
 
     // Case 2: API like { status, code, message, data: { current_page, data: [...] } }
     if (innerData && !Array.isArray(innerData) && Array.isArray((innerData as any).data)) {
@@ -119,9 +121,59 @@ const RecentEarning = () => {
     return [];
   }, [earningHistoryData]);
 
-  const handleRefresh = () => {
+  // Extract pagination info
+  const pagination = useMemo(() => {
+    if (!earningHistoryData || Array.isArray(earningHistoryData)) return null;
+
+    const innerData = (earningHistoryData as EarningHistoryResponse).data;
+
+    // Handle Laravel pagination structure
+    if (innerData && !Array.isArray(innerData) && (innerData as any).current_page !== undefined) {
+      return {
+        current_page: (innerData as any).current_page,
+        last_page: (innerData as any).last_page,
+        per_page: (innerData as any).per_page,
+        total: (innerData as any).total,
+        has_more: (innerData as any).next_page_url !== null,
+      };
+    }
+
+    return null;
+  }, [earningHistoryData]);
+
+  // Accumulate earnings across pages
+  useEffect(() => {
+    if (currentPageEarnings.length > 0) {
+      if (page === 1) {
+        // Reset on first page or refresh
+        setAllEarnings(currentPageEarnings);
+      } else {
+        // Append new page data
+        setAllEarnings((prev) => {
+          // Avoid duplicates by checking IDs
+          const existingIds = new Set(prev.map((e) => e.id));
+          const newEarnings = currentPageEarnings.filter((e) => !existingIds.has(e.id));
+          return [...prev, ...newEarnings];
+        });
+      }
+    }
+  }, [currentPageEarnings, page]);
+
+  const hasMore = pagination
+    ? pagination.current_page < pagination.last_page || pagination.has_more
+    : false;
+
+  const handleLoadMore = useCallback(() => {
+    if (hasMore && !isFetching && !isLoading) {
+      setPage((prev) => prev + 1);
+    }
+  }, [hasMore, isFetching, isLoading]);
+
+  const handleRefresh = useCallback(() => {
+    setPage(1);
+    setAllEarnings([]);
     refetch();
-  };
+  }, [refetch]);
 
   const renderEarningItem = ({ item }: { item: EarningItem }) => {
     const statusStyle = getStatusBadgeStyle(item.status);
@@ -297,6 +349,18 @@ const RecentEarning = () => {
     );
   };
 
+  const renderFooter = () => {
+    if (!hasMore) return null;
+    if (isFetching && page > 1) {
+      return (
+        <View className="py-4">
+          <ActivityIndicator size="small" color="#27B07D" />
+        </View>
+      );
+    }
+    return null;
+  };
+
   return (
     <GradientBackground topOverlayColor="#27B07D">
       <View className="flex-1">
@@ -307,7 +371,7 @@ const RecentEarning = () => {
 
         {/* Content */}
         <View className="flex-1 px-5 absolute top-5 left-0 right-0 bottom-5 z-10">
-          {isLoading && earnings.length === 0 ? (
+          {isLoading && allEarnings.length === 0 ? (
             <View>
               <View className="mb-5">
                 <Text className="text-2xl font-urbanist-bold mb-1 text-white">Recent Earnings</Text>
@@ -318,21 +382,22 @@ const RecentEarning = () => {
               <EarningListSkeleton />
             </View>
           ) : (
-            <FlatList
-              data={earnings}
+            <FlashList
+              data={allEarnings}
               keyExtractor={(item) => String(item.id)}
               renderItem={renderEarningItem}
               ListHeaderComponent={
                 <View className="mb-5">
                   <Text className="text-2xl font-urbanist-bold mb-1 text-white">
-                    Recent Earnings
+                    Earnings History
                   </Text>
                   <Text className="text-sm font-poppins-regular text-white">
-                    Your recent consultation earnings
+                    Your consultation earnings history
                   </Text>
                 </View>
               }
               ListEmptyComponent={renderEmpty}
+              ListFooterComponent={renderFooter}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom }}
               refreshControl={
@@ -342,6 +407,8 @@ const RecentEarning = () => {
                   tintColor="#27B07D"
                 />
               }
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.5}
             />
           )}
         </View>

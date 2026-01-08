@@ -12,7 +12,7 @@ export interface UseGetEarningHistoryParams {
 }
 
 export const useGetEarningHistory = (params?: UseGetEarningHistoryParams) => {
-  const { page = 1, per_page = 20, month, year } = params || {};
+  const { page, per_page, month, year } = params || {};
 
   return useQuery({
     queryKey: ['earning-history', page, per_page, month, year],

@@ -1,10 +1,10 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, StatusBar, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import { View, Text, StatusBar, ActivityIndicator, RefreshControl } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
-import Button from '@/common/components/Button';
 import { useGetPayouts } from '@/api/consultant/earning/useGetPayouts';
 import { PayoutItem } from '@/common/types';
 import { PayoutListSkeleton } from '@/common/components/skeletons/PayoutItemSkeleton';
@@ -70,7 +70,8 @@ const PayOutHistory = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
   const [page, setPage] = useState(1);
-  const perPage = 20;
+  const [allPayouts, setAllPayouts] = useState<PayoutItem[]>([]);
+  const perPage = 10;
 
   const {
     data: payoutsData,
@@ -83,9 +84,8 @@ const PayOutHistory = () => {
     per_page: perPage,
   });
 
-  // Handle different response structures
-  // API returns: { current_page, data: [...], last_page, ... }
-  const payouts: PayoutItem[] = useMemo(() => {
+  // Extract payouts from current page response
+  const currentPagePayouts: PayoutItem[] = useMemo(() => {
     if (!payoutsData) return [];
     // Handle Laravel pagination structure (data.data is the array)
     if (payoutsData?.data && Array.isArray(payoutsData.data)) {
@@ -96,6 +96,26 @@ const PayOutHistory = () => {
     if (payoutsData?.payouts && Array.isArray(payoutsData.payouts)) return payoutsData.payouts;
     return [];
   }, [payoutsData]);
+
+  // Accumulate payouts across pages
+  useEffect(() => {
+    if (currentPagePayouts.length > 0) {
+      if (page === 1) {
+        // Reset on first page or refresh
+        setAllPayouts(currentPagePayouts);
+      } else {
+        // Append new page data
+        setAllPayouts((prev) => {
+          // Avoid duplicates by checking IDs
+          const existingIds = new Set(prev.map((p) => p.id || p.transfer_id || p.transferId));
+          const newPayouts = currentPagePayouts.filter(
+            (p) => !existingIds.has(p.id || p.transfer_id || p.transferId)
+          );
+          return [...prev, ...newPayouts];
+        });
+      }
+    }
+  }, [currentPagePayouts, page]);
 
   const pagination = useMemo(() => {
     if (!payoutsData) return null;
@@ -121,13 +141,14 @@ const PayOutHistory = () => {
     : false;
 
   const handleLoadMore = useCallback(() => {
-    if (hasMore && !isFetching) {
+    if (hasMore && !isFetching && !isLoading) {
       setPage((prev) => prev + 1);
     }
-  }, [hasMore, isFetching]);
+  }, [hasMore, isFetching, isLoading]);
 
   const handleRefresh = useCallback(() => {
     setPage(1);
+    setAllPayouts([]);
     refetch();
   }, [refetch]);
 
@@ -233,17 +254,7 @@ const PayOutHistory = () => {
         </View>
       );
     }
-    return (
-      <View className="py-4">
-        <Button
-          text="Load More"
-          onPress={handleLoadMore}
-          variant="light"
-          className="w-full rounded-[10px]"
-          textClassName={isDark ? 'text-white' : 'text-[#162721]'}
-        />
-      </View>
-    );
+    return null;
   };
 
   return (
@@ -256,7 +267,7 @@ const PayOutHistory = () => {
 
         {/* Content */}
         <View className="flex-1 px-5 absolute top-5 left-0 right-0 bottom-5 z-10">
-          {isLoading && payouts.length === 0 ? (
+          {isLoading && allPayouts.length === 0 ? (
             <View>
               {/* Header Text */}
               <View className="flex-row items-center justify-between mb-5">
@@ -272,8 +283,8 @@ const PayOutHistory = () => {
               <PayoutListSkeleton />
             </View>
           ) : (
-            <FlatList
-              data={payouts}
+            <FlashList
+              data={allPayouts}
               keyExtractor={(item, index) =>
                 String(item.id || item.transfer_id || item.transferId || index)
               }
