@@ -45,8 +45,8 @@ export default function PricingScreen() {
   const { isDark } = useTheme();
   const isFocused = useIsFocused();
   const { data: profileData, isLoading: isProfileLoading } = useGetProfile({
-    // Poll every 10s while Pricing is visible so current plan + button state stay accurate
-    refetchInterval: isFocused ? 10_000 : false,
+    // Poll every 5s while Pricing is visible so current plan + button state stay accurate
+    refetchInterval: isFocused ? 5_000 : false,
     refetchIntervalInBackground: false,
   });
   const profileSubscription = profileData?.subscription ?? null;
