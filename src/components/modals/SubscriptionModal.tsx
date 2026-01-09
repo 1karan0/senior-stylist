@@ -12,6 +12,7 @@ import * as RNIap from 'react-native-iap';
 import { storage, type PendingPurchaseVerification } from '@/services/storage';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useQueryClient } from '@tanstack/react-query';
+import InfoModal from '@/common/components/modals/InfoModal';
 
 interface SubscriptionModalProps {
   plan: {
@@ -33,39 +34,67 @@ interface SubscriptionModalProps {
     };
   } | null;
   onClose?: () => void;
-  onNavigateToProfile?: () => void; // Callback to navigate (to profile tab or consultation tab based on source)
-  onNavigateToConsultation?: () => void; // Callback to navigate specifically to consultation screen (post-upgrade)
-  fromSignup?: boolean; // Indicates if user came from signup flow
-  fromProfile?: boolean; // Indicates if user came from Profile/Manage Subscription
 }
 
-export default function SubscriptionModal({
-  plan,
-  onClose,
-  onNavigateToProfile,
-  onNavigateToConsultation,
-  fromSignup = false,
-  fromProfile = false,
-}: SubscriptionModalProps) {
+export default function SubscriptionModal({ plan, onClose }: SubscriptionModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessingPurchase, setIsProcessingPurchase] = useState(false);
   const [isSyncingWithStore, setIsSyncingWithStore] = useState(false);
   const [isUpgradeConfirmationPending, setIsUpgradeConfirmationPending] = useState(false);
   const [isUpgradeAppliedMessageVisible, setIsUpgradeAppliedMessageVisible] = useState(false);
+  const [isVerifyingBackend, setIsVerifyingBackend] = useState(false);
+  const [showSubscriptionActiveModal, setShowSubscriptionActiveModal] = useState(false);
+  const [verifiedPlanName, setVerifiedPlanName] = useState<string | null>(null);
+  const [verifiedConsultationsAllowed, setVerifiedConsultationsAllowed] = useState<number | null>(
+    null
+  );
   const [iapInitialized, setIapInitialized] = useState(false);
   const [iapError, setIapError] = useState<string | null>(null);
-  const queryClient = useQueryClient();
-  const { data: profileData } = useGetProfile();
+
+  const { data: profileData, refetch: refetchProfile } = useGetProfile();
   const currentSubscription = profileData?.subscription ?? null;
   const processedPurchaseKeysRef = useRef<Set<string>>(new Set());
   const currentSubscriptionRef = useRef<any | null>(null);
   const upgradeRedirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const baselineStorePlanIdRef = useRef<string | null>(null);
+  const baselinePlanIdRef = useRef<number | null>(null);
+  const verificationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const verificationActiveRef = useRef(false);
 
-  // console.log('profileData', profileData);
-  console.log('currentSubscription', currentSubscription);
   useEffect(() => {
     currentSubscriptionRef.current = currentSubscription;
   }, [currentSubscription]);
+
+  // 0) Snapshot baseline subscription when modal opens.
+  // We do an explicit refetch on open so we compare against the freshest backend state.
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await refetchProfile();
+        if (!mounted) return;
+        const sub = res.data?.subscription ?? null;
+        baselineStorePlanIdRef.current = (sub?.store_plan_id as string | null) ?? null;
+        baselinePlanIdRef.current =
+          typeof sub?.plan_id === 'number'
+            ? (sub.plan_id as number)
+            : sub?.plan_id
+              ? Number(sub.plan_id)
+              : null;
+      } catch {
+        // If refetch fails, fall back to whatever is currently cached.
+        const sub = currentSubscriptionRef.current;
+        baselineStorePlanIdRef.current = sub?.store_plan_id ?? null;
+        baselinePlanIdRef.current = sub?.plan_id ?? null;
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+    // Intentionally only on mount/open
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -73,6 +102,11 @@ export default function SubscriptionModal({
         clearTimeout(upgradeRedirectTimeoutRef.current);
         upgradeRedirectTimeoutRef.current = null;
       }
+      if (verificationTimerRef.current) {
+        clearTimeout(verificationTimerRef.current);
+        verificationTimerRef.current = null;
+      }
+      verificationActiveRef.current = false;
     };
   }, []);
 
@@ -111,9 +145,6 @@ export default function SubscriptionModal({
 
       const currentPurchaseToken = profileData?.subscription?.purchase_token ?? null;
 
-      console.log('currentBasePlanId', currentBasePlanId);
-      console.log('currentPurchaseToken', currentPurchaseToken);
-
       // ---------------------------------------------------------
       // 2. Fetch product + offers from Play
       // ---------------------------------------------------------
@@ -145,8 +176,6 @@ export default function SubscriptionModal({
       const selectedBasePlanId = plan.originalPlan.base_plan_product_id as string;
 
       const matchingOffers = offers.filter((o: any) => o.basePlanId === selectedBasePlanId);
-
-      console.log('matchingOffers', matchingOffers);
 
       if (!matchingOffers.length) {
         throw new Error(`No offer found for basePlanId=${selectedBasePlanId}`);
@@ -182,8 +211,6 @@ export default function SubscriptionModal({
       } else {
         planChange = 'NO_CHANGE';
       }
-
-      console.log('planChange →', planChange);
 
       // ---------------------------------------------------------
       // 5. Replacement params (only when needed)
@@ -226,10 +253,7 @@ export default function SubscriptionModal({
         },
       };
 
-      console.log('requestObj', requestObj);
-
-      const response = await RNIap.requestPurchase(requestObj);
-      console.log('purchase response', response);
+      await RNIap.requestPurchase(requestObj);
     } catch (err: any) {
       console.error('Subscription error:', err);
       Alert.alert('Error', err.message || 'Unable to process subscription.');
@@ -245,199 +269,86 @@ export default function SubscriptionModal({
       setIsSyncingWithStore(false);
       const currentSub = currentSubscriptionRef.current;
       // Determine purchase scenario for logging
-      const hasActiveSub =
-        !!currentSub && (currentSub.status === 'active' || currentSub.is_active === true);
-      const purchaseScenario = !hasActiveSub
-        ? 'FIRST_TIME_PURCHASE'
-        : plan?.originalPlan?.id && currentSub?.plan_id
-          ? Number(plan.originalPlan.id) > Number(currentSub.plan_id)
-            ? 'UPGRADE'
-            : Number(plan.originalPlan.id) < Number(currentSub.plan_id)
-              ? 'DOWNGRADE'
-              : 'SAME_PLAN'
-          : 'UNKNOWN';
-
-      console.log('[SubscriptionModal] ========================================');
-      console.log('[SubscriptionModal] 🎉 PURCHASE UPDATE RECEIVED FROM GOOGLE PLAY');
-      console.log('[SubscriptionModal] ========================================');
-      console.log('[SubscriptionModal] Purchase Scenario:', {
-        scenario: purchaseScenario,
-        currentPlanId: currentSub?.plan_id || 'NONE',
-        newPlanId: plan?.originalPlan?.id || 'NONE',
-        timestamp: new Date().toISOString(),
-      });
-
-      // Log the complete raw purchase object from Google Play
-      console.log('[SubscriptionModal] 📦 Complete Purchase Object from Google Play:', {
-        // Standard properties
-        productId: purchase.productId,
-        transactionId: purchase.transactionId,
-        transactionDate: purchase.transactionDate,
-        // Full purchase object (all properties)
-        fullPurchaseObject: JSON.stringify(purchase, null, 2),
-      });
-
-      console.log(purchase, 'purchase');
 
       // Log Android-specific properties
       const purchaseAny = purchase as any;
-      if (Platform.OS === 'android') {
-        console.log('[SubscriptionModal] 🤖 Android-Specific Purchase Data:', {
-          orderId: purchaseAny.orderId || 'NOT_FOUND',
-          purchaseToken: purchaseAny.purchaseToken || 'NOT_FOUND',
-          purchaseState: purchaseAny.purchaseState || 'NOT_FOUND',
-          purchaseStateAndroid: purchaseAny.purchaseStateAndroid ?? 'NOT_FOUND',
-          purchaseStateMeaning:
-            purchaseAny.purchaseState === 'purchased'
-              ? 'PURCHASED ✅'
-              : purchaseAny.purchaseState === 'pending'
-                ? 'PENDING'
-                : purchaseAny.purchaseState === 'failed'
-                  ? 'FAILED'
-                  : purchaseAny.purchaseState || 'UNKNOWN',
-          signatureAndroid: purchaseAny.signatureAndroid || 'NOT_FOUND',
-          developerPayloadAndroid: purchaseAny.developerPayloadAndroid || 'NOT_FOUND',
-          autoRenewingAndroid: purchaseAny.autoRenewingAndroid ?? 'NOT_FOUND',
-          isAcknowledgedAndroid: purchaseAny.isAcknowledgedAndroid ?? 'NOT_FOUND',
-          // Subscription-specific Android properties
-          subscriptionPurchaseData: purchaseAny.subscriptionPurchaseData || 'NOT_FOUND',
-          basePlanId: purchaseAny.basePlanId || 'NOT_FOUND',
-          offerId: purchaseAny.offerId || 'NOT_FOUND',
-          offerToken: purchaseAny.offerToken || 'NOT_FOUND',
-        });
-      }
-
-      // Log iOS-specific properties
-      if (Platform.OS === 'ios') {
-        console.log('[SubscriptionModal] 🍎 iOS-Specific Purchase Data:', {
-          transactionReceipt: purchaseAny.transactionReceipt || 'NOT_FOUND',
-          transactionStateIOS: purchaseAny.transactionStateIOS ?? 'NOT_FOUND',
-          transactionStateIOSMeaning:
-            purchaseAny.transactionStateIOS === 0
-              ? 'PURCHASING'
-              : purchaseAny.transactionStateIOS === 1
-                ? 'PURCHASED ✅'
-                : purchaseAny.transactionStateIOS === 2
-                  ? 'FAILED'
-                  : purchaseAny.transactionStateIOS === 3
-                    ? 'RESTORED'
-                    : purchaseAny.transactionStateIOS === 4
-                      ? 'DEFERRED'
-                      : 'UNKNOWN',
-          originalTransactionIdentifierIOS:
-            purchaseAny.originalTransactionIdentifierIOS || 'NOT_FOUND',
-        });
-      }
-
-      // Log all available keys in the purchase object
-      console.log('[SubscriptionModal] 🔑 All Available Purchase Object Keys:', {
-        standardKeys: Object.keys(purchase),
-        allKeys: Object.keys(purchaseAny),
-        hasOrderId: 'orderId' in purchaseAny,
-        hasPurchaseToken: 'purchaseToken' in purchaseAny,
-        hasPurchaseState: 'purchaseState' in purchaseAny,
-        hasPurchaseStateAndroid: 'purchaseStateAndroid' in purchaseAny,
-        purchaseStateValue: purchaseAny.purchaseState || 'NOT_FOUND',
-      });
-
-      console.log('[SubscriptionModal] Basic Purchase Info:', {
-        productId: purchase.productId,
-        transactionId: purchase.transactionId,
-        platform: Platform.OS,
-        transactionDate: purchase.transactionDate,
-      });
-
-      console.log(purchase, 'purchase we have reached here');
-
       // 1. Determine Success State correctly for v14
       // Using type assertion to access platform-specific properties (purchaseAny already declared above)
       let isPurchaseSuccessful = false;
 
-      if (Platform.OS === 'android') {
-        /**
-         * Android purchase state can come in different shapes depending on react-native-iap version:
-         * - `purchaseStateAndroid` (number): 0 unspecified, 1 purchased, 2 pending
-         * - `purchaseState` (string): 'purchased' | 'pending' | ...
-         * - `dataAndroid` (stringified JSON) includes `purchaseState` + `orderId` + `purchaseToken`
-         */
-        const getAndroidPurchaseState = (): number | null => {
-          // Preferred: numeric state
-          if (typeof purchaseAny.purchaseStateAndroid === 'number')
-            return purchaseAny.purchaseStateAndroid;
+      // Start backend verification flow: we'll keep UI in "Verifying purchase..." until Profile API reflects the change.
+      // This makes sure base_plan_id/store_plan_id has actually changed on the backend (source of truth).
+      const startBackendVerification = async () => {
+        if (verificationTimerRef.current) {
+          clearTimeout(verificationTimerRef.current);
+          verificationTimerRef.current = null;
+        }
+        verificationActiveRef.current = true;
+        setIsVerifyingBackend(true);
 
-          // Common: string state
-          if (typeof purchaseAny.purchaseState === 'string') {
-            const s = purchaseAny.purchaseState.toLowerCase();
-            if (s === 'purchased') return 1;
-            if (s === 'pending') return 2;
+        const startedAt = Date.now();
+        const timeoutMs = 90_000;
+        const pollEveryMs = 2_500;
+
+        const tick = async () => {
+          if (!verificationActiveRef.current) return;
+
+          // Timeout guard
+          if (Date.now() - startedAt > timeoutMs) {
+            verificationActiveRef.current = false;
+            setIsVerifyingBackend(false);
+            return;
           }
 
-          // Fallback: parse raw payload from Google Play
-          if (typeof purchaseAny.dataAndroid === 'string' && purchaseAny.dataAndroid.trim()) {
-            try {
-              const parsed = JSON.parse(purchaseAny.dataAndroid);
-              const rawState = parsed?.purchaseState;
-              if (typeof rawState === 'number') {
-                // Some environments report purchaseState=0 even when `purchaseState: 'purchased'`
-                // and `orderId/purchaseToken` are present. Treat that as purchased.
-                if (
-                  rawState === 0 &&
-                  (parsed?.orderId || purchaseAny.orderId) &&
-                  (parsed?.purchaseToken || purchaseAny.purchaseToken)
-                ) {
-                  return 1;
-                }
-                return rawState;
-              }
-            } catch {
-              // ignore parse errors
+          try {
+            const res = await refetchProfile();
+            const sub = res.data?.subscription ?? null;
+
+            const newStorePlanId = (sub?.store_plan_id as string | null) ?? null;
+            const newPlanId =
+              typeof sub?.plan_id === 'number'
+                ? (sub.plan_id as number)
+                : sub?.plan_id
+                  ? Number(sub.plan_id)
+                  : null;
+
+            const baselineStorePlanId = baselineStorePlanIdRef.current;
+            const baselinePlanId = baselinePlanIdRef.current;
+
+            const isActiveNow = !!sub && (sub.status === 'active' || sub.is_active === true);
+            const storePlanChanged =
+              (baselineStorePlanId === null && newStorePlanId !== null) ||
+              (baselineStorePlanId !== null &&
+                newStorePlanId !== null &&
+                newStorePlanId !== baselineStorePlanId);
+            const planChanged =
+              (baselinePlanId === null && newPlanId !== null) ||
+              (baselinePlanId !== null && newPlanId !== null && newPlanId !== baselinePlanId);
+
+            if (isActiveNow && (storePlanChanged || planChanged)) {
+              // Update baselines so we don't re-trigger
+              baselineStorePlanIdRef.current = newStorePlanId;
+              baselinePlanIdRef.current = newPlanId;
+
+              verificationActiveRef.current = false;
+              setIsVerifyingBackend(false);
+              setVerifiedPlanName(sub?.plan_name || sub?.plan_slug || 'Your plan');
+              setVerifiedConsultationsAllowed(
+                typeof sub?.consultations_allowed === 'number' ? sub.consultations_allowed : null
+              );
+              setShowSubscriptionActiveModal(true);
+              return;
             }
+          } catch {
+            // Ignore transient polling errors
           }
 
-          return null;
+          verificationTimerRef.current = setTimeout(tick, pollEveryMs);
         };
 
-        const androidPurchaseState = getAndroidPurchaseState();
-        if (__DEV__) {
-          console.log('[SubscriptionModal][DEBUG] Android purchase state resolution', {
-            purchaseStateAndroid: purchaseAny.purchaseStateAndroid,
-            purchaseState: purchaseAny.purchaseState,
-            parsedPurchaseState: androidPurchaseState,
-            orderId: purchaseAny.orderId,
-            purchaseTokenPreview: purchaseAny.purchaseToken
-              ? String(purchaseAny.purchaseToken).slice(0, 12) + '…'
-              : null,
-          });
-        }
-
-        if (androidPurchaseState === 2) {
-          // Pending purchase: don't verify yet, but also don't leave UI stuck.
-          Alert.alert(
-            'Purchase Pending',
-            'Your purchase is pending. We will activate your subscription once Google Play confirms the payment.'
-          );
-          setIsProcessingPurchase(false);
-          setIsLoading(false);
-          return;
-        }
-
-        isPurchaseSuccessful = androidPurchaseState === 1;
-      } else {
-        // transactionStateIOS: 1 (purchased), 3 (restored)
-        isPurchaseSuccessful =
-          purchaseAny.transactionStateIOS === 1 || purchaseAny.transactionStateIOS === 3;
-      }
-
-      if (!isPurchaseSuccessful) {
-        console.warn('[SubscriptionModal] Purchase not successful, skipping backend', {
-          platform: Platform.OS,
-          purchaseStateAndroid: purchaseAny.purchaseStateAndroid,
-          purchaseState: purchaseAny.purchaseState,
-        });
-        setIsProcessingPurchase(false);
-        setIsLoading(false);
-        return;
-      }
+        // Run immediately
+        await tick();
+      };
 
       // De-dupe: purchaseUpdatedListener can fire multiple times for the same transaction.
       // Prefer the platform-specific unique identifier.
@@ -457,79 +368,6 @@ export default function SubscriptionModal({
         return;
       }
       if (dedupeKey) processedPurchaseKeysRef.current.add(dedupeKey);
-
-      try {
-        setIsLoading(true);
-        const userData = await storage.getUserData();
-
-        if (!userData?.id || !plan?.originalPlan?.id) {
-          throw new Error('User or Plan authentication failed.');
-        }
-
-        const toStringOrEmptySafe = (v: unknown) => {
-          if (v === undefined || v === null) return '';
-          if (typeof v === 'string') return v;
-          if (typeof v === 'number' || typeof v === 'boolean' || typeof v === 'bigint')
-            return String(v);
-          try {
-            return JSON.stringify(v);
-          } catch {
-            return String(v);
-          }
-        };
-
-        // 2. Build Payload for Backend (purchase only)
-        // Using type assertion to access platform-specific properties
-        const resolvedTransactionIdRaw =
-          Platform.OS === 'android'
-            ? purchaseAny.orderId ||
-              purchase.transactionId ||
-              purchaseAny.transactionId ||
-              purchaseAny.id
-            : purchase.transactionId || purchaseAny.transactionId;
-
-        const resolvedTransactionId =
-          resolvedTransactionIdRaw !== undefined && resolvedTransactionIdRaw !== null
-            ? String(resolvedTransactionIdRaw)
-            : '';
-
-        if (!resolvedTransactionId) {
-          throw new Error('Missing transactionId from purchase. Cannot verify with backend.');
-        }
-
-        // Persist purchase payload locally BEFORE calling backend (crash/offline recovery).
-        // This is intentionally NOT subscription state—only a pending verification queue.
-        const pendingId =
-          Platform.OS === 'android'
-            ? String(
-                purchaseAny.purchaseToken ||
-                  purchaseAny.orderId ||
-                  purchase.transactionId ||
-                  purchaseAny.transactionId ||
-                  ''
-              )
-            : String(
-                purchaseAny.originalTransactionIdentifierIOS ||
-                  purchase.transactionId ||
-                  purchaseAny.transactionId ||
-                  ''
-              );
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        console.error('[SubscriptionModal] ❌ Error in handlePurchaseUpdate:', {
-          errorMessage,
-          error: error instanceof Error ? error.stack : error,
-          purchaseProductId: purchase.productId,
-          purchaseTransactionId: purchase.transactionId,
-        });
-        Alert.alert('Verification Failed', 'Please contact support if you were charged.');
-      } finally {
-        setIsUpgradeConfirmationPending(false);
-        // Keep upgrade success message visible until redirect triggers or modal closes.
-        setIsProcessingPurchase(false);
-        setIsLoading(false);
-        setIsSyncingWithStore(false);
-      }
     },
     [plan, onClose]
   );
@@ -717,7 +555,7 @@ export default function SubscriptionModal({
             </View>
           )}
 
-        {/* Purchase/Upgrade Status Indicator */}
+        {/* Purchase/Upgrade/Verification Status Indicator */}
         {isUpgradeAppliedMessageVisible ? (
           <View className="mb-4 p-3 bg-green-50 rounded-lg border border-green-100">
             <View className="flex-row items-center">
@@ -743,6 +581,16 @@ export default function SubscriptionModal({
               </Text>
             </View>
           </View>
+        ) : isVerifyingBackend ? (
+          <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <View className="flex-row items-center">
+              <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
+              <Text className="text-blue-700 font-medium">Verifying purchase...</Text>
+            </View>
+            <Text className="text-blue-600 text-sm mt-1">
+              Waiting for confirmation from our server. Please don’t close this screen.
+            </Text>
+          </View>
         ) : (
           isProcessingPurchase && (
             <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
@@ -764,6 +612,7 @@ export default function SubscriptionModal({
             isLoading ||
             isProcessingPurchase ||
             isSyncingWithStore ||
+            isVerifyingBackend ||
             isUpgradeAppliedMessageVisible ||
             !iapInitialized ||
             (currentSubscription?.plan_id === plan.originalPlan.id &&
@@ -773,6 +622,7 @@ export default function SubscriptionModal({
             isLoading ||
             isProcessingPurchase ||
             isSyncingWithStore ||
+            isVerifyingBackend ||
             isUpgradeAppliedMessageVisible ||
             !iapInitialized ||
             (currentSubscription?.plan_id === plan.originalPlan.id &&
@@ -787,10 +637,12 @@ export default function SubscriptionModal({
             end={{ x: 1, y: 0 }}
             className="rounded-xl items-center justify-center py-4"
           >
-            {isLoading ? (
+            {isLoading || isVerifyingBackend ? (
               <View className="flex-row items-center">
                 <ActivityIndicator size="small" color="#FFFFFF" className="mr-2" />
-                <Text className="text-white text-[16px] font-semibold">Preparing...</Text>
+                <Text className="text-white text-[16px] font-semibold">
+                  {isVerifyingBackend ? 'Verifying...' : 'Preparing...'}
+                </Text>
               </View>
             ) : (
               <Text className="text-white text-[16px] font-semibold">
@@ -806,6 +658,29 @@ export default function SubscriptionModal({
             )}
           </LinearGradient>
         </Pressable>
+
+        <InfoModal
+          visible={showSubscriptionActiveModal}
+          title="Subscription Active"
+          message={
+            verifiedPlanName
+              ? `Your subscription is now active: ${verifiedPlanName}${
+                  verifiedConsultationsAllowed !== null
+                    ? ` (${verifiedConsultationsAllowed} consultations/month)`
+                    : ''
+                }.`
+              : 'Your subscription has been activated successfully.'
+          }
+          variant="success"
+          onConfirm={() => {
+            setShowSubscriptionActiveModal(false);
+            onClose?.();
+          }}
+          onClose={() => {
+            setShowSubscriptionActiveModal(false);
+            onClose?.();
+          }}
+        />
 
         {/* Platform Info */}
         <View className="mt-4 pt-4 border-t border-gray-100">
