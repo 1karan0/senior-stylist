@@ -143,12 +143,15 @@ const RecentEarning = () => {
 
   // Accumulate earnings across pages
   useEffect(() => {
-    if (currentPageEarnings.length > 0) {
-      if (page === 1) {
-        // Reset on first page or refresh
+    if (page === 1) {
+      // Reset on first page or refresh - only update if we have new data
+      // This prevents clearing earnings during refetch when data is temporarily unavailable
+      if (currentPageEarnings.length > 0) {
         setAllEarnings(currentPageEarnings);
-      } else {
-        // Append new page data
+      }
+    } else {
+      // Append new page data
+      if (currentPageEarnings.length > 0) {
         setAllEarnings((prev) => {
           // Avoid duplicates by checking IDs
           const existingIds = new Set(prev.map((e) => e.id));
@@ -171,7 +174,6 @@ const RecentEarning = () => {
 
   const handleRefresh = useCallback(() => {
     setPage(1);
-    setAllEarnings([]);
     refetch();
   }, [refetch]);
 
@@ -374,9 +376,9 @@ const RecentEarning = () => {
           {isLoading && allEarnings.length === 0 ? (
             <View>
               <View className="mb-5">
-                <Text className="text-2xl font-urbanist-bold mb-1 text-white">Recent Earnings</Text>
+                <Text className="text-2xl font-urbanist-bold mb-1 text-white">Earning History</Text>
                 <Text className="text-sm font-poppins-regular text-white">
-                  Your recent consultation earnings
+                  Your consultation earning history
                 </Text>
               </View>
               <EarningListSkeleton />
@@ -389,10 +391,10 @@ const RecentEarning = () => {
               ListHeaderComponent={
                 <View className="mb-5">
                   <Text className="text-2xl font-urbanist-bold mb-1 text-white">
-                    Earnings History
+                    Earning History
                   </Text>
                   <Text className="text-sm font-poppins-regular text-white">
-                    Your consultation earnings history
+                    Your consultation earning history
                   </Text>
                 </View>
               }

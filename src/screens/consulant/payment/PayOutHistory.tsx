@@ -148,7 +148,6 @@ const PayOutHistory = () => {
 
   const handleRefresh = useCallback(() => {
     setPage(1);
-    setAllPayouts([]);
     refetch();
   }, [refetch]);
 

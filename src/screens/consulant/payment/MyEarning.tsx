@@ -375,7 +375,7 @@ const MyEarning = () => {
                             <Text
                               className={`${isDark ? 'text-white' : 'text-textDark'} text-sm font-urbanist-bold`}
                             >
-                              consultaion {item.consultation_id}
+                              consultaion #{item.consultation_id}
                             </Text>
                             <Text className={`text-[#27B07D] text-sm font-poppins-semibold`}>
                               {formatMoney(item.amount)}
