@@ -402,13 +402,6 @@ export default function PricingScreen() {
               navigateToProfileHome();
             }, 300);
           }}
-          onNavigateToProfile={() => {
-            navigateToProfileHome();
-          }}
-          onNavigateToConsultation={() => {
-            // Keep it simple: always land on Profile after plan changes as well
-            navigateToProfileHome();
-          }}
         />
       )}
     </LinearGradient>
