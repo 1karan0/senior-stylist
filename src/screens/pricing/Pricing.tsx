@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,19 +10,17 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import {
   useGetSubscriptionPlans,
   SubscriptionPlan,
 } from '@/api/subscription/useGetSubscriptionPlans';
+import { Button } from '@/common/components/Button';
 import SubscriptionModal from '@/components/modals/SubscriptionModal';
 import { AppStackParamList } from '@/common/types';
-import { useAuth } from '@/contexts/AuthContext';
-import { storage } from '@/services/storage';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Button } from '@/common/components/Button';
-import { useGetProfile } from '@/api/user/profile/useGetProfile';
 
 interface PlanDisplay {
   key: string;
@@ -39,62 +37,31 @@ interface PlanDisplay {
 type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'Pricing'>;
 
 export default function PricingScreen() {
-  const navigation = useNavigation<NavigationProp>();
-  const route = useRoute();
-  const { user } = useAuth();
-  const { isDark } = useTheme();
-  const { data: profileData, isLoading: isProfileLoading } = useGetProfile();
-  const profileSubscription = profileData?.subscription ?? null;
-  // Check if this is from signup flow or manage subscription
-  // Route params can have: fromSignup (from OTP verification) or fromProfile (from Profile tab)
-  const routeParams = (route.params as any) || {};
-  const routeFromSignup = routeParams.fromSignup;
-  const routeFromProfile = routeParams.fromProfile;
-  const [fromSignup, setFromSignup] = useState<boolean>(routeFromSignup || false);
-  const [fromProfile, setFromProfile] = useState<boolean>(routeFromProfile || false);
-
-  // If fromSignup param not provided, check storage to determine if it's from signup
-  // Priority: route params > storage check
-  useEffect(() => {
-    // If fromProfile is explicitly set, don't check for signup
-    if (routeFromProfile) {
-      setFromProfile(true);
-      setFromSignup(false);
-      return;
-    }
-
-    if (routeFromSignup !== undefined) {
-      setFromSignup(routeFromSignup);
-      setFromProfile(false);
-    } else {
-      // If no explicit params, check storage to determine if it's from signup
-      const checkIfFromSignup = async () => {
-        try {
-          // First check the explicit new signup flag (set during OTP verification)
-          const isNewSignup = await storage.getIsNewSignup();
-          if (isNewSignup) {
-            setFromSignup(true);
-            setFromProfile(false);
-            // Clear the flag after checking (so it doesn't persist)
-            await storage.setIsNewSignup(false);
-            return;
-          }
-
-          // Fallback: Check subscription via Profile API (source of truth)
-          setFromSignup(!profileSubscription);
-          setFromProfile(!!profileSubscription);
-        } catch {
-          setFromSignup(false);
-          setFromProfile(false);
-        }
-      };
-      checkIfFromSignup();
-    }
-  }, [routeFromSignup, routeFromProfile, profileSubscription]);
-  const { data: subscriptionPlans, isLoading, error } = useGetSubscriptionPlans();
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<PlanDisplay | null>(null);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
-  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
+
+  const navigation = useNavigation<NavigationProp>();
+  const { isDark } = useTheme();
+  const isFocused = useIsFocused();
+  const { data: profileData, isLoading: isProfileLoading } = useGetProfile({
+    // Poll every 10s while Pricing is visible so current plan + button state stay accurate
+    refetchInterval: isFocused ? 10_000 : false,
+    refetchIntervalInBackground: false,
+  });
+  const profileSubscription = profileData?.subscription ?? null;
+  const { data: subscriptionPlans, isLoading, error } = useGetSubscriptionPlans();
+  const navigateToProfileHome = useCallback(() => {
+    try {
+      // Pricing is customer-only: always route back to customer Profile
+      (navigation as any).navigate('UserTabs', {
+        screen: 'ProfileTab',
+        params: { screen: 'ProfileHome' },
+      });
+    } catch (err) {
+      console.error('[Pricing] Navigation to Profile failed:', err);
+    }
+  }, [navigation]);
 
   // Transform API data to display format and filter out test plans
   const plans = useMemo(() => {
@@ -352,34 +319,6 @@ export default function PricingScreen() {
           )}
         </View>
 
-        {/*
-        // Current Subscription Info (commented out per request)
-        {profileSubscription?.status === 'active' && (
-          <View
-            className={`mt-6 p-4 rounded-lg border ${isDark ? 'bg-commonGradientStop1 border-commonGradientStop7' : 'bg-blue-50 border-blue-200'}`}
-          >
-            <View className="flex-row items-center mb-1">
-              <Ionicons
-                name="information-circle"
-                size={20}
-                color={isDark ? '#23A76F' : '#2563EB'}
-                className="mr-2"
-              />
-              <Text className={`font-semibold ${isDark ? 'text-white' : 'text-blue-800'}`}>
-                Active Subscription
-              </Text>
-            </View>
-            <Text className={`text-sm mt-1 ${isDark ? 'text-white' : 'text-blue-700'}`}>
-              You have an active{' '}
-              {profileSubscription?.plan?.name || 'subscription'}.
-              {profileSubscription?.plan_id !== selectedPlan?.originalPlan.id
-                ? ' Select a different plan to switch your subscription.'
-                : ' This is your current plan.'}
-            </Text>
-          </View>
-        )}
-        */}
-
         {/* BUTTON */}
         {(() => {
           // Determine button state and text
@@ -446,19 +385,8 @@ export default function PricingScreen() {
         <Pressable
           className="mt-4 mb-6"
           onPress={() => {
-            const userRole = user?.role;
-
-            if (userRole === 'consultant') {
-              // Navigate to ConsultantTabs and then to ChatTab (consultant's consultation equivalent)
-              (navigation as any).navigate('ConsultantTabs', {
-                screen: 'ChatTab',
-              });
-            } else {
-              // Navigate to UserTabs and then to ConsultationTab
-              (navigation as any).navigate('UserTabs', {
-                screen: 'ConsultationTab',
-              });
-            }
+            // Simple rule: always take user back to their Profile from Pricing
+            navigateToProfileHome();
           }}
         >
           <Text className="text-center text-textDark font-bold text-base">Skip</Text>
@@ -469,59 +397,18 @@ export default function PricingScreen() {
           plan={selectedPlan}
           onClose={async () => {
             setSubscriptionModal(false);
-            // Subscription status is sourced from Profile API.
-            // Navigate based on source:
-            // - From signup: Navigate to ConsultationTab after successful subscription
-            // - From Profile: Don't navigate here (handled in onNavigateToProfile callback)
-            if (fromSignup) {
-              setTimeout(() => {
-                try {
-                  (navigation as any).navigate('UserTabs', {
-                    screen: 'ConsultationTab',
-                  });
-                } catch (err) {
-                  console.error('[Pricing] Navigation error:', err);
-                }
-              }, 500);
-            }
+            // Simple rule: always land on Profile after closing purchase flow
+            setTimeout(() => {
+              navigateToProfileHome();
+            }, 300);
           }}
           onNavigateToProfile={() => {
-            // Navigate based on source:
-            // - From signup: Navigate to ConsultationTab
-            // - From Profile: Navigate to Profile tab
-            try {
-              if (fromProfile) {
-                // From Profile/Manage Subscription - go back to Profile
-                (navigation as any).navigate('UserTabs', {
-                  screen: 'ProfileTab',
-                  params: {
-                    screen: 'Profile',
-                  },
-                });
-              } else {
-                // From signup - go to ConsultationTab
-                (navigation as any).navigate('UserTabs', {
-                  screen: 'ConsultationTab',
-                });
-              }
-            } catch (err) {
-              console.error('[Pricing] Navigation error:', err);
-            }
+            navigateToProfileHome();
           }}
           onNavigateToConsultation={() => {
-            try {
-              const userRole = user?.role;
-              if (userRole === 'consultant') {
-                (navigation as any).navigate('ConsultantTabs', { screen: 'ChatTab' });
-              } else {
-                (navigation as any).navigate('UserTabs', { screen: 'ConsultationTab' });
-              }
-            } catch (err) {
-              console.error('[Pricing] Navigation error:', err);
-            }
+            // Keep it simple: always land on Profile after plan changes as well
+            navigateToProfileHome();
           }}
-          fromSignup={fromSignup}
-          fromProfile={fromProfile}
         />
       )}
     </LinearGradient>

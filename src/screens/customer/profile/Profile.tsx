@@ -15,6 +15,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { deepLinkToSubscriptions, initConnection } from 'react-native-iap';
+import { useIsFocused } from '@react-navigation/native';
 
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import Button from '@/common/components/Button';
@@ -32,7 +33,12 @@ interface Props {
 }
 
 const Profile: React.FC<Props> = ({ navigation }) => {
-  const { data: profileData } = useGetProfile();
+  const isFocused = useIsFocused();
+  const { data: profileData } = useGetProfile({
+    // Poll every 10s while this screen is visible so subscription/profile updates show live
+    refetchInterval: isFocused ? 10_000 : false,
+    refetchIntervalInBackground: false,
+  });
   const { logout } = useAuth();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
