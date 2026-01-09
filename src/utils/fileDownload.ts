@@ -24,6 +24,10 @@ export const getDownloadDirectory = async (): Promise<DownloadDirectory> => {
     RNFS.DocumentDirectoryPath || RNFS.ExternalDirectoryPath || RNFS.CachesDirectoryPath;
 
   if (Platform.OS === 'ios') {
+    // iOS: Try Downloads folder first if available, otherwise use Documents
+    if (RNFS.DownloadDirectoryPath) {
+      return { dir: RNFS.DownloadDirectoryPath, name: 'Downloads' };
+    }
     return { dir: RNFS.DocumentDirectoryPath || RNFS.CachesDirectoryPath, name: 'Documents' };
   }
 
@@ -35,29 +39,37 @@ export const getDownloadDirectory = async (): Promise<DownloadDirectory> => {
     typeof Platform.Version === 'number'
       ? Platform.Version
       : parseInt(String(Platform.Version), 10);
-  const hasPermission = await requestWriteStoragePermission();
 
-  if (!hasPermission) {
-    return { dir: appDir, name: 'Documents' };
-  }
-
-  // Try Downloads folder
+  // For Android, prioritize Downloads folder
+  // DownloadDirectoryPath uses MediaStore API on Android 10+ which handles scoped storage
   if (RNFS.DownloadDirectoryPath) {
+    // Request permission (may not be needed on Android 10+ but helps on older versions)
+    await requestWriteStoragePermission();
+    // Use DownloadDirectoryPath directly - react-native-fs handles MediaStore integration
     return { dir: RNFS.DownloadDirectoryPath, name: 'Downloads' };
   }
 
+  // Fallback: Try creating/accessing Download folder in ExternalStorage (for older Android versions)
   if (RNFS.ExternalStorageDirectoryPath) {
     const downloadDir = `${RNFS.ExternalStorageDirectoryPath}/Download`;
     try {
-      if (!(await RNFS.exists(downloadDir))) {
-        await RNFS.mkdir(downloadDir);
+      const hasPermission = await requestWriteStoragePermission();
+      if (hasPermission || androidVersion >= 29) {
+        // Try to ensure directory exists
+        const exists = await RNFS.exists(downloadDir);
+        if (!exists) {
+          await RNFS.mkdir(downloadDir);
+        }
+        return { dir: downloadDir, name: 'Downloads' };
       }
-      return { dir: downloadDir, name: 'Downloads' };
-    } catch {
-      return { dir: appDir, name: androidVersion >= 29 ? 'App Documents' : 'Documents' };
+    } catch (error) {
+      console.log(
+        '[fileDownload] ExternalStorage Download folder not accessible, using app directory'
+      );
     }
   }
 
+  // Only fall back to app directory if Downloads truly fails
   return { dir: appDir, name: androidVersion >= 29 ? 'App Documents' : 'Documents' };
 };
 
@@ -114,16 +126,30 @@ export const downloadFile = async (
 
   try {
     await saveFile(path, url, base64);
-    onSuccess({ filename, directoryName: name });
+
+    // Verify file was actually saved
+    if (await RNFS.exists(path)) {
+      onSuccess({ filename, directoryName: name });
+      return;
+    } else {
+      throw new Error('File was not saved successfully');
+    }
   } catch (error: any) {
-    // Fallback to app storage if Downloads failed
-    if (name === 'Downloads' && Platform.OS === 'android' && base64) {
+    // Only fallback to app storage if we were trying Downloads and it failed
+    // But don't fallback if we're already using app storage
+    if (name === 'Downloads' && Platform.OS === 'android') {
+      console.log('[fileDownload] Downloads folder failed, trying app storage as fallback');
       try {
         const fallbackPath = `${appDir}/${filename}`;
-        await saveFile(fallbackPath, undefined, base64);
-        onSuccess({ filename, directoryName: 'App Documents' });
-        return;
-      } catch {
+        await saveFile(fallbackPath, url, base64);
+
+        // Verify fallback file was saved
+        if (await RNFS.exists(fallbackPath)) {
+          onSuccess({ filename, directoryName: 'App Documents' });
+          return;
+        }
+      } catch (fallbackError: any) {
+        console.error('[fileDownload] Fallback to app storage also failed:', fallbackError);
         // Continue to error handling
       }
     }
