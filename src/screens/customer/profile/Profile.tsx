@@ -541,7 +541,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl p-4 mt-5 border`}
           >
             <TouchableOpacity
-              className="flex-row gap-2"
+              className="flex-row gap-2 items-center"
               onPress={() => navigation.navigate('DisputeList')}
             >
               <Image
@@ -550,7 +550,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                     ? require('@/assets/icons/white-report.png')
                     : require('@/assets/icons/report.png')
                 }
-                className=""
+                className="w-6 h-6"
                 resizeMode="contain"
               />
               <Text
@@ -566,7 +566,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl p-4 mt-5 border`}
           >
             <TouchableOpacity
-              className="flex-row gap-2"
+              className="flex-row gap-2 items-center"
               onPress={() => navigation.navigate('Settings')}
             >
               <Image
@@ -575,7 +575,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                     ? require('@/assets/icons/gear-white.png')
                     : require('@/assets/icons/gear.png')
                 }
-                className=""
+                className="w-6 h-6"
                 resizeMode="contain"
               />
               <Text
