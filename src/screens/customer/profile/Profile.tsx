@@ -35,8 +35,8 @@ interface Props {
 const Profile: React.FC<Props> = ({ navigation }) => {
   const isFocused = useIsFocused();
   const { data: profileData } = useGetProfile({
-    // Poll every 10s while this screen is visible so subscription/profile updates show live
-    refetchInterval: isFocused ? 10_000 : false,
+    // Poll every 5s while this screen is visible so subscription/profile updates show live
+    refetchInterval: isFocused ? 5_000 : false,
     refetchIntervalInBackground: false,
   });
   const { logout } = useAuth();
@@ -53,7 +53,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const subscription = profileData?.subscription;
   const hasSubscription = !!subscription;
 
-  console.log('subscription', subscription);
   // Format next billing date
   const formatBillingDate = (dateString: string | number | null | undefined): string => {
     if (!dateString) return 'N/A';
@@ -355,13 +354,23 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   </Text>
                 )}
 
-                {subscription.next_billing_date && (
-                  <Text
-                    className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-1`}
-                  >
-                    Next billing date: {formatBillingDate(subscription.next_billing_date)}
-                  </Text>
-                )}
+                {(() => {
+                  const autoRenew = !!subscription.auto_renew;
+                  const dateValue = autoRenew
+                    ? subscription.next_billing_date
+                    : subscription.expires_at || subscription.next_billing_date;
+
+                  if (!dateValue) return null;
+
+                  return (
+                    <Text
+                      className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-1`}
+                    >
+                      {autoRenew ? 'Next billing date' : 'Active till date'}:{' '}
+                      {formatBillingDate(dateValue)}
+                    </Text>
+                  );
+                })()}
 
                 {subscription.scheduled_change && (
                   <Text
@@ -384,14 +393,16 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   onPress={handleManageSubscription}
                   className={` bg-[#DAE7E0] rounded-[10px] mb-3`}
                 />
-                <Button
-                  text="Cancel Subscription"
-                  variant="light"
-                  onPress={() => setShowCancelModal(true)}
-                  icon={<Ionicons name="close-circle" size={20} color="#F22D2D" />}
-                  className="bg-white border border-[#DAE7E0] rounded-[10px]"
-                  textClassName="text-error"
-                />
+                {!!subscription.auto_renew && (
+                  <Button
+                    text="Cancel Subscription"
+                    variant="light"
+                    onPress={() => setShowCancelModal(true)}
+                    icon={<Ionicons name="close-circle" size={20} color="#F22D2D" />}
+                    className="bg-white border border-[#DAE7E0] rounded-[10px]"
+                    textClassName="text-error"
+                  />
+                )}
               </>
             ) : (
               <>

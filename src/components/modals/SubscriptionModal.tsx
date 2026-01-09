@@ -43,6 +43,8 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
   const [isUpgradeConfirmationPending, setIsUpgradeConfirmationPending] = useState(false);
   const [isUpgradeAppliedMessageVisible, setIsUpgradeAppliedMessageVisible] = useState(false);
   const [isVerifyingBackend, setIsVerifyingBackend] = useState(false);
+  const [hasStorePurchaseCallback, setHasStorePurchaseCallback] = useState(false);
+  const [awaitingProfileConfirmation, setAwaitingProfileConfirmation] = useState(false);
   const [showSubscriptionActiveModal, setShowSubscriptionActiveModal] = useState(false);
   const [verifiedPlanName, setVerifiedPlanName] = useState<string | null>(null);
   const [verifiedConsultationsAllowed, setVerifiedConsultationsAllowed] = useState<number | null>(
@@ -134,7 +136,12 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
       return;
     }
 
-    setIsLoading(true);
+    // Keep button in "Processing..." state from click until Profile API confirms the new subscription.
+    setHasStorePurchaseCallback(false);
+    setAwaitingProfileConfirmation(true);
+    setIsProcessingPurchase(true);
+    setIsSyncingWithStore(true);
+    setIsLoading(true); // short "preparing" phase (network/product fetch)
 
     try {
       // ---------------------------------------------------------
@@ -257,6 +264,10 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
     } catch (err: any) {
       console.error('Subscription error:', err);
       Alert.alert('Error', err.message || 'Unable to process subscription.');
+      // If we failed before the store flow started, release the button.
+      setAwaitingProfileConfirmation(false);
+      setIsProcessingPurchase(false);
+      setIsSyncingWithStore(false);
     } finally {
       setIsLoading(false);
     }
@@ -265,16 +276,59 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
   // 3. Handling the Purchase Result
   const handlePurchaseUpdate = useCallback(
     async (purchase: RNIap.Purchase) => {
-      // Ensure we don't show "syncing" once the store has delivered a purchase callback.
+      // Store delivered a callback → stop "syncing with store" and begin backend verification.
       setIsSyncingWithStore(false);
-      const currentSub = currentSubscriptionRef.current;
-      // Determine purchase scenario for logging
+      setHasStorePurchaseCallback(true);
 
-      // Log Android-specific properties
       const purchaseAny = purchase as any;
-      // 1. Determine Success State correctly for v14
-      // Using type assertion to access platform-specific properties (purchaseAny already declared above)
-      let isPurchaseSuccessful = false;
+      const toPlanIdNumber = (v: unknown): number | null => {
+        if (typeof v === 'number' && Number.isFinite(v)) return v;
+        if (typeof v === 'string' && v.trim()) {
+          const n = Number(v);
+          return Number.isFinite(n) ? n : null;
+        }
+        return null;
+      };
+
+      // Minimal success guard: don't start backend verification for pending/failed callbacks.
+      const isPendingPurchase = (() => {
+        if (Platform.OS !== 'android') return false;
+        const n =
+          typeof purchaseAny.purchaseStateAndroid === 'number'
+            ? purchaseAny.purchaseStateAndroid
+            : null;
+        const s =
+          typeof purchaseAny.purchaseState === 'string'
+            ? purchaseAny.purchaseState.toLowerCase()
+            : null;
+        return n === 2 || s === 'pending';
+      })();
+      if (isPendingPurchase) return;
+
+      const isSuccessfulPurchase = (() => {
+        if (Platform.OS === 'android') {
+          const n =
+            typeof purchaseAny.purchaseStateAndroid === 'number'
+              ? purchaseAny.purchaseStateAndroid
+              : null;
+          const s =
+            typeof purchaseAny.purchaseState === 'string'
+              ? purchaseAny.purchaseState.toLowerCase()
+              : null;
+          return n === 1 || s === 'purchased' || !!purchaseAny.purchaseToken;
+        }
+        // iOS: purchased/restored or receipt present
+        return (
+          purchaseAny.transactionStateIOS === 1 ||
+          purchaseAny.transactionStateIOS === 3 ||
+          !!purchaseAny.transactionReceipt
+        );
+      })();
+      if (!isSuccessfulPurchase) {
+        setAwaitingProfileConfirmation(false);
+        setIsProcessingPurchase(false);
+        return;
+      }
 
       // Start backend verification flow: we'll keep UI in "Verifying purchase..." until Profile API reflects the change.
       // This makes sure base_plan_id/store_plan_id has actually changed on the backend (source of truth).
@@ -297,6 +351,9 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           if (Date.now() - startedAt > timeoutMs) {
             verificationActiveRef.current = false;
             setIsVerifyingBackend(false);
+            // If backend hasn't confirmed in time, release processing so user can retry.
+            setAwaitingProfileConfirmation(false);
+            setIsProcessingPurchase(false);
             return;
           }
 
@@ -305,17 +362,24 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
             const sub = res.data?.subscription ?? null;
 
             const newStorePlanId = (sub?.store_plan_id as string | null) ?? null;
-            const newPlanId =
-              typeof sub?.plan_id === 'number'
-                ? (sub.plan_id as number)
-                : sub?.plan_id
-                  ? Number(sub.plan_id)
-                  : null;
+            const newPlanId = toPlanIdNumber(sub?.plan_id);
 
             const baselineStorePlanId = baselineStorePlanIdRef.current;
             const baselinePlanId = baselinePlanIdRef.current;
 
             const isActiveNow = !!sub && (sub.status === 'active' || sub.is_active === true);
+
+            // Only finish verification when backend shows the TARGET plan as active.
+            // This guarantees UI is strictly: Processing... -> Current Plan (no intermediate "Switch Plan").
+            const targetPlanId = plan?.originalPlan?.id ?? null;
+            const targetStorePlanId =
+              (plan?.originalPlan?.base_plan_product_id as string | null) ?? null;
+            const matchesTargetPlan =
+              (targetPlanId !== null && newPlanId !== null && newPlanId === Number(targetPlanId)) ||
+              (targetStorePlanId !== null &&
+                newStorePlanId !== null &&
+                newStorePlanId === targetStorePlanId);
+
             const storePlanChanged =
               (baselineStorePlanId === null && newStorePlanId !== null) ||
               (baselineStorePlanId !== null &&
@@ -325,13 +389,16 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
               (baselinePlanId === null && newPlanId !== null) ||
               (baselinePlanId !== null && newPlanId !== null && newPlanId !== baselinePlanId);
 
-            if (isActiveNow && (storePlanChanged || planChanged)) {
+            if (isActiveNow && matchesTargetPlan && (storePlanChanged || planChanged)) {
               // Update baselines so we don't re-trigger
               baselineStorePlanIdRef.current = newStorePlanId;
               baselinePlanIdRef.current = newPlanId;
 
               verificationActiveRef.current = false;
               setIsVerifyingBackend(false);
+              // Release "Processing..." so the button can render "Current Plan"
+              setAwaitingProfileConfirmation(false);
+              setIsProcessingPurchase(false);
               setVerifiedPlanName(sub?.plan_name || sub?.plan_slug || 'Your plan');
               setVerifiedConsultationsAllowed(
                 typeof sub?.consultations_allowed === 'number' ? sub.consultations_allowed : null
@@ -362,14 +429,15 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
                 ''
             );
       if (dedupeKey && processedPurchaseKeysRef.current.has(dedupeKey)) {
-        console.log('[SubscriptionModal] Duplicate purchase update ignored', { dedupeKey });
-        setIsProcessingPurchase(false);
-        setIsLoading(false);
+        // Keep processing UI — we may already be verifying backend.
         return;
       }
       if (dedupeKey) processedPurchaseKeysRef.current.add(dedupeKey);
+
+      // Start verifying against backend now that we have a successful store callback.
+      await startBackendVerification();
     },
-    [plan, onClose]
+    [refetchProfile]
   );
   // 1. Preparation: Initialize IAP and set up listeners
   useEffect(() => {
@@ -465,6 +533,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
       isSyncingWithStore ||
       isUpgradeConfirmationPending ||
       isUpgradeAppliedMessageVisible ||
+      isVerifyingBackend ||
       isLoading
     ) {
       Alert.alert(
@@ -538,23 +607,6 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           </View>
         )}
 
-        {/* Current Subscription Info */}
-        {currentSubscription &&
-          (currentSubscription.status === 'active' || currentSubscription.is_active) && (
-            <View className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-              <View className="flex-row items-center mb-1">
-                <Ionicons name="information-circle" size={20} color="#D97706" className="mr-2" />
-                <Text className="text-yellow-800 font-semibold">Active Subscription</Text>
-              </View>
-              <Text className="text-yellow-700 text-xs mt-1">
-                You currently have an active {currentSubscription.plan_name || 'subscription'}.
-                {currentSubscription.plan_id !== plan.originalPlan.id
-                  ? ' Switching plans will cancel your current subscription.'
-                  : ' This is the same plan you already have.'}
-              </Text>
-            </View>
-          )}
-
         {/* Purchase/Upgrade/Verification Status Indicator */}
         {isUpgradeAppliedMessageVisible ? (
           <View className="mb-4 p-3 bg-green-50 rounded-lg border border-green-100">
@@ -581,6 +633,16 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
               </Text>
             </View>
           </View>
+        ) : awaitingProfileConfirmation && hasStorePurchaseCallback ? (
+          <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <View className="flex-row items-center">
+              <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
+              <Text className="text-blue-700 font-medium">Verifying purchase...</Text>
+            </View>
+            <Text className="text-blue-600 text-sm mt-1">
+              Waiting for confirmation from our server. Please don’t close this screen.
+            </Text>
+          </View>
         ) : isVerifyingBackend ? (
           <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
             <View className="flex-row items-center">
@@ -605,11 +667,31 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           )
         )}
 
+        {/* Current Subscription Info (hide while verifying purchase) */}
+        {currentSubscription &&
+          (currentSubscription.status === 'active' || currentSubscription.is_active) &&
+          !awaitingProfileConfirmation &&
+          !isVerifyingBackend && (
+            <View className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+              <View className="flex-row items-center mb-1">
+                <Ionicons name="information-circle" size={20} color="#D97706" className="mr-2" />
+                <Text className="text-yellow-800 font-semibold">Active Subscription</Text>
+              </View>
+              <Text className="text-yellow-700 text-xs mt-1">
+                You currently have an active {currentSubscription.plan_name || 'subscription'}.
+                {currentSubscription.plan_id !== plan.originalPlan.id
+                  ? ' Switching plans will cancel your current subscription.'
+                  : ' This is the same plan you already have.'}
+              </Text>
+            </View>
+          )}
+
         {/* SUBSCRIBE BUTTON */}
         <Pressable
           onPress={handleSubscribe}
           disabled={
             isLoading ||
+            awaitingProfileConfirmation ||
             isProcessingPurchase ||
             isSyncingWithStore ||
             isVerifyingBackend ||
@@ -620,6 +702,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           }
           className={`mt-5 rounded-xl overflow-hidden ${
             isLoading ||
+            awaitingProfileConfirmation ||
             isProcessingPurchase ||
             isSyncingWithStore ||
             isVerifyingBackend ||
@@ -637,23 +720,20 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
             end={{ x: 1, y: 0 }}
             className="rounded-xl items-center justify-center py-4"
           >
-            {isLoading || isVerifyingBackend ? (
+            {awaitingProfileConfirmation ||
+            isProcessingPurchase ||
+            isLoading ||
+            isVerifyingBackend ? (
               <View className="flex-row items-center">
                 <ActivityIndicator size="small" color="#FFFFFF" className="mr-2" />
-                <Text className="text-white text-[16px] font-semibold">
-                  {isVerifyingBackend ? 'Verifying...' : 'Preparing...'}
-                </Text>
+                <Text className="text-white text-[16px] font-semibold">Processing...</Text>
               </View>
             ) : (
               <Text className="text-white text-[16px] font-semibold">
-                {isProcessingPurchase
-                  ? 'Processing...'
-                  : currentSubscription?.plan_id === plan.originalPlan.id &&
-                      currentSubscription.status === 'active'
-                    ? 'Current Plan'
-                    : currentSubscription && currentSubscription.status === 'active'
-                      ? 'Switch Plan'
-                      : 'Subscribe'}
+                {currentSubscription?.plan_id === plan.originalPlan.id &&
+                currentSubscription.status === 'active'
+                  ? 'Current Plan'
+                  : 'Subscribe'}
               </Text>
             )}
           </LinearGradient>
@@ -674,10 +754,12 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           variant="success"
           onConfirm={() => {
             setShowSubscriptionActiveModal(false);
+            setHasStorePurchaseCallback(false);
             onClose?.();
           }}
           onClose={() => {
             setShowSubscriptionActiveModal(false);
+            setHasStorePurchaseCallback(false);
             onClose?.();
           }}
         />
