@@ -18,7 +18,7 @@ else
   use_frameworks! :linkage => :static
 end
 
-target 'Senior_stylist' do
+target 'SeniorStylist' do
   config = use_native_modules!
 
   use_react_native!(
