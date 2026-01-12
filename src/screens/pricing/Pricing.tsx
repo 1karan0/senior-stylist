@@ -21,6 +21,7 @@ import { Button } from '@/common/components/Button';
 import SubscriptionModal from '@/components/modals/SubscriptionModal';
 import { AppStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
+import GradientBackground from '@/common/components/GradientBackground';
 
 interface PlanDisplay {
   key: string;
@@ -186,12 +187,7 @@ export default function PricingScreen() {
   }, [plans, profileSubscription]);
 
   return (
-    <LinearGradient
-      colors={['#ECFAF5', '#D1F6E7']} // pick your exact light-green gradient shades
-      start={{ x: 0, y: 0 }}
-      end={{ x: 2, y: 4 }}
-      className="flex-1"
-    >
+    <GradientBackground>
       <ScrollView
         className="flex-1 px-6"
         contentContainerStyle={{ paddingBottom: 20 }}
@@ -199,21 +195,27 @@ export default function PricingScreen() {
       >
         {/* HEADER */}
         <View className="pt-6 items-center">
-          <Text className="text-[24px] font-bold text-textDark">Choose Your Plan</Text>
-          <Text className="text-center text-textMuted mt-2">
+          <Text
+            className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+          >
+            Choose Your Plan
+          </Text>
+          <Text
+            className={`text-center mt-2 text-sm font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+          >
             Select a subscription to get started with expert{'\n'}consultations
           </Text>
         </View>
 
         {/* OFFER BADGE */}
         <View className="mt-3 items-center">
-          <View className="bg-commonGradientStop10 rounded-xl py-2 px-4 w-60">
+          <View className="bg-[#E7B008] rounded-xl py-2 px-4 w-60">
             <Text className="text-center text-base font-urbanist-bold text-white">
               50% OFF - First 6 Months
             </Text>
           </View>
           <Text
-            className={`text-sm text-textMuted mt-2 font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+            className={`text-sm mt-2 font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
           >
             Minimum 1 year subscription
           </Text>
@@ -249,7 +251,7 @@ export default function PricingScreen() {
                   onPress={() => setSelectedPlan(item)}
                   className={`rounded-md border-2 px-4 py-4 ${
                     active ? 'border-[#27B07D]' : isDark ? 'border-[#273F36]' : 'border-[#DAE7E0]'
-                  } ${isDark ? 'bg-[#1A2E26]' : 'bg-white'} ${isCurrentPlan ? 'bg-commonGradientStop1' : ''}`}
+                  } ${isDark ? 'bg-[#1A2E26]' : 'bg-white'}`}
                 >
                   <View className="flex-row items-center gap-3">
                     {/* Radio Button */}
@@ -389,7 +391,11 @@ export default function PricingScreen() {
             navigateToProfileHome();
           }}
         >
-          <Text className="text-center text-textDark font-bold text-base">Skip</Text>
+          <Text
+            className={`text-center font-poppins-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
+          >
+            Skip
+          </Text>
         </Pressable>
       </ScrollView>
       {subscriptionModal && (
@@ -404,6 +410,6 @@ export default function PricingScreen() {
           }}
         />
       )}
-    </LinearGradient>
+    </GradientBackground>
   );
 }

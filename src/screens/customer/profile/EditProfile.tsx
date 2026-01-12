@@ -194,6 +194,11 @@ const EditProfile = () => {
                     ? require('@/assets/icons/green-back.png')
                     : require('@/assets/icons/back.png')
                 }
+                style={{
+                  width: 20,
+                  height: 20,
+                }}
+                resizeMode="contain"
               />
             </TouchableOpacity>
             <Text className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-black'}`}>
