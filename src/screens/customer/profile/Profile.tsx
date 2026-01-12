@@ -119,17 +119,26 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     // ProfileStack is nested in UserTabs, which is in AppStack
     // We need to navigate to the AppStack level to access Pricing
     // Pass fromProfile: true to indicate this is from Profile/Manage Subscription
-    const parentNavigator = navigation.getParent?.();
-    if (parentNavigator) {
-      console.log('[Profile] Navigating to Pricing screen via parent navigator');
-      // @ts-ignore - parent navigator has Pricing route in AppStack
-      parentNavigator.navigate('Pricing', { fromProfile: true });
-    } else {
-      console.log('[Profile] Parent navigator not found, trying direct navigation');
-      // Fallback: try direct navigation (might work if navigation structure allows)
-      // @ts-ignore
-      navigation.navigate('Pricing', { fromProfile: true });
+    const tabNavigator = navigation.getParent?.(); // ProfileStack -> UserTabs (Tab)
+    const appStackNavigator = tabNavigator?.getParent?.(); // UserTabs (Tab) -> AppStack (Stack)
+
+    if (appStackNavigator) {
+      console.log('[Profile] Navigating to Pricing screen via AppStack navigator');
+      // @ts-ignore - Pricing is defined in AppStack
+      appStackNavigator.navigate('Pricing', { fromProfile: true });
+      return;
     }
+
+    if (tabNavigator) {
+      console.log('[Profile] AppStack navigator not found, trying tab navigator');
+      // @ts-ignore - might work in alternative navigator setups
+      tabNavigator.navigate('Pricing', { fromProfile: true });
+      return;
+    }
+
+    console.log('[Profile] Parent navigator not found, trying direct navigation');
+    // @ts-ignore
+    navigation.navigate('Pricing', { fromProfile: true });
   };
 
   const handleCancelSubscription = async () => {

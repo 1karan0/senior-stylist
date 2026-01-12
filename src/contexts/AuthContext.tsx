@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { InteractionManager, Platform } from 'react-native';
 import { storage } from '@/services/storage';
 import { useLoginApi } from '@/api/auth/useLogin';
 import { useVerifyEmailApi } from '@/api/auth/useVerifyEmail';
@@ -28,7 +29,7 @@ interface AuthContextType {
     user?: User;
   }>;
 
-  logout: () => void;
+  logout: () => Promise<void>;
   completeOnbording: () => void;
 }
 
@@ -46,6 +47,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     checkAuthStatus();
   }, []);
+
+  const scheduleNotificationsInit = () => {
+    // On iOS (especially TestFlight/Release), requesting permissions during navigation transitions
+    // can fail to show the system prompt. Defer until after interactions and a short delay.
+    InteractionManager.runAfterInteractions(() => {
+      const delayMs = Platform.OS === 'ios' ? 800 : 0;
+      setTimeout(() => {
+        initializeNotifications().catch((error) => {
+          if (__DEV__) {
+            console.warn('[auth] Failed to initialize notifications:', error);
+          }
+        });
+      }, delayMs);
+    });
+  };
 
   const ensureFirebaseSession = async () => {
     try {
@@ -83,11 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await ensureFirebaseSession();
 
         // Request notification permissions and register FCM token after restoring session
-        initializeNotifications().catch((error) => {
-          if (__DEV__) {
-            console.warn('[auth] Failed to initialize notifications:', error);
-          }
-        });
+        scheduleNotificationsInit();
       }
       setIsBordingCompleted(onbordingCompleted);
     } catch (error) {
@@ -123,28 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (__DEV__) {
         console.log('[auth] User logged in, initializing notifications...');
       }
-      initializeNotifications()
-        .then((token) => {
-          if (__DEV__) {
-            if (token) {
-              console.log(
-                '[auth] Notifications initialized successfully, token:',
-                token.substring(0, 20) + '...'
-              );
-            } else {
-              console.warn('[auth] Notifications initialized but no token obtained');
-            }
-          }
-        })
-        .catch((error) => {
-          if (__DEV__) {
-            console.error('[auth] Failed to initialize notifications:', error);
-            console.error('[auth] Notification error details:', {
-              message: error?.message,
-              code: error?.code,
-            });
-          }
-        });
+      scheduleNotificationsInit();
     } catch (err) {
       throw err;
     }
@@ -190,28 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (__DEV__) {
         console.log('[auth] Email verified, initializing notifications...');
       }
-      initializeNotifications()
-        .then((token) => {
-          if (__DEV__) {
-            if (token) {
-              console.log(
-                '[auth] Notifications initialized successfully, token:',
-                token.substring(0, 20) + '...'
-              );
-            } else {
-              console.warn('[auth] Notifications initialized but no token obtained');
-            }
-          }
-        })
-        .catch((error) => {
-          if (__DEV__) {
-            console.error('[auth] Failed to initialize notifications:', error);
-            console.error('[auth] Notification error details:', {
-              message: error?.message,
-              code: error?.code,
-            });
-          }
-        });
+      scheduleNotificationsInit();
 
       return { success: true };
     } catch (err: any) {
@@ -279,6 +249,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('[auth] Logout error:', error);
     } finally {
+      // Even if cleanup fails (e.g. corrupted AsyncStorage JSON), still log the user out locally.
+      // This prevents "can't logout" situations in Release/TestFlight builds.
+      try {
+        await storage.clearAuthData();
+      } catch {}
+      try {
+        await signOutFirebase();
+      } catch {}
+      setUser(null);
       setIsLoading(false);
     }
   };

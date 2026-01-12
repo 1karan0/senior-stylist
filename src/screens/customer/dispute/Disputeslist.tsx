@@ -274,7 +274,7 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <GradientBackground>
+    <GradientBackground topOverlayColor="#27B07D">
       <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
 
       {/* Header */}

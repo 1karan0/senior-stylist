@@ -103,7 +103,7 @@ const SubmitDispute: React.FC<Props> = ({ navigation, route }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
-      <GradientBackground>
+      <GradientBackground topOverlayColor="#27B07D">
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
 
         {/* Header Section with Green Background */}

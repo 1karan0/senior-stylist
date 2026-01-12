@@ -186,20 +186,9 @@ const EditProfile = () => {
       <View className="flex-1 px-5 pt-6 pb-20">
         {/* Header */}
         <View className={`mb-4 pb-4`}>
-          <View className="flex-row items-center gap-3">
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Image
-                source={
-                  isDark
-                    ? require('@/assets/icons/green-back.png')
-                    : require('@/assets/icons/back.png')
-                }
-                style={{
-                  width: 20,
-                  height: 20,
-                }}
-                resizeMode="contain"
-              />
+          <View className="flex-row items-center">
+            <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
+              <Ionicons name="arrow-back" size={24} color={isDark ? '#FFFFFF' : '#162721'} />
             </TouchableOpacity>
             <Text className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-black'}`}>
               Edit Profile

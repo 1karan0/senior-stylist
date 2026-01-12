@@ -98,7 +98,7 @@ const CreateDispute: React.FC<Props> = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <GradientBackground>
+      <GradientBackground topOverlayColor="#27B07D">
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
         {/* Header Section with Green Background */}
         <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">
@@ -141,7 +141,7 @@ const CreateDispute: React.FC<Props> = ({ navigation }) => {
   if (error) {
     return (
       <View className="flex-1">
-        <GradientBackground>
+        <GradientBackground topOverlayColor="#27B07D">
           <View className="flex-1 justify-center items-center px-4">
             <Text className={`text-lg ${isDark ? 'text-white' : 'text-textDark'} text-center`}>
               Failed to load consultations. Please try again.
@@ -153,7 +153,7 @@ const CreateDispute: React.FC<Props> = ({ navigation }) => {
   }
 
   return (
-    <GradientBackground>
+    <GradientBackground topOverlayColor="#27B07D">
       <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
       {/* Header Section with Green Background */}
       <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">

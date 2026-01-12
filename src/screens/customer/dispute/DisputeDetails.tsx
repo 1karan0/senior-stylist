@@ -170,7 +170,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
 
   if (isLoading && !data) {
     return (
-      <GradientBackground>
+      <GradientBackground topOverlayColor="#27B07D">
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
         {/* Header */}
         <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">
@@ -218,7 +218,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
 
   if (error || !dispute) {
     return (
-      <GradientBackground>
+      <GradientBackground topOverlayColor="#27B07D">
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={48} color={isDark ? '#8AA897' : '#94A3B8'} />
@@ -245,7 +245,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
-      <GradientBackground>
+      <GradientBackground topOverlayColor="#27B07D">
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
 
         {/* Header */}
