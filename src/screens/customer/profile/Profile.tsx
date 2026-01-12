@@ -288,7 +288,14 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
             {/* Email */}
             <View className="flex-row items-start gap-3 mb-3">
-              <Image source={require('@/assets/icons/green-email.png')} />
+              <Image
+                source={require('@/assets/icons/green-email.png')}
+                resizeMode="contain"
+                style={{
+                  width: 20,
+                  height: 20,
+                }}
+              />
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >
@@ -298,7 +305,14 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
             {/* Phone */}
             <View className="flex-row items-start gap-3 mb-3">
-              <Image source={require('@/assets/icons/green-phone.png')} />
+              <Image
+                source={require('@/assets/icons/green-phone.png')}
+                resizeMode="contain"
+                style={{
+                  width: 20,
+                  height: 20,
+                }}
+              />
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >
@@ -308,7 +322,14 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
             {/* Member Since */}
             <View className="flex-row items-start gap-3">
-              <Image source={require('@/assets/icons/calendar.png')} />
+              <Image
+                source={require('@/assets/icons/calendar.png')}
+                resizeMode="contain"
+                style={{
+                  width: 20,
+                  height: 20,
+                }}
+              />
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >

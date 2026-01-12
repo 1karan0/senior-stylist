@@ -79,6 +79,11 @@ const Details: React.FC = () => {
                   ? require('@/assets/icons/green-back.png')
                   : require('@/assets/icons/back.png')
               }
+              resizeMode="contain"
+              style={{
+                width: 20,
+                height: 20,
+              }}
             />
           </TouchableOpacity>
         </View>
@@ -98,7 +103,14 @@ const Details: React.FC = () => {
 
           {/* Info Row */}
           <View className="flex-row items-center gap-2 mb-1">
-            <Image source={require('@/assets/icons/green-user.png')} className="w-5 h-5" />
+            <Image
+              source={require('@/assets/icons/green-user.png')}
+              resizeMode="contain"
+              style={{
+                width: 20,
+                height: 20,
+              }}
+            />
             <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} `}>
               {article.author}
             </Text>
@@ -106,13 +118,27 @@ const Details: React.FC = () => {
 
           <View className="flex-row gap-4">
             <View className="flex-row items-center gap-2 mb-4">
-              <Image source={require('@/assets/icons/calendar.png')} className="w-5 h-5" />
+              <Image
+                source={require('@/assets/icons/calendar.png')}
+                resizeMode="contain"
+                style={{
+                  width: 20,
+                  height: 20,
+                }}
+              />
               <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} `}>
                 {article.published_date}
               </Text>
             </View>
             <View className="flex-row items-center gap-2 mb-4">
-              <Image source={require('@/assets/icons/clock.png')} className="w-5 h-5" />
+              <Image
+                source={require('@/assets/icons/clock.png')}
+                resizeMode="contain"
+                style={{
+                  width: 20,
+                  height: 20,
+                }}
+              />
               <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} `}>
                 {formatRelativeTime(article.created_at)}
               </Text>
