@@ -7,7 +7,7 @@
     "android:dev": "cd android && ./gradlew installDevDebug",
     "android:prod": "cd android && ./gradlew installProdDebug",
     "android:run:prod": "react-native run-android --tasks installProdDebug --appId com.seniorstylist.app --main-activity splashScreen",
-    "ios": "react-native run-ios",
+    "ios": "react-native run-ios --scheme \"SeniorStylist-Dev\" --mode \"Debug-Dev\"",
     "postinstall": "patch-package",
     "start": "react-native start",
     "test": "jest",

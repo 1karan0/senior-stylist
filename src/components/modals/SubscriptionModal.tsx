@@ -1,18 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, Pressable, Alert, Platform, ActivityIndicator } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, Text, Alert, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import {
-  purchaseUpdatedListener,
-  purchaseErrorListener,
-  initConnection,
-  MutationRequestPurchaseArgs,
-} from 'react-native-iap';
+import { purchaseUpdatedListener, purchaseErrorListener, initConnection } from 'react-native-iap';
 import * as RNIap from 'react-native-iap';
-import { storage, type PendingPurchaseVerification } from '@/services/storage';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
-import { useQueryClient } from '@tanstack/react-query';
 import InfoModal from '@/common/components/modals/InfoModal';
+import { Button } from '@/common/components/Button';
 
 interface SubscriptionModalProps {
   plan: {
@@ -548,13 +541,33 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
   if (!plan) return null;
 
+  const isSubscribeDisabled =
+    isLoading ||
+    awaitingProfileConfirmation ||
+    isProcessingPurchase ||
+    isSyncingWithStore ||
+    isVerifyingBackend ||
+    isUpgradeAppliedMessageVisible ||
+    !iapInitialized ||
+    (currentSubscription?.plan_id === plan.originalPlan.id &&
+      (currentSubscription.status === 'active' || currentSubscription.is_active));
+
+  const isSubscribeLoading =
+    awaitingProfileConfirmation || isProcessingPurchase || isLoading || isVerifyingBackend;
+
+  const subscribeButtonText =
+    currentSubscription?.plan_id === plan.originalPlan.id &&
+    (currentSubscription.status === 'active' || currentSubscription.is_active)
+      ? 'Current Plan'
+      : 'Subscribe';
+
   return (
     <View className="absolute inset-0 bg-black/80 items-center justify-center px-6">
       <View className="bg-white w-full rounded-md p-7 max-w-md">
         {/* CLOSE BUTTON */}
-        <Pressable
+        <Button
+          variant="light"
           onPress={handleClose}
-          className="absolute right-4 top-4 z-10"
           disabled={
             isProcessingPurchase ||
             isSyncingWithStore ||
@@ -562,9 +575,9 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
             isUpgradeAppliedMessageVisible ||
             isLoading
           }
-        >
-          <Ionicons name="close" size={28} color="#6B7280" />
-        </Pressable>
+          icon={<Ionicons name="close" size={28} color="#6B7280" />}
+          className="absolute right-4 top-4 z-10 bg-transparent p-0"
+        />
 
         {/* PLAN TITLE */}
         <Text className="text-[22px] font-bold text-textPrimary mb-2">{plan.title}</Text>
@@ -687,57 +700,15 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           )}
 
         {/* SUBSCRIBE BUTTON */}
-        <Pressable
+        <Button
+          text={subscribeButtonText}
           onPress={handleSubscribe}
-          disabled={
-            isLoading ||
-            awaitingProfileConfirmation ||
-            isProcessingPurchase ||
-            isSyncingWithStore ||
-            isVerifyingBackend ||
-            isUpgradeAppliedMessageVisible ||
-            !iapInitialized ||
-            (currentSubscription?.plan_id === plan.originalPlan.id &&
-              (currentSubscription.status === 'active' || currentSubscription.is_active))
-          }
-          className={`mt-5 rounded-xl overflow-hidden ${
-            isLoading ||
-            awaitingProfileConfirmation ||
-            isProcessingPurchase ||
-            isSyncingWithStore ||
-            isVerifyingBackend ||
-            isUpgradeAppliedMessageVisible ||
-            !iapInitialized ||
-            (currentSubscription?.plan_id === plan.originalPlan.id &&
-              (currentSubscription.status === 'active' || currentSubscription.is_active))
-              ? 'opacity-70'
-              : ''
-          }`}
-        >
-          <LinearGradient
-            colors={['#2CCB91', '#23A76F']}
-            start={{ x: 0, y: 1 }}
-            end={{ x: 1, y: 0 }}
-            className="rounded-xl items-center justify-center py-4"
-          >
-            {awaitingProfileConfirmation ||
-            isProcessingPurchase ||
-            isLoading ||
-            isVerifyingBackend ? (
-              <View className="flex-row items-center">
-                <ActivityIndicator size="small" color="#FFFFFF" className="mr-2" />
-                <Text className="text-white text-[16px] font-semibold">Processing...</Text>
-              </View>
-            ) : (
-              <Text className="text-white text-[16px] font-semibold">
-                {currentSubscription?.plan_id === plan.originalPlan.id &&
-                currentSubscription.status === 'active'
-                  ? 'Current Plan'
-                  : 'Subscribe'}
-              </Text>
-            )}
-          </LinearGradient>
-        </Pressable>
+          variant="gradient"
+          disabled={isSubscribeDisabled}
+          loading={isSubscribeLoading}
+          className="mt-5 rounded-xl"
+          textClassName="text-[16px]"
+        />
 
         <InfoModal
           visible={showSubscriptionActiveModal}
