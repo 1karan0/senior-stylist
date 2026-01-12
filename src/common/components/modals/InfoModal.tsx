@@ -52,7 +52,7 @@ const InfoModal: React.FC<InfoModalProps> = ({
 
         <View className="w-[90%]">
           <Text
-            className={` font-poppins-regular mb-6 px-2 text-start text-[#658176]
+            className={` font-poppins-regular mb-6 text-start text-[#658176]
          
           `}
           >

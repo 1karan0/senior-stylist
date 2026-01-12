@@ -8,6 +8,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useVerifyForgotPassOtp } from '@/api/auth/useverifyForgotPassOtp';
 import Toast from '@/common/components/Toast';
 import { Button } from '@/common/components/Button';
+import InfoModal from '@/common/components/modals/InfoModal';
 
 export default function OtpVerificationScreen({ navigation, route }: any) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -19,6 +20,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(30);
   const [isTimerActive, setIsTimerActive] = useState(true);
+  const [showAdminVerificationModal, setShowAdminVerificationModal] = useState(false);
 
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const { verifyEmail } = useAuth();
@@ -87,11 +89,21 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
         await storage.setIsNewSignup(true);
 
         const res = await verifyEmail(email, code);
+        console.log('res======> from screen ', res);
 
         if (!res.success) {
           // If verification fails, clear the flag
           await storage.setIsNewSignup(false);
           showToast(res.error || 'Invalid verification code', 'error');
+          return;
+        }
+
+        // Check if consultant requires admin verification
+        if (res.requiresAdminVerification) {
+          // Clear the signup flag since consultant can't proceed yet
+          await storage.setIsNewSignup(false);
+          // Show admin verification modal
+          setShowAdminVerificationModal(true);
           return;
         }
 
@@ -248,6 +260,25 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
           </View>
         </View>
       </View>
+
+      {/* Admin Verification Modal for Consultants */}
+      <InfoModal
+        visible={showAdminVerificationModal}
+        title="Account Under Verification"
+        message="Your account is currently under admin verification. This process typically takes up to one day. You will be able to log in once your account has been verified by our admin team. We'll notify you once the verification is complete."
+        buttonText="OK"
+        variant="info"
+        onConfirm={() => {
+          setShowAdminVerificationModal(false);
+          // Navigate back to login screen
+          navigation.navigate('Login');
+        }}
+        onClose={() => {
+          setShowAdminVerificationModal(false);
+          // Navigate back to login screen
+          navigation.navigate('Login');
+        }}
+      />
     </GradientBackground>
   );
 }

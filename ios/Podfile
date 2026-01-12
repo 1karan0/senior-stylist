@@ -43,5 +43,13 @@ target 'SeniorStylist' do
         end
       end
     end
+
+    # Fix: some pods (e.g. RNSVG) can trigger "non-modular-include-in-framework-module"
+    # when using use_frameworks! (even static). Allow non-modular includes for pods targets.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      end
+    end
   end
 end

@@ -18,7 +18,15 @@ interface AuthContextType {
   isLoading: boolean;
   isOnbordingCompleted: boolean;
   login: (email: string, password: string) => Promise<void>;
-  verifyEmail: (email: string, otp: string) => Promise<{ success: boolean; error?: string }>;
+  verifyEmail: (
+    email: string,
+    otp: string
+  ) => Promise<{
+    success: boolean;
+    error?: string;
+    requiresAdminVerification?: boolean;
+    user?: User;
+  }>;
 
   logout: () => void;
   completeOnbording: () => void;
@@ -149,6 +157,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = response.data?.access_token;
       const userData = response.data?.user;
       const firebaseToken = response.data?.firebase_custom_token;
+
+      // Check if this is a consultant who needs admin verification
+      // Consultants don't get access_token until admin verifies them
+      if (!token && userData?.role === 'consultant') {
+        return {
+          success: true,
+          requiresAdminVerification: true,
+          user: userData,
+        };
+      }
+      console.log('response======>', response);
 
       if (!token) {
         return { success: false, error: 'Token missing' };
