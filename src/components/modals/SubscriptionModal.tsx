@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, Alert, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, Alert, Platform, ActivityIndicator, Pressable } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { purchaseUpdatedListener, purchaseErrorListener, initConnection } from 'react-native-iap';
 import * as RNIap from 'react-native-iap';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import InfoModal from '@/common/components/modals/InfoModal';
-import { Button } from '@/common/components/Button';
+import { Linking } from 'react-native';
+import Button from '@/common/components/Button';
 
 interface SubscriptionModalProps {
   plan: {
@@ -129,25 +130,44 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
       return;
     }
 
-    // Keep button in "Processing..." state from click until Profile API confirms the new subscription.
-    setHasStorePurchaseCallback(false);
-    setAwaitingProfileConfirmation(true);
+    // Lock UI immediately
+    setIsLoading(true);
     setIsProcessingPurchase(true);
+    setAwaitingProfileConfirmation(true);
     setIsSyncingWithStore(true);
-    setIsLoading(true); // short "preparing" phase (network/product fetch)
 
     try {
-      // ---------------------------------------------------------
-      // 1. Current subscription from BACKEND (source of truth)
-      // ---------------------------------------------------------
+      // =====================================================
+      // ======================= iOS =========================
+      // =====================================================
+      if (Platform.OS === 'ios') {
+        /**
+         * Apple rules:
+         * - No base plans
+         * - No offer tokens
+         * - No proration flags
+         * - No upgrade/downgrade logic
+         * - Apple decides everything
+         */
+        await RNIap.requestPurchase({
+          type: 'subs',
+          request: {
+            apple: {
+              sku: productId, // MUST be the subscription PRODUCT ID, not group ID
+              andDangerouslyFinishTransactionAutomatically: false,
+            },
+          },
+        });
+
+        return;
+      }
+
+      // =====================================================
+      // ===================== ANDROID =======================
+      // =====================================================
 
       const currentBasePlanId = profileData?.subscription?.store_plan_id ?? null;
-
       const currentPurchaseToken = profileData?.subscription?.purchase_token ?? null;
-
-      // ---------------------------------------------------------
-      // 2. Fetch product + offers from Play
-      // ---------------------------------------------------------
 
       const products = await RNIap.fetchProducts({
         skus: [productId],
@@ -159,40 +179,28 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
       }
 
       const product: any = products[0];
-
       const offers =
         product.subscriptionOfferDetailsAndroid ||
         product.subscriptionOfferDetails ||
         product.subscriptionOffers;
 
       if (!offers?.length) {
-        throw new Error(`No subscription offers found for ${productId}`);
+        throw new Error(`No subscription offers found`);
       }
 
-      // ---------------------------------------------------------
-      // 3. Resolve selected base plan + offer
-      // ---------------------------------------------------------
-
       const selectedBasePlanId = plan.originalPlan.base_plan_product_id as string;
-
       const matchingOffers = offers.filter((o: any) => o.basePlanId === selectedBasePlanId);
 
       if (!matchingOffers.length) {
-        throw new Error(`No offer found for basePlanId=${selectedBasePlanId}`);
+        throw new Error(`No offer for basePlanId=${selectedBasePlanId}`);
       }
-
-      const selectedOfferId = plan.originalPlan.offer_plan_id;
 
       const targetOffer =
-        matchingOffers.find((o: any) => o.offerId === selectedOfferId) || matchingOffers[0];
+        matchingOffers.find((o: any) => o.offerId === plan.originalPlan.offer_plan_id) ||
+        matchingOffers[0];
 
-      if (!targetOffer?.offerToken) {
-        throw new Error(`OfferToken missing for ${selectedBasePlanId}`);
-      }
-
-      // ---------------------------------------------------------
-      // 4. Decide: INITIAL / UPGRADE / DOWNGRADE / NO_CHANGE
-      // ---------------------------------------------------------
+      let purchaseTokenAndroid: string | undefined;
+      let replacementModeAndroid: number | undefined;
 
       const currentIndex = currentBasePlanId
         ? BASE_PLAN_ORDER.indexOf(currentBasePlanId as any)
@@ -200,39 +208,12 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
       const targetIndex = BASE_PLAN_ORDER.indexOf(selectedBasePlanId as any);
 
-      let planChange: 'INITIAL' | 'UPGRADE' | 'DOWNGRADE' | 'NO_CHANGE' = 'INITIAL';
-
-      if (currentIndex === -1) {
-        planChange = 'INITIAL';
-      } else if (targetIndex > currentIndex) {
-        planChange = 'UPGRADE';
-      } else if (targetIndex < currentIndex) {
-        planChange = 'DOWNGRADE';
-      } else {
-        planChange = 'NO_CHANGE';
-      }
-
-      // ---------------------------------------------------------
-      // 5. Replacement params (only when needed)
-      // ---------------------------------------------------------
-
-      let purchaseTokenAndroid: string | undefined;
-      let replacementModeAndroid: number | undefined;
-
-      if ((planChange === 'UPGRADE' || planChange === 'DOWNGRADE') && currentPurchaseToken) {
+      if (currentPurchaseToken && currentIndex !== -1 && targetIndex !== currentIndex) {
         purchaseTokenAndroid = currentPurchaseToken;
-
-        replacementModeAndroid =
-          planChange === 'UPGRADE'
-            ? 5 // CHARGE_FULL_PRICE
-            : 3; // WITH_TIME_PRORATION
+        replacementModeAndroid = targetIndex > currentIndex ? 5 : 3;
       }
 
-      // ---------------------------------------------------------
-      // 6. Build purchase request
-      // ---------------------------------------------------------
-
-      const requestObj: any = {
+      await RNIap.requestPurchase({
         type: 'subs',
         request: {
           android: {
@@ -244,20 +225,16 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
               },
             ],
             obfuscatedAccountIdAndroid: profileData?.user?.uuid,
-
             ...(purchaseTokenAndroid && {
               purchaseTokenAndroid,
               replacementModeAndroid,
             }),
           },
         },
-      };
-
-      await RNIap.requestPurchase(requestObj);
+      });
     } catch (err: any) {
       console.error('Subscription error:', err);
       Alert.alert('Error', err.message || 'Unable to process subscription.');
-      // If we failed before the store flow started, release the button.
       setAwaitingProfileConfirmation(false);
       setIsProcessingPurchase(false);
       setIsSyncingWithStore(false);
@@ -383,6 +360,18 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
               (baselinePlanId !== null && newPlanId !== null && newPlanId !== baselinePlanId);
 
             if (isActiveNow && matchesTargetPlan && (storePlanChanged || planChanged)) {
+              // ✅ FINISH APPLE TRANSACTION HERE (AFTER BACKEND CONFIRMATION)
+              if (Platform.OS === 'ios' && purchase) {
+                try {
+                  await RNIap.finishTransaction({
+                    purchase,
+                    isConsumable: false, // subscriptions are non-consumable
+                  });
+                } catch (e) {
+                  console.warn('[IAP] finishTransaction (iOS) failed:', e);
+                  // Do NOT block UI if this fails
+                }
+              }
               // Update baselines so we don't re-trigger
               baselineStorePlanIdRef.current = newStorePlanId;
               baselinePlanIdRef.current = newPlanId;
@@ -699,17 +688,6 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
             </View>
           )}
 
-        {/* SUBSCRIBE BUTTON */}
-        <Button
-          text={subscribeButtonText}
-          onPress={handleSubscribe}
-          variant="gradient"
-          disabled={isSubscribeDisabled}
-          loading={isSubscribeLoading}
-          className="mt-5 rounded-xl"
-          textClassName="text-[16px]"
-        />
-
         <InfoModal
           visible={showSubscriptionActiveModal}
           title="Subscription Active"
@@ -735,21 +713,85 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           }}
         />
 
-        {/* Platform Info */}
+        {/* Payment Terms and Subscription Info */}
         <View className="mt-4 pt-4 border-t border-gray-100">
-          <Text className="text-center text-gray-500 text-xs">
-            Payment will be processed through{' '}
-            <Text className="font-semibold">
-              {Platform.OS === 'ios' ? 'Apple App Store' : 'Google Play Store'}
+          {Platform.OS === 'ios' ? (
+            <>
+              <Text className="text-center text-gray-500 text-xs mb-2">
+                Payment will be charged to your Apple ID account at confirmation of purchase.
+              </Text>
+              <Text className="text-center text-gray-500 text-xs mb-2">
+                Subscription automatically renews unless cancelled at least 24 hours before the end
+                of the current period.
+              </Text>
+              <Text className="text-center text-gray-500 text-xs mb-2">
+                Your account will be charged for renewal within 24 hours prior to the end of the
+                current period.
+              </Text>
+              <Text className="text-center text-gray-500 text-xs">
+                You can manage or cancel your subscription in your App Store account settings.
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text className="text-center text-gray-500 text-xs mb-2">
+                Payment will be processed through Google Play Store
+              </Text>
+              <Text className="text-center text-gray-500 text-xs mb-3">
+                Subscription automatically renews monthly unless cancelled at least 24 hours before
+                the end of the current period.
+              </Text>
+            </>
+          )}
+          {/* <>
+            <Text className="text-center text-gray-500 text-xs mb-2">
+              Payment will be charged to your Apple ID account at confirmation of purchase.
             </Text>
-          </Text>
-          <Text className="text-center text-gray-400 text-xs mt-1">
-            Product ID:{' '}
-            {Platform.OS === 'ios'
-              ? plan.originalPlan.apple_product_id
-              : plan.originalPlan.google_product_id}
-          </Text>
+            <Text className="text-center text-gray-500 text-xs mb-2">
+              Subscription automatically renews unless cancelled at least 24 hours before the end of
+              the current period.
+            </Text>
+            <Text className="text-center text-gray-500 text-xs mb-2">
+              Your account will be charged for renewal within 24 hours prior to the end of the
+              current period.
+            </Text>
+            <Text className="text-center text-gray-500 text-xs mb-3">
+              You can manage or cancel your subscription in your App Store account settings.
+            </Text>
+          </> */}
+          <View className="flex-row justify-center items-center gap-2 my-2">
+            <Pressable
+              onPress={() => {
+                Linking.openURL('https://senior-stylist.com/terms-conditions').catch((err) =>
+                  console.error('Failed to open Terms & Conditions:', err)
+                );
+              }}
+            >
+              <Text className="text-gray-500 text-xs underline">Terms of Use</Text>
+            </Pressable>
+            <Text className="text-gray-500 text-xs">|</Text>
+            <Pressable
+              onPress={() => {
+                Linking.openURL('https://senior-stylist.com/privacy-policy').catch((err) =>
+                  console.error('Failed to open Privacy Policy:', err)
+                );
+              }}
+            >
+              <Text className="text-gray-500 text-xs underline">Privacy Policy</Text>
+            </Pressable>
+          </View>
         </View>
+
+        {/* SUBSCRIBE BUTTON */}
+        <Button
+          text={subscribeButtonText}
+          onPress={handleSubscribe}
+          variant="gradient"
+          disabled={isSubscribeDisabled}
+          loading={isSubscribeLoading}
+          className="mt-5 rounded-xl"
+          textClassName="text-[16px]"
+        />
       </View>
     </View>
   );
