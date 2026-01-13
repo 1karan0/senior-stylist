@@ -1,0 +1,88 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "B1BD2C01",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6757600475",
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : true,
+    "_billingIssuesEnabled" : false,
+    "_compatibilityTimeRate" : {
+      "3" : 3
+    },
+    "_developerTeamID" : "VZS82HCU5Z",
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 789995478.93948805,
+    "_locale" : "en_US",
+    "_renewalBillingIssuesEnabled" : true,
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 10
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21888432",
+      "localizations" : [
+
+      ],
+      "name" : "Senior Stylist",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "12.0",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6757702110",
+          "introductoryOffer" : {
+            "displayPrice" : "6.0",
+            "internalID" : "44F6BEA1",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "payUpFront",
+            "subscriptionPeriod" : "P6M"
+          },
+          "localizations" : [
+            {
+              "description" : "Get 4 expert consultations per month",
+              "displayName" : "Starter",
+              "locale" : "en_GB"
+            }
+          ],
+          "productID" : "starter",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Starter",
+          "subscriptionGroupID" : "21888432",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

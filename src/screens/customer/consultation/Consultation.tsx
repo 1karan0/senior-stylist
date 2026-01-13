@@ -7,7 +7,6 @@ import NoConsultant from './NoConsultant';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useIsFocused } from '@react-navigation/native';
-import NoSubscription from './NOSubscription';
 
 const Consultation = () => {
   const { data, isLoading } = useGetConsultation();

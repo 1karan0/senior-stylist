@@ -141,6 +141,17 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
       // ======================= iOS =========================
       // =====================================================
       if (Platform.OS === 'ios') {
+        console.log('ios in-app payment request');
+        console.log('productId', productId);
+
+        // Optional: fetch subscription metadata from App Store (v14+ API)
+        const subscriptions = await RNIap.fetchProducts({
+          skus: [productId],
+          type: 'subs',
+        });
+
+        console.log('Found subscription:', subscriptions);
+
         /**
          * Apple rules:
          * - No base plans
@@ -150,13 +161,10 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
          * - Apple decides everything
          */
         await RNIap.requestPurchase({
-          type: 'subs',
           request: {
-            apple: {
-              sku: productId, // MUST be the subscription PRODUCT ID, not group ID
-              andDangerouslyFinishTransactionAutomatically: false,
-            },
+            apple: { sku: productId },
           },
+          type: 'subs',
         });
 
         return;
