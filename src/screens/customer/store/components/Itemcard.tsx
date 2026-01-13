@@ -1,9 +1,36 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Linking, Alert } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const ItemCard = ({ item }: any) => {
   const { isDark } = useTheme();
+
+  const handleBuyNow = async () => {
+    const rawUrl = item?.product_link;
+    const url = typeof rawUrl === 'string' ? rawUrl.trim() : '';
+
+    if (!url) {
+      Alert.alert('Link not available', 'This product does not have a purchase link.');
+      return;
+    }
+
+    // Basic safeguard: require http(s) links
+    if (!/^https?:\/\//i.test(url)) {
+      Alert.alert('Invalid link', 'This product link is not a valid URL.');
+      return;
+    }
+
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (!canOpen) {
+        Alert.alert('Cannot open link', 'Your device cannot open this link.');
+        return;
+      }
+      await Linking.openURL(url);
+    } catch (e) {
+      Alert.alert('Error', 'Failed to open the product link.');
+    }
+  };
 
   return (
     <View
@@ -42,7 +69,10 @@ const ItemCard = ({ item }: any) => {
             </Text>
           </View>
         </View>
-        <TouchableOpacity className="bg-[#00C896] px-5 py-2 rounded-[5px] mt-2">
+        <TouchableOpacity
+          onPress={handleBuyNow}
+          className="bg-[#00C896] px-5 py-2 rounded-[5px] mt-2"
+        >
           <Text className="text-white text-sm text-center font-poppins-semibold">Buy Now</Text>
         </TouchableOpacity>
       </View>

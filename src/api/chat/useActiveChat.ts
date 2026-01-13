@@ -154,6 +154,33 @@ export const clearAllActiveChats = async (): Promise<boolean> => {
     }
 
     const userId = userData.id.toString();
+    return await clearAllActiveChatsForUser(userId);
+  } catch (error: any) {
+    if (__DEV__) {
+      console.error('[active-chat] Failed to clear all active chats in Firestore:', error);
+    }
+    return false;
+  }
+};
+
+/**
+ * Clear all active chats for a specific user (logout-safe: doesn't depend on AsyncStorage)
+ */
+export const clearAllActiveChatsForUser = async (userId: string): Promise<boolean> => {
+  try {
+    if (!userId) return false;
+    getApp(); // Ensure Firebase is initialized
+
+    // Ensure Firebase Auth user is authenticated (required for Firestore security rules)
+    const firebaseUser = await waitForFirebaseUser(3000);
+    if (!firebaseUser) {
+      if (__DEV__) {
+        console.warn(
+          '[active-chat] Firebase user not authenticated, skipping clear all active chats'
+        );
+      }
+      return false;
+    }
 
     // Get all active chats
     const activeChatsSnapshot = await firestore()

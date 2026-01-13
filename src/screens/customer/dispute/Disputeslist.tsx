@@ -1,13 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  ActivityIndicator,
-  RefreshControl,
-  StatusBar,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Image, RefreshControl, StatusBar } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { FlashList } from '@shopify/flash-list';
@@ -172,9 +164,9 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
         return `Refunded on ${formatDate(item.created_at)}`;
       }
       if (item.latest_message) {
-        const daysAgo = Math.floor(
-          (Date.now() - new Date(item.latest_message.created_at).getTime()) / (1000 * 60 * 60 * 24)
-        );
+        const then = new Date(item.latest_message.created_at).getTime();
+        if (!Number.isFinite(then)) return 'Waiting for admin response';
+        const daysAgo = Math.floor((Date.now() - then) / (1000 * 60 * 60 * 24));
         if (daysAgo === 0) return 'Admin responded today';
         if (daysAgo === 1) return 'Admin responded 1 day ago';
         return `Admin responded ${daysAgo} days ago`;
@@ -196,7 +188,7 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
               <Text
                 className={`text-base font-poppins-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
               >
-                {DisputeMessage?.message.slice(0, 20) + '...'}
+                {item.consultation?.problem_description?.slice(0, 20) || 'Consultation'}
               </Text>
               {/* Date */}
               <Text
@@ -371,7 +363,9 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
           <FlashList
             data={filteredDisputes}
             renderItem={renderDisputeItem}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item, index) =>
+              item?.id != null ? String(item.id) : `dispute-${index}`
+            }
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom }}
             refreshControl={

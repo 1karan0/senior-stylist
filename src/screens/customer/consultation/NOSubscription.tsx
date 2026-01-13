@@ -38,48 +38,52 @@ const NoSubscription = () => {
   };
 
   return (
-    <GradientBackground className="flex-1 px-5 pt-6 ">
-      {/* Header */}
-      <Text className={`text-[26px] font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
-        Chats
-      </Text>
-      <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-1`}>
-        Manage your styling sessions
-      </Text>
+    <GradientBackground className="">
+      <View className="flex-1 px-5 pt-6 ">
+        {/* Header */}
+        <Text className={`text-[26px] font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
+          Chats
+        </Text>
+        <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-1`}>
+          Manage your styling sessions
+        </Text>
 
-      {/* Card */}
-      <View
-        className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-gray-100'} rounded-2xl shadow-md mt-10 p-6 items-center border `}
-      >
-        {/* Lock Icon */}
-        <View className="w-14 h-14 rounded-full border border-buttonPrimaryBg flex items-center justify-center mb-4">
-          <Image
-            source={require('@/assets/icons/lock.png')}
-            className="w-7 h-7"
-            resizeMode="contain"
+        {/* Card */}
+        <View
+          className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-gray-100'} rounded-2xl shadow-md mt-10 p-6 items-center border `}
+        >
+          {/* Lock Icon */}
+          <View className="w-14 h-14 rounded-full border border-buttonPrimaryBg flex items-center justify-center mb-4">
+            <Image
+              source={require('@/assets/icons/lock.png')}
+              className="w-7 h-7"
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Title */}
+          <Text
+            className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}  mb-1`}
+          >
+            Subscription Required
+          </Text>
+
+          {/* Subtitle */}
+          <Text
+            className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} text-center px-4 mb-6`}
+          >
+            You don't have an active subscription. To view and manage your consultations, please
+            subscribe to one of our plans first.
+          </Text>
+
+          {/* Button */}
+          <Button
+            text="Get Subscription"
+            onPress={handleNavigateToPricing}
+            variant="gradient"
+            className="w-full"
           />
         </View>
-
-        {/* Title */}
-        <Text className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}  mb-1`}>
-          Subscription Required
-        </Text>
-
-        {/* Subtitle */}
-        <Text
-          className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} text-center px-4 mb-6`}
-        >
-          You don't have an active subscription. To view and manage your consultations, please
-          subscribe to one of our plans first.
-        </Text>
-
-        {/* Button */}
-        <Button
-          text="Get Subscription"
-          onPress={handleNavigateToPricing}
-          variant="gradient"
-          className="w-full"
-        />
       </View>
     </GradientBackground>
   );

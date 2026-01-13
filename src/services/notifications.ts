@@ -303,25 +303,12 @@ export const getFCMToken = async (retryCount = 0): Promise<string | null> => {
   }
 };
 
-// Delete FCM token from Firestore (when user logs out)
-export const deleteFCMTokenFromBackend = async (): Promise<boolean> => {
+// Delete FCM token from Firestore for a specific user (safe to call during logout even after storage is cleared)
+export const deleteFCMTokenForUser = async (userId: string): Promise<boolean> => {
   try {
-    if (__DEV__) {
-      console.log('[notifications] Starting FCM token deletion...');
-    }
-
+    if (!userId) return false;
     getApp(); // Ensure Firebase is initialized
 
-    // Get user data first (before checking Firebase Auth)
-    const userData = await storage.getUserData();
-    if (!userData?.id) {
-      if (__DEV__) {
-        console.warn('[notifications] No user ID in storage, skipping FCM token deletion');
-      }
-      return false;
-    }
-
-    const userId = userData.id.toString();
     const deviceId = await DeviceInfo.getUniqueId();
 
     if (__DEV__) {
@@ -374,6 +361,39 @@ export const deleteFCMTokenFromBackend = async (): Promise<boolean> => {
       });
     }
     return true;
+  } catch (error: any) {
+    if (__DEV__) {
+      console.error('[notifications] ❌ Failed to delete FCM token from Firestore:', error);
+      console.error('[notifications] Token deletion error details:', {
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack?.substring(0, 300),
+      });
+    }
+    return false;
+  }
+};
+
+// Delete FCM token from Firestore (when user logs out)
+export const deleteFCMTokenFromBackend = async (): Promise<boolean> => {
+  try {
+    if (__DEV__) {
+      console.log('[notifications] Starting FCM token deletion...');
+    }
+
+    getApp(); // Ensure Firebase is initialized
+
+    // Get user data first (before checking Firebase Auth)
+    const userData = await storage.getUserData();
+    if (!userData?.id) {
+      if (__DEV__) {
+        console.warn('[notifications] No user ID in storage, skipping FCM token deletion');
+      }
+      return false;
+    }
+
+    const userId = userData.id.toString();
+    return await deleteFCMTokenForUser(userId);
   } catch (error: any) {
     if (__DEV__) {
       console.error('[notifications] ❌ Failed to delete FCM token from Firestore:', error);

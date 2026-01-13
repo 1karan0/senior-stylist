@@ -14,18 +14,6 @@ const Consultation = () => {
   const { isDark } = useTheme();
   const isFocused = useIsFocused();
 
-  const { data: profileData } = useGetProfile({
-    // Poll every 5s while this screen is visible so subscription/profile updates show live
-    refetchInterval: isFocused ? 5_000 : false,
-    refetchIntervalInBackground: false,
-  });
-  const subscription = profileData?.subscription ?? null;
-  const hasSubscription = !!subscription;
-
-  if (!hasSubscription) {
-    return <NoSubscription />;
-  }
-
   return (
     <View className={`flex-1 ${isDark ? 'bg-[#0B1E16]' : 'bg-white'} `}>
       {/* Loading State */}

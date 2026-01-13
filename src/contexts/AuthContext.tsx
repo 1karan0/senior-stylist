@@ -11,8 +11,21 @@ import {
   signInWithFirebaseCustomToken,
   signOutFirebase,
 } from '@/services/firebase';
-import { initializeNotifications, deleteFCMTokenFromBackend } from '@/services/notifications';
-import { clearAllActiveChats } from '@/api/chat/useActiveChat';
+import { initializeNotifications, deleteFCMTokenForUser } from '@/services/notifications';
+import { clearAllActiveChatsForUser } from '@/api/chat/useActiveChat';
+
+const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`[auth] Timeout: ${label} after ${ms}ms`)), ms);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
 
 interface AuthContextType {
   user: User | null;
@@ -193,71 +206,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    // IMPORTANT: Never block logout UI on networked Firestore calls.
+    // If Firestore hangs (common on flaky iOS networks), Promise.all can hang forever and the app
+    // gets stuck on the loading spinner ("can't logout"). We log out locally first, then do best-effort cleanup.
     setIsLoading(true);
+
+    // Capture userId for best-effort cleanup BEFORE storage is cleared.
+    const userData = await storage.getUserData().catch(() => null);
+    const userId: string | null = userData?.id ? String(userData.id) : null;
+
+    // Log out locally immediately so navigation can switch to AuthStack.
+    setUser(null);
+
+    // Fire-and-forget cleanup (with timeouts so we never hang the JS thread).
+    if (userId) {
+      void withTimeout(deleteFCMTokenForUser(userId), 4000, 'deleteFCMTokenForUser').catch(
+        (error) => {
+          if (__DEV__)
+            console.warn('[auth] deleteFCMTokenForUser failed:', error?.message || error);
+        }
+      );
+      void withTimeout(
+        clearAllActiveChatsForUser(userId),
+        4000,
+        'clearAllActiveChatsForUser'
+      ).catch((error) => {
+        if (__DEV__)
+          console.warn('[auth] clearAllActiveChatsForUser failed:', error?.message || error);
+      });
+    }
+
+    // Clear local auth state with short timeouts (these should be fast; if they hang, still finish logout).
     try {
-      // Delete FCM token from Firestore before clearing auth data
-      // This prevents notifications from being sent to the wrong user
-      // when a different user logs in on the same device
-      if (__DEV__) {
-        console.log('[auth] Logging out, cleaning up FCM token and active chats...');
-      }
-
-      // Get user data BEFORE clearing it (needed for token deletion)
-      const userData = await storage.getUserData();
-      if (__DEV__) {
-        console.log('[auth] User data retrieved for cleanup:', {
-          hasUserData: !!userData,
-          userId: userData?.id,
-        });
-      }
-
-      // Delete FCM token and clear active chats
-      const [tokenDeleted, chatsCleared] = await Promise.all([
-        deleteFCMTokenFromBackend().catch((error) => {
-          if (__DEV__) {
-            console.error('[auth] Failed to delete FCM token on logout:', error);
-            console.error('[auth] Token deletion error details:', {
-              message: error?.message,
-              code: error?.code,
-            });
-          }
-          return false;
-        }),
-        clearAllActiveChats().catch((error) => {
-          if (__DEV__) {
-            console.error('[auth] Failed to clear active chats on logout:', error);
-          }
-          return false;
-        }),
-      ]);
-
-      if (__DEV__) {
-        console.log('[auth] Cleanup results:', {
-          tokenDeleted,
-          chatsCleared,
-        });
-      }
-
-      // Now clear auth data and sign out
-      await storage.clearAuthData();
-      await signOutFirebase();
-      setUser(null);
-
-      if (__DEV__) {
-        console.log('[auth] Logout completed');
-      }
+      await withTimeout(storage.clearAuthData(), 1500, 'storage.clearAuthData');
     } catch (error) {
-      console.error('[auth] Logout error:', error);
+      if (__DEV__) console.warn('[auth] clearAuthData timeout/failure:', error);
+    }
+
+    try {
+      await withTimeout(signOutFirebase(), 1500, 'signOutFirebase');
+    } catch (error) {
+      if (__DEV__) console.warn('[auth] signOutFirebase timeout/failure:', error);
     } finally {
-      // Even if cleanup fails (e.g. corrupted AsyncStorage JSON), still log the user out locally.
-      // This prevents "can't logout" situations in Release/TestFlight builds.
-      try {
-        await storage.clearAuthData();
-      } catch {}
-      try {
-        await signOutFirebase();
-      } catch {}
-      setUser(null);
       setIsLoading(false);
     }
   };
