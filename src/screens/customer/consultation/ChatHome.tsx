@@ -138,7 +138,9 @@ const CustomerChatHome: React.FC = () => {
             await refetchPendingReviews();
             queryClient.invalidateQueries({ queryKey: ['pending-reviews'] });
             setShowRatingSuccessModal(true);
-            setRatingSuccessMessage('Thank you for your review!');
+            setRatingSuccessMessage(
+              `Thank you ${consultantName} for giving the ${rating} ${rating === 1 ? 'star' : 'stars'} rating! to your consultant ${consultantName}.`
+            );
           },
           onError: (error: any) => {
             Alert.alert('Error', error?.message || 'Failed to submit review. Please try again.');

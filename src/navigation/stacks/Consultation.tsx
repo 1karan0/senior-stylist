@@ -5,6 +5,7 @@ import Consultation from '@/screens/customer/consultation/Consultation';
 
 import NoConsultant from '@/screens/customer/consultation/NoConsultant';
 import NewConsultant from '@/screens/customer/consultation/NewConsultant';
+import NoSubscription from '@/screens/customer/consultation/NOSubscription';
 
 const Stack = createNativeStackNavigator<ConsultationStackParamList>();
 
@@ -28,6 +29,11 @@ const ConsultationStack: React.FC = () => (
       name="NewConsultant"
       component={NewConsultant}
       options={{ title: 'No Consultant Available' }}
+    />
+    <Stack.Screen
+      name="NoSubscription"
+      component={NoSubscription}
+      options={{ title: 'No Subscription Available' }}
     />
   </Stack.Navigator>
 );
