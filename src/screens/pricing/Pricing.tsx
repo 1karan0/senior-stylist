@@ -7,6 +7,7 @@ import {
   Alert,
   ScrollView,
   Platform,
+  Linking,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
@@ -143,7 +144,7 @@ export default function PricingScreen() {
         price: formattedPrice, // Just the price number without decimals
         priceSub: `${plan.monthly_price_formatted}/month`, // Kept for SubscriptionModal compatibility
         priceWithConsultations, // Full price line with consultations
-        desc: `Then ${formattedMonthlyPrice}/month after ${plan.discount_duration_months} months`,
+        desc: `Then ${formattedMonthlyPrice} / month, billed monthly after ${plan.discount_duration_months} months`,
         features: [
           `${plan.consultations_per_month} consultations/month`,
           'Message-based consultations',
@@ -211,18 +212,16 @@ export default function PricingScreen() {
         <View className="mt-3 items-center">
           <View className="bg-[#E7B008] rounded-xl py-2 px-4 w-60">
             <Text className="text-center text-base font-urbanist-bold text-white">
-              50% OFF - First 6 Months
+              Introductory offer: 50% off for first 6 months
             </Text>
           </View>
-          <Text
-            className={`text-sm mt-2 font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-          >
-            Minimum 1 year subscription
+          <Text className="text-center text-[10px] text-textMuted mt-2 font-poppins-regular">
+            Introductory offer available to new subscribers only.
           </Text>
         </View>
 
         {/* PLANS */}
-        <View className="mt-8 flex flex-col gap-4">
+        <View className="mt-4 flex flex-col gap-4">
           {isLoading ? (
             <View className="items-center justify-center py-8">
               <ActivityIndicator size="large" color="#23A76F" />
@@ -377,26 +376,42 @@ export default function PricingScreen() {
               variant="gradient"
               disabled={isLoadingSubscription || isCurrentPlan}
               loading={isLoadingSubscription}
-              className="mt-10 rounded-xl"
+              className="mt-6 rounded-xl"
               textClassName="text-[16px]"
             />
           );
         })()}
 
-        {/* SKIP */}
-        <Pressable
-          className="mt-4 mb-6"
-          onPress={() => {
-            // Simple rule: always take user back to their Profile from Pricing
-            navigateToProfileHome();
-          }}
-        >
-          <Text
-            className={`text-center font-poppins-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
-          >
-            Skip
+        {/* Subscription Renewal Notice */}
+        <View className="mt-4 mb-4 px-4">
+          <Text className="text-center text-textMuted text-xs">
+            Subscription automatically renews monthly unless cancelled at least 24 hours before the
+            end of the current period.
           </Text>
-        </Pressable>
+        </View>
+
+        {/* Terms of Use and Privacy Policy Links */}
+        <View className="flex-row justify-center items-center gap-2 mb-6">
+          <Pressable
+            onPress={() => {
+              Linking.openURL('https://senior-stylist.com/terms-conditions').catch((err) =>
+                console.error('Failed to open Terms & Conditions:', err)
+              );
+            }}
+          >
+            <Text className="text-textMuted text-xs underline">Terms of Use</Text>
+          </Pressable>
+          <Text className="text-textMuted text-xs">|</Text>
+          <Pressable
+            onPress={() => {
+              Linking.openURL('https://senior-stylist.com/privacy-policy').catch((err) =>
+                console.error('Failed to open Privacy Policy:', err)
+              );
+            }}
+          >
+            <Text className="text-textMuted text-xs underline">Privacy Policy</Text>
+          </Pressable>
+        </View>
       </ScrollView>
       {subscriptionModal && (
         <SubscriptionModal

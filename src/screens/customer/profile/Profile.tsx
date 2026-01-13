@@ -14,7 +14,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { deepLinkToSubscriptions, initConnection } from 'react-native-iap';
+import { deepLinkToSubscriptions, initConnection, getAvailablePurchases } from 'react-native-iap';
 import { useIsFocused } from '@react-navigation/native';
 
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
@@ -46,12 +46,21 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const scaleAnim = useState(new Animated.Value(1))[0];
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   const user = profileData?.user as ProfileUser;
   const subscription = profileData?.subscription;
   const hasSubscription = !!subscription;
+
+  // Check if subscription platform doesn't match current device
+  const subscriptionPlatform = subscription?.platform?.toLowerCase();
+  const currentPlatform = Platform.OS === 'ios' ? 'apple' : 'google';
+  const isPlatformMismatch =
+    !!subscription && !!subscriptionPlatform && subscriptionPlatform !== currentPlatform;
+
+  console.log('profileData', profileData);
 
   // Format next billing date
   const formatBillingDate = (dateString: string | number | null | undefined): string => {
@@ -139,6 +148,47 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     console.log('[Profile] Parent navigator not found, trying direct navigation');
     // @ts-ignore
     navigation.navigate('Pricing', { fromProfile: true });
+  };
+
+  const handleRestorePurchase = async () => {
+    try {
+      setIsRestoring(true);
+
+      // Initialize IAP connection if not already done
+      await initConnection();
+
+      // Get available purchases (this restores purchases)
+      const purchases = await getAvailablePurchases();
+
+      if (purchases && purchases.length > 0) {
+        Alert.alert(
+          'Purchases Restored',
+          `Found ${purchases.length} purchase(s). Your subscription should be restored shortly.`,
+          [{ text: 'OK' }]
+        );
+
+        // Refresh profile to get updated subscription status
+        // The profile query will automatically refetch due to refetchInterval
+        setTimeout(() => {
+          // Profile will auto-refresh via refetchInterval
+        }, 1000);
+      } else {
+        Alert.alert(
+          'No Purchases Found',
+          'No previous purchases were found to restore. If you believe this is an error, please contact support.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error: any) {
+      console.error('[Profile] Restore purchase error:', error);
+      Alert.alert(
+        'Restore Failed',
+        error?.message || 'Failed to restore purchases. Please try again or contact support.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsRestoring(false);
+    }
   };
 
   const handleCancelSubscription = async () => {
@@ -417,19 +467,68 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
                 {!subscription.scheduled_change && <View className="mb-4" />}
 
+                {/* Platform Mismatch Warning */}
+                {isPlatformMismatch && (
+                  <View
+                    className={`mb-4 p-3 rounded-lg border ${
+                      isDark
+                        ? 'bg-yellow-900/20 border-yellow-700'
+                        : 'bg-yellow-50 border-yellow-200'
+                    }`}
+                  >
+                    <View className="flex-row items-start mb-1">
+                      <Ionicons
+                        name="warning"
+                        size={20}
+                        color={isDark ? '#FCD34D' : '#D97706'}
+                        style={{ marginRight: 8, marginTop: 2 }}
+                      />
+                      <View className="flex-1">
+                        <Text
+                          className={`text-sm font-semibold mb-1 ${
+                            isDark ? 'text-yellow-300' : 'text-yellow-800'
+                          }`}
+                        >
+                          Platform Mismatch
+                        </Text>
+                        <Text
+                          className={`text-xs ${isDark ? 'text-yellow-200' : 'text-yellow-700'}`}
+                        >
+                          {subscriptionPlatform === 'google'
+                            ? 'To change or cancel this subscription, please use the Android device where you purchased it.'
+                            : 'To change or cancel this subscription, please use the iOS device where you purchased it.'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
                 <Button
                   text="Manage Subscription"
                   variant="light"
                   onPress={handleManageSubscription}
-                  className={` bg-[#DAE7E0] rounded-[10px] mb-3`}
+                  disabled={isPlatformMismatch}
+                  className={` bg-[#DAE7E0] rounded-[10px] mb-3 ${
+                    isPlatformMismatch ? 'opacity-50' : ''
+                  }`}
+                />
+                <Button
+                  text="Restore Purchase"
+                  variant="light"
+                  onPress={handleRestorePurchase}
+                  loading={isRestoring}
+                  className="bg-white border border-[#DAE7E0] rounded-[10px] mb-3"
                 />
                 {!!subscription.auto_renew && (
                   <Button
                     text="Cancel Subscription"
                     variant="light"
                     onPress={() => setShowCancelModal(true)}
+                    disabled={isPlatformMismatch}
                     icon={<Ionicons name="close-circle" size={20} color="#F22D2D" />}
-                    className="bg-white border border-[#DAE7E0] rounded-[10px]"
+                    className={`bg-white border border-[#DAE7E0] rounded-[10px] ${
+                      isPlatformMismatch ? 'opacity-50' : ''
+                    }`}
                     textClassName="text-error"
                   />
                 )}
@@ -447,6 +546,13 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   variant="light"
                   onPress={handleManageSubscription}
                   className={` bg-[#DAE7E0] rounded-[10px] mb-3`}
+                />
+                <Button
+                  text="Restore Purchase"
+                  variant="light"
+                  onPress={handleRestorePurchase}
+                  loading={isRestoring}
+                  className="bg-white border border-[#DAE7E0] rounded-[10px] mb-3"
                 />
                 {hasSubscription && (
                   <Button
