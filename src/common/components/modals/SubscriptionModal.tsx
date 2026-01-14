@@ -171,7 +171,10 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
         await RNIap.requestPurchase({
           request: {
-            ios: { sku: productId },
+            ios: {
+              sku: productId,
+              appAccountToken: profileData?.user?.uuid,
+            },
           },
           type: 'subs',
         });
@@ -263,6 +266,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
   // 3. Handling the Purchase Result
   const handlePurchaseUpdate = useCallback(
     async (purchase: RNIap.Purchase) => {
+      console.log('purchase update callback');
       // Store delivered a callback → stop "syncing with store" and begin backend verification.
       setIsSyncingWithStore(false);
       setHasStorePurchaseCallback(true);
@@ -480,20 +484,51 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
         purchaseErrorSubscription = purchaseErrorListener((error: any) => {
           const code = error?.code;
+          const message: string = String(error?.message || '');
+
+          const resetPurchaseUi = () => {
+            setIsLoading(false);
+            setIsProcessingPurchase(false);
+            setIsSyncingWithStore(false);
+            setAwaitingProfileConfirmation(false);
+            setIsVerifyingBackend(false);
+            setHasStorePurchaseCallback(false);
+            setIsUpgradeConfirmationPending(false);
+            setIsUpgradeAppliedMessageVisible(false);
+          };
+
           // User cancellation is expected.
           if (
             code === 'user-cancelled' ||
             code === 'E_USER_CANCELLED' ||
             code === 'E_USER_CANCELED'
           ) {
-            setIsLoading(false);
-            setIsProcessingPurchase(false);
+            resetPurchaseUi();
+            return;
+          }
+
+          // "Already owned" / "Already subscribed" should stop spinners and let UI reflect current plan.
+          // Different stores/versions can use different codes/messages, so we check both.
+          const isAlreadyOwned =
+            code === 'E_ALREADY_OWNED' ||
+            code === 'E_ITEM_ALREADY_OWNED' ||
+            code === 'itemAlreadyOwned' ||
+            /already owned|already subscribed|item is already owned/i.test(message);
+
+          if (isAlreadyOwned) {
+            console.warn('[SubscriptionModal] Item already owned:', { code, message });
+            resetPurchaseUi();
+            // Refresh backend state so the modal can show "Current Plan" if subscription is active.
+            refetchProfile?.();
+            Alert.alert(
+              'Already Subscribed',
+              'This subscription is already active on your account.'
+            );
             return;
           }
 
           console.error('[SubscriptionModal] Purchase error from listener:', error);
-          setIsLoading(false);
-          setIsProcessingPurchase(false);
+          resetPurchaseUi();
 
           const errorMessage = error?.message || 'An error occurred during purchase';
           Alert.alert('Purchase Error', errorMessage);
