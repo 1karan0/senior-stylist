@@ -19,7 +19,7 @@ import {
   SubscriptionPlan,
 } from '@/api/subscription/useGetSubscriptionPlans';
 import { Button } from '@/common/components/Button';
-import SubscriptionModal from '@/components/modals/SubscriptionModal';
+import SubscriptionModal from '@/common/components/modals/SubscriptionModal';
 import { AppStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import GradientBackground from '@/common/components/GradientBackground';
