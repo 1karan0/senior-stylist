@@ -14,7 +14,13 @@ import LinearGradient from 'react-native-linear-gradient';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { deepLinkToSubscriptions, initConnection, getAvailablePurchases } from 'react-native-iap';
+import {
+  deepLinkToSubscriptions,
+  initConnection,
+  finishTransaction,
+  type Purchase,
+} from 'react-native-iap';
+import * as RNIap from 'react-native-iap';
 import { useIsFocused } from '@react-navigation/native';
 
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
@@ -25,12 +31,18 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { verifyPurchase, type VerifyPurchasePayload } from '@/api/subscription/verifyPurchase';
+import { useGetSubscriptionPlans } from '@/api/subscription/useGetSubscriptionPlans';
+import { storage } from '@/services/storage';
 
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 interface Props {
   navigation: ProfileNavigationProp;
 }
+
+const IOS_SUBSCRIPTION_ID = 'starter';
+const ANDROID_SUBSCRIPTION_ID = 'senior_stylist_subscription_v2';
 
 const Profile: React.FC<Props> = ({ navigation }) => {
   const isFocused = useIsFocused();
@@ -39,7 +51,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     refetchInterval: isFocused ? 5_000 : false,
     refetchIntervalInBackground: false,
   });
-  console.log('profileData', profileData);
+  const { data: subscriptionPlans } = useGetSubscriptionPlans();
   const { logout } = useAuth();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
@@ -60,8 +72,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const currentPlatform = Platform.OS === 'ios' ? 'apple' : 'google';
   const isPlatformMismatch =
     !!subscription && !!subscriptionPlatform && subscriptionPlatform !== currentPlatform;
-
-  console.log('profileData', profileData);
 
   // Format next billing date
   const formatBillingDate = (dateString: string | number | null | undefined): string => {
@@ -155,38 +165,114 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     try {
       setIsRestoring(true);
 
-      // Initialize IAP connection if not already done
-      await initConnection();
+      await RNIap.initConnection();
 
-      // Get available purchases (this restores purchases)
-      const purchases = await getAvailablePurchases();
+      const availablePurchases = await RNIap.getAvailablePurchases();
+      const activeSubscriptions = await RNIap.getActiveSubscriptions();
 
-      if (purchases && purchases.length > 0) {
-        Alert.alert(
-          'Purchases Restored',
-          `Found ${purchases.length} purchase(s). Your subscription should be restored shortly.`,
-          [{ text: 'OK' }]
-        );
+      console.log('activeSubscriptions', activeSubscriptions);
+      console.log('availablePurchases', availablePurchases);
 
-        // Refresh profile to get updated subscription status
-        // The profile query will automatically refetch due to refetchInterval
-        setTimeout(() => {
-          // Profile will auto-refresh via refetchInterval
-        }, 1000);
-      } else {
-        Alert.alert(
-          'No Purchases Found',
-          'No previous purchases were found to restore. If you believe this is an error, please contact support.',
-          [{ text: 'OK' }]
-        );
-      }
+      // if (!availablePurchases || availablePurchases.length === 0) {
+      //   Alert.alert('No Purchases Found', 'No active subscriptions were found for this account.');
+      //   return;
+      // }
+
+      // // 🔐 STRICT filtering
+      // const validPurchases = availablePurchases.filter((purchase: Purchase) => {
+      //   if (Platform.OS === 'ios') {
+      //     return purchase.productId === IOS_SUBSCRIPTION_ID;
+      //   }
+
+      //   if (Platform.OS === 'android') {
+      //     return purchase.productId === ANDROID_SUBSCRIPTION_ID;
+      //   }
+
+      //   return false;
+      // });
+
+      // if (validPurchases.length === 0) {
+      //   Alert.alert('No Purchases Found', 'No valid subscriptions for this app were found.');
+      //   return;
+      // }
+
+      // // Pick most recent purchase
+      // const latestPurchase = validPurchases.sort(
+      //   (a: Purchase, b: Purchase) =>
+      //     Number(b.transactionDate || 0) - Number(a.transactionDate || 0)
+      // )[0];
+
+      // // Find planId from productId by matching with subscription plans
+      // const matchingPlan = subscriptionPlans?.find(
+      //   (plan: { apple_product_id: string; google_product_id: string }) =>
+      //     (Platform.OS === 'ios' && plan.apple_product_id === latestPurchase.productId) ||
+      //     (Platform.OS === 'android' && plan.google_product_id === latestPurchase.productId)
+      // );
+
+      // if (!matchingPlan) {
+      //   Alert.alert(
+      //     'Restore Failed',
+      //     'Could not find matching subscription plan. Please contact support.'
+      //   );
+      //   return;
+      // }
+
+      // // Get user data for userId
+      // const userData = await storage.getUserData();
+      // if (!userData?.id) {
+      //   Alert.alert('Restore Failed', 'User authentication failed. Please try again.');
+      //   return;
+      // }
+
+      // // Prepare payload for verifyPurchase API
+      // const purchaseAny = latestPurchase as any;
+      // const purchasePayload: VerifyPurchasePayload = {
+      //   userId: userData.id,
+      //   planId: matchingPlan.id,
+      //   platform: Platform.OS === 'ios' ? 'ios' : 'android',
+      //   transactionId:
+      //     Platform.OS === 'android'
+      //       ? purchaseAny.orderId || latestPurchase.transactionId || ''
+      //       : latestPurchase.transactionId || '',
+      //   productId: latestPurchase.productId,
+      //   base_plan_id: matchingPlan.base_plan_product_id || null,
+      //   purchaseDate: latestPurchase.transactionDate || Date.now(),
+
+      //   // Android-specific
+      //   purchaseToken: Platform.OS === 'android' ? purchaseAny.purchaseToken || null : null,
+      //   orderId: Platform.OS === 'android' ? purchaseAny.orderId || null : null,
+      //   packageName: Platform.OS === 'android' ? purchaseAny.packageNameAndroid || null : null,
+      //   autoRenewing: Platform.OS === 'android' ? (purchaseAny.autoRenewingAndroid ?? null) : null,
+
+      //   // iOS-specific
+      //   transactionReceipt: Platform.OS === 'ios' ? purchaseAny.transactionReceipt || null : null,
+      //   originalTransactionId:
+      //     Platform.OS === 'ios' ? purchaseAny.originalTransactionIdentifierIOS || null : null,
+      // };
+
+      // // 🚀 Send to backend for verification
+      // const result = await verifyPurchase(purchasePayload);
+
+      // if (result.status === 'success') {
+      //   // ✅ Finish transaction ONLY on iOS
+      //   if (Platform.OS === 'ios') {
+      //     await finishTransaction({
+      //       purchase: latestPurchase,
+      //       isConsumable: false,
+      //     });
+      //   }
+
+      //   Alert.alert('Subscription Restored', 'Your subscription has been restored successfully.');
+      // } else {
+      //   Alert.alert(
+      //     'Restore Failed',
+      //     result.message || 'Unable to restore purchases at this time.'
+      //   );
+      // }
     } catch (error: any) {
-      console.error('[Profile] Restore purchase error:', error);
-      Alert.alert(
-        'Restore Failed',
-        error?.message || 'Failed to restore purchases. Please try again or contact support.',
-        [{ text: 'OK' }]
-      );
+      console.error('[RestorePurchase]', error);
+
+      Alert.alert('Restore Failed', error?.message || 'Unable to restore purchases at this time.');
     } finally {
       setIsRestoring(false);
     }

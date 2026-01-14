@@ -10,7 +10,7 @@ import Toast from '@/common/components/Toast';
 import { useTheme } from '@/contexts/ThemeContext';
 import { storage } from '@/services/storage';
 import { useAds } from '@/contexts/AdContext';
-import AdModal from '@/components/ads/AdModal';
+import AdModal from '@/common/components/modals/AdModal';
 import type { ConsultantConsultation } from '@/api/consultant/consultations';
 import CancelConsultationModal from '@/common/components/modals/CancelConsultationModal';
 import { ModalWrapper } from '@/common/components/ModalWrapper';
