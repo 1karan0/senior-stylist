@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  InteractionManager,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
@@ -112,12 +120,19 @@ const FindingStylistModal: React.FC = () => {
   );
 
   const navigateToChat = useCallback(() => {
-    if (!consultationId) return;
+    const id = consultationId;
+    if (!id) return;
     stopAllTimers();
     close();
 
-    const nav = findNavigatorWithRoute('ConsultantChat');
-    nav.navigate('ConsultantChat', { consultationId, asCustomer: true });
+    // iOS can sometimes ignore navigation triggered during modal dismissal animations.
+    // Defer navigation until after interactions complete so it reliably transitions.
+    InteractionManager.runAfterInteractions(() => {
+      setTimeout(() => {
+        const nav = findNavigatorWithRoute('ConsultantChat');
+        nav.navigate('ConsultantChat', { consultationId: id, asCustomer: true });
+      }, 50);
+    });
   }, [consultationId, stopAllTimers, close, findNavigatorWithRoute]);
 
   // Handle Ad #1 (initial search ad) - starts the ad loop

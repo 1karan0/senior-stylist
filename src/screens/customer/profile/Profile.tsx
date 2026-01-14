@@ -31,7 +31,7 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { verifyPurchase, type VerifyPurchasePayload } from '@/api/subscription/verifyPurchase';
+import { restorePurchase } from '@/api/subscription/restorePurchase';
 import { useGetSubscriptionPlans } from '@/api/subscription/useGetSubscriptionPlans';
 import { storage } from '@/services/storage';
 
@@ -46,7 +46,7 @@ const ANDROID_SUBSCRIPTION_ID = 'senior_stylist_subscription_v2';
 
 const Profile: React.FC<Props> = ({ navigation }) => {
   const isFocused = useIsFocused();
-  const { data: profileData } = useGetProfile({
+  const { data: profileData, refetch: refetchProfile } = useGetProfile({
     // Poll every 5s while this screen is visible so subscription/profile updates show live
     refetchInterval: isFocused ? 5_000 : false,
     refetchIntervalInBackground: false,
@@ -172,6 +172,45 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
       console.log('activeSubscriptions', activeSubscriptions);
       console.log('availablePurchases', availablePurchases);
+
+      if (!availablePurchases || availablePurchases.length === 0) {
+        Alert.alert('No Purchases Found', 'No purchases available to restore.');
+        return;
+      }
+
+      // Pick most recent purchase (best-effort)
+      const latestPurchase = [...availablePurchases].sort(
+        (a: any, b: any) => Number(b.transactionDate || 0) - Number(a.transactionDate || 0)
+      )[0];
+      const purchaseAny = latestPurchase as any;
+
+      const transactionId =
+        Platform.OS === 'android'
+          ? String(purchaseAny.orderId || latestPurchase.transactionId || '')
+          : String(
+              latestPurchase.transactionId || purchaseAny.originalTransactionIdentifierIOS || ''
+            );
+
+      const purchaseToken = Platform.OS === 'android' ? (purchaseAny.purchaseToken ?? null) : null;
+
+      if (!transactionId) {
+        Alert.alert('Restore Failed', 'Could not determine transaction ID for this purchase.');
+        return;
+      }
+
+      const res = await restorePurchase({
+        purchaseToken,
+        transactionId,
+        platform: Platform.OS === 'ios' ? 'ios' : 'android',
+      });
+
+      if (res.status === 'success') {
+        Alert.alert('Subscription Restored', res.message || 'Your subscription was restored.');
+        // Refresh profile so UI updates
+        refetchProfile?.();
+      } else {
+        Alert.alert('Restore Failed', res.message || 'Unable to restore purchases at this time.');
+      }
 
       // if (!availablePurchases || availablePurchases.length === 0) {
       //   Alert.alert('No Purchases Found', 'No active subscriptions were found for this account.');
