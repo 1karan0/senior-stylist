@@ -160,9 +160,18 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
          * - No upgrade/downgrade logic
          * - Apple decides everything
          */
+        // NOTE: Some react-native-iap versions/types expect the v14+ "request: { apple: { sku } }, type: 'subs'"
+        // shape. This project uses a working runtime shape (`sku` at root), so we keep it and cast to satisfy TS.
+        // await RNIap.requestPurchase(
+        //   {
+        //     sku: productId, // Root level property for iOS
+        //     andDangerouslyFinishTransactionAutomaticallyIOS: false, // Recommended for production
+        //   } as unknown as Parameters<typeof RNIap.requestPurchase>[0]
+        // );
+
         await RNIap.requestPurchase({
           request: {
-            apple: { sku: productId },
+            ios: { sku: productId },
           },
           type: 'subs',
         });
@@ -259,6 +268,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
       setHasStorePurchaseCallback(true);
 
       const purchaseAny = purchase as any;
+      console.log('purchaseAny', purchaseAny);
       const toPlanIdNumber = (v: unknown): number | null => {
         if (typeof v === 'number' && Number.isFinite(v)) return v;
         if (typeof v === 'string' && v.trim()) {
@@ -463,6 +473,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         if (!isMounted) return;
 
         purchaseUpdateSubscription = purchaseUpdatedListener(async (purchase: RNIap.Purchase) => {
+          console.log('purchase data', purchase);
           await handlePurchaseUpdate(purchase);
         });
         console.log('[SubscriptionModal] ✅ Purchase update listener established and listening');

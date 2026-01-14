@@ -139,7 +139,7 @@ const CustomerChatHome: React.FC = () => {
             queryClient.invalidateQueries({ queryKey: ['pending-reviews'] });
             setShowRatingSuccessModal(true);
             setRatingSuccessMessage(
-              `Thank you ${consultantName} for giving the ${rating} ${rating === 1 ? 'star' : 'stars'} rating! to your consultant ${consultantName}.`
+              `Thank you for giving the ${rating} ${rating === 1 ? 'star' : 'stars'} rating! to your consultant ${consultantName}.`
             );
           },
           onError: (error: any) => {

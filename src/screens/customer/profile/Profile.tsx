@@ -39,7 +39,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     refetchInterval: isFocused ? 5_000 : false,
     refetchIntervalInBackground: false,
   });
-  console.log('profileData', profileData);
+  // console.log('profileData', profileData);
   const { logout } = useAuth();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
