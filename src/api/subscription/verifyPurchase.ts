@@ -46,6 +46,25 @@ export interface VerifyPurchaseResponse {
 }
 
 /**
+ * Restore purchase payload - simplified version for restore-purchase endpoint
+ */
+export interface RestorePurchasePayload {
+  purchaseToken?: string | null;
+  transactionId: string;
+  platform: VerifyPurchasePlatform;
+}
+
+/**
+ * Restore purchase response
+ */
+export interface RestorePurchaseResponse {
+  status: 'success' | 'error';
+  code: number;
+  message: string;
+  data?: VerifyPurchaseSuccessData;
+}
+
+/**
  * Verify an in-app purchase with the backend.
  *
  * This endpoint is used for:
@@ -68,6 +87,34 @@ export const verifyPurchase = async (
   const url = `${BASE_URL}/api/subscriptions/verify-purchase`;
 
   const response = await axios.post<VerifyPurchaseResponse>(url, payload, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return response.data;
+};
+
+/**
+ * Restore purchase with the backend.
+ *
+ * This endpoint is used for restoring purchases and only requires:
+ * - purchaseToken (Android) or null (iOS)
+ * - transactionId
+ * - platform
+ */
+export const restorePurchase = async (
+  payload: RestorePurchasePayload
+): Promise<RestorePurchaseResponse> => {
+  const token = await storage.getToken();
+  if (!token) {
+    throw new Error('Auth token missing');
+  }
+
+  const url = `${BASE_URL}/api/restore-purchase`;
+
+  const response = await axios.post<RestorePurchaseResponse>(url, payload, {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
