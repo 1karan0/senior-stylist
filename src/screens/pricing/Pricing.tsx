@@ -72,51 +72,45 @@ export default function PricingScreen() {
       return [];
     }
 
+    // Filter out test plans
     const filteredPlans = subscriptionPlans.filter((plan) => !plan.slug.includes('-test'));
-    const sortedPlans = filteredPlans.sort((a, b) => a.sort_order - b.sort_order);
 
-    // If backend doesn't return dedicated plan rows for these new Google Play variants,
-    // we still want to show them in UI for testing. So we "clone" existing plans and
-    // only override the Google Play identifiers used for purchase.
-    const withAndroidVariants = (() => {
+    // For Android: filter by google_product_id === 'senior_stylist_subscription_v1'
+    // For iOS: keep all plans
+    const platformFilteredPlans =
+      Platform.OS === 'android'
+        ? filteredPlans.filter(
+            (plan) => plan.google_product_id === 'senior_stylist_subscription_v1'
+          )
+        : filteredPlans;
+
+    const sortedPlans = platformFilteredPlans.sort((a, b) => a.sort_order - b.sort_order);
+
+    // For Android: map the first 3 plans to specific plan IDs and offer IDs
+    const withAndroidMapping = (() => {
       if (Platform.OS !== 'android') return sortedPlans;
       if (sortedPlans.length === 0) return sortedPlans;
 
-      const alreadyHasV2 = sortedPlans.some(
-        (p: any) => p.google_product_id === 'senior_stylist_subscription_v2'
-      );
-      if (alreadyHasV2) return sortedPlans;
-
-      const baseTemplate = sortedPlans[0]; // use cheapest plan's price UI
-      const premiumTemplate = sortedPlans[sortedPlans.length - 1]; // use highest plan's price UI
-
-      const makeVariant = (
-        template: any,
-        variantKey: string,
-        basePlanId: string,
-        offerId: string,
-        sortOrderOffset: number
-      ) => ({
-        ...template,
-        // unique slug/key so it renders as a distinct card
-        slug: `${template.slug}__${variantKey}`,
-        name: `${template.name} (${variantKey})`,
-        sort_order: (template.sort_order ?? 0) + sortOrderOffset,
-        // Google Play identifiers
-        google_product_id: 'senior_stylist_subscription_v2',
-        base_plan_product_id: basePlanId,
-        offer_plan_id: offerId,
-      });
-
-      return [
-        ...sortedPlans,
-        makeVariant(premiumTemplate, 'v2-base-plan-3', 'base-plan-3', 'offerof-3', 0.01),
-        makeVariant(premiumTemplate, 'v2-base-plan-2', 'base-plan-2', 'offerof-2', 0.02),
-        makeVariant(premiumTemplate, 'v2-base-plan-1', 'base-plan-1', 'offerof-1', 0.03),
+      // Map first 3 plans to specific plan IDs and offer IDs
+      const planMapping = [
+        { basePlanId: 'starter', offerId: 'starter-intro-offer' },
+        { basePlanId: 'professional', offerId: 'professional-intro-offer' },
+        { basePlanId: 'business', offerId: 'business-intro-offer' },
       ];
+
+      return sortedPlans.map((plan, index) => {
+        if (index < 3) {
+          return {
+            ...plan,
+            base_plan_product_id: planMapping[index].basePlanId,
+            offer_plan_id: planMapping[index].offerId,
+          };
+        }
+        return plan;
+      });
     })();
 
-    const mappedPlans = withAndroidVariants.map((plan: any) => {
+    const mappedPlans = withAndroidMapping.map((plan: SubscriptionPlan) => {
       // Helper function to remove decimals from price
       const formatPriceWithoutDecimals = (priceString: string): string => {
         const priceMatch = priceString.match(/£?([\d,]+\.?\d*)/);

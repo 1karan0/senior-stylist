@@ -14,12 +14,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import {
-  deepLinkToSubscriptions,
-  initConnection,
-  finishTransaction,
-  type Purchase,
-} from 'react-native-iap';
+import { deepLinkToSubscriptions, initConnection, finishTransaction } from 'react-native-iap';
 import * as RNIap from 'react-native-iap';
 import { useIsFocused } from '@react-navigation/native';
 
@@ -31,18 +26,13 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { restorePurchase } from '@/api/subscription/restorePurchase';
-import { useGetSubscriptionPlans } from '@/api/subscription/useGetSubscriptionPlans';
-import { storage } from '@/services/storage';
+import { restorePurchase, type RestorePurchasePayload } from '@/api/subscription/verifyPurchase';
 
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 interface Props {
   navigation: ProfileNavigationProp;
 }
-
-const IOS_SUBSCRIPTION_ID = 'starter';
-const ANDROID_SUBSCRIPTION_ID = 'senior_stylist_subscription_v2';
 
 const Profile: React.FC<Props> = ({ navigation }) => {
   const isFocused = useIsFocused();
@@ -143,20 +133,16 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     const appStackNavigator = tabNavigator?.getParent?.(); // UserTabs (Tab) -> AppStack (Stack)
 
     if (appStackNavigator) {
-      console.log('[Profile] Navigating to Pricing screen via AppStack navigator');
       // @ts-ignore - Pricing is defined in AppStack
       appStackNavigator.navigate('Pricing', { fromProfile: true });
       return;
     }
 
     if (tabNavigator) {
-      console.log('[Profile] AppStack navigator not found, trying tab navigator');
       // @ts-ignore - might work in alternative navigator setups
       tabNavigator.navigate('Pricing', { fromProfile: true });
       return;
     }
-
-    console.log('[Profile] Parent navigator not found, trying direct navigation');
     // @ts-ignore
     navigation.navigate('Pricing', { fromProfile: true });
   };
@@ -164,154 +150,51 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const handleRestorePurchase = async () => {
     try {
       setIsRestoring(true);
-
       await RNIap.initConnection();
 
-      const availablePurchases = await RNIap.getAvailablePurchases();
-      const activeSubscriptions = await RNIap.getActiveSubscriptions();
+      // On iOS, you can also fetch the latest receipt for more accuracy
+      // const receipt = await RNIap.getReceiptIOS();
 
-      console.log('activeSubscriptions', activeSubscriptions);
-      console.log('availablePurchases', availablePurchases);
+      const availablePurchases = await RNIap.getAvailablePurchases();
+
+      if (Platform.OS === 'ios') {
+        const receipt = await RNIap.getReceiptIOS();
+        console.log('receipt', receipt);
+      }
 
       if (!availablePurchases || availablePurchases.length === 0) {
-        Alert.alert('No Purchases Found', 'No purchases available to restore.');
+        Alert.alert(
+          'No History Found',
+          "We couldn't find any previous purchases for this account."
+        );
         return;
       }
 
-      // Pick most recent purchase (best-effort)
-      const latestPurchase = [...availablePurchases].sort(
-        (a: any, b: any) => Number(b.transactionDate || 0) - Number(a.transactionDate || 0)
-      )[0];
-      const purchaseAny = latestPurchase as any;
+      for (const purchase of availablePurchases) {
+        const platform = Platform.OS === 'ios' ? 'ios' : 'android';
 
-      const transactionId =
-        Platform.OS === 'android'
-          ? String(purchaseAny.orderId || latestPurchase.transactionId || '')
-          : String(
-              latestPurchase.transactionId || purchaseAny.originalTransactionIdentifierIOS || ''
-            );
+        const restorePayload: RestorePurchasePayload = {
+          // iOS uses transactionId; Android uses purchaseToken (critical for Google)
+          purchaseToken: Platform.OS === 'android' ? purchase.purchaseToken : null,
+          transactionId: purchase.transactionId || '',
+          platform,
+        };
 
-      const purchaseToken = Platform.OS === 'android' ? (purchaseAny.purchaseToken ?? null) : null;
+        const result = await restorePurchase(restorePayload);
 
-      if (!transactionId) {
-        Alert.alert('Restore Failed', 'Could not determine transaction ID for this purchase.');
-        return;
+        if (result.status === 'success') {
+          // ✅ MUST finish transaction on BOTH platforms in 2026
+          await finishTransaction({ purchase, isConsumable: false });
+
+          Alert.alert('Restored', 'Your subscription has been successfully restored.');
+          return;
+        }
       }
-
-      const res = await restorePurchase({
-        purchaseToken,
-        transactionId,
-        platform: Platform.OS === 'ios' ? 'ios' : 'android',
-      });
-
-      if (res.status === 'success') {
-        Alert.alert('Subscription Restored', res.message || 'Your subscription was restored.');
-        // Refresh profile so UI updates
-        refetchProfile?.();
-      } else {
-        Alert.alert('Restore Failed', res.message || 'Unable to restore purchases at this time.');
-      }
-
-      // if (!availablePurchases || availablePurchases.length === 0) {
-      //   Alert.alert('No Purchases Found', 'No active subscriptions were found for this account.');
-      //   return;
-      // }
-
-      // // 🔐 STRICT filtering
-      // const validPurchases = availablePurchases.filter((purchase: Purchase) => {
-      //   if (Platform.OS === 'ios') {
-      //     return purchase.productId === IOS_SUBSCRIPTION_ID;
-      //   }
-
-      //   if (Platform.OS === 'android') {
-      //     return purchase.productId === ANDROID_SUBSCRIPTION_ID;
-      //   }
-
-      //   return false;
-      // });
-
-      // if (validPurchases.length === 0) {
-      //   Alert.alert('No Purchases Found', 'No valid subscriptions for this app were found.');
-      //   return;
-      // }
-
-      // // Pick most recent purchase
-      // const latestPurchase = validPurchases.sort(
-      //   (a: Purchase, b: Purchase) =>
-      //     Number(b.transactionDate || 0) - Number(a.transactionDate || 0)
-      // )[0];
-
-      // // Find planId from productId by matching with subscription plans
-      // const matchingPlan = subscriptionPlans?.find(
-      //   (plan: { apple_product_id: string; google_product_id: string }) =>
-      //     (Platform.OS === 'ios' && plan.apple_product_id === latestPurchase.productId) ||
-      //     (Platform.OS === 'android' && plan.google_product_id === latestPurchase.productId)
-      // );
-
-      // if (!matchingPlan) {
-      //   Alert.alert(
-      //     'Restore Failed',
-      //     'Could not find matching subscription plan. Please contact support.'
-      //   );
-      //   return;
-      // }
-
-      // // Get user data for userId
-      // const userData = await storage.getUserData();
-      // if (!userData?.id) {
-      //   Alert.alert('Restore Failed', 'User authentication failed. Please try again.');
-      //   return;
-      // }
-
-      // // Prepare payload for verifyPurchase API
-      // const purchaseAny = latestPurchase as any;
-      // const purchasePayload: VerifyPurchasePayload = {
-      //   userId: userData.id,
-      //   planId: matchingPlan.id,
-      //   platform: Platform.OS === 'ios' ? 'ios' : 'android',
-      //   transactionId:
-      //     Platform.OS === 'android'
-      //       ? purchaseAny.orderId || latestPurchase.transactionId || ''
-      //       : latestPurchase.transactionId || '',
-      //   productId: latestPurchase.productId,
-      //   base_plan_id: matchingPlan.base_plan_product_id || null,
-      //   purchaseDate: latestPurchase.transactionDate || Date.now(),
-
-      //   // Android-specific
-      //   purchaseToken: Platform.OS === 'android' ? purchaseAny.purchaseToken || null : null,
-      //   orderId: Platform.OS === 'android' ? purchaseAny.orderId || null : null,
-      //   packageName: Platform.OS === 'android' ? purchaseAny.packageNameAndroid || null : null,
-      //   autoRenewing: Platform.OS === 'android' ? (purchaseAny.autoRenewingAndroid ?? null) : null,
-
-      //   // iOS-specific
-      //   transactionReceipt: Platform.OS === 'ios' ? purchaseAny.transactionReceipt || null : null,
-      //   originalTransactionId:
-      //     Platform.OS === 'ios' ? purchaseAny.originalTransactionIdentifierIOS || null : null,
-      // };
-
-      // // 🚀 Send to backend for verification
-      // const result = await verifyPurchase(purchasePayload);
-
-      // if (result.status === 'success') {
-      //   // ✅ Finish transaction ONLY on iOS
-      //   if (Platform.OS === 'ios') {
-      //     await finishTransaction({
-      //       purchase: latestPurchase,
-      //       isConsumable: false,
-      //     });
-      //   }
-
-      //   Alert.alert('Subscription Restored', 'Your subscription has been restored successfully.');
-      // } else {
-      //   Alert.alert(
-      //     'Restore Failed',
-      //     result.message || 'Unable to restore purchases at this time.'
-      //   );
-      // }
     } catch (error: any) {
-      console.error('[RestorePurchase]', error);
-
-      Alert.alert('Restore Failed', error?.message || 'Unable to restore purchases at this time.');
+      // Check for user cancellation to avoid showing "Error" alerts
+      if (error.code !== 'E_USER_CANCELLED') {
+        Alert.alert('Restore Error', error.message);
+      }
     } finally {
       setIsRestoring(false);
     }
@@ -335,7 +218,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       // Use react-native-iap's deep link to open platform subscription management
       try {
         await deepLinkToSubscriptions();
-        console.log('[Profile] Successfully opened subscription management');
       } catch (error: any) {
         console.warn('[Profile] Deep link failed, using fallback:', {
           code: error.code,
@@ -582,12 +464,17 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   <Text
                     className={`${isDark ? 'text-yellow-400' : 'text-yellow-600'} font-poppins-regular text-sm mb-4`}
                   >
-                    Plan change scheduled: {subscription.scheduled_change?.plan_name || 'Change'}{' '}
-                    will start on{' '}
-                    {formatBillingDate(
-                      subscription.scheduled_change?.start_date ||
-                        subscription.scheduled_change?.effective_date
-                    )}
+                    {subscription.scheduled_change?.type === 'downgrade' &&
+                    subscription.scheduled_change?.to_plan_name
+                      ? `From the next billing cycle (${formatBillingDate(
+                          subscription.scheduled_change?.effective_at
+                        )}), your plan will downgrade to ${subscription.scheduled_change.to_plan_name} after next billing date.`
+                      : `Plan change scheduled: ${
+                          subscription.scheduled_change?.plan_name || 'Change'
+                        } will start on ${formatBillingDate(
+                          subscription.scheduled_change?.start_date ||
+                            subscription.scheduled_change?.effective_date
+                        )}`}
                   </Text>
                 )}
 

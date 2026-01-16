@@ -25,7 +25,7 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
           className="absolute inset-0"
           onPress={dismissOnBackdropPress ? onClose : undefined}
         />
-        <View className={`rounded-md p-6 bg-white w-[95%] mx-2 ${containerClassName}`}>
+        <View className={`rounded-md p-6 bg-white w-[90%] max-w-md mx-4 ${containerClassName}`}>
           {children}
         </View>
         {overlay ? (

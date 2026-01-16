@@ -41,31 +41,29 @@ const InfoModal: React.FC<InfoModalProps> = ({
 
   return (
     <ModalWrapper visible={visible} onClose={onClose ?? onConfirm} dismissOnBackdropPress={true}>
-      <View className="">
+      <View className="items-center">
         <Text
-          className={`text-xl font-poppins-semibold mb-3 text-start
-             'text-textDark'
-          `}
+          className={`text-xl font-poppins-semibold mb-3 text-center ${
+            isDark ? 'text-white' : 'text-textDark'
+          }`}
         >
           {title}
         </Text>
 
-        <View className="w-[90%]">
-          <Text
-            className={` font-poppins-regular mb-6 text-start text-[#658176]
-         
-          `}
-          >
-            {message}
-          </Text>
-        </View>
+        <Text
+          className={`font-poppins-regular mb-6 text-center text-[#658176] ${
+            isDark ? 'text-textSecondary' : 'text-[#658176]'
+          }`}
+        >
+          {message}
+        </Text>
 
-        <View className="w-[50%]">
+        <View className="w-full items-center">
           <Button
             text={buttonText}
             variant="gradient"
             onPress={onConfirm}
-            className="rounded-[14px]"
+            className="rounded-[14px] w-full"
           />
         </View>
       </View>
