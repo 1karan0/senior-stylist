@@ -150,73 +150,51 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const handleRestorePurchase = async () => {
     try {
       setIsRestoring(true);
-
       await RNIap.initConnection();
 
+      // On iOS, you can also fetch the latest receipt for more accuracy
+      // const receipt = await RNIap.getReceiptIOS();
+
       const availablePurchases = await RNIap.getAvailablePurchases();
-      // Check if there are any available purchases
+
+      if (Platform.OS === 'ios') {
+        const receipt = await RNIap.getReceiptIOS();
+        console.log('receipt', receipt);
+      }
+
       if (!availablePurchases || availablePurchases.length === 0) {
-        Alert.alert('No Purchases Found', 'No availablePurchases for the user.');
+        Alert.alert(
+          'No History Found',
+          "We couldn't find any previous purchases for this account."
+        );
         return;
       }
 
-      // Process each purchase
       for (const purchase of availablePurchases) {
-        const purchaseAny = purchase as unknown as Record<string, unknown>;
         const platform = Platform.OS === 'ios' ? 'ios' : 'android';
 
-        // Extract transactionId based on platform
-        const transactionId =
-          Platform.OS === 'android'
-            ? (purchaseAny.orderId as string) || purchase.transactionId || ''
-            : purchase.transactionId || '';
-
-        // Extract purchaseToken (Android only)
-        const purchaseToken =
-          Platform.OS === 'android' ? (purchaseAny.purchaseToken as string) || null : null;
-
-        // Prepare payload for restore-purchase API
         const restorePayload: RestorePurchasePayload = {
-          purchaseToken,
-          transactionId,
+          // iOS uses transactionId; Android uses purchaseToken (critical for Google)
+          purchaseToken: Platform.OS === 'android' ? purchase.purchaseToken : null,
+          transactionId: purchase.transactionId || '',
           platform,
         };
-        // Call restore-purchase API
+
         const result = await restorePurchase(restorePayload);
 
         if (result.status === 'success') {
-          // ✅ Finish transaction ONLY on iOS
-          if (Platform.OS === 'ios') {
-            await finishTransaction({
-              purchase: purchase,
-              isConsumable: false,
-            });
-          }
+          // ✅ MUST finish transaction on BOTH platforms in 2026
+          await finishTransaction({ purchase, isConsumable: false });
 
-          Alert.alert(
-            'Subscription Restored',
-            result.message || 'Your subscription has been restored successfully.'
-          );
-          return; // Exit after first successful restore
-        } else {
-          // Continue to next purchase if this one fails
-          // eslint-disable-next-line no-console
-          console.warn('[RestorePurchase] Failed for purchase:', result.message);
+          Alert.alert('Restored', 'Your subscription has been successfully restored.');
+          return;
         }
       }
-
-      // If we get here, all purchases failed
-      Alert.alert(
-        'Restore Failed',
-        'Unable to restore purchases at this time. Please try again or contact support.'
-      );
-    } catch (error: unknown) {
-      // eslint-disable-next-line no-console
-      console.error('[RestorePurchase]', error);
-
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unable to restore purchases at this time.';
-      Alert.alert('Restore Failed', errorMessage);
+    } catch (error: any) {
+      // Check for user cancellation to avoid showing "Error" alerts
+      if (error.code !== 'E_USER_CANCELLED') {
+        Alert.alert('Restore Error', error.message);
+      }
     } finally {
       setIsRestoring(false);
     }
