@@ -139,6 +139,9 @@ export default function PricingScreen() {
         priceSub: `${plan.monthly_price_formatted}/month`, // Kept for SubscriptionModal compatibility
         priceWithConsultations, // Full price line with consultations
         desc: `Then ${formattedMonthlyPrice} / month, billed monthly after ${plan.discount_duration_months} months`,
+        formattedPrice, // For displaying large price
+        formattedMonthlyPrice, // For displaying regular price
+        discountDurationMonths: plan.discount_duration_months, // For displaying discount duration
         features: [
           `${plan.consultations_per_month} consultations/month`,
           'Message-based consultations',
@@ -203,19 +206,24 @@ export default function PricingScreen() {
         </View>
 
         {/* OFFER BADGE */}
-        <View className="mt-3 items-center">
+        <View className="mt-2 items-center">
           <View className="bg-[#E7B008] rounded-xl py-2 px-4 w-60">
             <Text className="text-center text-base font-urbanist-bold text-white">
               Introductory offer: 50% off for first 6 months
+              {/* {Platform.OS === 'ios'
+                ? 'Available for eligible Apple IDs. Apple determines eligibility.'
+                : 'Available for eligible Google accounts. Eligibility is determined by Google Play.'} */}
             </Text>
           </View>
-          <Text className="text-center text-[10px] text-textMuted mt-2 font-poppins-regular">
-            Introductory offer available to new subscribers only.
+          <Text className="w-80 text-center text-[10px] text-textMuted mt-2 font-poppins-regular">
+            {Platform.OS === 'ios'
+              ? 'Introductory offer available for eligible Apple IDs. Apple determines eligibility.'
+              : 'Introductory offer available for eligible Google accounts. Eligibility is determined by Google Play.'}
           </Text>
         </View>
 
         {/* PLANS */}
-        <View className="mt-4 flex flex-col gap-4">
+        <View className="mt-3 flex flex-col gap-4">
           {isLoading ? (
             <View className="items-center justify-center py-8">
               <ActivityIndicator size="large" color="#23A76F" />
@@ -242,7 +250,7 @@ export default function PricingScreen() {
                 <Pressable
                   key={item.key}
                   onPress={() => setSelectedPlan(item)}
-                  className={`rounded-md border-2 px-4 py-4 ${
+                  className={`rounded-md border-2 px-4 py-3 ${
                     active ? 'border-[#27B07D]' : isDark ? 'border-[#273F36]' : 'border-[#DAE7E0]'
                   } ${isDark ? 'bg-[#1A2E26]' : 'bg-white'}`}
                 >
@@ -268,28 +276,35 @@ export default function PricingScreen() {
                         )}
                       </View>
 
-                      {/* Price with consultations: "£6/Monthly - 4 consultations" */}
+                      {/* Price: "£6/month for first 6 months, then £12/month" */}
                       <View className="flex-row items-center justify-between mt-1">
-                        <View className="flex-row items-center flex-1">
+                        <View className="flex-1">
                           <Text
-                            className={`font-poppins-semibold text-[22px] ${isDark ? 'text-white' : 'text-textDark'}`}
+                            className={`text-[15px] font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
                           >
-                            {item?.price}
+                            <Text
+                              className={`font-poppins-semibold text-xl ${isDark ? 'text-white' : 'text-textDark'}`}
+                            >
+                              {item.formattedPrice}
+                            </Text>
+                            /month for first {item.discountDurationMonths} months,
                           </Text>
                           <Text
-                            className={`font-poppins-regular text-[15px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                            className={`text-[15px] font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
                           >
-                            /
+                            then{' '}
+                            <Text
+                              className={`font-poppins-semibold text-xl ${isDark ? 'text-white' : 'text-textDark'}`}
+                            >
+                              {item.formattedMonthlyPrice}
+                            </Text>
+                            /month
                           </Text>
+                          {/* Consultations per month */}
                           <Text
-                            className={`font-poppins-regular text-[15px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                            className={`text-base font-poppins-regular mt-1 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
                           >
-                            Monthly
-                          </Text>
-                          <Text
-                            className={`font-poppins-regular text-[15px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-                          >
-                            {`- ${item.consulationPerMonth} consultations`}
+                            {item.consulationPerMonth} consultations per month
                           </Text>
                         </View>
                         {/* Arrow Icon inside the box, aligned to the right */}
@@ -299,13 +314,6 @@ export default function PricingScreen() {
                           color={isDark ? '#8AA897' : '#94A3B8'}
                         />
                       </View>
-
-                      {/* Description: "Then £12/month after 6 months" */}
-                      <Text
-                        className={`text-[13px] font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-                      >
-                        {item.desc}
-                      </Text>
                     </View>
                   </View>
                 </Pressable>
@@ -346,10 +354,21 @@ export default function PricingScreen() {
             selectedPlanIndex >= 0 &&
             selectedPlanIndex < currentPlanIndex;
 
-          let buttonText = 'Continue to Payment';
+          // Hide button when current plan is selected
           if (isCurrentPlan) {
-            buttonText = 'Current Plan';
-          } else if (isUpgrade) {
+            return (
+              <Pressable onPress={navigateToProfileHome} className="mt-2 items-center">
+                <Text
+                  className={`text-lg text-[#E7B008] font-poppins-bold ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                >
+                  Close
+                </Text>
+              </Pressable>
+            );
+          }
+
+          let buttonText = 'Continue to Payment';
+          if (isUpgrade) {
             buttonText = 'Upgrade';
           } else if (isDowngrade) {
             buttonText = 'Downgrade';
@@ -358,26 +377,35 @@ export default function PricingScreen() {
           }
 
           return (
-            <Button
-              text={buttonText}
-              onPress={() => {
-                if (!selectedPlan) {
-                  Alert.alert('No Plan Selected', 'Please select a subscription plan first.');
-                  return;
-                }
-                setSubscriptionModal(true);
-              }}
-              variant="gradient"
-              disabled={isLoadingSubscription || isCurrentPlan}
-              loading={isLoadingSubscription}
-              className="mt-6 rounded-xl"
-              textClassName="text-[16px]"
-            />
+            <>
+              <Button
+                text={buttonText}
+                onPress={() => {
+                  if (!selectedPlan) {
+                    Alert.alert('No Plan Selected', 'Please select a subscription plan first.');
+                    return;
+                  }
+                  setSubscriptionModal(true);
+                }}
+                variant="gradient"
+                disabled={isLoadingSubscription}
+                loading={isLoadingSubscription}
+                className="mt-3 rounded-xl"
+                textClassName="text-[16px]"
+              />
+              <Pressable onPress={navigateToProfileHome} className="mt-3 items-center">
+                <Text
+                  className={`text-base font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                >
+                  Close
+                </Text>
+              </Pressable>
+            </>
           );
         })()}
 
         {/* Subscription Renewal Notice */}
-        <View className="mt-4 mb-4 px-4">
+        <View className="mt-2 mb-2 px-4">
           <Text className="text-center text-textMuted text-xs">
             Subscription automatically renews monthly unless cancelled at least 24 hours before the
             end of the current period.
