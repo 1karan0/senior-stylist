@@ -1,13 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
 import UserTabNavigator from '@/navigation/UserTabNavigator';
 import ConsultantTabNavigator from '@/navigation/ConsultantTabNavigator';
 import PricingScreen from '@/screens/pricing/Pricing';
 import ConsultantChatScreen from '@/screens/consulant/chat/Conversation';
 import { AppStackParamList } from '@/common/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { storage } from '@/services/storage';
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -16,15 +15,22 @@ const AppStack: React.FC = () => {
   const userRole = user?.role; // or 'customer'
   const [initialRoute, setInitialRoute] = useState<keyof AppStackParamList | undefined>(undefined);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(true);
-  const navigation = useNavigation<any>();
 
-  // Determine initial route based on user role
-  // Note: Login users ALWAYS go to UserTabs (never Pricing)
-  // Pricing screen is only shown for new users after OTP verification
+  // Fetch profile data to check subscription status
+  const { data: profileData, isLoading: isProfileLoading } = useGetProfile({
+    enabled: !!user, // Only fetch when user is authenticated
+  });
+
+  // Determine initial route based on user role and subscription status
   useEffect(() => {
-    const determineInitialRoute = async () => {
+    const determineInitialRoute = () => {
       if (!user) {
         setIsCheckingSubscription(false);
+        return;
+      }
+
+      // Wait for profile data to load
+      if (isProfileLoading) {
         return;
       }
 
@@ -35,33 +41,25 @@ const AppStack: React.FC = () => {
         return;
       }
 
-      // For customers: Check if this is a new signup (after OTP verification)
-      // Only new signups should see Pricing screen
-      try {
-        const isNewSignup = await storage.getIsNewSignup();
-        console.log('[AppStack] Checking signup status:', { isNewSignup, userRole });
+      // For customers: Check subscription from profile API
+      const subscription = profileData?.subscription;
+      const hasSubscription = !!subscription;
 
-        if (isNewSignup) {
-          // New signup - show Pricing screen
-          // Note: Don't clear the flag here - let Pricing screen clear it after checking
-          console.log('[AppStack] New signup detected - navigating to Pricing');
-          setInitialRoute('Pricing');
-        } else {
-          // Existing user (login) - always go to UserTabs
-          console.log('[AppStack] Existing user (login) - navigating to UserTabs');
-          setInitialRoute('UserTabs');
-        }
-      } catch (error) {
-        console.error('[AppStack] Error checking signup status:', error);
-        // Default to UserTabs on error (safer for login users)
+      console.log('hasSubscription', subscription);
+
+      if (!hasSubscription) {
+        // No subscription - show Pricing screen
+        setInitialRoute('Pricing');
+      } else {
+        // Has subscription - go to UserTabs
         setInitialRoute('UserTabs');
-      } finally {
-        setIsCheckingSubscription(false);
       }
+
+      setIsCheckingSubscription(false);
     };
 
     determineInitialRoute();
-  }, [user, userRole]);
+  }, [user, userRole, profileData, isProfileLoading]);
 
   // Note: We use initialRouteName to set Pricing as the initial route
   // React Navigation handles the navigation automatically, no manual navigation needed

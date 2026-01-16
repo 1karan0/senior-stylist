@@ -357,22 +357,42 @@ export default function PricingScreen() {
             buttonText = 'Switch Plan';
           }
 
+          const hasSubscription = !!profileSubscription;
+
           return (
-            <Button
-              text={buttonText}
-              onPress={() => {
-                if (!selectedPlan) {
-                  Alert.alert('No Plan Selected', 'Please select a subscription plan first.');
-                  return;
-                }
-                setSubscriptionModal(true);
-              }}
-              variant="gradient"
-              disabled={isLoadingSubscription || isCurrentPlan}
-              loading={isLoadingSubscription}
-              className="mt-6 rounded-xl"
-              textClassName="text-[16px]"
-            />
+            <>
+              <Button
+                text={buttonText}
+                onPress={() => {
+                  if (!selectedPlan) {
+                    Alert.alert('No Plan Selected', 'Please select a subscription plan first.');
+                    return;
+                  }
+                  setSubscriptionModal(true);
+                }}
+                variant="gradient"
+                disabled={isLoadingSubscription || isCurrentPlan}
+                loading={isLoadingSubscription}
+                className="mt-6 rounded-xl"
+                textClassName="text-[16px]"
+              />
+              {/* Close button - only show when user has subscription */}
+              {hasSubscription && (
+                <Button
+                  text="Close"
+                  onPress={() => {
+                    if (navigation.canGoBack()) {
+                      navigation.goBack();
+                    } else {
+                      navigateToProfileHome();
+                    }
+                  }}
+                  variant="light"
+                  className="mt-3 rounded-xl bg-white border border-[#DAE7E0]"
+                  textClassName="text-[16px]"
+                />
+              )}
+            </>
           );
         })()}
 
@@ -410,12 +430,8 @@ export default function PricingScreen() {
       {subscriptionModal && (
         <SubscriptionModal
           plan={selectedPlan}
-          onClose={async () => {
+          onClose={() => {
             setSubscriptionModal(false);
-            // Simple rule: always land on Profile after closing purchase flow
-            setTimeout(() => {
-              navigateToProfileHome();
-            }, 300);
           }}
         />
       )}
