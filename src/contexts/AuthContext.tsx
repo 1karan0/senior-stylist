@@ -11,7 +11,11 @@ import {
   signInWithFirebaseCustomToken,
   signOutFirebase,
 } from '@/services/firebase';
-import { initializeNotifications, deleteFCMTokenForUser } from '@/services/notifications';
+import {
+  initializeNotifications,
+  deleteFCMTokenForUser,
+  clearLocalFCMToken,
+} from '@/services/notifications';
 import { clearAllActiveChatsForUser } from '@/api/chat/useActiveChat';
 
 const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
@@ -136,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       await Promise.all([storage.setToken(token), storage.setUserData(user)]);
       setUser(user);
+      console.log('user======>', user);
 
       if (firebaseToken) {
         await initializeFirebase();
@@ -218,22 +223,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Log out locally immediately so navigation can switch to AuthStack.
     setUser(null);
 
-    // Fire-and-forget cleanup (with timeouts so we never hang the JS thread).
+    // Best-effort cleanup (bounded by timeouts so we never hang the JS thread).
+    const cleanupTasks: Promise<unknown>[] = [];
     if (userId) {
-      void withTimeout(deleteFCMTokenForUser(userId), 4000, 'deleteFCMTokenForUser').catch(
-        (error) => {
+      cleanupTasks.push(
+        withTimeout(deleteFCMTokenForUser(userId), 2500, 'deleteFCMTokenForUser').catch((error) => {
           if (__DEV__)
             console.warn('[auth] deleteFCMTokenForUser failed:', error?.message || error);
-        }
+        })
       );
-      void withTimeout(
-        clearAllActiveChatsForUser(userId),
-        4000,
-        'clearAllActiveChatsForUser'
-      ).catch((error) => {
-        if (__DEV__)
-          console.warn('[auth] clearAllActiveChatsForUser failed:', error?.message || error);
-      });
+      cleanupTasks.push(
+        withTimeout(clearAllActiveChatsForUser(userId), 2500, 'clearAllActiveChatsForUser').catch(
+          (error) => {
+            if (__DEV__)
+              console.warn('[auth] clearAllActiveChatsForUser failed:', error?.message || error);
+          }
+        )
+      );
+    }
+    cleanupTasks.push(
+      withTimeout(clearLocalFCMToken(), 2000, 'clearLocalFCMToken').catch((error) => {
+        if (__DEV__) console.warn('[auth] clearLocalFCMToken failed:', error?.message || error);
+      })
+    );
+    if (cleanupTasks.length > 0) {
+      await Promise.allSettled(cleanupTasks);
     }
 
     // Clear local auth state with short timeouts (these should be fast; if they hang, still finish logout).

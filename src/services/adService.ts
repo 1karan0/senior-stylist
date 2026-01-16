@@ -14,29 +14,35 @@ export interface Ad {
   size: AdSize;
 }
 
+interface AdProviderAd {
+  id: number;
+  tab_id: string;
+  title: string;
+  description: string;
+  media_type: 'image' | 'video';
+  media_url: string;
+  redirect_url: string | null;
+  size: 'small' | 'large';
+  segundos_activo: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 interface AdProviderResponse {
   success: boolean;
   message: string;
   data?: {
-    id: number;
+    ads: AdProviderAd[];
+    count: number;
     tab_id: string;
-    title: string;
-    description: string;
-    media_type: 'image' | 'video';
-    media_url: string; // URL to media file
-    redirect_url: string | null;
-    size: 'small' | 'large';
-    segundos_activo: number;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
   };
 }
 
 /**
  * Normalizes the API response to our Ad type
  */
-const parseAdFromApi = (apiData: AdProviderResponse['data']): Ad | null => {
+const parseAdFromApi = (apiData: AdProviderAd | null | undefined): Ad | null => {
   if (!apiData) return null;
 
   return {
@@ -56,6 +62,9 @@ const parseAdFromApi = (apiData: AdProviderResponse['data']): Ad | null => {
  */
 export const fetchRandomAd = async (size: AdSize = 'small'): Promise<Ad | null> => {
   try {
+    if (__DEV__) {
+      console.log('[Ads] Fetching ad', { size });
+    }
     // Check if ads are enabled and size is allowed
     const isAllowed = await isAdSizeAllowed(size);
     if (!isAllowed) {
@@ -69,12 +78,12 @@ export const fetchRandomAd = async (size: AdSize = 'small'): Promise<Ad | null> 
       console.error('[Ads] No provider URL configured');
       return null;
     }
+    if (__DEV__) {
+      console.log('[Ads] Provider URL', config.provider_url);
+    }
 
-    // Build the URL with size
-    const providerUrl = `${config.provider_url}/${size}`;
-
-    // Fetch the ad
-    const response = await fetch(providerUrl, {
+    // Fetch ads from provider
+    const response = await fetch(config.provider_url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -89,14 +98,38 @@ export const fetchRandomAd = async (size: AdSize = 'small'): Promise<Ad | null> 
 
     const data: AdProviderResponse = await response.json();
 
-    if (!data.success || !data.data) {
+    if (!data.success || !data.data?.ads?.length) {
       console.log('[Ads] Provider returned no ad data');
       return null;
     }
 
-    // Normalize and return
-    const ad = parseAdFromApi(data.data);
-    return ad;
+    const activeAds = data.data.ads.filter((ad) => ad.is_active);
+    const sizeMatchedAds = activeAds.filter((ad) => ad.size === size);
+    const candidates = sizeMatchedAds.length > 0 ? sizeMatchedAds : activeAds;
+    if (__DEV__) {
+      console.log('[Ads] Provider ads', {
+        total: data.data.ads.length,
+        active: activeAds.length,
+        sizeMatched: sizeMatchedAds.length,
+        chosenPool: candidates.length,
+      });
+    }
+    if (candidates.length === 0) {
+      console.log('[Ads] No active ads available');
+      return null;
+    }
+
+    const randomIndex = Math.floor(Math.random() * candidates.length);
+    const selected = candidates[randomIndex];
+    if (__DEV__) {
+      console.log('[Ads] Selected ad', {
+        id: selected.id,
+        mediaType: selected.media_type,
+        size: selected.size,
+        redirectUrl: Boolean(selected.redirect_url),
+      });
+    }
+    return parseAdFromApi(selected);
   } catch (error) {
     console.error('[Ads] Error fetching ad:', error);
     return null;

@@ -4,6 +4,7 @@ import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 import axios from 'axios';
 import { storage } from '@/services/storage';
 import { ProfileUser, ProfileSubscription } from '@/common/types';
+import { Platform } from 'react-native';
 
 export interface ProfileResponse {
   user: ProfileUser;
@@ -23,7 +24,7 @@ export const useGetProfile = (options?: UseGetProfileOptions) => {
         const res = await axios.get(`${BASE_URL}/api/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'X-Device-Type': 'android',
+            'X-Device-Type': Platform.OS,
             'X-App-Version': '1.0.0',
           },
         });

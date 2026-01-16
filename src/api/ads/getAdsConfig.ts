@@ -20,8 +20,8 @@ export interface AdsConfigResponse {
   code: number;
   message: string;
   data: {
-    ios: PlatformAdConfig;
-    android: PlatformAdConfig;
+    ios?: PlatformAdConfig;
+    android?: PlatformAdConfig;
   };
 }
 
@@ -31,13 +31,28 @@ export interface AdsConfigResponse {
 export const getAdsConfig = async (): Promise<AdsConfigResponse> => {
   try {
     const token = await storage.getToken();
+    const platform = Platform.OS === 'ios' ? 'ios' : 'android';
+    if (__DEV__) {
+      console.log('[Ads] Fetching config', { platform, hasToken: Boolean(token) });
+    }
     const response = await axios.get<AdsConfigResponse>(`${BASE_URL}/api/ads/config`, {
+      params: { platform },
       headers: {
         ...(token && { Authorization: `Bearer ${token}` }),
         'Content-Type': 'application/json',
       },
     });
 
+    if (__DEV__) {
+      const platformData = response.data?.data?.[platform];
+      console.log('[Ads] Config response', {
+        status: response.data?.status,
+        code: response.data?.code,
+        enabled: platformData?.enabled,
+        defaultSize: platformData?.default_size,
+        hasProviderUrl: Boolean(platformData?.provider_url),
+      });
+    }
     return response.data;
   } catch (error: any) {
     console.error('[Ads] Failed to fetch ad config:', error);

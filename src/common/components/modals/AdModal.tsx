@@ -9,6 +9,7 @@ import {
   BackHandler,
   Linking,
   Animated,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
@@ -35,11 +36,12 @@ interface AdModalProps {
   ad: Ad | null;
   onFinished: () => void;
   onClosedEarly?: () => void;
+  renderInline?: boolean;
 }
 
 const AUTO_CLOSE_DURATION = 30;
 
-const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
+const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished, renderInline = false }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [canClose, setCanClose] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
@@ -252,98 +254,108 @@ const AdModal: React.FC<AdModalProps> = ({ visible, ad, onFinished }) => {
     );
   };
 
+  const content = (
+    <SafeAreaView className="flex-1 bg-black justify-center items-center" edges={['top', 'bottom']}>
+      {renderTimerIndicator()}
+
+      {canClose && (
+        <Animated.View
+          style={{
+            position: 'absolute',
+            top: topOffset,
+            right: 20,
+            zIndex: 20,
+            opacity: fadeAnim,
+          }}
+        >
+          <TouchableOpacity
+            className="shadow-lg"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 20,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={handleClose}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="close" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
+      {ad.redirectUrl && canClose && (
+        <View
+          className="absolute z-10"
+          style={{ bottom: Platform.OS === 'ios' ? 100 : 80, alignSelf: 'center' }}
+        >
+          <View
+            className="px-6 py-3 rounded-full shadow-lg"
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}
+          >
+            <Text className="text-white text-sm font-medium">Tap to learn more</Text>
+          </View>
+        </View>
+      )}
+
+      <TouchableOpacity
+        className="w-full h-full bg-[#0a0a0a]"
+        style={{ position: 'relative' }}
+        activeOpacity={ad.redirectUrl && canClose ? 0.95 : 1}
+        onPress={handleMediaPress}
+        disabled={!canClose || !ad.redirectUrl}
+      >
+        {renderMedia()}
+        {mediaError && (
+          <View
+            className="absolute top-0 left-0 right-0 bottom-0 justify-center items-center"
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}
+          >
+            <Ionicons name="alert-circle-outline" size={64} color="#ff4444" />
+            <Text className="text-white text-base mt-4 text-center px-8">{mediaError}</Text>
+            <Text className="text-gray-400 text-sm mt-2 text-center px-8">
+              The ad will close automatically
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+
+      <View
+        className="absolute z-10"
+        style={{ bottom: Platform.OS === 'ios' ? 50 : 30, alignSelf: 'center' }}
+      >
+        <View className="px-4 py-2 rounded-full" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <Text className="text-gray-300 text-xs">Advertisement</Text>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+
+  if (renderInline) {
+    return <View style={[StyleSheet.absoluteFillObject, styles.inlineOverlay]}>{content}</View>;
+  }
+
   return (
     <Modal
       visible={visible}
-      transparent={false}
+      transparent
       animationType="fade"
+      presentationStyle="overFullScreen"
       onRequestClose={canClose ? handleClose : undefined}
       statusBarTranslucent
     >
-      <SafeAreaView
-        className="flex-1 bg-black justify-center items-center"
-        edges={['top', 'bottom']}
-      >
-        {renderTimerIndicator()}
-
-        {canClose && (
-          <Animated.View
-            style={{
-              position: 'absolute',
-              top: topOffset,
-              right: 20,
-              zIndex: 20,
-              opacity: fadeAnim,
-            }}
-          >
-            <TouchableOpacity
-              className="shadow-lg"
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 20,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-              onPress={handleClose}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="close" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-
-        {ad.redirectUrl && canClose && (
-          <View
-            className="absolute z-10"
-            style={{ bottom: Platform.OS === 'ios' ? 100 : 80, alignSelf: 'center' }}
-          >
-            <View
-              className="px-6 py-3 rounded-full shadow-lg"
-              style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}
-            >
-              <Text className="text-white text-sm font-medium">Tap to learn more</Text>
-            </View>
-          </View>
-        )}
-
-        <TouchableOpacity
-          className="w-full h-full bg-[#0a0a0a]"
-          style={{ position: 'relative' }}
-          activeOpacity={ad.redirectUrl && canClose ? 0.95 : 1}
-          onPress={handleMediaPress}
-          disabled={!canClose || !ad.redirectUrl}
-        >
-          {renderMedia()}
-          {mediaError && (
-            <View
-              className="absolute top-0 left-0 right-0 bottom-0 justify-center items-center"
-              style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}
-            >
-              <Ionicons name="alert-circle-outline" size={64} color="#ff4444" />
-              <Text className="text-white text-base mt-4 text-center px-8">{mediaError}</Text>
-              <Text className="text-gray-400 text-sm mt-2 text-center px-8">
-                The ad will close automatically
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        <View
-          className="absolute z-10"
-          style={{ bottom: Platform.OS === 'ios' ? 50 : 30, alignSelf: 'center' }}
-        >
-          <View
-            className="px-4 py-2 rounded-full"
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-          >
-            <Text className="text-gray-300 text-xs">Advertisement</Text>
-          </View>
-        </View>
-      </SafeAreaView>
+      {content}
     </Modal>
   );
 };
 
 export default AdModal;
+
+const styles = StyleSheet.create({
+  inlineOverlay: {
+    zIndex: 9999,
+    elevation: 9999,
+  },
+});

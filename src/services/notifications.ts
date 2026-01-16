@@ -374,6 +374,39 @@ export const deleteFCMTokenForUser = async (userId: string): Promise<boolean> =>
   }
 };
 
+// Delete local FCM token so this device stops receiving pushes immediately
+export const clearLocalFCMToken = async (): Promise<boolean> => {
+  try {
+    getApp(); // Ensure Firebase is initialized
+
+    if (__DEV__) {
+      console.log('[notifications] Clearing local FCM token...');
+    }
+
+    await messaging().deleteToken();
+
+    if (Platform.OS === 'ios') {
+      const unregister = (messaging() as any).unregisterDeviceForRemoteMessages;
+      if (typeof unregister === 'function') {
+        await unregister.call(messaging());
+      }
+    }
+
+    if (__DEV__) {
+      console.log('[notifications] ✅ Local FCM token cleared');
+    }
+    return true;
+  } catch (error: any) {
+    if (__DEV__) {
+      console.warn('[notifications] ❌ Failed to clear local FCM token:', {
+        message: error?.message,
+        code: error?.code,
+      });
+    }
+    return false;
+  }
+};
+
 // Delete FCM token from Firestore (when user logs out)
 export const deleteFCMTokenFromBackend = async (): Promise<boolean> => {
   try {

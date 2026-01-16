@@ -173,6 +173,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           request: {
             ios: {
               sku: productId,
+              andDangerouslyFinishTransactionAutomatically: false,
               appAccountToken: profileData?.user?.uuid,
             },
           },
@@ -266,10 +267,13 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
   // 3. Handling the Purchase Result
   const handlePurchaseUpdate = useCallback(
     async (purchase: RNIap.Purchase) => {
-      console.log('purchase update callback');
+      console.log('purchase update callback 2');
+      console.log('purchase', purchase);
       // Store delivered a callback → stop "syncing with store" and begin backend verification.
       setIsSyncingWithStore(false);
       setHasStorePurchaseCallback(true);
+
+      console.log('purchase 1');
 
       const purchaseAny = purchase as any;
       console.log('purchaseAny', purchaseAny);
@@ -281,6 +285,8 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         }
         return null;
       };
+
+      console.log('purchase 2');
 
       // Minimal success guard: don't start backend verification for pending/failed callbacks.
       const isPendingPurchase = (() => {
@@ -296,6 +302,8 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         return n === 2 || s === 'pending';
       })();
       if (isPendingPurchase) return;
+
+      console.log('purchase 3');
 
       const isSuccessfulPurchase = (() => {
         if (Platform.OS === 'android') {
@@ -325,6 +333,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
       // Start backend verification flow: we'll keep UI in "Verifying purchase..." until Profile API reflects the change.
       // This makes sure base_plan_id/store_plan_id has actually changed on the backend (source of truth).
       const startBackendVerification = async () => {
+        console.log('startBackendVerification');
         if (verificationTimerRef.current) {
           clearTimeout(verificationTimerRef.current);
           verificationTimerRef.current = null;
@@ -337,6 +346,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         const pollEveryMs = 2_500;
 
         const tick = async () => {
+          console.log('tick');
           if (!verificationActiveRef.current) return;
 
           // Timeout guard
@@ -352,6 +362,8 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           try {
             const res = await refetchProfile();
             const sub = res.data?.subscription ?? null;
+
+            console.log('sub======>', sub);
 
             const newStorePlanId = (sub?.store_plan_id as string | null) ?? null;
             const newPlanId = toPlanIdNumber(sub?.plan_id);
@@ -677,7 +689,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
             <View className="flex-row items-center">
               <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
-              <Text className="text-blue-700 font-medium">Syncing with Play Store...</Text>
+              <Text className="text-blue-700 font-medium">Syncing with App Store...</Text>
             </View>
           </View>
         ) : isUpgradeConfirmationPending ? (

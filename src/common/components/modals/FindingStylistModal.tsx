@@ -53,7 +53,7 @@ const FindingStylistModal: React.FC = () => {
   const [hasShownInitialAd, setHasShownInitialAd] = useState(false);
   const [isWaitingForAd2, setIsWaitingForAd2] = useState(false);
   const [adLoopActive, setAdLoopActive] = useState(false); // Track if ad loop is active
-  const [showCancelModal, setShowCancelModal] = useState(false); // Modal for cancel consultation
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const { isDark } = useTheme();
   const cancelConsultationMutation = useCancelConsultaion();
@@ -382,14 +382,12 @@ const FindingStylistModal: React.FC = () => {
 
     try {
       stopAllTimers();
-      setLoading(true);
       await cancelConsultationMutation.mutateAsync(String(consultationId));
       showToast('Consultation cancelled successfully.', 'success');
       await storage.removeConsultationDraft();
       closeAllAndDismiss();
     } catch (err: any) {
       showToast(err?.message || 'Failed to cancel consultation. Please try again.', 'error');
-      setLoading(false);
     }
   }, [
     consultationId,
@@ -549,6 +547,11 @@ const FindingStylistModal: React.FC = () => {
         }}
         dismissOnBackdropPress={false}
         containerClassName={isDark ? 'bg-buttonSecondaryText' : 'bg-white'}
+        overlay={
+          showAd ? (
+            <AdModal visible={showAd && visible} ad={currentAd} onFinished={handleAdFinished} />
+          ) : null
+        }
       >
         <ScrollView contentContainerClassName="items-center" bounces={false}>
           <View className="w-full items-center">
@@ -564,6 +567,14 @@ const FindingStylistModal: React.FC = () => {
                 <Text className="text-[13px] text-[#7C7C7C]">Connecting you with stylists…</Text>
               </View>
             )}
+            {cancelConsultationMutation.isPending &&
+              !searchFailedMessage &&
+              !showStylistProfile && (
+                <View className="flex-row items-center gap-2 mt-3">
+                  <ActivityIndicator color="#27B07D" size="small" />
+                  <Text className="text-[13px] text-[#7C7C7C]">Cancelling your consultation…</Text>
+                </View>
+              )}
 
             {!searchFailedMessage && canCancelConsultation && (
               <TouchableOpacity
@@ -579,8 +590,6 @@ const FindingStylistModal: React.FC = () => {
           </View>
         </ScrollView>
       </ModalWrapper>
-
-      <AdModal visible={showAd} ad={currentAd} onFinished={handleAdFinished} />
 
       <CancelConsultationModal
         visible={showCancelModal}

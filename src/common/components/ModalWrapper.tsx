@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 export interface ModalWrapperProps {
   visible: boolean;
@@ -7,6 +7,7 @@ export interface ModalWrapperProps {
   children: ReactNode;
   dismissOnBackdropPress?: boolean;
   containerClassName?: string;
+  overlay?: ReactNode;
 }
 
 export const ModalWrapper: React.FC<ModalWrapperProps> = ({
@@ -15,6 +16,7 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
   children,
   dismissOnBackdropPress = true,
   containerClassName = '',
+  overlay,
 }) => {
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
@@ -26,7 +28,19 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
         <View className={`rounded-md p-6 bg-white w-[95%] mx-2 ${containerClassName}`}>
           {children}
         </View>
+        {overlay ? (
+          <View pointerEvents="box-none" style={[StyleSheet.absoluteFillObject, styles.overlay]}>
+            {overlay}
+          </View>
+        ) : null}
       </View>
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  overlay: {
+    zIndex: 9999,
+    elevation: 9999,
+  },
+});

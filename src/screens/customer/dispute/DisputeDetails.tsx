@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
   StatusBar,
   KeyboardAvoidingView,
-  Platform,
   Alert,
+  Platform,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -24,6 +22,7 @@ import { ProfileStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import DisputeDetailsSkeleton from '@/common/components/skeletons/DisputeDetailsSkeleton';
+import ChatInput from '@/components/chat/ChatInput';
 
 type DisputeDetailsNavigationProp = StackNavigationProp<ProfileStackParamList, 'DisputeDetails'>;
 type DisputeDetailsRouteProp = RouteProp<ProfileStackParamList, 'DisputeDetails'>;
@@ -67,7 +66,6 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
   const { isDark } = useTheme();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const [message, setMessage] = useState('');
   const scrollViewRef = useRef<ScrollView>(null);
 
   const { data, isLoading, error, refetch } = useGetDisputeDetails(disputeId);
@@ -93,8 +91,8 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
     navigation.goBack();
   };
 
-  const handleSend = () => {
-    if (!message.trim() || isSending) return;
+  const handleSend = (text: string) => {
+    if (!text.trim() || isSending) return;
 
     // Check if dispute is closed/resolved
     if (dispute?.status === 'closed' || dispute?.status === 'resolved') {
@@ -102,11 +100,8 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
       return;
     }
 
-    const messageText = message.trim();
-    setMessage('');
-
     sendMessage(
-      { id: disputeId, message: messageText },
+      { id: disputeId, message: text.trim() },
       {
         onSuccess: () => {
           refetch();
@@ -114,8 +109,6 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
         onError: (error: any) => {
           console.error('Failed to send message:', error);
           Alert.alert('Error', error?.message || 'Failed to send message. Please try again.');
-          // Restore message on error
-          setMessage(messageText);
         },
       }
     );
@@ -241,235 +234,187 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
   const disputeIdFormatted = `#DIS-${String(dispute.id).padStart(3, '0')}`;
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-    >
-      <GradientBackground topOverlayColor="#27B07D">
-        <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
-
-        {/* Header */}
-        <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">
-          <View className="flex-row items-center mb-2">
-            <TouchableOpacity
-              onPress={handleBack}
-              className="mr-3 p-1"
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-            <Text className="text-white text-2xl font-urbanist-bold flex-1">Dispute Details</Text>
-          </View>
-          <View className="flex-row items-center">
-            <Text className="text-white text-sm font-poppins-regular mr-2">
-              {dispute.consultation?.consultation_id_formatted}
-            </Text>
-            <View className={`px-3 py-1 rounded-full  ${getStatusColor(dispute.status)}`}>
-              <Text
-                className={`text-xs font-urbanist-semibold ${getStatusTextColor(dispute.status)}`}
-              >
-                {getStatusLabel(dispute.status)}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <ScrollView
-          ref={scrollViewRef}
-          className="flex-1 px-6 pt-6"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+    <GradientBackground topOverlayColor="#27B07D">
+      <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
+      <View className="flex-1 pb-14">
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? insets.bottom : 0}
         >
-          {/* Consultation Details Section */}
-          <View
-            className={`rounded-xl p-4 mb-4 border ${
-              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
-            }`}
-          >
-            <Text
-              className={`text-base font-poppins-semibold mb-3 ${
-                isDark ? 'text-white' : 'text-textDark'
-              }`}
-            >
-              Consultation Details
-            </Text>
-            <View>
-              <View className="flex-row items-center justify-between">
+          {/* Header */}
+          <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">
+            <View className="flex-row items-center mb-2">
+              <TouchableOpacity
+                onPress={handleBack}
+                className="mr-3 p-1"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text className="text-white text-2xl font-urbanist-bold flex-1">Dispute Details</Text>
+            </View>
+            <View className="flex-row items-center">
+              <Text className="text-white text-sm font-poppins-regular mr-2">
+                {dispute.consultation?.consultation_id_formatted}
+              </Text>
+              <View className={`px-3 py-1 rounded-full  ${getStatusColor(dispute.status)}`}>
                 <Text
-                  className={`text-sm font-poppins-regular mb-2 ${
-                    isDark ? 'text-white' : 'text-textDark'
-                  }`}
+                  className={`text-xs font-urbanist-semibold ${getStatusTextColor(dispute.status)}`}
                 >
-                  Consultation ID
-                </Text>
-                <Text
-                  className={`text-sm font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
-                >
-                  {dispute.consultation?.consultation_id_formatted}
-                </Text>
-              </View>
-              <View
-                className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-2`}
-              />
-              <View className="flex-row items-center justify-between">
-                <Text
-                  className={`text-sm font-poppins-regular mb-2 ${
-                    isDark ? 'text-white' : 'text-textDark'
-                  }`}
-                >
-                  Date
-                </Text>
-                <Text
-                  className={`text-sm font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
-                >
-                  {dispute.created_at ? formatDateTime(dispute.created_at).date : 'N/A'}
-                </Text>
-              </View>
-              <View
-                className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-2`}
-              />
-              <View className="flex-row items-center justify-between">
-                <Text
-                  className={`text-sm font-poppins-regular ${
-                    isDark ? 'text-white' : 'text-textDark'
-                  }`}
-                >
-                  Stylist
-                </Text>
-                <Text
-                  className={`text-sm font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
-                >
-                  {dispute.consultant?.name || 'Unknown'}
+                  {getStatusLabel(dispute.status)}
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Conversation Section */}
-          <View className={`rounded-xl  mb-4 `}>
-            <Text
-              className={`text-base font-poppins-semibold mb-4 ${
-                isDark ? 'text-white' : 'text-textDark'
+          <ScrollView
+            ref={scrollViewRef}
+            className="flex-1 px-6 pt-6"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 100 }}
+          >
+            {/* Consultation Details Section */}
+            <View
+              className={`rounded-xl p-4 mb-4 border ${
+                isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
               }`}
             >
-              Conversation
-            </Text>
-
-            {messages.length === 0 ? (
               <Text
-                className={`text-sm font-poppins-regular text-center py-4 ${
-                  isDark ? 'text-textSecondary' : 'text-textMuted'
+                className={`text-base font-poppins-semibold mb-3 ${
+                  isDark ? 'text-white' : 'text-textDark'
                 }`}
               >
-                No messages yet
+                Consultation Details
               </Text>
-            ) : (
               <View>
-                {messages.map((msg) => {
-                  const isUser = msg.is_admin === false || msg.user_id === user?.id;
-                  const { time } = formatDateTime(msg.created_at);
-
-                  return (
-                    <View key={msg.id} className={`my-1 ${isUser ? 'items-end' : 'items-start'}`}>
-                      <View
-                        className={`w-full p-3 border rounded-xl ${
-                          isUser
-                            ? `${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0] '} `
-                            : `${isDark ? 'bg-[#233931] border-[#27B07D]' : 'bg-[#E2F2EA] border-[#27B07D]'} `
-                        }`}
-                      >
-                        <View className="flex-row items-center justify-between">
-                          <Text
-                            className={`text-base font-poppins-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
-                          >
-                            {isUser ? 'You' : 'Admin'}
-                          </Text>
-                          <View className="flex-row items-center mt-1 gap-1">
-                            <Text
-                              className={`text-[10px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-                            >
-                              {time}
-                            </Text>
-                          </View>
-                        </View>
-                        <Text
-                          className={`text-sm font-poppins-regular leading-5 
-                             ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-                        >
-                          {msg.message}
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                })}
+                <View className="flex-row items-center justify-between">
+                  <Text
+                    className={`text-sm font-poppins-regular mb-2 ${
+                      isDark ? 'text-white' : 'text-textDark'
+                    }`}
+                  >
+                    Consultation ID
+                  </Text>
+                  <Text
+                    className={`text-sm font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+                  >
+                    {dispute.consultation?.consultation_id_formatted}
+                  </Text>
+                </View>
+                <View
+                  className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-2`}
+                />
+                <View className="flex-row items-center justify-between">
+                  <Text
+                    className={`text-sm font-poppins-regular mb-2 ${
+                      isDark ? 'text-white' : 'text-textDark'
+                    }`}
+                  >
+                    Date
+                  </Text>
+                  <Text
+                    className={`text-sm font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+                  >
+                    {dispute.created_at ? formatDateTime(dispute.created_at).date : 'N/A'}
+                  </Text>
+                </View>
+                <View
+                  className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-full h-[1px] mb-2`}
+                />
+                <View className="flex-row items-center justify-between">
+                  <Text
+                    className={`text-sm font-poppins-regular ${
+                      isDark ? 'text-white' : 'text-textDark'
+                    }`}
+                  >
+                    Stylist
+                  </Text>
+                  <Text
+                    className={`text-sm font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+                  >
+                    {dispute.consultant?.name || 'Unknown'}
+                  </Text>
+                </View>
               </View>
-            )}
-          </View>
-        </ScrollView>
+            </View>
 
-        {/* Message Input */}
-        <View
-          className={`px-4 pt-2 pb-2 mb-16 `}
-          style={{
-            paddingBottom: Math.max(insets.bottom, 12),
-          }}
-        >
-          <View
-            className={`flex-row items-center rounded-[28px] px-4 min-h-[50px] shadow-[0px_0px_14px_3px_#0000001F] ${
-              isDark ? 'bg-[#0E1B16]' : 'bg-[#ffffff]'
-            }`}
-          >
-            <TextInput
-              className={`flex-1 ${isDark ? 'text-white' : 'text-textDark'} text-[15px] max-h-[100px] py-2`}
-              style={{
-                textAlignVertical: 'center',
-                includeFontPadding: false,
-              }}
-              value={message}
-              onChangeText={setMessage}
-              placeholder={
-                dispute?.status === 'closed' || dispute?.status === 'resolved'
-                  ? 'Dispute is closed'
-                  : 'Type your reply...'
-              }
-              placeholderTextColor="#A1A1A1"
-              multiline
-              maxLength={2000}
-              editable={
-                !isSending && dispute?.status !== 'closed' && dispute?.status !== 'resolved'
-              }
-              onSubmitEditing={handleSend}
-              returnKeyType="send"
-            />
+            {/* Conversation Section */}
+            <View className={`rounded-xl  mb-4 `}>
+              <Text
+                className={`text-base font-poppins-semibold mb-4 ${
+                  isDark ? 'text-white' : 'text-textDark'
+                }`}
+              >
+                Conversation
+              </Text>
 
-            <TouchableOpacity
-              onPress={handleSend}
-              disabled={
-                !message.trim() ||
-                isSending ||
-                dispute?.status === 'closed' ||
-                dispute?.status === 'resolved'
-              }
-              className={`ml-2 w-10 h-10 rounded-full justify-center items-center ${
-                message.trim() &&
-                !isSending &&
-                dispute?.status !== 'closed' &&
-                dispute?.status !== 'resolved'
-                  ? 'bg-[#36D399]'
-                  : 'bg-gray-300'
-              }`}
-              activeOpacity={0.7}
-            >
-              {isSending ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+              {messages.length === 0 ? (
+                <Text
+                  className={`text-sm font-poppins-regular text-center py-4 ${
+                    isDark ? 'text-textSecondary' : 'text-textMuted'
+                  }`}
+                >
+                  No messages yet
+                </Text>
               ) : (
-                <Ionicons name="paper-plane" size={20} color="#FFFFFF" />
+                <View>
+                  {messages.map((msg) => {
+                    const isUser = msg.is_admin === false || msg.user_id === user?.id;
+                    const { time } = formatDateTime(msg.created_at);
+
+                    return (
+                      <View key={msg.id} className={`my-1 ${isUser ? 'items-end' : 'items-start'}`}>
+                        <View
+                          className={`w-full p-3 border rounded-xl ${
+                            isUser
+                              ? `${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0] '} `
+                              : `${isDark ? 'bg-[#233931] border-[#27B07D]' : 'bg-[#E2F2EA] border-[#27B07D]'} `
+                          }`}
+                        >
+                          <View className="flex-row items-center justify-between">
+                            <Text
+                              className={`text-base font-poppins-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
+                            >
+                              {isUser ? 'You' : 'Admin'}
+                            </Text>
+                            <View className="flex-row items-center mt-1 gap-1">
+                              <Text
+                                className={`text-[10px] ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                              >
+                                {time}
+                              </Text>
+                            </View>
+                          </View>
+                          <Text
+                            className={`text-sm font-poppins-regular leading-5 
+                             ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                          >
+                            {msg.message}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
               )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </GradientBackground>
-    </KeyboardAvoidingView>
+            </View>
+          </ScrollView>
+
+          {/* Message Input */}
+
+          <ChatInput
+            onSend={(text) => handleSend(text)}
+            disabled={isSending || dispute?.status === 'closed' || dispute?.status === 'resolved'}
+            placeholder={
+              dispute?.status === 'closed' || dispute?.status === 'resolved'
+                ? 'Dispute is closed'
+                : 'Type your reply...'
+            }
+          />
+        </KeyboardAvoidingView>
+      </View>
+    </GradientBackground>
   );
 };
 
