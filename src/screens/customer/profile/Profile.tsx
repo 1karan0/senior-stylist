@@ -152,15 +152,10 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       setIsRestoring(true);
       await RNIap.initConnection();
 
-      // On iOS, you can also fetch the latest receipt for more accuracy
-      // const receipt = await RNIap.getReceiptIOS();
-
       const availablePurchases = await RNIap.getAvailablePurchases();
 
-      if (Platform.OS === 'ios') {
-        const receipt = await RNIap.getReceiptIOS();
-        console.log('receipt', receipt);
-      }
+      // take you to the subscription management page in the app store
+      // const updatedSubscriptions = await RNIap.showManageSubscriptionsIOS();
 
       if (!availablePurchases || availablePurchases.length === 0) {
         Alert.alert(
@@ -170,15 +165,38 @@ const Profile: React.FC<Props> = ({ navigation }) => {
         return;
       }
 
+      console.log('availablePurchases', availablePurchases);
+
       for (const purchase of availablePurchases) {
+        console.log('purchase is inside the loop');
         const platform = Platform.OS === 'ios' ? 'ios' : 'android';
+
+        const isIos = Platform.OS === 'ios';
+        const transactionId = isIos
+          ? 'originalTransactionIdentifierIOS' in purchase &&
+            purchase.originalTransactionIdentifierIOS
+            ? purchase.originalTransactionIdentifierIOS
+            : purchase.transactionId
+          : purchase.transactionId;
+
+        if (!transactionId) {
+          if (__DEV__) {
+            console.warn('[restore] Missing transactionId for purchase, skipping:', purchase);
+          }
+          continue;
+        }
 
         const restorePayload: RestorePurchasePayload = {
           // iOS uses transactionId; Android uses purchaseToken (critical for Google)
-          purchaseToken: Platform.OS === 'android' ? purchase.purchaseToken : null,
-          transactionId: purchase.transactionId || '',
+          purchaseToken:
+            !isIos && 'purchaseToken' in purchase && purchase.purchaseToken
+              ? purchase.purchaseToken
+              : null,
+          transactionId,
           platform,
         };
+
+        console.log('restorePayload', restorePayload);
 
         const result = await restorePurchase(restorePayload);
 
