@@ -486,12 +486,17 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   <Text
                     className={`${isDark ? 'text-yellow-400' : 'text-yellow-600'} font-poppins-regular text-sm mb-4`}
                   >
-                    Plan change scheduled: {subscription.scheduled_change?.plan_name || 'Change'}{' '}
-                    will start on{' '}
-                    {formatBillingDate(
-                      subscription.scheduled_change?.start_date ||
-                        subscription.scheduled_change?.effective_date
-                    )}
+                    {subscription.scheduled_change?.type === 'downgrade' &&
+                    subscription.scheduled_change?.to_plan_name
+                      ? `From the next billing cycle (${formatBillingDate(
+                          subscription.scheduled_change?.effective_at
+                        )}), your plan will downgrade to ${subscription.scheduled_change.to_plan_name} after next billing date.`
+                      : `Plan change scheduled: ${
+                          subscription.scheduled_change?.plan_name || 'Change'
+                        } will start on ${formatBillingDate(
+                          subscription.scheduled_change?.start_date ||
+                            subscription.scheduled_change?.effective_date
+                        )}`}
                   </Text>
                 )}
 
