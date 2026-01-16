@@ -236,7 +236,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
   return (
     <GradientBackground topOverlayColor="#27B07D">
       <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
-      <View className="flex-1 pb-14">
+      <View className={`flex-1 pb-14 ${Platform.OS === 'ios' ? 'pb-14' : 'pb-16'}`}>
         <KeyboardAvoidingView
           className="flex-1"
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

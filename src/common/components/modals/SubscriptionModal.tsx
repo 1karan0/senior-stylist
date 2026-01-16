@@ -689,7 +689,9 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
             <View className="flex-row items-center">
               <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
-              <Text className="text-blue-700 font-medium">Syncing with App Store...</Text>
+              <Text className="text-blue-700 font-medium">
+                Syncing with {Platform.OS === 'ios' ? 'App Store' : 'Google Play Store'}...
+              </Text>
             </View>
           </View>
         ) : isUpgradeConfirmationPending ? (
