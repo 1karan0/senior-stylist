@@ -106,7 +106,7 @@ export const createConsultation = async (problem_description: string, image: any
   if (!token) throw new Error('Auth token missing');
 
   let imageStoragePath: string | null = null;
-  let imagePublicUrl: string | null = null;
+  // Remove imagePublicUrl - server will generate permanent URL
 
   // Upload image using Laravel signed URL (if provided)
   if (image?.uri) {
@@ -136,7 +136,8 @@ export const createConsultation = async (problem_description: string, image: any
         throw new Error('Invalid signed URL response: missing data');
       }
 
-      const { upload_url, download_url, storage_path, headers: uploadHeaders } = responseData;
+      // ✅ Remove download_url - not needed (server generates permanent URL)
+      const { upload_url, storage_path, headers: uploadHeaders } = responseData;
 
       if (!upload_url || !storage_path) {
         throw new Error('Invalid signed URL response: missing upload_url or storage_path');
@@ -171,14 +172,13 @@ export const createConsultation = async (problem_description: string, image: any
       // Use headers from response (e.g., { "Content-Type": "image/jpeg" })
       await uploadImageToSignedUrl(image.uri, upload_url, uploadHeaders || {});
 
-      // Step 3: Store storage_path (required) and download_url (optional) for consultation creation
+      // Step 3: Store storage_path (required for consultation creation)
       imageStoragePath = storage_path;
-      imagePublicUrl = download_url || null;
+      // ✅ Remove imagePublicUrl assignment - server will generate permanent URL
 
       if (__DEV__) {
         console.log('[consultation] image uploaded successfully', {
           storagePath: imageStoragePath,
-          downloadUrl: imagePublicUrl?.substring(0, 80) + '...',
         });
       }
     } catch (error: any) {
@@ -193,21 +193,18 @@ export const createConsultation = async (problem_description: string, image: any
     }
   }
 
-  // Step 3: Create consultation with image_storage_path (required) and optionally image_public_url
+  // Step 3: Create consultation with image_storage_path only
+  // ✅ Don't send image_public_url - server generates permanent URL automatically
   const requestData: {
     problem_description: string;
     image_storage_path?: string;
-    image_public_url?: string;
   } = {
     problem_description,
   };
 
   if (imageStoragePath) {
     requestData.image_storage_path = imageStoragePath;
-    // Optionally include public URL (API can generate it if not provided)
-    if (imagePublicUrl) {
-      requestData.image_public_url = imagePublicUrl;
-    }
+    // ✅ Removed: Don't send image_public_url - server will generate permanent URL
   }
 
   if (__DEV__) {
@@ -224,6 +221,14 @@ export const createConsultation = async (problem_description: string, image: any
         'Content-Type': 'application/json',
       },
     });
+
+    // ✅ The permanent image_public_url is now in res.data.data.consultation.image_public_url
+    // Use this URL for displaying the image - it never expires!
+    if (__DEV__ && res.data?.data?.consultation?.image_public_url) {
+      console.log('[consultation] permanent image URL generated:', {
+        imagePublicUrl: res.data.data.consultation.image_public_url.substring(0, 80) + '...',
+      });
+    }
 
     return res.data;
   } catch (err: any) {
