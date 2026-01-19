@@ -216,9 +216,10 @@ export default function PricingScreen() {
             </Text>
           </View>
           <Text className="w-80 text-center text-[10px] text-textMuted mt-2 font-poppins-regular">
-            {Platform.OS === 'ios'
+            Introductory offer available for eligible Apple IDs. Apple determines eligibility.
+            {/* {Platform.OS === 'ios'
               ? 'Introductory offer available for eligible Apple IDs. Apple determines eligibility.'
-              : 'Introductory offer available for eligible Google accounts. Eligibility is determined by Google Play.'}
+              : 'Introductory offer available for eligible Google accounts. Eligibility is determined by Google Play.'} */}
           </Text>
         </View>
 
@@ -367,7 +368,7 @@ export default function PricingScreen() {
             );
           }
 
-          let buttonText = 'Continue to Payment';
+          let buttonText = 'Confirm Subscription';
           if (isUpgrade) {
             buttonText = 'Upgrade';
           } else if (isDowngrade) {
@@ -407,8 +408,12 @@ export default function PricingScreen() {
         {/* Subscription Renewal Notice */}
         <View className="mt-2 mb-2 px-4">
           <Text className="text-center text-textMuted text-xs">
-            Subscription automatically renews monthly unless cancelled at least 24 hours before the
-            end of the current period.
+            Payment will be charged to your Apple ID account at confirmation of purchase.
+            Subscription automatically renews unless cancelled at least 24 hours before the end of
+            the current period.
+            {/* {Platform.OS === 'ios'
+              ? 'Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'
+              : 'Payment will be charged to your Google Play account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'} */}
           </Text>
         </View>
 

@@ -156,11 +156,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       // const receipt = await RNIap.getReceiptIOS();
 
       const availablePurchases = await RNIap.getAvailablePurchases();
-
-      if (Platform.OS === 'ios') {
-        const receipt = await RNIap.getReceiptIOS();
-        console.log('receipt', receipt);
-      }
+      console.log('availablePurchases', availablePurchases);
 
       if (!availablePurchases || availablePurchases.length === 0) {
         Alert.alert(
@@ -175,7 +171,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
         const restorePayload: RestorePurchasePayload = {
           // iOS uses transactionId; Android uses purchaseToken (critical for Google)
-          purchaseToken: Platform.OS === 'android' ? purchase.purchaseToken : null,
+          purchaseToken: purchase.purchaseToken,
           transactionId: purchase.transactionId || '',
           platform,
         };
