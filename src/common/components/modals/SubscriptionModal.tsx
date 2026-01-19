@@ -152,28 +152,11 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
         console.log('Found subscription:', subscriptions);
 
-        /**
-         * Apple rules:
-         * - No base plans
-         * - No offer tokens
-         * - No proration flags
-         * - No upgrade/downgrade logic
-         * - Apple decides everything
-         */
-        // NOTE: Some react-native-iap versions/types expect the v14+ "request: { apple: { sku } }, type: 'subs'"
-        // shape. This project uses a working runtime shape (`sku` at root), so we keep it and cast to satisfy TS.
-        // await RNIap.requestPurchase(
-        //   {
-        //     sku: productId, // Root level property for iOS
-        //     andDangerouslyFinishTransactionAutomaticallyIOS: false, // Recommended for production
-        //   } as unknown as Parameters<typeof RNIap.requestPurchase>[0]
-        // );
-
         await RNIap.requestPurchase({
           request: {
             ios: {
               sku: productId,
-              andDangerouslyFinishTransactionAutomatically: false,
+              andDangerouslyFinishTransactionAutomatically: true,
               appAccountToken: profileData?.user?.uuid,
             },
           },
@@ -472,6 +455,22 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         await initConnection();
 
         if (!isMounted) return;
+
+        // =====================================================
+        // NEW: FINISH PENDING TRANSACTIONS (CRITICAL FOR iOS)
+        // =====================================================
+        try {
+          if (Platform.OS === 'ios') {
+            // This clears the queue of any stuck/processed payments
+            const transactions = await RNIap.getAvailablePurchases();
+            for (const transaction of transactions) {
+              console.log('[IAP] Finishing stale transaction:', transaction.transactionId);
+              await RNIap.finishTransaction({ purchase: transaction, isConsumable: false });
+            }
+          }
+        } catch (err) {
+          console.warn('[SubscriptionModal] Failed to clear stale transactions:', err);
+        }
 
         // 2. Clear pending transactions (Android)
         // Using type assertion as this method might not be in TypeScript definitions
