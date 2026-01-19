@@ -171,28 +171,11 @@ const Profile: React.FC<Props> = ({ navigation }) => {
         console.log('purchase is inside the loop');
         const platform = Platform.OS === 'ios' ? 'ios' : 'android';
 
-        const isIos = Platform.OS === 'ios';
-        const transactionId = isIos
-          ? 'originalTransactionIdentifierIOS' in purchase &&
-            purchase.originalTransactionIdentifierIOS
-            ? purchase.originalTransactionIdentifierIOS
-            : purchase.transactionId
-          : purchase.transactionId;
-
-        if (!transactionId) {
-          if (__DEV__) {
-            console.warn('[restore] Missing transactionId for purchase, skipping:', purchase);
-          }
-          continue;
-        }
-
         const restorePayload: RestorePurchasePayload = {
           // iOS uses transactionId; Android uses purchaseToken (critical for Google)
           purchaseToken:
-            !isIos && 'purchaseToken' in purchase && purchase.purchaseToken
-              ? purchase.purchaseToken
-              : null,
-          transactionId,
+            Platform.OS === 'android' ? purchase.purchaseToken : purchase.purchaseToken,
+          transactionId: purchase.transactionId || '',
           platform,
         };
 

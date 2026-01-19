@@ -100,11 +100,13 @@ const NoConsultant = () => {
             variant="gradient"
             className="w-full"
             icon={
-              <Image
-                source={require('@/assets/icons/white-search-icon.png')}
-                className="w-5 h-5 mr-2"
-                resizeMode="contain"
-              />
+              hasSubscription ? (
+                <Image
+                  source={require('@/assets/icons/white-search-icon.png')}
+                  className="w-5 h-5 mr-2"
+                  resizeMode="contain"
+                />
+              ) : undefined
             }
           />
         </View>
