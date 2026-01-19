@@ -163,8 +163,8 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
   };
 
   return (
-    <GradientBackground className="flex-1 px-5 ">
-      <View className="flex-1 items-center">
+    <GradientBackground className="flex-1 ">
+      <View className="flex-1 items-center px-5">
         <Toast
           visible={toast.visible}
           message={toast.message}

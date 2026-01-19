@@ -70,7 +70,7 @@ export const Button: React.FC<ButtonProps> = ({
         <View
           style={{
             borderRadius: 14,
-            paddingVertical: Platform.OS === 'ios' ? 6 : 3,
+            paddingVertical: Platform.OS === 'ios' ? 4 : 3,
             paddingHorizontal: 12,
             overflow: 'hidden',
             backgroundColor: effectiveDisabled ? '#D1D5DB' : gradientColors[0],

@@ -27,7 +27,7 @@
     "_developerTeamID" : "VZS82HCU5Z",
     "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
-    "_lastSynchronizedDate" : 790263325.55918705,
+    "_lastSynchronizedDate" : 790508774.3118,
     "_locale" : "en_US",
     "_renewalBillingIssuesEnabled" : true,
     "_storefront" : "USA",
@@ -57,7 +57,7 @@
           "internalID" : "6757796681",
           "introductoryOffer" : {
             "displayPrice" : "10.0",
-            "internalID" : "2FE5D292",
+            "internalID" : "0F3F6602",
             "numberOfPeriods" : 6,
             "paymentMode" : "payAsYouGo",
             "subscriptionPeriod" : "P1M"
@@ -91,7 +91,7 @@
           "internalID" : "6757796511",
           "introductoryOffer" : {
             "displayPrice" : "9.0",
-            "internalID" : "D8FB0FB5",
+            "internalID" : "60C5F046",
             "numberOfPeriods" : 6,
             "paymentMode" : "payAsYouGo",
             "subscriptionPeriod" : "P1M"
@@ -125,7 +125,7 @@
           "internalID" : "6757702110",
           "introductoryOffer" : {
             "displayPrice" : "6.0",
-            "internalID" : "25A259C2",
+            "internalID" : "B4650A7E",
             "numberOfPeriods" : 1,
             "paymentMode" : "payUpFront",
             "subscriptionPeriod" : "P6M"
