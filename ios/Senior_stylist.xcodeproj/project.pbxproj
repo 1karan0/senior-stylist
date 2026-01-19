@@ -352,8 +352,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.seniorstylist.app.dev;
 				PRODUCT_NAME = SeniorStylist;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG DEV";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -584,8 +584,8 @@
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEV";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEV";
 				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};

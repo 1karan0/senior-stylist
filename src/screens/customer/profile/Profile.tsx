@@ -152,15 +152,8 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       setIsRestoring(true);
       await RNIap.initConnection();
 
-      // On iOS, you can also fetch the latest receipt for more accuracy
-      // const receipt = await RNIap.getReceiptIOS();
-
       const availablePurchases = await RNIap.getAvailablePurchases();
-
-      if (Platform.OS === 'ios') {
-        const receipt = await RNIap.getReceiptIOS();
-        console.log('receipt', receipt);
-      }
+      console.log('availablePurchases', availablePurchases);
 
       if (!availablePurchases || availablePurchases.length === 0) {
         Alert.alert(
@@ -170,15 +163,20 @@ const Profile: React.FC<Props> = ({ navigation }) => {
         return;
       }
 
+      console.log('availablePurchases', availablePurchases);
+
       for (const purchase of availablePurchases) {
+        console.log('purchase is inside the loop');
         const platform = Platform.OS === 'ios' ? 'ios' : 'android';
 
         const restorePayload: RestorePurchasePayload = {
           // iOS uses transactionId; Android uses purchaseToken (critical for Google)
-          purchaseToken: Platform.OS === 'android' ? purchase.purchaseToken : null,
+          purchaseToken: purchase.purchaseToken,
           transactionId: purchase.transactionId || '',
           platform,
         };
+
+        console.log('restorePayload', restorePayload);
 
         const result = await restorePurchase(restorePayload);
 

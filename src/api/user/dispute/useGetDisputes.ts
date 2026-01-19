@@ -1,10 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 import { storage } from '@/services/storage';
 import axios from 'axios';
 import { BASE_URL } from '@/config';
 
-export const useGetDisputes = () => {
-  return useQuery({
+type DisputesResponse = {
+  data?: {
+    disputes?: any[];
+  };
+};
+
+type UseGetDisputesOptions = Omit<UseQueryOptions<DisputesResponse>, 'queryKey' | 'queryFn'>;
+
+export const useGetDisputes = (options?: UseGetDisputesOptions) => {
+  return useQuery<DisputesResponse>({
     queryKey: ['disputes'],
     queryFn: async () => {
       const token = await storage.getToken();
@@ -16,5 +24,6 @@ export const useGetDisputes = () => {
       });
       return response.data;
     },
+    ...options,
   });
 };

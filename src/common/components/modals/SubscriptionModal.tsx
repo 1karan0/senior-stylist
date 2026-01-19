@@ -180,6 +180,8 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           type: 'subs',
         });
 
+        console.log('purchase request successful');
+
         return;
       }
 

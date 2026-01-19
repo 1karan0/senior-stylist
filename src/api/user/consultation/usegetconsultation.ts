@@ -1,12 +1,20 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { BASE_URL } from '@/config';
 import { storage } from '@/services/storage';
 
 export const useGetConsultation = () => {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: ['consultations'],
+    placeholderData: () => queryClient.getQueryData(['consultations']),
+    staleTime: 60_000,
+    gcTime: 10 * 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    retry: 1,
     queryFn: async () => {
       const token = await storage.getToken();
       if (!token) throw new Error('Auth token missing');

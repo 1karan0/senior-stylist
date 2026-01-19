@@ -3,10 +3,13 @@ import { View, Text, TouchableOpacity, Image, RefreshControl, StatusBar } from '
 import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { FlashList } from '@shopify/flash-list';
+import { useIsFocused } from '@react-navigation/native';
 
 import { useGetDisputes } from '@/api/user/dispute/useGetDisputes';
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import GradientBackground from '@/common/components/GradientBackground';
 import { ProfileStackParamList } from '@/common/types';
+import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { DisputeListSkeleton } from '@/common/components/skeletons/DisputeItemSkeleton';
@@ -123,8 +126,19 @@ const getStatusLabel = (status: string) => {
 const DisputeList: React.FC<Props> = ({ navigation }) => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-  const { data, isLoading, error, refetch, isRefetching } = useGetDisputes();
+  const isFocused = useIsFocused();
+  const { user } = useAuth();
+  const { data: profileData, isLoading: isProfileLoading } = useGetProfile({
+    enabled: !!user,
+    refetchInterval: isFocused ? 5_000 : false,
+    refetchIntervalInBackground: false,
+  });
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const hasSubscription = !!profileData?.subscription;
+  const canFetchDisputes = !!user && !isProfileLoading && hasSubscription;
+  const { data, isLoading, error, refetch, isRefetching } = useGetDisputes({
+    enabled: canFetchDisputes,
+  });
 
   const disputes: Dispute[] = data?.data?.disputes || [];
   const filteredDisputes = useMemo(() => {
@@ -139,6 +153,7 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
   }, [disputes, activeFilter]);
 
   const handleCreateDispute = () => {
+    if (!hasSubscription) return;
     navigation.navigate('CreateDispute');
   };
 
@@ -278,8 +293,9 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
             </View>
             <TouchableOpacity
               onPress={handleCreateDispute}
+              disabled={!hasSubscription}
               className="px-2 py-1 rounded-full"
-              style={{ backgroundColor: '#E7B008' }}
+              style={{ backgroundColor: hasSubscription ? '#E7B008' : '#B3B3B3' }}
               activeOpacity={0.7}
             >
               <Text className="text-white font-poppins-semibold">+ Create Dispute</Text>
@@ -290,7 +306,7 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
       </View>
 
       {/* Content */}
-      <View className="flex-1 px-6 pt-6 pb-5 w-full">
+      <View className="flex-1 px-6 pt-5 pb-5 w-full">
         {/* Filter Tabs */}
         <View className="flex-row gap-2 justify-between w-full mb-4">
           {(['all', 'open', 'resolved'] as FilterType[]).map((filter) => (
@@ -345,16 +361,20 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
             <Text
               className={`text-lg font-poppins-semibold mt-4 ${isDark ? 'text-white' : 'text-textDark'}`}
             >
-              No Disputes Yet
+              {hasSubscription ? 'No Disputes Yet' : 'Subscription Required'}
             </Text>
             <Text
               className={`text-sm font-poppins-regular mt-2 text-center px-8 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
             >
-              You haven't created any disputes. Tap the "New" button to create one.
+              {hasSubscription
+                ? 'You haven\'t created any disputes. Tap the "New" button to create one.'
+                : "You don't have an active subscription. Subscribe to create and manage disputes."}
             </Text>
             <TouchableOpacity
               onPress={handleCreateDispute}
+              disabled={!hasSubscription}
               className="mt-6 px-6 py-3 bg-buttonPrimaryBg rounded-xl"
+              style={!hasSubscription ? { opacity: 0.5 } : undefined}
             >
               <Text className="text-white font-poppins-semibold">Create Dispute</Text>
             </TouchableOpacity>
