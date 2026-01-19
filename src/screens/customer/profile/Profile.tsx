@@ -153,9 +153,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       await RNIap.initConnection();
 
       const availablePurchases = await RNIap.getAvailablePurchases();
-
-      // take you to the subscription management page in the app store
-      // const updatedSubscriptions = await RNIap.showManageSubscriptionsIOS();
+      console.log('availablePurchases', availablePurchases);
 
       if (!availablePurchases || availablePurchases.length === 0) {
         Alert.alert(
@@ -173,8 +171,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
         const restorePayload: RestorePurchasePayload = {
           // iOS uses transactionId; Android uses purchaseToken (critical for Google)
-          purchaseToken:
-            Platform.OS === 'android' ? purchase.purchaseToken : purchase.purchaseToken,
+          purchaseToken: purchase.purchaseToken,
           transactionId: purchase.transactionId || '',
           platform,
         };
