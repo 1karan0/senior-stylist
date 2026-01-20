@@ -165,6 +165,12 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
         console.log('purchase request successful');
 
+        // Keep button disabled - awaitingProfileConfirmation stays true until profile returns
+        // Stop showing loading spinner but keep button disabled
+        setIsLoading(false);
+        setIsProcessingPurchase(false);
+        setIsSyncingWithStore(false);
+
         return;
       }
 
@@ -238,6 +244,12 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           },
         },
       });
+
+      // Keep button disabled - awaitingProfileConfirmation stays true until profile returns
+      // Stop showing loading spinner but keep button disabled
+      setIsLoading(false);
+      setIsProcessingPurchase(false);
+      setIsSyncingWithStore(false);
     } catch (err: any) {
       console.error('Subscription error:', err);
       Alert.alert('Error', err.message || 'Unable to process subscription.');
@@ -601,24 +613,38 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
   if (!plan) return null;
 
+  // Check if current plan matches selected plan (same condition for both disabled state and button text)
+  const isCurrentPlan =
+    currentSubscription?.plan_id === plan.originalPlan.id &&
+    (currentSubscription.status === 'active' || currentSubscription.is_active);
+
+  // Button should be disabled when:
+  // - Awaiting profile confirmation (from the moment handleSubscribe is clicked until profile returns)
+  // - Verifying backend (after purchase completes)
+  // - Upgrade message is visible
+  // - IAP not initialized
+  // - It's the current plan
   const isSubscribeDisabled =
-    isLoading ||
     awaitingProfileConfirmation ||
-    isProcessingPurchase ||
-    isSyncingWithStore ||
     isVerifyingBackend ||
     isUpgradeAppliedMessageVisible ||
     !iapInitialized ||
-    (currentSubscription?.plan_id === plan.originalPlan.id &&
-      (currentSubscription.status === 'active' || currentSubscription.is_active));
+    isCurrentPlan;
 
+  // Button shows loading spinner when:
+  // - Verifying backend (after purchase completes)
+  // - Awaiting profile confirmation after purchase callback
   const isSubscribeLoading =
-    awaitingProfileConfirmation || isProcessingPurchase || isLoading || isVerifyingBackend;
+    isVerifyingBackend || (awaitingProfileConfirmation && hasStorePurchaseCallback);
 
-  const subscribeButtonText =
-    currentSubscription?.plan_id === plan.originalPlan.id &&
-    (currentSubscription.status === 'active' || currentSubscription.is_active)
-      ? 'Current Plan'
+  // Button text logic:
+  // 1. If it's the current plan -> "Current Plan"
+  // 2. If awaiting profile confirmation or verifying backend -> "Verifying the purchase"
+  // 3. Otherwise -> "Subscribe"
+  const subscribeButtonText = isCurrentPlan
+    ? 'Current Plan'
+    : awaitingProfileConfirmation || isVerifyingBackend
+      ? 'Verifying the purchase'
       : 'Subscribe';
 
   return (
@@ -816,22 +842,6 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
               </Text>
             </>
           )}
-          {/* <>
-            <Text className="text-center text-gray-500 text-xs mb-2">
-              Payment will be charged to your Apple ID account at confirmation of purchase.
-            </Text>
-            <Text className="text-center text-gray-500 text-xs mb-2">
-              Subscription automatically renews unless cancelled at least 24 hours before the end of
-              the current period.
-            </Text>
-            <Text className="text-center text-gray-500 text-xs mb-2">
-              Your account will be charged for renewal within 24 hours prior to the end of the
-              current period.
-            </Text>
-            <Text className="text-center text-gray-500 text-xs mb-3">
-              You can manage or cancel your subscription in your App Store account settings.
-            </Text>
-          </> */}
           <View className="flex-row justify-center items-center gap-2 my-2">
             <Pressable
               onPress={() => {
