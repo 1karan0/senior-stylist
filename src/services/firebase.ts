@@ -32,6 +32,7 @@ export const initializeFirebase = (): boolean => {
     // Use getApp() to get the default Firebase app instance
     // This ensures Firebase is initialized and uses the new non-deprecated API
     const app = getApp();
+    console.log('app======>', app);
     return app !== null;
   } catch (error: any) {
     if (__DEV__) {
@@ -56,6 +57,7 @@ export const initializeFirebase = (): boolean => {
 export const getFirebaseAuth = () => {
   try {
     getApp(); // Ensure Firebase is initialized
+    console.log('auth======>', auth());
     return auth();
   } catch (error) {
     if (__DEV__) {
@@ -83,6 +85,7 @@ export const signInWithFirebaseCustomToken = async (customToken: string) => {
   try {
     getApp(); // Ensure Firebase is initialized
     const userCredential = await auth().signInWithCustomToken(customToken);
+    console.log('userCredential======>', userCredential);
     return userCredential.user;
   } catch (error: any) {
     if (__DEV__) {
