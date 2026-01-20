@@ -156,7 +156,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           request: {
             ios: {
               sku: productId,
-              andDangerouslyFinishTransactionAutomatically: true,
+              andDangerouslyFinishTransactionAutomatically: false,
               appAccountToken: profileData?.user?.uuid,
             },
           },
@@ -462,11 +462,15 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         try {
           if (Platform.OS === 'ios') {
             // This clears the queue of any stuck/processed payments
-            const transactions = await RNIap.getAvailablePurchases();
-            for (const transaction of transactions) {
-              console.log('[IAP] Finishing stale transaction:', transaction.transactionId);
-              await RNIap.finishTransaction({ purchase: transaction, isConsumable: false });
+            const pending = await RNIap.getPendingTransactionsIOS();
+            if (pending.length) {
+              await RNIap.clearTransactionIOS();
             }
+            // const transactions = await RNIap.getAvailablePurchases();
+            // for (const transaction of transactions) {
+            //   console.log('[IAP] Finishing stale transaction:', transaction.transactionId);
+            //   await RNIap.finishTransaction({ purchase: transaction, isConsumable: false });
+            // }
           }
         } catch (err) {
           console.warn('[SubscriptionModal] Failed to clear stale transactions:', err);
