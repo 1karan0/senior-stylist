@@ -9,10 +9,11 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { finishTransaction } from 'react-native-iap';
+import * as RNIap from 'react-native-iap';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import {
   useGetSubscriptionPlans,
@@ -23,6 +24,7 @@ import SubscriptionModal from '@/common/components/modals/SubscriptionModal';
 import { AppStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import GradientBackground from '@/common/components/GradientBackground';
+import { restorePurchase, type RestorePurchasePayload } from '@/api/subscription/verifyPurchase';
 
 interface PlanDisplay {
   key: string;
@@ -42,11 +44,16 @@ export default function PricingScreen() {
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<PlanDisplay | null>(null);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
   const { isDark } = useTheme();
   const isFocused = useIsFocused();
-  const { data: profileData, isLoading: isProfileLoading } = useGetProfile({
+  const {
+    data: profileData,
+    isLoading: isProfileLoading,
+    refetch: refetchProfile,
+  } = useGetProfile({
     // Poll every 5s while Pricing is visible so current plan + button state stay accurate
     refetchInterval: isFocused ? 5_000 : false,
     refetchIntervalInBackground: false,
@@ -64,6 +71,60 @@ export default function PricingScreen() {
       console.error('[Pricing] Navigation to Profile failed:', err);
     }
   }, [navigation]);
+
+  const handleRestorePurchase = async () => {
+    try {
+      setIsRestoring(true);
+      await RNIap.initConnection();
+
+      const availablePurchases = await RNIap.getAvailablePurchases();
+      console.log('availablePurchases', availablePurchases);
+
+      if (!availablePurchases || availablePurchases.length === 0) {
+        Alert.alert(
+          'No History Found',
+          "We couldn't find any previous purchases for this account."
+        );
+        return;
+      }
+
+      console.log('availablePurchases', availablePurchases);
+
+      for (const purchase of availablePurchases) {
+        console.log('purchase is inside the loop');
+        const platform = Platform.OS === 'ios' ? 'ios' : 'android';
+
+        const restorePayload: RestorePurchasePayload = {
+          // iOS uses transactionId; Android uses purchaseToken (critical for Google)
+          purchaseToken: purchase.purchaseToken,
+          transactionId: purchase.transactionId || '',
+          platform,
+        };
+
+        console.log('restorePayload', restorePayload);
+
+        const result = await restorePurchase(restorePayload);
+
+        if (result.status === 'success') {
+          // ✅ MUST finish transaction on BOTH platforms in 2026
+          await finishTransaction({ purchase, isConsumable: false });
+
+          // Refetch profile to update subscription status
+          await refetchProfile();
+
+          Alert.alert('Restored', 'Your subscription has been successfully restored.');
+          return;
+        }
+      }
+    } catch (error: any) {
+      // Check for user cancellation to avoid showing "Error" alerts
+      if (error.code !== 'E_USER_CANCELLED') {
+        Alert.alert('Restore Error', error.message);
+      }
+    } finally {
+      setIsRestoring(false);
+    }
+  };
 
   // Transform API data to display format and filter out test plans
   const plans = useMemo(() => {
@@ -216,15 +277,15 @@ export default function PricingScreen() {
             </Text>
           </View>
           <Text className="w-80 text-center text-[10px] text-textMuted mt-2 font-poppins-regular">
-            Introductory offer available for eligible Apple IDs. Apple determines eligibility.
-            {/* {Platform.OS === 'ios'
+            {/* Introductory offer available for eligible Apple IDs. Apple determines eligibility. */}
+            {Platform.OS === 'ios'
               ? 'Introductory offer available for eligible Apple IDs. Apple determines eligibility.'
-              : 'Introductory offer available for eligible Google accounts. Eligibility is determined by Google Play.'} */}
+              : 'Introductory offer available for eligible Google accounts. Eligibility is determined by Google Play.'}
           </Text>
         </View>
 
         {/* PLANS */}
-        <View className="mt-3 flex flex-col gap-4">
+        <View className="mt-2 flex flex-col gap-4">
           {isLoading ? (
             <View className="items-center justify-center py-8">
               <ActivityIndicator size="large" color="#23A76F" />
@@ -251,7 +312,7 @@ export default function PricingScreen() {
                 <Pressable
                   key={item.key}
                   onPress={() => setSelectedPlan(item)}
-                  className={`rounded-md border-2 px-4 py-3 ${
+                  className={`rounded-md border-2 px-4 py-2.5 ${
                     active ? 'border-[#27B07D]' : isDark ? 'border-[#273F36]' : 'border-[#DAE7E0]'
                   } ${isDark ? 'bg-[#1A2E26]' : 'bg-white'}`}
                 >
@@ -266,7 +327,7 @@ export default function PricingScreen() {
                     <View className="flex-1">
                       <View className="flex-row items-center gap-2">
                         <Text
-                          className={`font-poppins-medium text-lg ${isDark ? 'text-white' : 'text-textDark'}`}
+                          className={`font-poppins-medium text-base ${isDark ? 'text-white' : 'text-textDark'}`}
                         >
                           {item.title}
                         </Text>
@@ -281,21 +342,21 @@ export default function PricingScreen() {
                       <View className="flex-row items-center justify-between mt-1">
                         <View className="flex-1">
                           <Text
-                            className={`text-[15px] font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                            className={`text-base font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
                           >
                             <Text
-                              className={`font-poppins-semibold text-xl ${isDark ? 'text-white' : 'text-textDark'}`}
+                              className={`font-poppins-semibold text-lg ${isDark ? 'text-white' : 'text-textDark'}`}
                             >
                               {item.formattedPrice}
                             </Text>
                             /month for first {item.discountDurationMonths} months,
                           </Text>
                           <Text
-                            className={`text-[15px] font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                            className={`text-base font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
                           >
                             then{' '}
                             <Text
-                              className={`font-poppins-semibold text-xl ${isDark ? 'text-white' : 'text-textDark'}`}
+                              className={`font-poppins-semibold text-lg ${isDark ? 'text-white' : 'text-textDark'}`}
                             >
                               {item.formattedMonthlyPrice}
                             </Text>
@@ -358,12 +419,12 @@ export default function PricingScreen() {
           // Hide button when current plan is selected
           if (isCurrentPlan) {
             return (
-              <Pressable onPress={navigateToProfileHome} className="mt-2 items-center">
-                <Text
-                  className={`text-lg text-[#E7B008] font-poppins-bold ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-                >
-                  Close
-                </Text>
+              <Pressable
+                onPress={navigateToProfileHome}
+                className="mt-2 items-center flex-row justify-center gap-2"
+              >
+                {/* <Ionicons name="close-circle" size={20} color="#F22D2D" /> */}
+                <Text className="text-error text-base font-poppins-regular underline">Close</Text>
               </Pressable>
             );
           }
@@ -394,12 +455,21 @@ export default function PricingScreen() {
                 className="mt-3 rounded-xl"
                 textClassName="text-[16px]"
               />
-              <Pressable onPress={navigateToProfileHome} className="mt-3 items-center">
-                <Text
-                  className={`text-base font-poppins-regular ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-                >
-                  Close
-                </Text>
+              <Button
+                text="Restore Purchase"
+                onPress={handleRestorePurchase}
+                variant="light"
+                disabled={isRestoring}
+                loading={isRestoring}
+                className="mt-3 rounded-xl"
+                textClassName="text-[16px]"
+              />
+              <Pressable
+                onPress={navigateToProfileHome}
+                className="mt-3 items-center flex-row justify-center gap-2"
+              >
+                {/* <Ionicons name="close-circle" size={20} color="#F22D2D" /> */}
+                <Text className="text-error text-base font-poppins-regular underline">Close</Text>
               </Pressable>
             </>
           );
@@ -408,12 +478,12 @@ export default function PricingScreen() {
         {/* Subscription Renewal Notice */}
         <View className="mt-2 mb-2 px-4">
           <Text className="text-center text-textMuted text-xs">
-            Payment will be charged to your Apple ID account at confirmation of purchase.
+            {/* Payment will be charged to your Apple ID account at confirmation of purchase.
             Subscription automatically renews unless cancelled at least 24 hours before the end of
-            the current period.
-            {/* {Platform.OS === 'ios'
+            the current period. */}
+            {Platform.OS === 'ios'
               ? 'Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'
-              : 'Payment will be charged to your Google Play account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'} */}
+              : 'Payment will be charged to your Google Play account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'}
           </Text>
         </View>
 

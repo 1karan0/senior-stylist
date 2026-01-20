@@ -3,12 +3,14 @@ import {
   View,
   Text,
   TouchableOpacity,
+  Pressable,
   Image,
   ScrollView,
   Animated,
   Platform,
   Alert,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Clipboard from '@react-native-clipboard/clipboard';
@@ -523,25 +525,34 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                     isPlatformMismatch ? 'opacity-50' : ''
                   }`}
                 />
-                <Button
-                  text="Restore Purchase"
-                  variant="light"
+                <Pressable
                   onPress={handleRestorePurchase}
-                  loading={isRestoring}
-                  className="bg-white border border-[#DAE7E0] rounded-[10px] mb-3"
-                />
+                  disabled={isRestoring}
+                  className="mb-3 items-center"
+                >
+                  {isRestoring ? (
+                    <View className="flex-row items-center gap-2">
+                      <ActivityIndicator size="small" color="#27B07D" />
+                      <Text style={{ color: '#27B07D' }} className="text-base font-poppins-regular">
+                        Restore Purchase
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={{ color: '#27B07D' }} className="text-base font-poppins-regular">
+                      Restore Purchase
+                    </Text>
+                  )}
+                </Pressable>
                 {!!subscription.auto_renew && (
-                  <Button
-                    text="Cancel Subscription"
-                    variant="light"
+                  <Pressable
                     onPress={() => setShowCancelModal(true)}
                     disabled={isPlatformMismatch}
-                    icon={<Ionicons name="close-circle" size={20} color="#F22D2D" />}
-                    className={`bg-white border border-[#DAE7E0] rounded-[10px] ${
-                      isPlatformMismatch ? 'opacity-50' : ''
-                    }`}
-                    textClassName="text-error"
-                  />
+                    className={`mb-3 items-center ${isPlatformMismatch ? 'opacity-50' : ''}`}
+                  >
+                    <Text className="text-error text-base font-poppins-regular underline">
+                      Cancel Subscription
+                    </Text>
+                  </Pressable>
                 )}
               </>
             ) : (
@@ -558,22 +569,30 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   onPress={handleManageSubscription}
                   className={` bg-[#DAE7E0] rounded-[10px] mb-3`}
                 />
-                <Button
-                  text="Restore Purchase"
-                  variant="light"
+                <Pressable
                   onPress={handleRestorePurchase}
-                  loading={isRestoring}
-                  className="bg-white border border-[#DAE7E0] rounded-[10px] mb-3"
-                />
+                  disabled={isRestoring}
+                  className="mb-3 items-center"
+                >
+                  {isRestoring ? (
+                    <View className="flex-row items-center gap-2">
+                      <ActivityIndicator size="small" color="#27B07D" />
+                      <Text style={{ color: '#27B07D' }} className="text-base font-poppins-regular">
+                        Restore Purchase
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={{ color: '#27B07D' }} className="text-base font-poppins-regular">
+                      Restore Purchase
+                    </Text>
+                  )}
+                </Pressable>
                 {hasSubscription && (
-                  <Button
-                    text="Cancel Subscription"
-                    variant="light"
-                    onPress={() => setShowCancelModal(true)}
-                    icon={<Ionicons name="close-circle" size={20} color="#F22D2D" />}
-                    className="bg-white border border-[#DAE7E0] rounded-[10px]"
-                    textClassName="text-error"
-                  />
+                  <Pressable onPress={() => setShowCancelModal(true)} className="items-center">
+                    <Text className="text-error text-base font-poppins-regular underline">
+                      Cancel Subscription
+                    </Text>
+                  </Pressable>
                 )}
               </>
             )}
