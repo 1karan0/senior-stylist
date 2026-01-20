@@ -84,15 +84,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
 
  override func sourceURL(for bridge: RCTBridge) -> URL? {
- self.bundleURL()
+ return self.bundleURL()
  }
 
- override func bundleURL() -> URL? {
- #if DEBUG
-  return RCTBundleURLProvider.sharedSettings()
-  .jsBundleURL(forBundleRoot: "index")
- #else
-  return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
- #endif
- }
+override func bundleURL() -> URL? {
+    #if DEBUG
+      return RCTBundleURLProvider.sharedSettings()
+        .jsBundleURL(
+          forBundleRoot: "index",
+          fallbackExtension: nil
+        )
+    #else
+      return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+    #endif
+  }
+
 }
