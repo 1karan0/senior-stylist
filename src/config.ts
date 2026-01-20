@@ -19,10 +19,10 @@ import Config from 'react-native-config';
  */
 
 // Environment
-export const ENV = Config.ENV || 'dev';
+export const ENV = Config.ENV;
 
 // API Configuration
-export const BASE_URL = Config.BASE_URL || 'https://ss-admin.codeit.space';
+export const BASE_URL = Config.BASE_URL;
 
 // Export all config values in one object (optional, for convenience)
 export const config = {
