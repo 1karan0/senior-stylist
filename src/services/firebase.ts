@@ -95,6 +95,7 @@ export const signInWithFirebaseCustomToken = async (customToken: string) => {
         );
       } else {
         console.error('Failed to sign in with custom token:', error);
+        console.log('firebase config checking=======', FIREBASE_CONFIG);
       }
     }
     throw error;

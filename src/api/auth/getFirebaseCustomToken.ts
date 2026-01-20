@@ -3,7 +3,7 @@ import axios from 'axios';
 import { BASE_URL } from '@/config';
 import { storage } from '@/services/storage';
 
-export const fetchFirebaseCustomToken = async (): Promise<string | null> => {
+export async function fetchFirebaseCustomToken(): Promise<string | null> {
   const token = await storage.getToken();
   if (!token) {
     return null;
@@ -25,4 +25,4 @@ export const fetchFirebaseCustomToken = async (): Promise<string | null> => {
     }
     return null;
   }
-};
+}

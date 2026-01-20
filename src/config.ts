@@ -20,10 +20,10 @@ import Config from 'react-native-config';
 
 // Environment
 export const ENV = Config.ENV;
-
+console.log('env checking=======', ENV);
 // API Configuration
 export const BASE_URL = Config.BASE_URL;
-
+console.log('base url checking=======', BASE_URL);
 // Export all config values in one object (optional, for convenience)
 export const config = {
   ENV,

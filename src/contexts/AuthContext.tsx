@@ -135,6 +135,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = response?.data?.access_token;
       const user = response?.data?.user;
       const firebaseToken = response?.data?.firebase_custom_token;
+      console.log('response======>', response);
+      console.log('token======>', token);
+      console.log('user======>', user);
+      console.log('firebaseToken======>', firebaseToken);
 
       if (!token) throw new Error('Token missing in API response');
 
