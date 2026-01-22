@@ -14,7 +14,7 @@ const Consultation = () => {
   const { isDark } = useTheme();
   const isFocused = useIsFocused();
 
-  const { data: profileData } = useGetProfile({
+  const { data: profileData, isLoading: isProfileLoading } = useGetProfile({
     // Poll every 5s while this screen is visible so subscription/profile updates show live
     refetchInterval: isFocused ? 5_000 : false,
     refetchIntervalInBackground: false,
@@ -22,7 +22,8 @@ const Consultation = () => {
   const subscription = profileData?.subscription ?? null;
   const hasSubscription = !!subscription;
   const hasConsultations = (data?.length ?? 0) > 0;
-  const shouldShowLoading = isLoading && !hasConsultations;
+  const shouldShowLoading =
+    (isLoading && !hasConsultations && isProfileLoading) || (isProfileLoading && !hasSubscription);
   return (
     <View className={`flex-1 ${isDark ? 'bg-[#0B1E16]' : 'bg-white'} `}>
       {/* Loading State */}
@@ -34,6 +35,12 @@ const Consultation = () => {
         </GradientBackground>
       ) : hasConsultations && hasSubscription ? (
         <CustomerChatHome />
+      ) : isProfileLoading ? (
+        <GradientBackground>
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" />
+          </View>
+        </GradientBackground>
       ) : (
         <NoConsultant />
       )}

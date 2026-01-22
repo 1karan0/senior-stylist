@@ -11,16 +11,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "export ENVFILE=&quot;.env.prod&quot;&#10;echo &quot;Using ENVFILE: $ENVFILE&quot;&#10;">
-               <EnvironmentBuildable>
-                  <BuildableReference
-                     BuildableIdentifier = "primary"
-                     BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-                     BuildableName = "SeniorStylist.app"
-                     BlueprintName = "SeniorStylist"
-                     ReferencedContainer = "container:Senior_stylist.xcodeproj">
-                  </BuildableReference>
-               </EnvironmentBuildable>
+               scriptText = "&#10;">
             </ActionContent>
          </ExecutionAction>
       </PreActions>
@@ -72,7 +63,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "# Type a script or drag a script file from your workspace to insert its path.&#10;export ENVFILE=.env.prod&#10;">
+               scriptText = "# Type a script or drag a script file from your workspace to insert its path.&#10;if [ &quot;${CONFIGURATION}&quot; = &quot;Debug-Dev&quot; ] || [ &quot;${CONFIGURATION}&quot; = &quot;Release-Dev&quot; ]; then&#10;  export ENVFILE=.env.dev&#10;else&#10;  export ENVFILE=.env.prod&#10;fi&#10;&#10;echo &quot;&#x1f9ea; Using ENVFILE=$ENVFILE&quot;&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
@@ -95,13 +86,6 @@
             ReferencedContainer = "container:Senior_stylist.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "ENVFILE"
-            value = ".env.prod"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release-Prod"
@@ -131,7 +115,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "export ENVFILE=&quot;.env.prod&quot;&#10;echo &quot;Using ENVFILE: $ENVFILE&quot;&#10;">
+               scriptText = "if [ &quot;${CONFIGURATION}&quot; = &quot;Debug-Dev&quot; ] || [ &quot;${CONFIGURATION}&quot; = &quot;Release-Dev&quot; ]; then&#10;  export ENVFILE=.env.dev&#10;else&#10;  export ENVFILE=.env.prod&#10;fi&#10;&#10;echo &quot;&#x1f9ea; Using ENVFILE=$ENVFILE&quot;&#10;&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
