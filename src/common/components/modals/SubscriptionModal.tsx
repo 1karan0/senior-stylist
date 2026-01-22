@@ -236,12 +236,12 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
                 offerToken: targetOffer.offerToken,
               },
             ],
-            obfuscatedAccountId: profileData?.user?.uuid,
+            obfuscatedAccountIdAndroid: profileData?.user?.uuid,
             ...(purchaseTokenAndroid && {
               purchaseTokenAndroid,
               replacementModeAndroid,
             }),
-          },
+          } as any,
         },
       });
 
