@@ -30,9 +30,13 @@ const AppStack: React.FC = () => {
         return;
       }
 
+      console.log('user in app stack', user);
+
       // For customers: Check active_subscription from user object
       const activeSubscription = (user as any)?.active_subscription;
       const hasActiveSubscription = !!activeSubscription;
+
+      console.log('hasActiveSubscription', hasActiveSubscription);
 
       if (hasActiveSubscription) {
         setInitialRoute('UserTabs');
