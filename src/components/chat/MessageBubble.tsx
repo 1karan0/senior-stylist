@@ -1,7 +1,8 @@
 import React from 'react';
-import { Linking, Text, TouchableOpacity, View, Image } from 'react-native';
+import { Linking, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { useTheme } from '@/contexts/ThemeContext';
+import CachedImage from '@/common/components/CachedImage';
 
 import type { ChatLinkPreview, ChatMessage } from '@/types/chat';
 
@@ -51,7 +52,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       }`}
     >
       {preview.image ? (
-        <Image
+        <CachedImage
           source={{ uri: preview.image }}
           className="w-full h-40 bg-commonGradientStop6"
           resizeMode="cover"
@@ -140,7 +141,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 onPress={() => onImagePress?.(message.attachment_url!)}
                 activeOpacity={0.9}
               >
-                <Image
+                <CachedImage
                   source={{ uri: message.attachment_url }}
                   className="w-[200px] h-[200px] rounded-xl border border-[#152821]"
                   resizeMode="cover"

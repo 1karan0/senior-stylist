@@ -1,6 +1,7 @@
 import React from 'react';
-import { Dimensions, Modal, StyleSheet, TouchableOpacity, View, Image } from 'react-native';
+import { Dimensions, Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import CachedImage from '@/common/components/CachedImage';
 
 interface ImageModalProps {
   visible: boolean;
@@ -26,7 +27,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ visible, imageUri, onClose, rou
         <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.8}>
           <Ionicons name="close" size={28} color="#FFFFFF" />
         </TouchableOpacity>
-        <Image
+        <CachedImage
           source={{ uri: imageUri }}
           style={imageStyle}
           resizeMode={rounded ? 'cover' : 'contain'}

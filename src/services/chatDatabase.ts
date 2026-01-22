@@ -9,6 +9,8 @@ type Consultation = ConsultantConsultation;
 let SQLite: any = null;
 let db: any = null;
 const isWeb = Platform.OS === 'web';
+type ChatCacheStatus = 'sqlite' | 'memory' | 'web';
+let cacheStatus: ChatCacheStatus = isWeb ? 'web' : 'memory';
 
 // Write queue for database operations to prevent transaction conflicts
 class WriteQueue {
@@ -148,6 +150,7 @@ const logDatabaseIntrospection = async (database: any) => {
 
 export const initChatDatabase = async (): Promise<any> => {
   if (isWeb || !SQLite) {
+    cacheStatus = isWeb ? 'web' : 'memory';
     // Return a mock database object for web/Expo Go
     return {
       execAsync: async () => {},
@@ -158,6 +161,7 @@ export const initChatDatabase = async (): Promise<any> => {
   }
 
   if (db) {
+    cacheStatus = 'sqlite';
     return db;
   }
 
@@ -201,11 +205,13 @@ export const initChatDatabase = async (): Promise<any> => {
 
     // Wrap the database to provide expo-sqlite-like API
     db = createDatabaseWrapper(nitroSqliteDb);
+    cacheStatus = 'sqlite';
     logDatabaseIntrospection(db);
   } catch (error) {
     if (__DEV__) {
       console.warn('Failed to initialize SQLite, using in-memory cache:', error);
     }
+    cacheStatus = 'memory';
     // Return mock database
     return {
       execAsync: async () => {},
@@ -217,6 +223,8 @@ export const initChatDatabase = async (): Promise<any> => {
 
   return db;
 };
+
+export const getChatCacheStatus = (): ChatCacheStatus => cacheStatus;
 
 export const getChatDatabase = async (): Promise<any> => {
   if (!db) {

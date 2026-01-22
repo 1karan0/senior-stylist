@@ -157,7 +157,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     <View
       className="px-4 pt-2"
       style={{
-        paddingBottom: Math.max(insets.bottom, 12),
+        paddingBottom: Platform.OS === 'ios' ? 0 : Math.max(insets.bottom, 12),
       }}
     >
       {selectedImage ? (

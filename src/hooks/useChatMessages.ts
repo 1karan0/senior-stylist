@@ -4,12 +4,14 @@ import { consultationMessagesApi } from '@/api/consultations/messages';
 import { sendMessageToFirestore, waitForFirebaseUser } from '@/services/firebase';
 import {
   getMessages,
+  getChatCacheStatus,
   initChatDatabase,
   markAllAsRead,
   saveMessage,
   saveMessages,
   updateMessageStatus,
 } from '@/services/chatDatabase';
+import { prefetchImageUrls } from '@/services/imageCache';
 import type { ChatMessage } from '@/types/chat';
 import NetInfo from '@react-native-community/netinfo';
 
@@ -33,12 +35,9 @@ export const useChatMessages = ({
   const [hasMore, setHasMore] = useState(true);
   const [realtimeEnabled, setRealtimeEnabled] = useState(false);
   const [offlineError, setOfflineError] = useState<string | null>(null);
+  const [cacheStatus, setCacheStatus] = useState<'sqlite' | 'memory' | 'web'>('memory');
 
   const realtimeUnsubscribeRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    initChatDatabase();
-  }, []);
 
   const loadMessages = useCallback(
     async (reset = false) => {
@@ -96,7 +95,20 @@ export const useChatMessages = ({
   );
 
   useEffect(() => {
-    loadMessages(true);
+    let mounted = true;
+
+    const initAndLoad = async () => {
+      await initChatDatabase();
+      if (mounted) {
+        setCacheStatus(getChatCacheStatus());
+      }
+      await loadMessages(true);
+    };
+
+    initAndLoad();
+    return () => {
+      mounted = false;
+    };
   }, [loadMessages]);
 
   useEffect(() => {
@@ -222,6 +234,22 @@ export const useChatMessages = ({
       consultationMessagesApi.markChatRead(consultationId).catch(() => {});
     }
   }, [consultationId, messages.length]);
+
+  useEffect(() => {
+    const recent = messages.slice(-40);
+    const urls: string[] = [];
+    recent.forEach((msg) => {
+      if (msg.attachment_url) {
+        urls.push(msg.attachment_url);
+      }
+      if (msg.link_preview?.image) {
+        urls.push(msg.link_preview.image);
+      }
+    });
+    if (urls.length > 0) {
+      prefetchImageUrls(urls).catch(() => {});
+    }
+  }, [messages]);
 
   const loadOlderMessages = useCallback(async () => {
     if (!hasMore || loadingOlder) {
@@ -353,6 +381,7 @@ export const useChatMessages = ({
     hasMore,
     realtimeEnabled,
     offlineError,
+    cacheStatus,
     loadOlderMessages,
     sendMessage,
     retryMessage,
