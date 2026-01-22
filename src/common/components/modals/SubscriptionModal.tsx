@@ -236,7 +236,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
                 offerToken: targetOffer.offerToken,
               },
             ],
-            obfuscatedAccountIdAndroid: profileData?.user?.uuid,
+            obfuscatedAccountId: profileData?.user?.uuid,
             ...(purchaseTokenAndroid && {
               purchaseTokenAndroid,
               replacementModeAndroid,
