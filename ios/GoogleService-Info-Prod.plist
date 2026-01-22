@@ -15,16 +15,32 @@
 	<key>STORAGE_BUCKET</key>
 	<string>senior-stylist-prod.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_ANALYTICS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_APPINVITE_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_GCM_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_SIGNIN_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>GOOGLE_APP_ID</key>
 	<string>1:552447936882:ios:94adc74edd763f0fc535eb</string>
+	<key>BASE_URL</key>
+	<string>https://api.senior-stylist.com</string>
+	<key>ENV</key>
+	<string>PROD</string>
+	<key>FIREBASE_STORAGE_BUCKET</key>
+	<string>senior-stylist-prod.firebasestorage.app</string>
+	<key>FIREBASE_API_KEY</key>
+	<string>AIzaSyC_NX9ijwrrE-LtjJYxUneWwSvQhhrLPqU</string>
+	<key>FIREBASE_MESSAGING_SENDER_ID</key>
+	<string>552447936882</string>
+	<key>FIREBASE_AUTH_DOMAIN</key>
+	<string>senior-stylist-prod.firebaseapp.com</string>
+	<key>FIREBASE_PROJECT_ID</key>
+	<string>senior-stylist-prod</string>
+	<key>FIREBASE_APP_ID</key>
+	<string>1:552447936882:android:78f261ed1845a9b5c535eb</string>
 </dict>
 </plist>
