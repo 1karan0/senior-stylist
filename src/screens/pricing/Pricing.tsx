@@ -60,6 +60,7 @@ export default function PricingScreen() {
   });
   const profileSubscription = profileData?.subscription ?? null;
   const { data: subscriptionPlans, isLoading, error } = useGetSubscriptionPlans();
+
   const navigateToProfileHome = useCallback(() => {
     try {
       // Pricing is customer-only: always route back to customer Profile
@@ -78,7 +79,6 @@ export default function PricingScreen() {
       await RNIap.initConnection();
 
       const availablePurchases = await RNIap.getAvailablePurchases();
-      console.log('availablePurchases', availablePurchases);
 
       if (!availablePurchases || availablePurchases.length === 0) {
         Alert.alert(
@@ -88,10 +88,7 @@ export default function PricingScreen() {
         return;
       }
 
-      console.log('availablePurchases', availablePurchases);
-
       for (const purchase of availablePurchases) {
-        console.log('purchase is inside the loop');
         const platform = Platform.OS === 'ios' ? 'ios' : 'android';
 
         const restorePayload: RestorePurchasePayload = {
@@ -100,8 +97,6 @@ export default function PricingScreen() {
           transactionId: purchase.transactionId || '',
           platform,
         };
-
-        console.log('restorePayload', restorePayload);
 
         const result = await restorePurchase(restorePayload);
 
@@ -136,40 +131,18 @@ export default function PricingScreen() {
     // Filter out test plans
     const filteredPlans = subscriptionPlans.filter((plan) => !plan.slug.includes('-test'));
 
-    // For Android: filter by google_product_id === 'senior_stylist_subscription_v1'
-    // For iOS: keep all plans
+    // For Android: filter plans that have google_product_id
+    // For iOS: keep all plans (they use apple_product_id)
     const platformFilteredPlans =
       Platform.OS === 'android'
-        ? filteredPlans.filter((plan) => plan.google_product_id === 'senior_stylist')
+        ? filteredPlans.filter(
+            (plan) => plan.google_product_id && plan.google_product_id.trim() !== ''
+          )
         : filteredPlans;
 
     const sortedPlans = platformFilteredPlans.sort((a, b) => a.sort_order - b.sort_order);
 
-    // For Android: map the first 3 plans to specific plan IDs and offer IDs
-    const withAndroidMapping = (() => {
-      if (Platform.OS !== 'android') return sortedPlans;
-      if (sortedPlans.length === 0) return sortedPlans;
-
-      // Map first 3 plans to specific plan IDs and offer IDs
-      const planMapping = [
-        { basePlanId: 'starter', offerId: 'starter-intro-offer' },
-        { basePlanId: 'professional', offerId: 'professional-intro-offer' },
-        { basePlanId: 'business', offerId: 'business-intro-offer' },
-      ];
-
-      return sortedPlans.map((plan, index) => {
-        if (index < 3) {
-          return {
-            ...plan,
-            base_plan_product_id: planMapping[index].basePlanId,
-            offer_plan_id: planMapping[index].offerId,
-          };
-        }
-        return plan;
-      });
-    })();
-
-    const mappedPlans = withAndroidMapping.map((plan: SubscriptionPlan) => {
+    const mappedPlans = sortedPlans.map((plan: SubscriptionPlan) => {
       // Helper function to remove decimals from price
       const formatPriceWithoutDecimals = (priceString: string): string => {
         const priceMatch = priceString.match(/£?([\d,]+\.?\d*)/);

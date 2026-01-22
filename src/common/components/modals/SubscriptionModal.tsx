@@ -236,7 +236,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
                 offerToken: targetOffer.offerToken,
               },
             ],
-            obfuscatedAccountIdAndroid: profileData?.user?.uuid,
+            obfuscatedAccountId: profileData?.user?.uuid,
             ...(purchaseTokenAndroid && {
               purchaseTokenAndroid,
               replacementModeAndroid,
@@ -478,11 +478,6 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
             if (pending.length) {
               await RNIap.clearTransactionIOS();
             }
-            // const transactions = await RNIap.getAvailablePurchases();
-            // for (const transaction of transactions) {
-            //   console.log('[IAP] Finishing stale transaction:', transaction.transactionId);
-            //   await RNIap.finishTransaction({ purchase: transaction, isConsumable: false });
-            // }
           }
         } catch (err) {
           console.warn('[SubscriptionModal] Failed to clear stale transactions:', err);
