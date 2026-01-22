@@ -56,6 +56,7 @@ const EditProfile: React.FC = () => {
     phoneNumber: '',
     email: '',
     address: '',
+    bio: '',
   });
   const [showPasswordSection, setShowPasswordSection] = useState(false);
 
@@ -79,11 +80,13 @@ const EditProfile: React.FC = () => {
   // reflect fetched profile into local state when available
   useEffect(() => {
     if (user) {
+      const existingBio = user?.consultant_details?.bio ?? user?.bio ?? '';
       setFormData({
         name: user.name ?? '',
         phoneNumber: user.phone ?? '',
         email: user.email ?? '',
         address: user.address ?? '',
+        bio: existingBio,
       });
       setProfileImage(user.profile_picture_url ?? null);
     }
@@ -177,6 +180,7 @@ const EditProfile: React.FC = () => {
       address: formData.address ?? '',
       profile_picture_url: profileImage ?? '',
       phone: formData.phoneNumber,
+      bio: formData.bio?.trim() ?? '',
       ...(passwordValues?.newPassword && { password: passwordValues.newPassword }),
     };
 
@@ -277,8 +281,11 @@ const EditProfile: React.FC = () => {
                   ) : (
                     <LinearGradient
                       colors={['#27B07D', '#36D399']}
-                      style={{ flex: 1 }}
-                      className="items-center justify-center"
+                      style={{
+                        flex: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}
                     >
                       <Text className="text-white font-urbanist-semibold text-4xl">
                         {formData.name?.charAt(0) ?? 'J'}
@@ -335,6 +342,28 @@ const EditProfile: React.FC = () => {
                 }`}
                 placeholderTextColor={isDark ? '#8AA897' : '#658176'}
                 editable={!isSaving}
+              />
+            </View>
+            {/* Bio */}
+            <View className="mb-5">
+              <Text
+                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+              >
+                Bio
+              </Text>
+              <TextInput
+                value={formData.bio}
+                onChangeText={(text) => setFormData({ ...formData, bio: text })}
+                className={`border rounded-xl px-4 py-3 font-poppins-regular h-28 ${
+                  isDark
+                    ? 'bg-[#0F1F1A] border-commonGradientStop7 text-white'
+                    : 'bg-white border-[#DAE7E0] text-textDark'
+                }`}
+                placeholder="Enter your bio"
+                placeholderTextColor={isDark ? '#8AA897' : '#658176'}
+                editable={!isSaving}
+                multiline
+                textAlignVertical="top"
               />
             </View>
 

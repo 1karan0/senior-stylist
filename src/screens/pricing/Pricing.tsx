@@ -140,9 +140,7 @@ export default function PricingScreen() {
     // For iOS: keep all plans
     const platformFilteredPlans =
       Platform.OS === 'android'
-        ? filteredPlans.filter(
-            (plan) => plan.google_product_id === 'senior_stylist_subscription_v1'
-          )
+        ? filteredPlans.filter((plan) => plan.google_product_id === 'senior_stylist')
         : filteredPlans;
 
     const sortedPlans = platformFilteredPlans.sort((a, b) => a.sort_order - b.sort_order);
