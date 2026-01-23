@@ -247,7 +247,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
 
                   <View className="flex-1">
                     <Button
-                      text="Submit Review"
+                      text="Submit "
                       variant="gradient"
                       onPress={handleSubmit}
                       loading={isLoading}

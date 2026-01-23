@@ -9,22 +9,28 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { useForm, Controller } from 'react-hook-form';
 
 import { createConsultation } from '@/api/user/consultation/useCreateConsultation';
 import GradientBackground from '@/common/components/GradientBackground';
 import Toast from '@/common/components/Toast';
 import Button from '@/common/components/Button';
+import ImagePickerModal from '@/common/components/modals/ImagePickerModal';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAds } from '@/contexts/AdContext';
 import { storage } from '@/services/storage';
-import { requestPhotoLibraryPermission, showPermissionDeniedAlert } from '@/utils/imagePermissions';
+import {
+  requestPhotoLibraryPermission,
+  requestCameraPermission,
+  showPermissionDeniedAlert,
+} from '@/utils/imagePermissions';
 import { useFindingStylistModal } from '@/contexts/FindingStylistModalContext';
 
 const NewConsultant = ({ navigation }: any) => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [showImagePickerModal, setShowImagePickerModal] = useState(false);
   const [toast, setToast] = useState({
     visible: false,
     message: '',
@@ -58,8 +64,60 @@ const NewConsultant = ({ navigation }: any) => {
     },
   });
 
-  const pickImage = async () => {
+  const handleImagePickerResult = (asset: any) => {
+    if (!asset) return;
+
+    // Prefer base64 data URI like chat does
+    if (asset.base64) {
+      const mimeType = asset.type || 'image/jpeg';
+      setSelectedImage({
+        ...asset,
+        uri: `data:${mimeType};base64,${asset.base64}`,
+      });
+    } else if (asset.uri) {
+      setSelectedImage(asset);
+    }
+  };
+
+  const takePhoto = async () => {
     try {
+      setShowImagePickerModal(false);
+      // Request permission before opening camera
+      const hasPermission = await requestCameraPermission();
+      if (!hasPermission && Platform.OS === 'android') {
+        showPermissionDeniedAlert('camera');
+        return;
+      }
+
+      const result = await launchCamera({
+        mediaType: 'photo',
+        quality: 0.8,
+        saveToPhotos: false,
+        includeBase64: true,
+      });
+
+      if (result.didCancel) return;
+
+      // Handle permission errors
+      if (
+        result.errorCode === 'permission' ||
+        result.errorMessage?.toLowerCase().includes('permission')
+      ) {
+        showPermissionDeniedAlert('camera');
+        return;
+      }
+
+      if (result.assets && result.assets.length > 0) {
+        handleImagePickerResult(result.assets[0]);
+      }
+    } catch (err) {
+      console.log('Camera error:', err);
+    }
+  };
+
+  const pickFromGallery = async () => {
+    try {
+      setShowImagePickerModal(false);
       // Request permission before opening gallery
       const hasPermission = await requestPhotoLibraryPermission();
       if (!hasPermission && Platform.OS === 'android') {
@@ -85,17 +143,7 @@ const NewConsultant = ({ navigation }: any) => {
       }
 
       if (result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        // Prefer base64 data URI like chat does
-        if (asset.base64) {
-          const mimeType = asset.type || 'image/jpeg';
-          setSelectedImage({
-            ...asset,
-            uri: `data:${mimeType};base64,${asset.base64}`,
-          });
-        } else if (asset.uri) {
-          setSelectedImage(asset);
-        }
+        handleImagePickerResult(result.assets[0]);
       }
     } catch (err) {
       console.log('Image pick error:', err);
@@ -234,7 +282,7 @@ const NewConsultant = ({ navigation }: any) => {
               <Button
                 text="Upload reference photo"
                 variant="light"
-                onPress={pickImage}
+                onPress={() => setShowImagePickerModal(true)}
                 icon={
                   <Image
                     source={require('@/assets/icons/upload-2.png')}
@@ -247,11 +295,13 @@ const NewConsultant = ({ navigation }: any) => {
 
               {/* Show Preview */}
               {selectedImage && (
-                <View className="mt-4 items-center overflow-hidden rounded-xl">
+                <View
+                  className={`mt-4 items-center overflow-hidden border ${isDark ? 'border-commonGradientStop7' : 'border-[#DADADA]'} rounded-xl`}
+                >
                   <Image
                     source={{ uri: selectedImage.uri }}
                     className="w-full h-52 rounded-xl"
-                    resizeMode="cover"
+                    resizeMode="contain"
                   />
                 </View>
               )}
@@ -280,6 +330,15 @@ const NewConsultant = ({ navigation }: any) => {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
+
+        {/* Image Picker Modal */}
+        <ImagePickerModal
+          visible={showImagePickerModal}
+          onClose={() => setShowImagePickerModal(false)}
+          onCamera={takePhoto}
+          onGallery={pickFromGallery}
+          title="Choose Reference Photo"
+        />
       </GradientBackground>
     </View>
   );

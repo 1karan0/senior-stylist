@@ -16,9 +16,17 @@ interface Props {
   onCamera: () => void;
   onGallery: () => void;
   loading?: boolean;
+  title?: string;
 }
 
-const ImagePickerModal = ({ visible, onClose, onCamera, onGallery, loading = false }: Props) => {
+const ImagePickerModal = ({
+  visible,
+  onClose,
+  onCamera,
+  onGallery,
+  loading = false,
+  title = 'Choose Photo',
+}: Props) => {
   const { isDark } = useTheme();
 
   return (
@@ -38,7 +46,7 @@ const ImagePickerModal = ({ visible, onClose, onCamera, onGallery, loading = fal
               isDark ? 'text-white' : 'text-black'
             }`}
           >
-            Choose Profile Photo
+            {title}
           </Text>
 
           {/* Camera Button */}

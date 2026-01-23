@@ -758,7 +758,7 @@ export const setupTokenRefreshListener = (): (() => void) => {
 
 // Notification data types
 export interface NotificationData {
-  type: 'new_request' | 'new_message';
+  type: 'new_request' | 'new_message' | 'consultation_completed';
   consultation_id?: string;
   consultationId?: string; // Support both snake_case and camelCase
   request_id?: string;

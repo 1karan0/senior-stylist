@@ -29,6 +29,7 @@ import {
 } from '@/services/notifications';
 import { clearAllActiveChats } from '@/api/chat/useActiveChat';
 import { useAuth } from '@/contexts/AuthContext';
+import { useConsultationCompletionListener } from '@/hooks/useConsultationCompletionListener';
 
 /**
  * NotificationHandler component
@@ -90,6 +91,35 @@ const NotificationHandler: React.FC = () => {
           asCustomer,
         });
         console.log('🔔 [NOTIFICATION] Navigation to chat completed');
+      } else if (data.type === 'consultation_completed' && consultationId) {
+        // Navigate to chat screen for completed consultation (for consultants)
+        const consultationIdStr = String(consultationId);
+        if (!consultationIdStr) {
+          console.error(
+            '🔔 [NOTIFICATION] Missing consultation_id in consultation_completed notification'
+          );
+          return;
+        }
+
+        const consultationIdNum = Number(consultationIdStr);
+        if (isNaN(consultationIdNum) || consultationIdNum <= 0) {
+          console.error('🔔 [NOTIFICATION] Invalid consultation_id:', consultationIdStr);
+          return;
+        }
+
+        console.log('🔔 [NOTIFICATION] Navigating to completed consultation:', {
+          consultationId: consultationIdNum,
+          consultationIdStr,
+          userRole: user?.role,
+          isConsultant,
+        });
+
+        // Navigate to chat screen (consultant view)
+        navigation.navigate('ConsultantChat', {
+          consultationId: consultationIdNum,
+          asCustomer: false,
+        });
+        console.log('🔔 [NOTIFICATION] Navigation to completed consultation completed');
       } else if (data.type === 'new_request' && requestId) {
         // Navigate to requests screen (for consultants)
         // RequestTab is nested inside ConsultantTabs
@@ -185,6 +215,9 @@ const NotificationHandler: React.FC = () => {
       });
     }
   };
+
+  // Listen for consultation completion (only for consultants)
+  useConsultationCompletionListener();
 
   useEffect(() => {
     // Don't initialize notifications here - wait for user to be logged in
