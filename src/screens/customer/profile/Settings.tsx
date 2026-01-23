@@ -72,16 +72,73 @@ const Settings: React.FC = () => {
   const handleBack = () => navigation.goBack();
   const handleDeleteAccount = () => setShowDeleteModal(true);
 
-  const handleOpenTerms = () => {
-    Linking.openURL('https://senior-stylist.com/terms-conditions');
+  const handleOpenTerms = async () => {
+    const url =
+      Platform.OS === 'ios'
+        ? 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
+        : 'https://senior-stylist.com/terms-conditions';
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        setToast({
+          visible: true,
+          message: 'Unable to open the link. Please try again later.',
+          type: 'error' as any,
+        });
+      }
+    } catch (error) {
+      setToast({
+        visible: true,
+        message: 'Failed to open the link. Please try again later.',
+        type: 'error' as any,
+      });
+    }
   };
 
-  const handleOpenPrivacyPolicy = () => {
-    Linking.openURL('https://senior-stylist.com/privacy-policy');
+  const handleOpenPrivacyPolicy = async () => {
+    const url = 'https://senior-stylist.com/privacy-policy';
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        setToast({
+          visible: true,
+          message: 'Unable to open the link. Please try again later.',
+          type: 'error' as any,
+        });
+      }
+    } catch (error) {
+      setToast({
+        visible: true,
+        message: 'Failed to open the link. Please try again later.',
+        type: 'error' as any,
+      });
+    }
   };
 
-  const handleContactUs = () => {
-    Linking.openURL('https://senior-stylist.com/contact');
+  const handleContactUs = async () => {
+    const url = 'https://senior-stylist.com/contact';
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        setToast({
+          visible: true,
+          message: 'Unable to open the link. Please try again later.',
+          type: 'error' as any,
+        });
+      }
+    } catch (error) {
+      setToast({
+        visible: true,
+        message: 'Failed to open the link. Please try again later.',
+        type: 'error' as any,
+      });
+    }
   };
 
   const confirmDeleteAccount = async () => {

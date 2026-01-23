@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
+import firestore from '@react-native-firebase/firestore';
+import { waitForFirebaseUser } from '@/services/firebase';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useConsultation } from '@/hooks/useConsultation';
@@ -129,6 +131,58 @@ const ConsultantChatScreen: React.FC = () => {
     }
   }, [consultation?.status]);
 
+  // Listen for consultation status changes (especially when customer completes it)
+  useEffect(() => {
+    if (!consultationId || !isConsultant) {
+      return;
+    }
+
+    const setupStatusListener = async () => {
+      const firebaseUser = await waitForFirebaseUser(3000);
+      if (!firebaseUser) {
+        return;
+      }
+
+      const consultationRef = firestore().collection('consultations').doc(String(consultationId));
+
+      const unsubscribe = consultationRef.onSnapshot(
+        (doc) => {
+          if (doc.exists()) {
+            const data = doc.data();
+            const newStatus = data?.status;
+
+            // If status changed to 'completed', reload the consultation
+            if (newStatus === 'completed' && consultation?.status !== 'completed') {
+              if (__DEV__) {
+                console.log('[chat] Consultation status changed to completed, reloading...');
+              }
+              // Reload consultation to get updated status
+              reloadConsultation();
+            }
+          }
+        },
+        (error) => {
+          if (__DEV__) {
+            console.warn('[chat] Failed to listen to consultation status:', error);
+          }
+        }
+      );
+
+      return unsubscribe;
+    };
+
+    let unsubscribe: (() => void) | null = null;
+    setupStatusListener().then((unsub) => {
+      unsubscribe = unsub || null;
+    });
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [consultationId, isConsultant, consultation?.status, reloadConsultation]);
+
   // Intercept back button for customers when consultation is not completed
   useEffect(() => {
     if (!consultation || isConsultant) return;
@@ -159,6 +213,18 @@ const ConsultantChatScreen: React.FC = () => {
   const handleSend = useCallback(
     async (text: string, imageUri?: string) => {
       if (!currentUserId || !consultation) {
+        return;
+      }
+
+      // Prevent sending messages if consultation is completed
+      if (consultation.status === 'completed') {
+        Alert.alert(
+          'Consultation Completed',
+          'This consultation has been completed. You can no longer send messages.',
+          [{ text: 'OK' }]
+        );
+        // Reload consultation to ensure we have the latest status
+        await reloadConsultation();
         return;
       }
 
@@ -193,7 +259,14 @@ const ConsultantChatScreen: React.FC = () => {
         }
       }
     },
-    [consultation, currentUserId, currentUserName, isConsultant, sendMessageHook]
+    [
+      consultation,
+      currentUserId,
+      currentUserName,
+      isConsultant,
+      sendMessageHook,
+      reloadConsultation,
+    ]
   );
 
   const handleRetry = useCallback(
@@ -326,8 +399,12 @@ const ConsultantChatScreen: React.FC = () => {
     return <ChatLoadingScreen onBack={() => goToChatHome()} />;
   }
 
+  // Chat window is open only if:
+  // 1. chat_window_is_open is explicitly true, OR
+  // 2. Status is 'assigned' or 'active' (and NOT 'completed')
   const chatWindowOpen =
-    consultation.chat_window_is_open ?? ['assigned', 'active'].includes(consultation.status);
+    consultation.status !== 'completed' &&
+    (consultation.chat_window_is_open ?? ['assigned', 'active'].includes(consultation.status));
 
   return (
     <GradientBackground edges={['bottom', 'left', 'right']}>
