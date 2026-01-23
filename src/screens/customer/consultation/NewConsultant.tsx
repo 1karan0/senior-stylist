@@ -198,8 +198,8 @@ const NewConsultant = ({ navigation }: any) => {
   };
 
   return (
-    <View className="flex-1 pb-10">
-      <GradientBackground className="flex-1">
+    <View className="flex-1">
+      <GradientBackground className="flex-1 pb-10">
         <Toast
           visible={toast.visible}
           message={toast.message}
@@ -212,8 +212,8 @@ const NewConsultant = ({ navigation }: any) => {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <ScrollView
-            className="flex-1 px-5 pt-6"
-            contentContainerStyle={{ paddingBottom: 20 }}
+            className="flex-1 px-5 pt-6 "
+            contentContainerStyle={{ paddingBottom: 60 }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
