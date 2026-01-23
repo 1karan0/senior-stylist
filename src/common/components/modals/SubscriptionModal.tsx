@@ -840,7 +840,11 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           <View className="flex-row justify-center items-center gap-2 my-2">
             <Pressable
               onPress={() => {
-                Linking.openURL('https://senior-stylist.com/terms-conditions').catch((err) =>
+                const termsUrl =
+                  Platform.OS === 'ios'
+                    ? 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
+                    : 'https://senior-stylist.com/terms-conditions';
+                Linking.openURL(termsUrl).catch((err) =>
                   console.error('Failed to open Terms & Conditions:', err)
                 );
               }}
