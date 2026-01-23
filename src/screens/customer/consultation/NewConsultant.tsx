@@ -198,7 +198,7 @@ const NewConsultant = ({ navigation }: any) => {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 pb-10">
       <GradientBackground className="flex-1">
         <Toast
           visible={toast.visible}

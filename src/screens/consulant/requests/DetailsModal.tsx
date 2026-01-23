@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 
 import { ModalWrapper } from '@/common/components/ModalWrapper';
 import { RequestItem } from './List';
@@ -19,6 +19,14 @@ const formatTimestamp = (timestamp?: number) => {
 };
 
 const DetailsModal: React.FC<DetailsModalProps> = ({ visible, onClose, request }) => {
+  const [isImageLoading, setIsImageLoading] = useState(false);
+
+  useEffect(() => {
+    if (request?.imageUrl) {
+      setIsImageLoading(true);
+    }
+  }, [request?.imageUrl]);
+
   if (!request) {
     return null;
   }
@@ -66,13 +74,21 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ visible, onClose, request }
             </Text>
           </View>
         )}
-        {request.imageUrl && ( // <-- ADD THIS BLOCK (after line 71)
+        {request.imageUrl && (
           <View className="mt-4">
             <Image
               source={{ uri: request.imageUrl }}
               className="w-full h-64 rounded-xl"
               resizeMode="cover"
+              onLoadStart={() => setIsImageLoading(true)}
+              onLoadEnd={() => setIsImageLoading(false)}
+              onError={() => setIsImageLoading(false)}
             />
+            {isImageLoading && (
+              <View className="absolute inset-0 items-center justify-center rounded-xl bg-black/10">
+                <ActivityIndicator size="small" color="#0E9F6E" />
+              </View>
+            )}
           </View>
         )}
         <View className="mt-6">

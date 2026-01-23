@@ -106,7 +106,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           <View>
             <View className="flex-1 items-center gap-[4px]">
               <Text className="text-[16px]  font-urbanist-semibold text-white">
-                {otherPersonName}
+                {otherPersonName.slice(0, 10)}...
               </Text>
               {specialization ? (
                 <View className="px-2 py-1 bg-textMuted rounded-xl">
