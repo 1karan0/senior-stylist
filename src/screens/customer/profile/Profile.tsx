@@ -38,13 +38,14 @@ interface Props {
 
 const Profile: React.FC<Props> = ({ navigation }) => {
   const isFocused = useIsFocused();
+  const { logout, user: authUser, exitGuest } = useAuth();
   const { data: profileData, refetch: refetchProfile } = useGetProfile({
     // Poll every 5s while this screen is visible so subscription/profile updates show live
-    refetchInterval: isFocused ? 5_000 : false,
+    refetchInterval: isFocused && !!authUser ? 5_000 : false,
     refetchIntervalInBackground: false,
+    enabled: !!authUser,
   });
   // console.log('profileData', profileData);
-  const { logout } = useAuth();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
 
@@ -58,6 +59,32 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const user = profileData?.user as ProfileUser;
   const subscription = profileData?.subscription;
   const hasSubscription = !!subscription;
+
+  if (!authUser) {
+    return (
+      <GradientBackground>
+        <View className="flex-1 pb-10">
+          <View className="px-5 py-5">
+            <Text
+              className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+            >
+              Profile
+            </Text>
+          </View>
+          <View className="flex-1 items-center justify-center px-6">
+            <Text
+              className={`text-base text-center mb-4 ${
+                isDark ? 'text-textSecondary' : 'text-textMuted'
+              }`}
+            >
+              Please log in to access your profile.
+            </Text>
+            <Button text="Login" variant="gradient" onPress={exitGuest} className="w-full" />
+          </View>
+        </View>
+      </GradientBackground>
+    );
+  }
 
   // Check if subscription platform doesn't match current device
   const subscriptionPlatform = subscription?.platform?.toLowerCase();

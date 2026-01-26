@@ -1,10 +1,15 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { BASE_URL } from '@/config';
 import { storage } from '@/services/storage';
 
-export const useGetConsultation = () => {
+type UseGetConsultationOptions = Omit<
+  UseQueryOptions<unknown[]>,
+  'queryKey' | 'queryFn' | 'placeholderData'
+>;
+
+export const useGetConsultation = (options?: UseGetConsultationOptions) => {
   const queryClient = useQueryClient();
 
   return useQuery({
@@ -28,5 +33,6 @@ export const useGetConsultation = () => {
 
       return res.data?.data?.consultations || [];
     },
+    ...options,
   });
 };

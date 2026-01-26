@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, Image, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import LinearGradient from 'react-native-linear-gradient';
 
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
@@ -24,7 +25,7 @@ export default function LoginScreen({ navigation }: any) {
   });
   const { isDark } = useTheme();
 
-  const { login } = useAuth();
+  const { login, continueAsGuest } = useAuth();
 
   const insets = useSafeAreaInsets();
 
@@ -48,6 +49,10 @@ export default function LoginScreen({ navigation }: any) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleContinueAsGuest = () => {
+    continueAsGuest();
   };
 
   return (
@@ -162,6 +167,35 @@ export default function LoginScreen({ navigation }: any) {
             variant="gradient"
             className="mb-6"
           />
+
+          <View className="flex-row items-center mb-5">
+            <View className={`flex-1 h-px ${isDark ? 'bg-[#273F36]' : 'bg-[#DAE7E0]'}`} />
+            <Text
+              className={`mx-3 text-xs font-poppins ${
+                isDark ? 'text-textSecondary' : 'text-textMuted'
+              }`}
+            >
+              OR
+            </Text>
+            <View className={`flex-1 h-px ${isDark ? 'bg-[#273F36]' : 'bg-[#DAE7E0]'}`} />
+          </View>
+
+          <View className="mb-6">
+            <LinearGradient
+              colors={['#27B07D', '#36D399']}
+              start={{ x: 0, y: 1 }}
+              end={{ x: 1, y: 0 }}
+              style={{ borderRadius: 14, padding: 1 }}
+            >
+              <Button
+                text="Continue as Guest"
+                onPress={handleContinueAsGuest}
+                variant="light"
+                className="bg-transparent rounded-[13px]"
+                textClassName="text-white"
+              />
+            </LinearGradient>
+          </View>
 
           {/* Sign Up */}
           <View className="flex-row justify-center">

@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import GradientBackground from '@/common/components/GradientBackground';
 
 export default function AuthGate() {
-  const { user, isLoading } = useAuth();
+  const { user, isGuest, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -18,5 +18,5 @@ export default function AuthGate() {
     );
   }
 
-  return user ? <AppStack /> : <AuthStack />;
+  return user || isGuest ? <AppStack /> : <AuthStack />;
 }

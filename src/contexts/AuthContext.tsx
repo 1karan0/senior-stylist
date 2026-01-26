@@ -33,6 +33,7 @@ const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): 
 
 interface AuthContextType {
   user: User | null;
+  isGuest: boolean;
   isLoading: boolean;
   isOnbordingCompleted: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -48,12 +49,15 @@ interface AuthContextType {
 
   logout: () => Promise<void>;
   completeOnbording: () => void;
+  continueAsGuest: () => void;
+  exitGuest: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isOnBordingCompleted, setIsBordingCompleted] = useState(false);
 
@@ -144,6 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       await Promise.all([storage.setToken(token), storage.setUserData(user)]);
       setUser(user);
+      setIsGuest(false);
       console.log('user======>', user);
 
       if (firebaseToken) {
@@ -189,6 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await Promise.all([storage.setToken(token), storage.setUserData(userData)]);
 
       setUser(userData);
+      setIsGuest(false);
       console.log('userData======>', userData);
 
       // Initialize Firebase session
@@ -226,6 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Log out locally immediately so navigation can switch to AuthStack.
     setUser(null);
+    setIsGuest(false);
 
     // Best-effort cleanup (bounded by timeouts so we never hang the JS thread).
     const cleanupTasks: Promise<unknown>[] = [];
@@ -275,14 +282,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsBordingCompleted(true);
   };
 
+  const continueAsGuest = () => {
+    setUser(null);
+    setIsGuest(true);
+  };
+
+  const exitGuest = () => {
+    setIsGuest(false);
+  };
+
   const value: AuthContextType = {
     user,
+    isGuest,
     isLoading,
     isOnbordingCompleted: isOnBordingCompleted,
     login,
     verifyEmail,
     logout,
     completeOnbording,
+    continueAsGuest,
+    exitGuest,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
