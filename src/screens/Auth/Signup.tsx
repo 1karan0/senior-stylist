@@ -8,6 +8,7 @@ import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import TextInputField from '@/common/components/TextInputField';
 import Toast from '@/common/components/Toast';
+import PhoneNumberInput from '@/common/components/PhoneNumberInput';
 import { useTheme } from '@/contexts/ThemeContext';
 import { requestStoragePermission, showPermissionDeniedAlert } from '@/utils/imagePermissions';
 import { Platform } from 'react-native';
@@ -26,6 +27,7 @@ export default function SignupScreen({ navigation, route }: any) {
     message: '',
     type: 'info' as any,
   });
+  const [selectedCallingCode, setSelectedCallingCode] = useState<any>(null);
 
   const { isDark } = useTheme();
   const user = route.params.user; // expects 'consultant' or other
@@ -96,10 +98,12 @@ export default function SignupScreen({ navigation, route }: any) {
     try {
       setLoading(true);
 
+      const callingCode = selectedCallingCode?.callingCode ?? '';
+      console.log(`${callingCode}${form.phone}`, 'phone number');
       const signupData: any = {
         name: form.name,
         email: form.email,
-        phone: form.phone,
+        phone: `${callingCode}${form.phone}`,
         password: form.password,
       };
 
@@ -222,26 +226,26 @@ export default function SignupScreen({ navigation, route }: any) {
               )}
             />
 
-            {/* Phone */}
+            {/* Phone Number */}
             <Controller
               control={control}
               name="phone"
               rules={{
                 required: 'Phone number is required',
-                pattern: {
-                  value: /^[0-9]{10,15}$/,
-                  message: 'Please enter a valid phone number (10-15 digits)',
-                },
+                minLength: { value: 7, message: 'Too short' },
+                maxLength: { value: 15, message: 'Too long' },
               }}
               render={({ field: { onChange, value } }) => (
-                <TextInputField
+                <PhoneNumberInput
                   label="Phone Number"
-                  placeholder="Enter your phone number"
-                  icon={require('../../assets/icons/phone.png')}
-                  keyboardType="number-pad"
                   value={value}
-                  onChangeText={onChange}
                   error={errors.phone?.message as string}
+                  onPhoneChange={(country, phone) => {
+                    setSelectedCallingCode(country);
+                    onChange(phone);
+                  }}
+                  onFocus={() => {}}
+                  onBlur={() => {}}
                 />
               )}
             />
