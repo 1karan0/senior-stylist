@@ -25,6 +25,7 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import ImageModal from '@/common/components/modals/ImageModal';
 import TextInputField from '@/common/components/TextInputField';
+import PhoneNumberInput from '@/common/components/PhoneNumberInput';
 
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';
 import { useEditProfile } from '@/api/user/profile/useEditProfile';
@@ -59,6 +60,7 @@ const EditProfile: React.FC = () => {
     bio: '',
   });
   const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [selectedCallingCode, setSelectedCallingCode] = useState<any>(null);
 
   // mutations
   const uploadMutation = useUploadProfilePicture();
@@ -369,22 +371,20 @@ const EditProfile: React.FC = () => {
 
             {/* Phone Number */}
             <View className="mb-5">
-              <Text
-                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-              >
-                Phone Number
-              </Text>
-              <TextInput
+              <PhoneNumberInput
+                label="Phone Number"
                 value={formData.phoneNumber}
-                onChangeText={(text) => setFormData({ ...formData, phoneNumber: text })}
-                keyboardType="phone-pad"
-                className={`border rounded-xl px-4 py-3 font-poppins-regular ${
-                  isDark
-                    ? 'bg-[#0F1F1A] border-commonGradientStop7 text-white'
-                    : 'bg-white border-[#DAE7E0] text-textDark'
-                }`}
-                placeholderTextColor={isDark ? '#8AA897' : '#658176'}
-                editable={!isSaving}
+                onPhoneChange={(country, phone) => {
+                  setSelectedCallingCode(country);
+
+                  const callingCode = country?.callingCode ?? '';
+                  setFormData({
+                    ...formData,
+                    phoneNumber: `${callingCode}${phone}`,
+                  });
+                }}
+                onFocus={() => {}}
+                onBlur={() => {}}
               />
             </View>
 

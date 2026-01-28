@@ -12,6 +12,7 @@ import { Button } from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { ProfileUser } from '@/common/types';
 import TextInputField from '@/common/components/TextInputField';
+import PhoneNumberInput from '@/common/components/PhoneNumberInput';
 import ImagePickerModal from '@/common/components/modals/ImagePickerModal';
 import ImageModal from '@/common/components/modals/ImageModal';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -54,6 +55,7 @@ const EditProfile = () => {
   const [showModal, setShowModal] = React.useState(false);
   const [showImagePreview, setShowImagePreview] = React.useState(false);
   const [showPasswordSection, setShowPasswordSection] = React.useState(false);
+  const [selectedCallingCode, setSelectedCallingCode] = React.useState<any>(null);
 
   // Optimize Image
   const optimizeImage = (asset: ImagePicker.Asset) => {
@@ -259,11 +261,28 @@ const EditProfile = () => {
               onChangeText={(t) => setValue('name', t)}
             />
 
-            <TextInputField
-              label="PHONE NUMBER"
-              keyboardType="phone-pad"
-              value={watch('phone')}
-              onChangeText={(t) => setValue('phone', t)}
+            <Controller
+              control={control}
+              name="phone"
+              rules={{
+                required: 'Phone number is required',
+                minLength: { value: 7, message: 'Too short' },
+                maxLength: { value: 15, message: 'Too long' },
+              }}
+              render={({ field: { onChange, value } }) => (
+                <PhoneNumberInput
+                  label="Phone Number"
+                  value={value}
+                  error={errors.phone?.message as string}
+                  onPhoneChange={(country, phone) => {
+                    setSelectedCallingCode(country);
+                    const callingCode = country?.callingCode ?? '';
+                    onChange(`${callingCode}${phone}`);
+                  }}
+                  onFocus={() => {}}
+                  onBlur={() => {}}
+                />
+              )}
             />
 
             {/* Email */}
