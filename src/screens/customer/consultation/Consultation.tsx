@@ -8,7 +8,6 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useIsFocused } from '@react-navigation/native';
 import GradientBackground from '@/common/components/GradientBackground';
-import ConversationSkeleton from '@/common/components/skeletons/ConversationSkeleton';
 import Button from '@/common/components/Button';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -76,7 +75,7 @@ const Consultation = () => {
         <GradientBackground>
           <View className="flex-1 px-5 mb-8 mt-4">
             <Text
-              className={`text-[26px] font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}
+              className={`text-[24px] font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}
             >
               Chats
             </Text>

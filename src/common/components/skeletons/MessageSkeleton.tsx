@@ -59,12 +59,12 @@ const MessageSkeleton: React.FC = () => {
       <View className={`max-w-[70%] ${Math.random() > 0.5 ? 'mr-auto' : 'ml-auto'}`}>
         <SkeletonBox
           width={Math.random() > 0.5 ? '100' : '150'}
-          height={14}
+          height={48}
           style={{ borderRadius: 12 }}
         />
         <SkeletonBox
           width="50"
-          height={12}
+          height={20}
           style={{ marginTop: 4, borderRadius: 8, opacity: 0.5 }}
         />
       </View>
@@ -74,7 +74,7 @@ const MessageSkeleton: React.FC = () => {
 
 const MessageListSkeleton: React.FC = () => {
   return (
-    <View className="flex-1 p-4">
+    <View className="flex-1 p-4 ">
       {[...Array(6)].map((_, i) => (
         <MessageSkeleton key={i} />
       ))}

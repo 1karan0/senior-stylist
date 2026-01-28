@@ -74,7 +74,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
       <SafeAreaView className="flex-1 bg-black/80 px-6">
         <StatusBar translucent backgroundColor="#000000D1" barStyle="light-content" />
         <KeyboardAvoidingView
-          className="flex-1 bg-black/80 px-6"
+          className="flex-1 px-6"
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
         >

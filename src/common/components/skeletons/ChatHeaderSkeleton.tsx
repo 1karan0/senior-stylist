@@ -59,12 +59,12 @@ const ChatHeaderSkeleton: React.FC = () => {
 
   return (
     <View>
-      <StatusBar translucent backgroundColor="#36D399" barStyle="light-content" />
+      <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
       <View
-        className="bg-commonGradientStop2  pb-7 px-4 rounded-b-3xl"
+        className="bg-buttonPrimaryBg  pb-7 px-4 rounded-b-3xl"
         style={{ paddingTop: Platform.OS === 'ios' ? insets.top + 12 : 30 }}
       >
-        <View className="flex-row items-center">
+        <View className="flex-row items-center mt-5">
           {/* Back Button Skeleton */}
           <SkeletonBox width="40" height={40} style={{ borderRadius: 8, marginRight: 12 }} />
 
@@ -82,9 +82,6 @@ const ChatHeaderSkeleton: React.FC = () => {
         </View>
 
         {/* Status Indicator Skeleton */}
-        <View style={{ marginTop: 12 }}>
-          <SkeletonBox width="120" height={20} style={{ borderRadius: 12 }} />
-        </View>
       </View>
     </View>
   );
