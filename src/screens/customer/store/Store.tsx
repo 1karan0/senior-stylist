@@ -31,25 +31,24 @@ const StoreScreen = () => {
     <GradientBackground>
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: paddingBottom }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="flex-1 px-5 pt-4">
+        <View className="flex-1 px-5 pt-6">
           {/* Header */}
-          <View>
-            <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
-              Products
-            </Text>
-            <Text className={`mt-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
-              Discover our professional hair care collection
-            </Text>
-          </View>
+
+          <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
+            Products
+          </Text>
+          <Text className={`mt-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
+            Discover our professional hair care collection
+          </Text>
 
           {/* Promo card */}
           <View className=" relative">
             <Image
               source={require('@/assets/images/discount-card.jpg')}
-              className="w-full h-full mt-6"
+              className="w-full h-full mt-6 rounded-3xl"
               resizeMode="contain"
               style={{
                 height: promoCardHeight,
