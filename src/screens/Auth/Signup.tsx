@@ -99,13 +99,15 @@ export default function SignupScreen({ navigation, route }: any) {
       setLoading(true);
 
       const callingCode = selectedCallingCode?.callingCode ?? '';
-      console.log(`${callingCode}${form.phone}`, 'phone number');
       const signupData: any = {
         name: form.name,
         email: form.email,
-        phone: `${callingCode}${form.phone}`,
+        phone: form.phone,
+        phone_country_code: callingCode,
         password: form.password,
       };
+
+      console.log(signupData, 'signupData');
 
       if (isConsultant) {
         // Consultant signup: include CV if available

@@ -259,6 +259,7 @@ export interface ProfileSubscription {
 }
 
 export interface ProfileUser {
+  phone_country_code: ReactNode;
   id: number;
   uuid: string;
   name: string;

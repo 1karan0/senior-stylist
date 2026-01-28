@@ -55,6 +55,7 @@ const EditProfile: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     phoneNumber: '',
+    phone_country_code: '',
     email: '',
     address: '',
     bio: '',
@@ -86,6 +87,7 @@ const EditProfile: React.FC = () => {
       setFormData({
         name: user.name ?? '',
         phoneNumber: user.phone ?? '',
+        phone_country_code: user.phone_country_code ?? '',
         email: user.email ?? '',
         address: user.address ?? '',
         bio: existingBio,
@@ -182,6 +184,7 @@ const EditProfile: React.FC = () => {
       address: formData.address ?? '',
       profile_picture_url: profileImage ?? '',
       phone: formData.phoneNumber,
+      phone_country_code: formData.phone_country_code,
       bio: formData.bio?.trim() ?? '',
       ...(passwordValues?.newPassword && { password: passwordValues.newPassword }),
     };
@@ -374,13 +377,19 @@ const EditProfile: React.FC = () => {
               <PhoneNumberInput
                 label="Phone Number"
                 value={formData.phoneNumber}
+                initialCountry={
+                  formData.phone_country_code
+                    ? { cca2: 'GB', callingCode: formData.phone_country_code }
+                    : undefined
+                }
                 onPhoneChange={(country, phone) => {
                   setSelectedCallingCode(country);
 
                   const callingCode = country?.callingCode ?? '';
                   setFormData({
                     ...formData,
-                    phoneNumber: `${callingCode}${phone}`,
+                    phoneNumber: phone,
+                    phone_country_code: callingCode,
                   });
                 }}
                 onFocus={() => {}}

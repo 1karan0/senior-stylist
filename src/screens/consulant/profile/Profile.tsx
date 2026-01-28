@@ -146,7 +146,7 @@ const Profile: React.FC = () => {
                 <Text
                   className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
                 >
-                  {user?.phone}
+                  {user?.phone_country_code} {user?.phone}
                 </Text>
               </View>
 
