@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "128763626215",
+    "project_id": "senior-stylist-t",
+    "storage_bucket": "senior-stylist-t.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:128763626215:android:424161602d3249b99f5842",
+        "android_client_info": {
+          "package_name": "com.seniorstylist.app.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9QxsjVcAbGdbUVeRh2rOm0MIbPF6CsQA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+
