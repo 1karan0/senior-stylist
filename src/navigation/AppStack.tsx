@@ -15,6 +15,8 @@ const AppStack: React.FC = () => {
   const [initialRoute, setInitialRoute] = useState<keyof AppStackParamList | undefined>(undefined);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(true);
 
+  console.log('user in app stack', user);
+
   // Determine initial route based on user role and subscription status
   useEffect(() => {
     const determineInitialRoute = () => {

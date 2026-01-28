@@ -45,7 +45,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     refetchIntervalInBackground: false,
     enabled: !!authUser,
   });
-  // console.log('profileData', profileData);
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
 
@@ -182,7 +181,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       await RNIap.initConnection();
 
       const availablePurchases = await RNIap.getAvailablePurchases();
-      console.log('availablePurchases', availablePurchases);
 
       if (!availablePurchases || availablePurchases.length === 0) {
         Alert.alert(
@@ -192,10 +190,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
         return;
       }
 
-      console.log('availablePurchases', availablePurchases);
-
       for (const purchase of availablePurchases) {
-        console.log('purchase is inside the loop');
         const platform = Platform.OS === 'ios' ? 'ios' : 'android';
 
         const restorePayload: RestorePurchasePayload = {
@@ -204,8 +199,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           transactionId: purchase.transactionId || '',
           platform,
         };
-
-        console.log('restorePayload', restorePayload);
 
         const result = await restorePurchase(restorePayload);
 
@@ -410,7 +403,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >
-                {user?.phone}
+                {user?.phone_country_code} {user?.phone}
               </Text>
             </View>
 

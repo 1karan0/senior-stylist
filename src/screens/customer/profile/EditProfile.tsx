@@ -24,6 +24,16 @@ import {
 import { Platform } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
+interface EditProfileFormValues {
+  name: string;
+  phone: string;
+  phone_country_code: string;
+  address: string;
+  email: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 const EditProfile = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -39,11 +49,13 @@ const EditProfile = () => {
     handleSubmit,
     setValue,
     watch,
+    getValues,
     formState: { errors },
-  } = useForm({
+  } = useForm<EditProfileFormValues>({
     defaultValues: {
       name: profile.name,
       phone: profile.phone,
+      phone_country_code: (profile.phone_country_code as string) ?? '',
       address: profile.address ?? '',
       email: profile.email,
       newPassword: '',
@@ -170,6 +182,7 @@ const EditProfile = () => {
     const payload = {
       name: values.name,
       phone: values.phone,
+      phone_country_code: values.phone_country_code,
       address: values.address,
       profile_picture_url: profilePic,
       ...(values.newPassword && { password: values.newPassword }),
@@ -273,11 +286,17 @@ const EditProfile = () => {
                 <PhoneNumberInput
                   label="Phone Number"
                   value={value}
+                  initialCountry={
+                    getValues('phone_country_code')
+                      ? { cca2: 'GB', callingCode: getValues('phone_country_code') }
+                      : undefined
+                  }
                   error={errors.phone?.message as string}
                   onPhoneChange={(country, phone) => {
                     setSelectedCallingCode(country);
                     const callingCode = country?.callingCode ?? '';
-                    onChange(`${callingCode}${phone}`);
+                    setValue('phone_country_code', callingCode);
+                    onChange(phone);
                   }}
                   onFocus={() => {}}
                   onBlur={() => {}}

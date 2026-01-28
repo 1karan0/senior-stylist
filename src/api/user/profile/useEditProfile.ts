@@ -11,6 +11,7 @@ export const useEditProfile = () => {
       address: string;
       profile_picture_url: string;
       phone: string;
+      phone_country_code: string;
       password?: string;
       bio?: string;
     }) => {

@@ -23,8 +23,8 @@ const StoreScreen = () => {
           Products
         </Text>
 
-        {/* Center Content */}
-        <View className="flex-1 items-center justify-center">
+        {/* Top-aligned content */}
+        <View className="flex-1">
           <View
             className={`w-full rounded-2xl overflow-hidden ${
               isDark ? 'bg-commonGradientStop6' : 'bg-white'
@@ -36,19 +36,21 @@ const StoreScreen = () => {
               elevation: 4,
             }}
           >
-            {/* Promo Image */}
-            <Image
-              source={require('../../../assets/images/store-promo.png')}
-              className="w-full h-44"
-              resizeMode="cover"
-            />
+            {/* Image perfectly fitting the top area */}
+            <View className="w-full h-52 bg-[#00C896]">
+              <Image
+                source={require('@/assets/icons/app-icon.png')}
+                className="w-full h-full"
+                resizeMode="contain"
+              />
+            </View>
 
-            {/* CTA Section */}
-            <View className="items-center py-6 px-4">
+            {/* CTA section with more breathing room */}
+            <View className="items-center py-8">
               <TouchableOpacity
                 onPress={handleShopNow}
                 activeOpacity={0.85}
-                className="bg-[#00C896] px-12 py-3 rounded-full"
+                className="bg-[#00C896] px-14 py-4 rounded-full"
               >
                 <Text className="text-white text-base font-semibold">Shop Now</Text>
               </TouchableOpacity>
@@ -57,7 +59,7 @@ const StoreScreen = () => {
 
           {/* Compliance helper text */}
           <Text
-            className={`text-xs text-center mt-4 px-6 ${
+            className={`text-xs text-center mt-5 px-6 ${
               isDark ? 'text-gray-400' : 'text-gray-500'
             }`}
           >

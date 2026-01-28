@@ -7,6 +7,7 @@ interface CustomerSignupData {
   name: string;
   email: string;
   phone: string;
+  phone_country_code: string;
   password: string;
   referral_code?: string;
 }
@@ -16,6 +17,7 @@ interface ConsultantSignupData {
   email: string;
   phone: string;
   password: string;
+  phone_country_code: string;
   cv?: {
     uri: string;
     name: string;
@@ -38,6 +40,7 @@ export const useSignupApi = () => {
           formData.append('name', data.name);
           formData.append('email', data.email);
           formData.append('phone', data.phone);
+          formData.append('phone_country_code', data.phone_country_code);
           formData.append('password', data.password);
 
           if ('cv' in data && data.cv) {
@@ -54,6 +57,7 @@ export const useSignupApi = () => {
             name: data.name,
             email: data.email,
             phone: data.phone,
+            phone_country_code: data.phone_country_code,
             password: data.password,
           };
 
