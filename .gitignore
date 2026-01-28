@@ -83,5 +83,6 @@ yarn-error.log
 
 /android/app/google-services.json
 /mobile-app
-
+/android/app/src/dev/google-services.json
+/android/app/src/prod/google-services.json
 /premierpicks-app
