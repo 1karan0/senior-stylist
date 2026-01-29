@@ -9,6 +9,7 @@ import ProfileStack from '@/navigation/stacks/Profile';
 import { MainTabParamList } from '@/common/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { FindingStylistModalProvider } from '@/contexts/FindingStylistModalContext';
 import FindingStylistModal from '@/common/components/modals/FindingStylistModal';
 
@@ -47,6 +48,7 @@ const createTabBarIcon = (routeName: string) => {
 const UserTabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
+  const { isGuest } = useAuth();
 
   // lower base bottom to bring bar closer to the bottom
   const baseBottom = Platform.OS === 'ios' ? 4 : 3;
@@ -56,6 +58,7 @@ const UserTabNavigator: React.FC = () => {
     <FindingStylistModalProvider>
       <>
         <Tab.Navigator
+          initialRouteName={isGuest ? 'StoreTab' : 'ConsultationTab'}
           screenOptions={{
             tabBarActiveTintColor: '#27B07D',
             tabBarInactiveTintColor: '#658176',

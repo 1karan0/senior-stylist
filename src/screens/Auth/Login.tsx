@@ -181,33 +181,19 @@ export default function LoginScreen({ navigation }: any) {
           </View>
 
           <View className="mb-6">
-            <LinearGradient
-              colors={['#27B07D', '#36D399']}
-              start={{ x: 0, y: 1 }}
-              end={{ x: 1, y: 0 }}
-              style={{ borderRadius: 14, padding: 1 }}
-            >
-              <Button
-                text="Continue as Guest"
-                onPress={handleContinueAsGuest}
-                variant="light"
-                className="bg-transparent rounded-[13px]"
-                textClassName="text-white"
-              />
-            </LinearGradient>
+            <Button
+              text="Sign Up"
+              onPress={() => navigation.navigate('Signup', { user: 'customer' })}
+              variant="light"
+              className={`rounded-[14px] ${isDark ? 'bg-[#0E1B17] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'} border`}
+              textClassName={`${isDark ? 'text-[#ffffff]' : 'text-[#162721]'} text-base font-urbanist-bold`}
+            />
           </View>
 
           {/* Sign Up */}
           <View className="flex-row justify-center">
-            <Text
-              className={` ${
-                isDark ? 'text-textSecondary' : 'text-[#64748B]'
-              } font-normal text-[14px]`}
-            >
-              Don't have an account?{' '}
-            </Text>
-            <Pressable onPress={() => navigation.navigate('Signup', { user: 'customer' })}>
-              <Text className="text-textPrimary">Sign Up</Text>
+            <Pressable onPress={() => handleContinueAsGuest()}>
+              <Text className="text-textPrimary">Continue as Guest</Text>
             </Pressable>
           </View>
 

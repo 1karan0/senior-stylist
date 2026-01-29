@@ -33,12 +33,10 @@ const Consultation = () => {
     return (
       <GradientBackground>
         <View className="flex-1 px-5 pt-6">
-          <Text className={`text-[26px] font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <Text className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Chats
           </Text>
-          <Text className={`${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-1`}>
-            Manage your styling sessions
-          </Text>
+
           <View className="flex-1 items-center justify-center">
             <Text
               className={`text-base text-center mb-4 ${
@@ -47,7 +45,7 @@ const Consultation = () => {
             >
               Please log in to access your consultations.
             </Text>
-            <Button text="Login" variant="gradient" onPress={exitGuest} className="w-full" />
+            <Button text="Login" variant="gradient" onPress={exitGuest} className="w-4/5" />
           </View>
         </View>
       </GradientBackground>
@@ -74,9 +72,7 @@ const Consultation = () => {
       ) : isFetching && !shouldShowLoading ? (
         <GradientBackground>
           <View className="flex-1 px-5 mb-8 mt-4">
-            <Text
-              className={`text-[24px] font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}
-            >
+            <Text className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
               Chats
             </Text>
             <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-1`}>
