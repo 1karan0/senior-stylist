@@ -56,7 +56,6 @@ export const initializeFirebase = (): boolean => {
 export const getFirebaseAuth = () => {
   try {
     getApp(); // Ensure Firebase is initialized
-    console.log('auth======>', auth());
     return auth();
   } catch (error) {
     if (__DEV__) {

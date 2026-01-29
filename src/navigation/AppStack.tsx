@@ -15,13 +15,9 @@ const AppStack: React.FC = () => {
   const [initialRoute, setInitialRoute] = useState<keyof AppStackParamList | undefined>(undefined);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(true);
 
-  console.log('user in app stack', user);
-
   // Determine initial route based on user role and subscription status
   useEffect(() => {
     const determineInitialRoute = () => {
-      console.log('user', user);
-
       if (!user) {
         setIsCheckingSubscription(false);
         return;
@@ -34,13 +30,9 @@ const AppStack: React.FC = () => {
         return;
       }
 
-      console.log('user in app stack', user);
-
       // For customers: Check active_subscription from user object
       const activeSubscription = (user as any)?.active_subscription;
       const hasActiveSubscription = !!activeSubscription;
-
-      console.log('hasActiveSubscription', hasActiveSubscription);
 
       if (hasActiveSubscription) {
         setInitialRoute('UserTabs');
