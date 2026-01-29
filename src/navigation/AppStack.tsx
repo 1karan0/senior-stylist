@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 const AppStack: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const userRole = user?.role; // or 'customer'
   const [initialRoute, setInitialRoute] = useState<keyof AppStackParamList | undefined>(undefined);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(true);
@@ -21,6 +21,13 @@ const AppStack: React.FC = () => {
   useEffect(() => {
     const determineInitialRoute = () => {
       console.log('user', user);
+
+      // For guest users, go to UserTabs (which will show StoreTab)
+      if (!user && isGuest) {
+        setInitialRoute('UserTabs');
+        setIsCheckingSubscription(false);
+        return;
+      }
 
       if (!user) {
         setIsCheckingSubscription(false);

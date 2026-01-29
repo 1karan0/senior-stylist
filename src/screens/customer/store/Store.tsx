@@ -18,10 +18,12 @@ const STORE_URL = 'https://shop.senior-stylist.com/';
 const StoreScreen = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-  const { height: windowHeight } = useWindowDimensions();
+  const { width: windowWidth } = useWindowDimensions();
 
-  // Keep the promo card large, but responsive across devices.
-  const promoCardHeight = Math.min(610, Math.max(560, windowHeight * 0.62));
+  // Width-driven sizing is much more consistent than height-driven sizing across devices.
+  // The screen uses `px-5` (20px) so the card width is windowWidth - 40.
+  const promoCardWidth = Math.max(1, windowWidth - 40);
+  const promoCardHeight = Math.max(360, Math.min(565, Math.round(promoCardWidth * 1.6)));
 
   const handleShopNow = () => {
     Linking.openURL(STORE_URL);
@@ -45,22 +47,35 @@ const StoreScreen = () => {
           </Text>
 
           {/* Promo card */}
-          <View className=" relative">
-            <Image
-              source={require('@/assets/images/discount-card.jpg')}
-              className="w-full h-full mt-6 rounded-3xl"
-              resizeMode="contain"
+          <View className="relative">
+            <View
+              className="w-full mt-3"
               style={{
                 height: promoCardHeight,
+                borderRadius: 24,
+                overflow: 'hidden',
+                // Prevent "white corners" in dark mode when the image doesn't perfectly cover.
+                backgroundColor: isDark ? '#0B1220' : '#FFFFFF',
               }}
-            />
+            >
+              <Image
+                source={require('@/assets/images/discount-card.jpg')}
+                resizeMode="cover"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: 24,
+                  backgroundColor: isDark ? '#0B1220' : '#FFFFFF',
+                }}
+              />
+            </View>
 
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleShopNow}
-              className=" bg-white absolute bottom-16 rounded-[10px] self-center px-10 py-3"
+              className=" bg-[#27B07D] absolute bottom-16 rounded-[5px] self-center px-10 py-3"
             >
-              <Text className="text-base font-urbanist-bold text-[#0F172A]">Shop Now</Text>
+              <Text className="text-base font-poppins-semibold text-white">Shop Now</Text>
             </TouchableOpacity>
           </View>
           {/* Compliance helper text */}

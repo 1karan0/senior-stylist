@@ -55,7 +55,7 @@ const NoConsultant = () => {
     <GradientBackground className="">
       <View className="flex-1 px-5 pt-6 ">
         {/* Header */}
-        <Text className={`text-[24px] font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
+        <Text className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
           Chats
         </Text>
         <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-1`}>

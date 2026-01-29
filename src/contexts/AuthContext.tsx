@@ -50,7 +50,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   completeOnbording: () => void;
   continueAsGuest: () => void;
-  exitGuest: () => void;
+  exitGuest: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -287,8 +287,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsGuest(true);
   };
 
-  const exitGuest = () => {
+  const exitGuest = async () => {
     setIsGuest(false);
+    // Mark onboarding as completed so user is redirected to Login screen, not Onboarding
+    await storage.setOnbordingCompleted();
+    setIsBordingCompleted(true);
   };
 
   const value: AuthContextType = {

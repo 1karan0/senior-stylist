@@ -78,7 +78,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             >
               Please log in to access your profile.
             </Text>
-            <Button text="Login" variant="gradient" onPress={exitGuest} className="w-full" />
+            <Button text="Login" variant="gradient" onPress={exitGuest} className="w-4/5" />
           </View>
         </View>
       </GradientBackground>
