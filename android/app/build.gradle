@@ -166,9 +166,6 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
     
-    // React Native IAP - v14.5.0+ supports Billing Library 8.0
-    implementation project(':react-native-iap')
-
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
