@@ -1,19 +1,23 @@
-# Resolve react_native_pods.rb with node to allow for hoisting
-require Pod::Executable.execute_command('node', ['-p',
-  'require.resolve(
-    "react-native/scripts/react_native_pods.rb",
-    {paths: [process.argv[1]]},
-  )', __dir__]).strip
-
+#Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command(
+  'node',
+  ['-p',
+   'require.resolve(
+     "react-native/scripts/react_native_pods.rb",
+     {paths: [process.argv[1]]},
+   )',
+   __dir__]
+).strip
+ 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
-
+ 
 project 'Senior_stylist',
-  'Debug-Dev' => :debug,
-  'Release-Dev' => :release,
-  'Debug-Prod' => :debug,
+  'Debug-Dev'    => :debug,
+  'Release-Dev'  => :release,
+  'Debug-Prod'   => :debug,
   'Release-Prod' => :release
-
+ 
 # Use static frameworks for better compatibility with Firebase and gRPC
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
@@ -23,40 +27,59 @@ else
   # Default to static frameworks for React Native + Firebase
   use_frameworks! :linkage => :static
 end
-
+ 
 target 'SeniorStylist' do
   config = use_native_modules!
-
+ 
   use_react_native!(
     :path => config[:reactNativePath],
     :hermes_enabled => true,
-    # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
-
+ 
   post_install do |installer|
     react_native_post_install(
       installer,
       config[:reactNativePath],
-      :mac_catalyst_enabled => false,
-      # :ccache_enabled => true
+      :mac_catalyst_enabled => false
     )
-    
+ 
+    # 🔐 ENVFILE mapping for react-native-config (Dev / Prod)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        case config.name
+        when 'Debug-Dev', 'Release-Dev'
+          config.build_settings['ENVFILE'] = '.env.dev'
+        when 'Debug-Prod', 'Release-Prod'
+          config.build_settings['ENVFILE'] = '.env.prod'
+        end
+        # 🔍 DEBUG: confirm ENVFILE during pod install
+        # puts "👉 ENVFILE for #{config.name}: #{config.build_settings['ENVFILE']}"
+      end
+    end
+ 
     # Fix for Firebase Swift pods module maps
     installer.pods_project.targets.each do |target|
-      if ['FirebaseAuth', 'FirebaseFirestore', 'FirebaseStorage', 'FirebaseCoreInternal'].include?(target.name)
+      if [
+        'FirebaseAuth',
+        'FirebaseFirestore',
+        'FirebaseStorage',
+        'FirebaseCoreInternal'
+      ].include?(target.name)
         target.build_configurations.each do |config|
           config.build_settings['DEFINES_MODULE'] = 'YES'
         end
       end
     end
-
-    # Fix: some pods (e.g. RNSVG) can trigger "non-modular-include-in-framework-module"
-    # when using use_frameworks! (even static). Allow non-modular includes for pods targets.
+ 
+    # Allow non-modular includes when using use_frameworks!
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        config.build_settings[
+          'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'
+        ] = 'YES'
       end
     end
   end
 end
+ 

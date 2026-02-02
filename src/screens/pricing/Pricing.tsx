@@ -36,6 +36,10 @@ interface PlanDisplay {
   features: string[];
   consulationPerMonth: number;
   originalPlan: SubscriptionPlan;
+  formattedPrice: string;
+  formattedMonthlyPrice: string;
+  discountDurationMonths: number;
+  storeProduct?: RNIap.Product | RNIap.Subscription;
 }
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'Pricing'>;
@@ -45,6 +49,8 @@ export default function PricingScreen() {
   const [selectedPlan, setSelectedPlan] = useState<PlanDisplay | null>(null);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [storeProducts, setStoreProducts] = useState<any[]>([]);
+  const [isFetchingStore, setIsFetchingStore] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
   const { isDark } = useTheme();
@@ -60,6 +66,40 @@ export default function PricingScreen() {
   });
   const profileSubscription = profileData?.subscription ?? null;
   const { data: subscriptionPlans, isLoading, error } = useGetSubscriptionPlans();
+
+  // Fetch store products to get localized pricing and offers
+  useEffect(() => {
+    const fetchStoreProducts = async () => {
+      if (!subscriptionPlans || subscriptionPlans.length === 0) return;
+
+      try {
+        setIsFetchingStore(true);
+        await RNIap.initConnection();
+
+        const skus = subscriptionPlans
+          .map((plan) => (Platform.OS === 'ios' ? plan.apple_product_id : plan.google_product_id))
+          .filter((sku): sku is string => !!sku && sku.trim() !== '');
+
+        if (skus.length > 0) {
+          const products = await RNIap.fetchProducts({
+            skus,
+            type: 'subs',
+          });
+          console.log('[Pricing] Store products fetched:', products);
+          console.log('[Pricing] Store products fetched:', products?.length);
+          if (products) {
+            setStoreProducts(products);
+          }
+        }
+      } catch (err) {
+        console.error('[Pricing] Error fetching store products:', err);
+      } finally {
+        setIsFetchingStore(false);
+      }
+    };
+
+    fetchStoreProducts();
+  }, [subscriptionPlans]);
 
   const navigateToProfileHome = useCallback(() => {
     try {
@@ -143,12 +183,17 @@ export default function PricingScreen() {
     const sortedPlans = platformFilteredPlans.sort((a, b) => a.sort_order - b.sort_order);
 
     const mappedPlans = sortedPlans.map((plan: SubscriptionPlan) => {
+      // Find matching store product
+      const productId = Platform.OS === 'ios' ? plan.apple_product_id : plan.google_product_id;
+      const storeProduct = storeProducts.find((p: any) => (p.productId || p.sku) === productId);
+
       // Helper function to remove decimals from price
       const formatPriceWithoutDecimals = (priceString: string): string => {
-        const priceMatch = priceString.match(/£?([\d,]+\.?\d*)/);
+        if (!priceString) return '';
+        const priceMatch = priceString.match(/([^0-9]*)([\d,]+\.?\d*)/);
         if (priceMatch) {
-          const numericValue = parseFloat(priceMatch[1].replace(/,/g, ''));
-          const currencySymbol = priceString.includes('£') ? '£' : '';
+          const currencySymbol = priceMatch[1].trim();
+          const numericValue = parseFloat(priceMatch[2].replace(/,/g, ''));
           const priceValue =
             numericValue % 1 === 0 ? Math.floor(numericValue).toString() : numericValue.toString();
           return `${currencySymbol}${priceValue}`;
@@ -156,24 +201,97 @@ export default function PricingScreen() {
         return priceString;
       };
 
-      // Extract numeric value from discounted_price_formatted and remove decimals
-      // e.g., "£6.00" -> "£6" or "£12.00" -> "£12"
-      const formattedPrice = formatPriceWithoutDecimals(plan.discounted_price_formatted);
-      const formattedMonthlyPrice = formatPriceWithoutDecimals(plan.monthly_price_formatted);
+      let formattedPrice = '';
+      let formattedMonthlyPrice = '';
+      let discountDurationMonths = 0;
+
+      // If store product is available, use its pricing
+      if (storeProduct) {
+        if (Platform.OS === 'ios') {
+          const iosProduct = storeProduct as any;
+          console.log('[Pricing] iOS product:', iosProduct);
+          formattedMonthlyPrice = iosProduct.localizedPrice;
+
+          // Check for introductory offer on iOS
+          if (iosProduct.introductoryPrice) {
+            formattedPrice = iosProduct.introductoryPrice;
+            // introductoryPriceNumberOfPeriodsIOS is the number of periods
+            discountDurationMonths =
+              Number(iosProduct.introductoryPriceNumberOfPeriodsIOS) ||
+              plan.discount_duration_months;
+          } else {
+            formattedPrice = formattedMonthlyPrice;
+            discountDurationMonths = plan.discount_duration_months;
+          }
+        } else {
+          // Android
+          const androidProduct = storeProduct as any;
+          console.log('[Pricing] Android product:', androidProduct);
+          const offers =
+            androidProduct.subscriptionOfferDetailsAndroid ||
+            androidProduct.subscriptionOfferDetails ||
+            androidProduct.subscriptionOffers ||
+            [];
+
+          // Find the matching offer based on base_plan_product_id
+          const matchingOffer =
+            offers.find((o: any) => o.basePlanId === plan.base_plan_product_id) || offers[0];
+
+          if (matchingOffer) {
+            // Get the last phase (usually the recurring one) for monthly price
+            const recurringPhase =
+              matchingOffer.pricingPhases.pricingPhaseList[
+                matchingOffer.pricingPhases.pricingPhaseList.length - 1
+              ];
+            formattedMonthlyPrice = formatPriceWithoutDecimals(recurringPhase.formattedPrice);
+
+            // Check if there's an introductory/discounted phase (first phase)
+            if (matchingOffer.pricingPhases.pricingPhaseList.length > 1) {
+              const introPhase = matchingOffer.pricingPhases.pricingPhaseList[0];
+              formattedPrice = formatPriceWithoutDecimals(introPhase.formattedPrice);
+
+              // Extract duration from ISO 8601 duration (e.g., P6M)
+              const durationMatch = introPhase.billingPeriod.match(/P(\d+)M/);
+              if (durationMatch) {
+                discountDurationMonths = parseInt(durationMatch[1], 10);
+              } else {
+                discountDurationMonths = plan.discount_duration_months;
+              }
+            } else {
+              formattedPrice = formattedMonthlyPrice;
+              discountDurationMonths = plan.discount_duration_months;
+            }
+          } else {
+            // Fallback to API if no offer found
+            formattedPrice = formatPriceWithoutDecimals(plan.discounted_price_formatted);
+            formattedMonthlyPrice = formatPriceWithoutDecimals(plan.monthly_price_formatted);
+            discountDurationMonths = plan.discount_duration_months;
+          }
+        }
+      } else {
+        // Fallback to API pricing if store product is not available
+        formattedPrice = formatPriceWithoutDecimals(plan.discounted_price_formatted);
+        formattedMonthlyPrice = formatPriceWithoutDecimals(plan.monthly_price_formatted);
+        discountDurationMonths = plan.discount_duration_months;
+      }
+
+      // Final cleanup of price formatting
+      formattedPrice = formatPriceWithoutDecimals(formattedPrice);
+      formattedMonthlyPrice = formatPriceWithoutDecimals(formattedMonthlyPrice);
 
       // Format: "£6/Monthly - 4 consultations"
       const priceWithConsultations = `${formattedPrice}/Monthly - ${plan.consultations_per_month} consultations`;
 
-      const planDisplay = {
+      const planDisplay: PlanDisplay = {
         key: plan.slug,
         title: plan.name,
         price: formattedPrice, // Just the price number without decimals
-        priceSub: `${plan.monthly_price_formatted}/month`, // Kept for SubscriptionModal compatibility
+        priceSub: `${formattedMonthlyPrice}/month`, // Kept for SubscriptionModal compatibility
         priceWithConsultations, // Full price line with consultations
-        desc: `Then ${formattedMonthlyPrice} / month, billed monthly after ${plan.discount_duration_months} months`,
+        desc: `Then ${formattedMonthlyPrice} / month, billed monthly after ${discountDurationMonths} months`,
         formattedPrice, // For displaying large price
         formattedMonthlyPrice, // For displaying regular price
-        discountDurationMonths: plan.discount_duration_months, // For displaying discount duration
+        discountDurationMonths, // For displaying discount duration
         features: [
           `${plan.consultations_per_month} consultations/month`,
           'Message-based consultations',
@@ -182,6 +300,7 @@ export default function PricingScreen() {
         ],
         consulationPerMonth: plan.consultations_per_month,
         originalPlan: plan,
+        storeProduct: storeProduct as RNIap.Product | RNIap.Subscription, // Pass the store product data
       };
 
       return planDisplay;
@@ -189,7 +308,7 @@ export default function PricingScreen() {
 
     // Return only API plans (no hardcoded plans)
     return mappedPlans;
-  }, [subscriptionPlans]);
+  }, [subscriptionPlans, storeProducts]);
 
   // Profile API is the source of truth for subscription status.
   useEffect(() => {

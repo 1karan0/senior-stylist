@@ -26,6 +26,7 @@ interface SubscriptionModalProps {
       plan_type?: 'base' | 'sub';
       stripe_product_id: string | null;
     };
+    storeProduct?: RNIap.Product | RNIap.Subscription;
   } | null;
   onClose?: () => void;
 }
@@ -145,10 +146,12 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         console.log('productId', productId);
 
         // Optional: fetch subscription metadata from App Store (v14+ API)
-        const subscriptions = await RNIap.fetchProducts({
-          skus: [productId],
-          type: 'subs',
-        });
+        const subscriptions = plan.storeProduct
+          ? [plan.storeProduct]
+          : await RNIap.fetchProducts({
+              skus: [productId],
+              type: 'subs',
+            });
 
         console.log('Found subscription:', subscriptions);
 
