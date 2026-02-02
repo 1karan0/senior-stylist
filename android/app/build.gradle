@@ -1,3 +1,30 @@
+// Copy the correct google-services.json file based on build flavor
+// This must happen BEFORE the Google Services plugin is applied
+def getCurrentFlavor() {
+    Gradle gradle = getGradle()
+    String tskReqStr = gradle.getStartParameter().getTaskRequests().toString()
+    
+    if (tskReqStr.contains("Dev") || tskReqStr.contains("dev")) {
+        return "dev"
+    } else if (tskReqStr.contains("Prod") || tskReqStr.contains("prod")) {
+        return "prod"
+    }
+    // Default to prod if not specified
+    return "prod"
+}
+
+def currentFlavor = getCurrentFlavor()
+def googleServicesSource = file("src/${currentFlavor}/google-services.json")
+def googleServicesTarget = file("google-services.json")
+
+if (googleServicesSource.exists()) {
+    googleServicesTarget.delete()
+    googleServicesTarget << googleServicesSource.text
+    println "✓ Copied google-services.json from src/${currentFlavor}/ for ${currentFlavor} build"
+} else {
+    println "WARNING: google-services.json not found in src/${currentFlavor}/"
+}
+
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
@@ -99,10 +126,11 @@ android {
         applicationId "com.seniorstylist.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 15
+        versionCode 19
         versionName "1.1.4"
         missingDimensionStrategy "environment", "prod"
     }
+    
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
