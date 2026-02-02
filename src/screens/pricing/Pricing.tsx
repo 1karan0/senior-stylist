@@ -626,6 +626,13 @@ export default function PricingScreen() {
           </Text>
         </View>
 
+        {/* VAT/GST Notice */}
+        <View className="mt-2 mb-2 px-4">
+          <Text className="text-center text-textMuted text-xs">
+            Prices shown include applicable VAT/GST as per local regulations.
+          </Text>
+        </View>
+
         {/* Terms of Use and Privacy Policy Links */}
         <View className="flex-row justify-center items-center gap-2 mb-6">
           <Pressable
