@@ -3330,8 +3330,34 @@ PODS:
     - Yoga
   - react-native-image-resizer (1.4.5):
     - React-Core
-  - react-native-netinfo (11.4.1):
+  - react-native-netinfo (11.5.1):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
     - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - react-native-pager-view (6.9.1):
     - boost
     - DoubleConversion
@@ -4162,7 +4188,7 @@ PODS:
     - Yoga
   - RNDeviceInfo (15.0.1):
     - React-Core
-  - RNFBApp (23.8.4):
+  - RNFBApp (23.8.5):
     - boost
     - DoubleConversion
     - fast_float
@@ -4191,7 +4217,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNFBAuth (23.8.4):
+  - RNFBAuth (23.8.5):
     - boost
     - DoubleConversion
     - fast_float
@@ -4221,7 +4247,7 @@ PODS:
     - RNFBApp
     - SocketRocket
     - Yoga
-  - RNFBFirestore (23.8.4):
+  - RNFBFirestore (23.8.5):
     - boost
     - DoubleConversion
     - fast_float
@@ -4251,7 +4277,7 @@ PODS:
     - RNFBApp
     - SocketRocket
     - Yoga
-  - RNFBMessaging (23.8.4):
+  - RNFBMessaging (23.8.5):
     - boost
     - DoubleConversion
     - fast_float
@@ -4282,7 +4308,7 @@ PODS:
     - RNFBApp
     - SocketRocket
     - Yoga
-  - RNFBStorage (23.8.4):
+  - RNFBStorage (23.8.5):
     - boost
     - DoubleConversion
     - fast_float
@@ -4440,7 +4466,7 @@ PODS:
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNScreens (4.20.0):
+  - RNScreens (4.21.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -4467,10 +4493,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNScreens/common (= 4.20.0)
+    - RNScreens/common (= 4.21.0)
     - SocketRocket
     - Yoga
-  - RNScreens/common (4.20.0):
+  - RNScreens/common (4.21.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -5062,7 +5088,7 @@ SPEC CHECKSUMS:
   react-native-document-picker: 3e3eecbc67c4a324c78ee4539da4215a46cf0275
   react-native-image-picker: 6051cfd030121b880a58f1cc0e5e33e9887804e4
   react-native-image-resizer: 17b2d73c030975b6543395c7e7368bc8774c5efa
-  react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
+  react-native-netinfo: 9f8e8c8591625fc7dc335e10e9b8cc1b0c1c482b
   react-native-pager-view: 0e228ec2dfdd87807d125c7bbfb83299edede19c
   react-native-render-html: 5afc4751f1a98621b3009432ef84c47019dcb2bd
   react-native-safe-area-context: 0a3b034bb63a5b684dd2f5fffd3c90ef6ed41ee8
@@ -5105,16 +5131,16 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: fd44f4b03e007e642e98df6726737bc66e9ba609
   RNCClipboard: e560338bf6cc4656a09ff90610b62ddc0dbdad65
   RNDeviceInfo: 36d7f232bfe7c9b5c494cb7793230424ed32c388
-  RNFBApp: d26ef99dc9f9530f56ceee011b05175a16af42bc
-  RNFBAuth: 96d6a293f64697f20271f9620d7ed2678ab1eae1
-  RNFBFirestore: b07e890ac7f0268cfe93cd4d25288227e7e28a77
-  RNFBMessaging: 702aa5f2921f1e8411b8e066b2f8f40184146937
-  RNFBStorage: 9778b45dd7ccff8bba1f72e8f060fbb2047d39b5
+  RNFBApp: ecfd6567af4c73409c36103f7968e27696a92901
+  RNFBAuth: 377e207a70dcd3d72af186413566c3eb3bae5736
+  RNFBFirestore: 6f1a117cb8aea59ea38e69eb654ac21d6be25cc2
+  RNFBMessaging: 8bee64a40bb3e1463bea7abffc43548d072f8ffc
+  RNFBStorage: 01b3d98513b20161de56a63c1258c2e968594bf3
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
   RNNitroSQLite: 5fa7133eefbdbdef4f0658c3f9e9c07633042c0b
   RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
   RNReanimated: 085278ac0a7044df824e13af982bf50bd4771e1b
-  RNScreens: 0811c38c9b11745e0bdb52157421c87a79e3d8b1
+  RNScreens: ed8557455a1c9de16749334ed6ddfd523081ade5
   RNSVG: 122ad5db3ef9be375bbf7f371e37306eeed7e4fa
   RNWorklets: cb0d3cc3c613ac60a3b7620f394980d997a86d8d
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
