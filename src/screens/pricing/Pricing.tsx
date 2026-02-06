@@ -36,10 +36,6 @@ interface PlanDisplay {
   features: string[];
   consulationPerMonth: number;
   originalPlan: SubscriptionPlan;
-  formattedPrice: string;
-  formattedMonthlyPrice: string;
-  discountDurationMonths: number;
-  storeProduct?: RNIap.Product | RNIap.Subscription;
 }
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'Pricing'>;
@@ -49,8 +45,6 @@ export default function PricingScreen() {
   const [selectedPlan, setSelectedPlan] = useState<PlanDisplay | null>(null);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
-  const [storeProducts, setStoreProducts] = useState<any[]>([]);
-  const [isFetchingStore, setIsFetchingStore] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
   const { isDark } = useTheme();
@@ -66,54 +60,6 @@ export default function PricingScreen() {
   });
   const profileSubscription = profileData?.subscription ?? null;
   const { data: subscriptionPlans, isLoading, error } = useGetSubscriptionPlans();
-
-  // Fetch store products to get localized pricing and offers
-  useEffect(() => {
-    const fetchStoreProducts = async () => {
-      if (!subscriptionPlans || subscriptionPlans.length === 0) {
-        setStoreProducts([]);
-        return;
-      }
-
-      try {
-        setIsFetchingStore(true);
-        // Clear previous products to prevent "flashing" or stale currency data
-        setStoreProducts([]);
-
-        await RNIap.initConnection();
-
-        const skus = Array.from(
-          new Set(
-            subscriptionPlans
-              .map((plan) =>
-                Platform.OS === 'ios' ? plan.apple_product_id : plan.google_product_id
-              )
-              .filter((sku): sku is string => !!sku && sku.trim() !== '')
-          )
-        );
-
-        console.log('[Pricing] Unique SKUs:', skus);
-
-        if (skus.length > 0) {
-          const products = await RNIap.fetchProducts({
-            skus,
-            type: 'subs',
-          });
-          console.log('products', products);
-          console.log('[Pricing] Store products fetched:', products?.length);
-          if (products && products.length > 0) {
-            setStoreProducts(products);
-          }
-        }
-      } catch (err) {
-        console.error('[Pricing] Error fetching store products:', err);
-      } finally {
-        setIsFetchingStore(false);
-      }
-    };
-
-    fetchStoreProducts();
-  }, [subscriptionPlans]);
 
   const navigateToProfileHome = useCallback(() => {
     try {
@@ -177,10 +123,8 @@ export default function PricingScreen() {
 
   // Transform API data to display format and filter out test plans
   const plans = useMemo(() => {
-    // CRITICAL: If we are still fetching store products, or if we have none yet,
-    // we return an empty array. This prevents the "flash" of API-sourced pricing
-    // (which defaults to British Pounds) before the store data arrives.
-    if (!subscriptionPlans || isFetchingStore || storeProducts.length === 0) {
+    if (!subscriptionPlans) {
+      console.log('[Pricing] No subscription plans data available');
       return [];
     }
 
@@ -198,151 +142,54 @@ export default function PricingScreen() {
 
     const sortedPlans = platformFilteredPlans.sort((a, b) => a.sort_order - b.sort_order);
 
-    const mappedPlans = sortedPlans
-      .map((plan: SubscriptionPlan) => {
-        // Find matching store product
-        const productId = Platform.OS === 'ios' ? plan.apple_product_id : plan.google_product_id;
-        const storeProduct = storeProducts.find(
-          (p: any) => (p.productId || p.sku || p.id) === productId
-        );
-
-        // ONLY show the plan if it exists in the Store. This ensures the price
-        // is ALWAYS the real localized price from the store.
-        if (!storeProduct) {
-          return null;
+    const mappedPlans = sortedPlans.map((plan: SubscriptionPlan) => {
+      // Helper function to remove decimals from price
+      const formatPriceWithoutDecimals = (priceString: string): string => {
+        const priceMatch = priceString.match(/£?([\d,]+\.?\d*)/);
+        if (priceMatch) {
+          const numericValue = parseFloat(priceMatch[1].replace(/,/g, ''));
+          const currencySymbol = priceString.includes('£') ? '£' : '';
+          const priceValue =
+            numericValue % 1 === 0 ? Math.floor(numericValue).toString() : numericValue.toString();
+          return `${currencySymbol}${priceValue}`;
         }
+        return priceString;
+      };
 
-        // Helper function to ensure consistent price formatting
-        const formatPrice = (priceString: string): string => {
-          if (!priceString) return '';
-          // Returns the price string exactly as it comes from the store
-          return priceString;
-        };
+      // Extract numeric value from discounted_price_formatted and remove decimals
+      // e.g., "£6.00" -> "£6" or "£12.00" -> "£12"
+      const formattedPrice = formatPriceWithoutDecimals(plan.discounted_price_formatted);
+      const formattedMonthlyPrice = formatPriceWithoutDecimals(plan.monthly_price_formatted);
 
-        let formattedPrice = '';
-        let formattedMonthlyPrice = '';
-        let discountDurationMonths = 0;
+      // Format: "£6/Monthly - 4 consultations"
+      const priceWithConsultations = `${formattedPrice}/Monthly - ${plan.consultations_per_month} consultations`;
 
-        if (Platform.OS === 'ios') {
-          const iosProduct = storeProduct as any;
-          // Use displayPrice for the standard recurring monthly price (e.g., "$12.00")
-          formattedMonthlyPrice = formatPrice(iosProduct.displayPrice || iosProduct.localizedPrice);
+      const planDisplay = {
+        key: plan.slug,
+        title: plan.name,
+        price: formattedPrice, // Just the price number without decimals
+        priceSub: `${plan.monthly_price_formatted}/month`, // Kept for SubscriptionModal compatibility
+        priceWithConsultations, // Full price line with consultations
+        desc: `Then ${formattedMonthlyPrice} / month, billed monthly after ${plan.discount_duration_months} months`,
+        formattedPrice, // For displaying large price
+        formattedMonthlyPrice, // For displaying regular price
+        discountDurationMonths: plan.discount_duration_months, // For displaying discount duration
+        features: [
+          `${plan.consultations_per_month} consultations/month`,
+          'Message-based consultations',
+          'Product recommendations',
+          'Expert matching system',
+        ],
+        consulationPerMonth: plan.consultations_per_month,
+        originalPlan: plan,
+      };
 
-          // iOS Introductory offers
-          const introPrice = iosProduct.introductoryPriceIOS || iosProduct.introductoryPrice;
-          const introPeriods = iosProduct.introductoryPriceNumberOfPeriodsIOS;
-          const introUnit = iosProduct.introductoryPriceSubscriptionPeriodIOS; // 'month', 'year', etc.
-
-          if (introPrice && introPeriods) {
-            formattedPrice = formatPrice(introPrice);
-
-            // Calculate duration in months
-            const periods = Number(introPeriods);
-            if (introUnit === 'year') {
-              discountDurationMonths = periods * 12;
-            } else if (introUnit === 'week') {
-              discountDurationMonths = Math.round(periods / 4);
-            } else if (introUnit === 'day') {
-              discountDurationMonths = Math.round(periods / 30);
-            } else {
-              // default to month
-              discountDurationMonths = periods;
-            }
-          } else {
-            formattedPrice = formattedMonthlyPrice;
-            discountDurationMonths = plan.discount_duration_months;
-          }
-        } else {
-          // Android (react-native-iap v12+)
-          const androidProduct = storeProduct as any;
-          const offers =
-            androidProduct.subscriptionOfferDetailsAndroid ||
-            androidProduct.subscriptionOfferDetails ||
-            androidProduct.subscriptionOffers ||
-            [];
-
-          // Find the matching offer based on base_plan_product_id from API
-          const matchingOffer =
-            offers.find((o: any) => o.basePlanId === plan.base_plan_product_id) || offers[0];
-
-          if (matchingOffer && matchingOffer.pricingPhases?.pricingPhaseList) {
-            const phases = matchingOffer.pricingPhases.pricingPhaseList;
-
-            // The last phase is always the recurring (base) price
-            const recurringPhase = phases[phases.length - 1];
-            formattedMonthlyPrice = formatPrice(recurringPhase.formattedPrice);
-
-            // If there's more than one phase, the first one(s) are introductory/discounted
-            if (phases.length > 1) {
-              const introPhase = phases[0];
-              formattedPrice = formatPrice(introPhase.formattedPrice);
-
-              // Calculate total discount duration in months from all non-recurring phases
-              let totalMonths = 0;
-              for (let i = 0; i < phases.length - 1; i++) {
-                const phase = phases[i];
-                const cycleCount = phase.billingCycleCount || 1;
-                const period = phase.billingPeriod || ''; // e.g., "P1M", "P1W", "P1Y"
-
-                const periodMatch = period.match(/P(\d+)([DMY])/);
-                if (periodMatch) {
-                  const amount = parseInt(periodMatch[1], 10);
-                  const unit = periodMatch[2];
-                  if (unit === 'M') totalMonths += cycleCount * amount;
-                  else if (unit === 'Y') totalMonths += cycleCount * amount * 12;
-                  else if (unit === 'W') totalMonths += Math.round((cycleCount * amount) / 4);
-                  else if (unit === 'D') totalMonths += Math.round((cycleCount * amount) / 30);
-                }
-              }
-              discountDurationMonths = totalMonths || plan.discount_duration_months;
-            } else {
-              formattedPrice = formattedMonthlyPrice;
-              discountDurationMonths = plan.discount_duration_months;
-            }
-          } else {
-            // Fallback for older Android structures or unexpected data
-            formattedMonthlyPrice = formatPrice(
-              androidProduct.localizedPrice || androidProduct.price
-            );
-            formattedPrice = formattedMonthlyPrice;
-            discountDurationMonths = plan.discount_duration_months;
-          }
-        }
-
-        // Format: "£6/Monthly - 4 consultations"
-        const priceWithConsultations = `${formattedPrice}/Monthly - ${plan.consultations_per_month} consultations`;
-
-        const planDisplay: PlanDisplay = {
-          key: plan.slug,
-          title: plan.name,
-          price: formattedPrice,
-          priceSub: `${formattedMonthlyPrice}/month`,
-          priceWithConsultations,
-          desc:
-            formattedPrice !== formattedMonthlyPrice
-              ? `Then ${formattedMonthlyPrice} / month, billed monthly after ${discountDurationMonths} months`
-              : `Billed monthly`,
-          formattedPrice,
-          formattedMonthlyPrice,
-          discountDurationMonths,
-          features: [
-            `${plan.consultations_per_month} consultations/month`,
-            'Message-based consultations',
-            'Product recommendations',
-            'Expert matching system',
-          ],
-          consulationPerMonth: plan.consultations_per_month,
-          originalPlan: plan,
-          storeProduct: storeProduct as RNIap.Product | RNIap.Subscription,
-        };
-
-        return planDisplay;
-      })
-      .filter((plan): plan is PlanDisplay => plan !== null);
+      return planDisplay;
+    });
 
     // Return only API plans (no hardcoded plans)
     return mappedPlans;
-  }, [subscriptionPlans, storeProducts, isFetchingStore]);
+  }, [subscriptionPlans]);
 
   // Profile API is the source of truth for subscription status.
   useEffect(() => {
@@ -410,7 +257,7 @@ export default function PricingScreen() {
 
         {/* PLANS */}
         <View className="mt-2 flex flex-col gap-4">
-          {isLoading || (isFetchingStore && storeProducts.length === 0) ? (
+          {isLoading ? (
             <View className="items-center justify-center py-8">
               <ActivityIndicator size="large" color="#23A76F" />
               <Text className="text-textMuted mt-4">Loading plans...</Text>
@@ -462,45 +309,30 @@ export default function PricingScreen() {
                         )}
                       </View>
 
-                      {/* Price: Display logic for intro offer vs base price */}
+                      {/* Price: "£6/month for first 6 months, then £12/month" */}
                       <View className="flex-row items-center justify-between mt-1">
                         <View className="flex-1">
-                          {item.formattedPrice !== item.formattedMonthlyPrice ? (
-                            <>
-                              <Text
-                                className={`text-base font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-                              >
-                                <Text
-                                  className={`font-poppins-semibold text-lg ${isDark ? 'text-white' : 'text-textDark'}`}
-                                >
-                                  {item.formattedPrice}
-                                </Text>
-                                /month for first {item.discountDurationMonths} months,
-                              </Text>
-                              <Text
-                                className={`text-base font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
-                              >
-                                then{' '}
-                                <Text
-                                  className={`font-poppins-semibold text-lg ${isDark ? 'text-white' : 'text-textDark'}`}
-                                >
-                                  {item.formattedMonthlyPrice}
-                                </Text>
-                                /month
-                              </Text>
-                            </>
-                          ) : (
+                          <Text
+                            className={`text-base font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                          >
                             <Text
-                              className={`text-base font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                              className={`font-poppins-semibold text-lg ${isDark ? 'text-white' : 'text-textDark'}`}
                             >
-                              <Text
-                                className={`font-poppins-semibold text-lg ${isDark ? 'text-white' : 'text-textDark'}`}
-                              >
-                                {item.formattedMonthlyPrice}
-                              </Text>
-                              /month
+                              {item.formattedPrice}
                             </Text>
-                          )}
+                            /month for first {item.discountDurationMonths} months,
+                          </Text>
+                          <Text
+                            className={`text-base font-poppins-regular ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
+                          >
+                            then{' '}
+                            <Text
+                              className={`font-poppins-semibold text-lg ${isDark ? 'text-white' : 'text-textDark'}`}
+                            >
+                              {item.formattedMonthlyPrice}
+                            </Text>
+                            /month
+                          </Text>
                           {/* Consultations per month */}
                           <Text
                             className={`text-base font-poppins-regular mt-1 ${isDark ? 'text-[#8AA897]' : 'text-[#658176]'}`}
@@ -623,13 +455,6 @@ export default function PricingScreen() {
             {Platform.OS === 'ios'
               ? 'Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'
               : 'Payment will be charged to your Google Play account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'}
-          </Text>
-        </View>
-
-        {/* VAT/GST Notice */}
-        <View className="mt-2 mb-2 px-4">
-          <Text className="text-center text-textMuted text-xs">
-            Prices shown include applicable VAT/GST as per local regulations.
           </Text>
         </View>
 
