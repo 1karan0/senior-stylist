@@ -15,8 +15,8 @@ interface UseAppVersionCheckResult {
 // Store URLs - Update these with your actual App Store ID when available
 // Android package: com.senior_stylist
 // iOS bundle ID: com.seniorstylist.app
-const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.senior_stylist';
-const APP_STORE_URL = 'https://apps.apple.com/app/id0000000000'; // TODO: Replace with actual App Store ID
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.seniorstylist.app';
+const APP_STORE_URL = 'https://apps.apple.com/app/id6757600475'; // TODO: Replace with actual App Store ID
 
 export const useAppVersionCheck = (): UseAppVersionCheckResult => {
   const [forceUpdateRequired, setForceUpdateRequired] = useState(false);
