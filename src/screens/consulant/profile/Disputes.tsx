@@ -18,7 +18,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { ConsultantDispute } from '@/common/types';
 import { DisputeListSkeleton } from '@/common/components/skeletons/DisputeItemSkeleton';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 type FilterType = 'all' | 'open' | 'resolved';
 
 const formatDate = (dateString: string): string => {
@@ -79,7 +79,7 @@ const Disputes: React.FC<Props> = ({ navigation }) => {
   const { paddingBottom } = useTabBarSafePadding();
   const { data, isLoading, error, refetch, isRefetching } = useGetConsultantDisputes();
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
-
+  const { horizontalPadding } = useTabletLayout();
   const disputes: ConsultantDispute[] = data?.data?.disputes || [];
   const filteredDisputes = useMemo(() => {
     if (activeFilter === 'all') return disputes;
@@ -226,7 +226,7 @@ const Disputes: React.FC<Props> = ({ navigation }) => {
       </View>
 
       {/* Content */}
-      <View className="flex-1 px-6 pt-6 pb-5 w-full">
+      <View className="flex-1 pt-6 pb-5 w-full" style={{ paddingHorizontal: horizontalPadding }}>
         {/* Filter Tabs */}
         <View className="flex-row gap-2 justify-between w-full mb-4">
           {(['all', 'open', 'resolved'] as FilterType[]).map((filter) => (

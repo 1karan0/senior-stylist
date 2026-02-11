@@ -11,6 +11,7 @@ import Toast from '@/common/components/Toast';
 import TextInputField from '@/common/components/TextInputField';
 import { AuthStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 const ResetPassword = () => {
   const {
@@ -31,7 +32,7 @@ const ResetPassword = () => {
   const { isDark } = useTheme();
   const mutation = useResetPassword();
   const insets = useSafeAreaInsets();
-
+  const { horizontalPadding } = useTabletLayout();
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({
       visible: true,
@@ -80,7 +81,7 @@ const ResetPassword = () => {
             paddingBottom: insets.bottom + 20,
             flexGrow: 1,
           }}
-          className="px-5"
+          style={[{ paddingHorizontal: horizontalPadding }]}
         >
           {/* Logo & Header */}
           <View className="items-center mt-14 mb-10">

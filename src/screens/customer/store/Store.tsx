@@ -12,18 +12,20 @@ import {
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 const STORE_URL = 'https://shop.senior-stylist.com/';
 
 const StoreScreen = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
   const { width: windowWidth } = useWindowDimensions();
-
+  const { horizontalPadding, isTablet } = useTabletLayout();
   // Width-driven sizing is much more consistent than height-driven sizing across devices.
   // The screen uses `px-5` (20px) so the card width is windowWidth - 40.
   const promoCardWidth = Math.max(1, windowWidth - 40);
-  const promoCardHeight = Math.max(360, Math.min(565, Math.round(promoCardWidth * 1.6)));
+  const promoCardHeight = isTablet
+    ? Math.max(360, Math.min(765, Math.round(promoCardWidth * 1.6)))
+    : Math.max(360, Math.min(565, Math.round(promoCardWidth * 1.6)));
 
   const handleShopNow = () => {
     Linking.openURL(STORE_URL);
@@ -36,7 +38,7 @@ const StoreScreen = () => {
         contentContainerStyle={{ paddingBottom: paddingBottom }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="flex-1 px-5 pt-6">
+        <View className="flex-1 pt-6" style={[{ paddingHorizontal: horizontalPadding }]}>
           {/* Header */}
 
           <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>

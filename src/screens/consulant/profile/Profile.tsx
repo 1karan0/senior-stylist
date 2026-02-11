@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image, Platform, Animated } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
@@ -9,28 +9,71 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import LinearGradient from 'react-native-linear-gradient';
 import Button from '@/common/components/Button';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 const Profile: React.FC = () => {
+  const [isCopied, setIsCopied] = useState(false);
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const scaleAnim = useState(new Animated.Value(1))[0];
   const { isDark } = useTheme();
   const { logout } = useAuth();
   const navigation = useNavigation<any>();
   const { data: profileData } = useGetProfile();
+  console.log('profileData', profileData);
 
   const user = profileData?.user as any;
   const totalSessions = user?.consultant_details?.total_sessions ?? 0;
   const averageRating = user?.consultant_details?.average_rating ?? 0;
 
   const { paddingBottom } = useTabBarSafePadding();
-
+  const { horizontalPadding } = useTabletLayout();
   const goToEditProfile = () => navigation.navigate('EditProfile');
   const goToSettings = () => navigation.navigate('Settings');
   const goToMyEarning = () => navigation.navigate('MyEarning');
   const goToDisputes = () => navigation.navigate('Disputes');
+
+  const handleCopyCode = () => {
+    const code = user?.referral_code;
+    if (code) {
+      Clipboard.setString(code);
+      setIsCopied(true);
+
+      // Scale animation for button
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 0.9,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Fade in/out animation for "Copied!" text
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.delay(1500),
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setIsCopied(false));
+    }
+  };
   return (
     <GradientBackground>
       <View className="flex-1 ">
         {/* Header */}
-        <View className="px-5 py-6">
+        <View className="py-6" style={{ paddingHorizontal: horizontalPadding }}>
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
           >
@@ -40,7 +83,8 @@ const Profile: React.FC = () => {
 
         {/* Content */}
         <ScrollView
-          className="flex-1 px-5"
+          className="flex-1"
+          style={{ paddingHorizontal: horizontalPadding }}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }} // allow last items to scroll above tab bar
         >
@@ -209,6 +253,84 @@ const Profile: React.FC = () => {
                 >
                   Average Rating
                 </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* ---------- Referral Program ---------- */}
+          <View
+            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mb-5`}
+          >
+            <View>
+              <View className="flex-row gap-2 items-baseline">
+                <Image
+                  source={
+                    isDark
+                      ? require('@/assets/icons/users-white.png')
+                      : require('@/assets/icons/users.png')
+                  }
+                  className=""
+                />
+                <Text
+                  className={`text-[22px] ${isDark ? 'text-white' : 'text-textDark'} font-urbanist-semibold mb-2`}
+                >
+                  Referral Program
+                </Text>
+              </View>
+              <Text
+                className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-2 w-[90%]`}
+              >
+                Share your code with friends and earn rewards
+              </Text>
+            </View>
+
+            {/* Code Box */}
+            <View className="flex-row justify-between mb-3 relative">
+              <View
+                className={` w-[80%] items-center text-center bg-[#F5F9F7] border-[#DAE7E0] border rounded-lg py-3 `}
+              >
+                <Text className="text-black text-base font-urbanist-bold">
+                  {user?.referral_code ?? '------'}
+                </Text>
+              </View>
+              <View>
+                <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                  <LinearGradient
+                    colors={['#2CCB91', '#23A76F']}
+                    start={{ x: 0, y: 1 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      borderRadius: 12,
+                      width: 48,
+                      height: 48,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <TouchableOpacity
+                      onPress={handleCopyCode}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Image
+                        source={
+                          isCopied
+                            ? require('@/assets/icons/white-check.png')
+                            : require('@/assets/icons/copy.png')
+                        }
+                        style={{
+                          width: 24,
+                          height: 24,
+                        }}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                  </LinearGradient>
+                </Animated.View>
               </View>
             </View>
           </View>

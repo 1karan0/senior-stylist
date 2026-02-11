@@ -17,6 +17,7 @@ import { ProfileStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import LinearGradient from 'react-native-linear-gradient';
 import { ConsultationListSkeleton } from '@/common/components/skeletons/ConsultationItemSkeleton';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 type CreateDisputeNavigationProp = StackNavigationProp<ProfileStackParamList, 'CreateDispute'>;
 
@@ -48,7 +49,7 @@ const CreateDispute: React.FC<Props> = ({ navigation }) => {
   const { isDark } = useTheme();
   const { data, isLoading, error } = useGetDisputeConsultations();
   const [selectedConsultationId, setSelectedConsultationId] = useState<number | null>(null);
-
+  const { horizontalPadding } = useTabletLayout();
   const consultations: Consultation[] = data?.data.consultations || [];
 
   const formatDate = (dateString: string): string => {
@@ -109,7 +110,7 @@ const CreateDispute: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          <View className="px-6 pt-6 pb-24">
+          <View className="pt-6 pb-24" style={[{ paddingHorizontal: horizontalPadding }]}>
             {/* Step 1 Section */}
             <View className="mb-6">
               <Text
@@ -164,7 +165,7 @@ const CreateDispute: React.FC<Props> = ({ navigation }) => {
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-6 pt-6 pb-24">
+        <View className=" pt-6 pb-24" style={[{ paddingHorizontal: horizontalPadding }]}>
           {/* Step 1 Section */}
           <View className="mb-6">
             <Text

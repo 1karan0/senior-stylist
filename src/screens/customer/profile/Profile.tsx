@@ -29,7 +29,7 @@ import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { restorePurchase, type RestorePurchasePayload } from '@/api/subscription/verifyPurchase';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 interface Props {
@@ -47,7 +47,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   });
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-
+  const { horizontalPadding } = useTabletLayout();
   const [isCopied, setIsCopied] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -62,7 +62,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   if (!authUser) {
     return (
       <GradientBackground>
-        <View className="flex-1 pb-10">
+        <View className="flex-1 pb-10" style={{ paddingHorizontal: horizontalPadding }}>
           <View className="px-5 py-5">
             <Text
               className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
@@ -275,7 +275,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     <GradientBackground>
       <View className="flex-1 pb-10 ">
         {/* Header */}
-        <View className="px-5 py-5">
+        <View className="py-5" style={[{ paddingHorizontal: horizontalPadding }]}>
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
           >
@@ -283,7 +283,8 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           </Text>
         </View>
         <ScrollView
-          className="flex-1 px-5"
+          className="flex-1"
+          style={[{ paddingHorizontal: horizontalPadding }]}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}

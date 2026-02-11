@@ -16,6 +16,7 @@ import PhoneNumberInput from '@/common/components/PhoneNumberInput';
 import ImagePickerModal from '@/common/components/modals/ImagePickerModal';
 import ImageModal from '@/common/components/modals/ImageModal';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 import {
   requestCameraPermission,
   requestPhotoLibraryPermission,
@@ -39,7 +40,7 @@ const EditProfile = () => {
   const route = useRoute();
   const { profile } = route.params as { profile: ProfileUser };
   const { isDark } = useTheme();
-
+  const { horizontalPadding } = useTabletLayout();
   const queryClient = useQueryClient();
   const uploadMutation = useUploadProfilePicture();
   const editMutation = useEditProfile();
@@ -198,7 +199,7 @@ const EditProfile = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1 px-5 pt-6 pb-20">
+      <View className="flex-1 pt-6 pb-20" style={[{ paddingHorizontal: horizontalPadding }]}>
         {/* Header */}
         <View className={`mb-4 pb-4`}>
           <View className="flex-row items-center">

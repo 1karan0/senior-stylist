@@ -8,6 +8,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useGetPayouts } from '@/api/consultant/earning/useGetPayouts';
 import { PayoutItem } from '@/common/types';
 import { PayoutListSkeleton } from '@/common/components/skeletons/PayoutItemSkeleton';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 const formatDate = (dateString: string): string => {
   try {
@@ -72,7 +73,7 @@ const PayOutHistory = () => {
   const [page, setPage] = useState(1);
   const [allPayouts, setAllPayouts] = useState<PayoutItem[]>([]);
   const perPage = 10;
-
+  const { horizontalPadding } = useTabletLayout();
   const {
     data: payoutsData,
     isLoading,
@@ -265,7 +266,10 @@ const PayOutHistory = () => {
         <View className="px-5 pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0" />
 
         {/* Content */}
-        <View className="flex-1 px-5 absolute top-5 left-0 right-0 bottom-5 z-10">
+        <View
+          className="flex-1 absolute top-5 left-0 right-0 bottom-5 z-10"
+          style={{ paddingHorizontal: horizontalPadding }}
+        >
           {isLoading && allPayouts.length === 0 ? (
             <View>
               {/* Header Text */}

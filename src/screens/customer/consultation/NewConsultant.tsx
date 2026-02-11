@@ -20,13 +20,14 @@ import ImagePickerModal from '@/common/components/modals/ImagePickerModal';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAds } from '@/contexts/AdContext';
 import { storage } from '@/services/storage';
+
 import {
   requestPhotoLibraryPermission,
   requestCameraPermission,
   showPermissionDeniedAlert,
 } from '@/utils/imagePermissions';
 import { useFindingStylistModal } from '@/contexts/FindingStylistModalContext';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 const NewConsultant = ({ navigation }: any) => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -40,7 +41,7 @@ const NewConsultant = ({ navigation }: any) => {
   const { isDark } = useTheme();
   const { isAdsEnabled, preloadAd } = useAds();
   const { open: openFindingStylistModal } = useFindingStylistModal();
-
+  const { horizontalPadding } = useTabletLayout();
   // Preload ad when component mounts (so it's ready when user taps "Find Stylist")
   useEffect(() => {
     if (isAdsEnabled) {
@@ -212,7 +213,8 @@ const NewConsultant = ({ navigation }: any) => {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <ScrollView
-            className="flex-1 px-5 pt-6 "
+            className="flex-1 pt-6 "
+            style={[{ paddingHorizontal: horizontalPadding }]}
             contentContainerStyle={{ paddingBottom: 60 }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}

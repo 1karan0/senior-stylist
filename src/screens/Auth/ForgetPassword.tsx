@@ -8,6 +8,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import Toast from '@/common/components/Toast';
 import TextInputField from '@/common/components/TextInputField';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 export default function ForgetPassword({ navigation }: any) {
   const {
@@ -23,7 +24,7 @@ export default function ForgetPassword({ navigation }: any) {
   });
   const sendOtpMutation = useForgotPassword();
   const { isDark } = useTheme();
-
+  const { horizontalPadding } = useTabletLayout();
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({
       visible: true,
@@ -59,7 +60,7 @@ export default function ForgetPassword({ navigation }: any) {
         onClose={() => setToast({ ...toast, visible: false })}
       />
 
-      <View className="flex-1 px-6">
+      <View className="flex-1" style={[{ paddingHorizontal: horizontalPadding }]}>
         {/* Logo + Headings */}
         <View className="items-center mt-14 mb-10">
           <Image

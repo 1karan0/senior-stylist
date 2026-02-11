@@ -10,11 +10,12 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useDownloadStatement } from '@/api/consultant/earning/useGetStatementDownload';
 import { downloadFile } from '@/utils/fileDownload';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 const EarningStatement = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-
+  const { horizontalPadding } = useTabletLayout();
   const getUkTaxYearStartYear = (d: Date) => {
     // UK tax year starts on Apr 6
     const year = d.getFullYear();
@@ -128,7 +129,8 @@ const EarningStatement = () => {
         <View className="px-5 pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0" />
 
         <ScrollView
-          className="flex-1 px-5 absolute top-5 left-0 right-0 bottom-5 z-10"
+          className="flex-1 absolute top-5 left-0 right-0 bottom-5 z-10"
+          style={{ paddingHorizontal: horizontalPadding }}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}
         >

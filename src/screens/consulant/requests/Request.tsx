@@ -10,7 +10,7 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { initializeFirebase, listenToStylistRequests, StylistRequest } from '@/services/firebase';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 const mapConsultationToRequestItem = (consultation: ConsultantConsultation): RequestItem => {
   const customerName = consultation.user?.name || 'Unknown User';
   const requestedAt = new Date(consultation.requested_at).getTime();
@@ -53,7 +53,7 @@ const Request: React.FC = () => {
   const isConsultant = user?.role === 'consultant';
   const { isDark } = useTheme();
   const navigation = useNavigation<any>();
-
+  const { horizontalPadding } = useTabletLayout();
   // <<-- CALL THE HOOK UNCONDITIONALLY AT THE TOP
   const { paddingBottom } = useTabBarSafePadding();
 
@@ -244,7 +244,7 @@ const Request: React.FC = () => {
   return (
     <GradientBackground>
       {/* outer container with paddingBottom so non-scroll content doesn't get hidden */}
-      <View className="flex-1 px-5 py-6" style={{ paddingBottom }}>
+      <View className="flex-1 py-6" style={{ paddingBottom, paddingHorizontal: horizontalPadding }}>
         <View className="flex-col items-start">
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}

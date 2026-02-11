@@ -7,7 +7,7 @@ import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 type RootStackParamList = {
   NewConsultant: undefined;
   // add other routes here if needed
@@ -17,6 +17,7 @@ const NoConsultant = () => {
   const isFocused = useIsFocused();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { isDark } = useTheme();
+  const { horizontalPadding } = useTabletLayout();
   const { data: profileData } = useGetProfile({
     // Poll every 5s while this screen is visible so subscription/profile updates show live
     refetchInterval: isFocused ? 5_000 : false,
@@ -53,7 +54,7 @@ const NoConsultant = () => {
 
   return (
     <GradientBackground className="">
-      <View className="flex-1 px-5 pt-6 ">
+      <View className="flex-1 pt-6 " style={[{ paddingHorizontal: horizontalPadding }]}>
         {/* Header */}
         <Text className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
           Chats

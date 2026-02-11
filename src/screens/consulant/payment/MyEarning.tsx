@@ -21,6 +21,7 @@ import StripeWebViewModal from '@/screens/consulant/payment/components/StripeWeb
 import { useGetStripAccount } from '@/api/consultant/strip-express/useGetStripAccount';
 import { useGetOnboardingLink } from '@/api/consultant/strip-express/useGetOnboardingLink';
 import { useGetRecentEarnings } from '@/api/consultant/earning/useGetrecentEarnings';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 interface RecentEarningItem {
   id: number;
@@ -35,6 +36,7 @@ const MyEarning = () => {
   const navigation = useNavigation<any>();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
+  const { horizontalPadding } = useTabletLayout();
   const { data: myEarning, isLoading: isMyEarningLoading } = useGetMyEarning();
   const {
     data: stripAccount,
@@ -171,7 +173,8 @@ const MyEarning = () => {
 
         {/* Content */}
         <ScrollView
-          className="flex-1 px-5 absolute top-5 left-0 right-0 bottom-5 z-10 "
+          className="flex-1 absolute top-5 left-0 right-0 bottom-5 z-10 "
+          style={{ paddingHorizontal: horizontalPadding }}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}
         >

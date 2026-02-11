@@ -12,6 +12,7 @@ import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useGetLeaderboard } from '@/api/consultant/useGetLeaderboard';
 import Button from '@/common/components/Button';
 import { BASE_URL } from '@/config';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 const Dashboard: React.FC = () => {
   const [pdfModalVisible, setPdfModalVisible] = useState(false);
@@ -28,7 +29,7 @@ const Dashboard: React.FC = () => {
 
   // Keep these values in sync with your tab navigator
   const { paddingBottom } = useTabBarSafePadding();
-
+  const { horizontalPadding } = useTabletLayout();
   // PDF URL for About Earnings - Update this with your actual PDF URL
   const EARNINGS_PDF_URL = `${BASE_URL}/Stylist_Pay_Protocol_Partnership_and_Growth-v1.pdf`; // Replace with your actual PDF URL
 
@@ -40,7 +41,7 @@ const Dashboard: React.FC = () => {
     <GradientBackground>
       <View className="flex-1">
         {/* Header */}
-        <View className="px-5 py-6">
+        <View className="py-6" style={{ paddingHorizontal: horizontalPadding }}>
           <Text
             className={`text-2xl font-urbanist-bold  ${isDark ? 'text-white' : 'text-textDark'}`}
           >
@@ -56,7 +57,7 @@ const Dashboard: React.FC = () => {
           contentContainerStyle={{ paddingBottom }}
         >
           {/* Stats Grid */}
-          <View className="px-5">
+          <View style={{ paddingHorizontal: horizontalPadding }}>
             {/* Total Sessions and Avg Rating - Side by Side */}
             <View className="flex-row justify-between mb-4">
               {/* Total Sessions */}
@@ -143,7 +144,7 @@ const Dashboard: React.FC = () => {
           </View>
 
           {/* About Earnings Button */}
-          <View className="px-5 mb-5">
+          <View className="mb-5" style={{ paddingHorizontal: horizontalPadding }}>
             <Button
               text="About Earnings"
               icon={<Text className="text-white text-xl font-bold">$</Text>}
@@ -154,82 +155,88 @@ const Dashboard: React.FC = () => {
           </View>
 
           {/* Leaderboard Section */}
-          <View
-            className={` border  p-4 mb-8 mx-5 rounded-xl ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
-          >
-            <Text
-              className={`text-xl font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark '}`}
+          <View style={{ paddingHorizontal: horizontalPadding }}>
+            <View
+              className={` border py-6 px-4 mb-8 rounded-xl  ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
             >
-              Leaderboard
-            </Text>
-            <Text
-              className={`font-poppins-regular mb-4 text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-            >
-              {leaderboardData
-                ? `Showing latest available leaderboard: ${leaderboardData.month_name} ${leaderboardData.year}`
-                : 'Your latest consultations'}
-            </Text>
+              <Text
+                className={`text-xl font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark '}`}
+              >
+                Leaderboard
+              </Text>
+              <Text
+                className={`font-poppins-regular mb-4 text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+              >
+                {leaderboardData
+                  ? `Showing latest available leaderboard: ${leaderboardData.month_name} ${leaderboardData.year}`
+                  : 'Your latest consultations'}
+              </Text>
 
-            {/* Leaderboard Items */}
-            {isLoadingLeaderboard ? (
-              <View className="items-center py-8">
-                <Text className={`text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
-                  Loading leaderboard...
-                </Text>
-              </View>
-            ) : leaderboardData?.leaderboard && leaderboardData.leaderboard.length > 0 ? (
-              leaderboardData.leaderboard.map((item) => (
-                <View
-                  key={item.consultant_id}
-                  className={`rounded-xl p-4 mb-3 border ${isDark ? 'bg-[#233931] border-[#445E54]' : 'bg-[#F5F9F7] border-[#DAE7E0]'}`}
-                >
-                  <View className="flex-row justify-between items-center">
-                    <View className="flex-row items-center flex-1">
-                      {/* Rank Badge */}
-                      <View
-                        className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                          item.rank === 1
-                            ? 'bg-yellow-400'
-                            : item.rank === 2
-                              ? 'bg-gray-300'
-                              : item.rank === 3
-                                ? 'bg-orange-300'
-                                : isDark
-                                  ? 'bg-[#445E54]'
-                                  : 'bg-[#DAE7E0]'
-                        }`}
-                      >
-                        <Text
-                          className={`font-urbanist-bold text-sm ${
-                            item.rank <= 3 ? 'text-white' : isDark ? 'text-white' : 'text-textDark'
+              {/* Leaderboard Items */}
+              {isLoadingLeaderboard ? (
+                <View className="items-center py-8">
+                  <Text className={`text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
+                    Loading leaderboard...
+                  </Text>
+                </View>
+              ) : leaderboardData?.leaderboard && leaderboardData.leaderboard.length > 0 ? (
+                leaderboardData.leaderboard.map((item) => (
+                  <View
+                    key={item.consultant_id}
+                    className={`rounded-xl p-4 mb-3 border ${isDark ? 'bg-[#233931] border-[#445E54]' : 'bg-[#F5F9F7] border-[#DAE7E0]'}`}
+                  >
+                    <View className="flex-row justify-between items-center">
+                      <View className="flex-row items-center flex-1">
+                        {/* Rank Badge */}
+                        <View
+                          className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                            item.rank === 1
+                              ? 'bg-yellow-400'
+                              : item.rank === 2
+                                ? 'bg-gray-300'
+                                : item.rank === 3
+                                  ? 'bg-orange-300'
+                                  : isDark
+                                    ? 'bg-[#445E54]'
+                                    : 'bg-[#DAE7E0]'
                           }`}
                         >
-                          {item.rank}
-                        </Text>
-                      </View>
-                      <View className="flex-1">
-                        <Text
-                          className={`font-urbanist-semibold text-base ${isDark ? 'text-white' : 'text-textDark'}`}
-                        >
-                          {item.name}
-                        </Text>
-                        <Text
-                          className={`font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
-                        >
-                          {item.consultations_count} consultations
-                        </Text>
+                          <Text
+                            className={`font-urbanist-bold text-sm ${
+                              item.rank <= 3
+                                ? 'text-white'
+                                : isDark
+                                  ? 'text-white'
+                                  : 'text-textDark'
+                            }`}
+                          >
+                            {item.rank}
+                          </Text>
+                        </View>
+                        <View className="flex-1">
+                          <Text
+                            className={`font-urbanist-semibold text-base ${isDark ? 'text-white' : 'text-textDark'}`}
+                          >
+                            {item.name}
+                          </Text>
+                          <Text
+                            className={`font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                          >
+                            {item.consultations_count} consultations
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </View>
+                ))
+              ) : (
+                <View className="items-center py-8">
+                  <Text className={`text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
+                    No leaderboard data available
+                  </Text>
                 </View>
-              ))
-            ) : (
-              <View className="items-center py-8">
-                <Text className={`text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
-                  No leaderboard data available
-                </Text>
-              </View>
-            )}
+              )}
+            </View>
           </View>
         </ScrollView>
 

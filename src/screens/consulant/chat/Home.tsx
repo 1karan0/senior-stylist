@@ -7,7 +7,7 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useConsultantConsultations } from '@/hooks/useConsultantConsultations';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 import type { AppStackParamList, ConversationPreview } from '@/common/types';
 import GradientBackground from '@/common/components/GradientBackground';
 import ConversationItem from '@/components/chat/ConversationItem';
@@ -22,7 +22,7 @@ const ChatHome: React.FC = () => {
   const { isDark } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const { paddingBottom } = useTabBarSafePadding();
-
+  const { horizontalPadding } = useTabletLayout();
   const consultantKey = useMemo(() => (user?.id ? String(user.id) : null), [user?.id]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
@@ -63,7 +63,7 @@ const ChatHome: React.FC = () => {
 
   return (
     <GradientBackground className="flex-1">
-      <View className="flex-1 pt-6 px-5" style={{ paddingBottom }}>
+      <View className="flex-1 pt-6" style={{ paddingBottom, paddingHorizontal: horizontalPadding }}>
         <ConsultantChatHomeHeader
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}

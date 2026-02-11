@@ -20,14 +20,14 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDeleteAccount } from '@/api/auth/useDeletAccount';
 import Toast from '@/common/components/Toast';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 const Settings: React.FC = () => {
   const { theme, isDark, setTheme } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
   const navigation = useNavigation();
   const { logout } = useAuth();
   const deleteAccountMutation = useDeleteAccount();
-
+  const { horizontalPadding } = useTabletLayout();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [appVersion, setAppVersion] = useState<string>('');
   const [toast, setToast] = useState({
@@ -171,7 +171,7 @@ const Settings: React.FC = () => {
           onClose={() => setToast({ ...toast, visible: false })}
         />
         {/* Header */}
-        <View className="px-5 py-6">
+        <View className="py-6" style={[{ paddingHorizontal: horizontalPadding }]}>
           <View className="flex-row items-center">
             <TouchableOpacity onPress={handleBack} className="mr-3">
               <Ionicons name="arrow-back" size={24} color={isDark ? '#FFFFFF' : '#162721'} />
@@ -186,7 +186,8 @@ const Settings: React.FC = () => {
 
         {/* Content */}
         <ScrollView
-          className="flex-1 px-5"
+          className="flex-1"
+          style={[{ paddingHorizontal: horizontalPadding }]}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}
         >

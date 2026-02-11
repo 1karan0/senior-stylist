@@ -5,7 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/contexts/ThemeContext';
 import type { AppStackParamList, ConsultationStackParamList } from '@/common/types';
 import SearchBar from './SearchBar';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 type NavParamList = AppStackParamList & ConsultationStackParamList;
 
 interface ChatHomeHeaderProps {
@@ -21,9 +21,9 @@ const ChatHomeHeader: React.FC<ChatHomeHeaderProps> = ({
 }) => {
   const { isDark } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<NavParamList>>();
-
+  const { horizontalPadding } = useTabletLayout();
   return (
-    <View className="px-5 pt-6">
+    <View className="pt-6" style={[{ paddingHorizontal: horizontalPadding }]}>
       <View className="flex-row justify-between items-center">
         <Text
           className={`${isDark ? 'text-white' : 'text-textDark'} text-2xl font-urbanist font-bold`}

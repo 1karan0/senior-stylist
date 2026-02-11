@@ -9,6 +9,7 @@ import { useVerifyForgotPassOtp } from '@/api/auth/useverifyForgotPassOtp';
 import Toast from '@/common/components/Toast';
 import { Button } from '@/common/components/Button';
 import InfoModal from '@/common/components/modals/InfoModal';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 export default function OtpVerificationScreen({ navigation, route }: any) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -28,6 +29,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
   const isOtpComplete = otp.every((digit) => digit !== '');
 
   const { params } = route;
+  const { horizontalPadding } = useTabletLayout();
   const screen = params?.screen;
   const email = params?.email;
 
@@ -164,7 +166,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
 
   return (
     <GradientBackground className="flex-1 ">
-      <View className="flex-1 items-center px-5">
+      <View className="flex-1 items-center" style={[{ paddingHorizontal: horizontalPadding }]}>
         <Toast
           visible={toast.visible}
           message={toast.message}

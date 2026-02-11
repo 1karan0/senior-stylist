@@ -20,7 +20,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { ProfileStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import Ionicons from '@react-native-vector-icons/ionicons';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 type SubmitDisputeNavigationProp = StackNavigationProp<ProfileStackParamList, 'SubmitDispute'>;
 type SubmitDisputeRouteProp = RouteProp<ProfileStackParamList, 'SubmitDispute'>;
 
@@ -39,7 +39,7 @@ const SubmitDispute: React.FC<Props> = ({ navigation, route }) => {
   const [error, setError] = useState('');
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
+  const { horizontalPadding } = useTabletLayout();
   const handleBack = () => {
     navigation.goBack();
   };
@@ -115,7 +115,7 @@ const SubmitDispute: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          <View className="px-6 pt-6 pb-24">
+          <View className="pt-6 pb-24" style={[{ paddingHorizontal: horizontalPadding }]}>
             {/* Step 2 Section */}
             <View className="mb-6">
               <Text
@@ -237,7 +237,10 @@ const SubmitDispute: React.FC<Props> = ({ navigation, route }) => {
           onRequestClose={handleReviewModalClose}
         >
           <StatusBar translucent backgroundColor="#000000D1" barStyle="light-content" />
-          <View className="flex-1 justify-center items-center bg-black/80">
+          <View
+            className="flex-1 justify-center items-center bg-black/80"
+            style={{ paddingHorizontal: horizontalPadding }}
+          >
             <View
               className={`${isDark ? 'bg-[#0D1A16]' : 'bg-white'} rounded-xl px-5 py-7 w-[90%]`}
               style={{ position: 'relative' }}
@@ -322,7 +325,10 @@ const SubmitDispute: React.FC<Props> = ({ navigation, route }) => {
           onRequestClose={handleSuccessModalClose}
         >
           <StatusBar translucent backgroundColor="#000000D1" barStyle="light-content" />
-          <View className="flex-1 justify-center items-center bg-black/80 px-6">
+          <View
+            className="flex-1 justify-center items-center bg-black/80 "
+            style={{ paddingHorizontal: horizontalPadding }}
+          >
             <View
               className={`${isDark ? 'bg-[#0D1A16]' : 'bg-white'} rounded-2xl px-6 py-7 w-full`}
               style={{ position: 'relative' }}

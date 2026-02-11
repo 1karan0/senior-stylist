@@ -19,6 +19,7 @@ import EarningStatement from '@/screens/consulant/payment/EarningStatement';
 import PayOutHistory from '@/screens/consulant/payment/PayOutHistory';
 import RecentEarning from '@/screens/consulant/payment/RecentEarning';
 import Disputes from '@/screens/consulant/profile/Disputes';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 const Tab = createBottomTabNavigator<ConsultantTabParamList>();
 const ProfileStack = createNativeStackNavigator();
@@ -47,7 +48,7 @@ const ProfileStackNavigator: React.FC = () => {
 const ConsultantTabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
-
+  const { horizontalPadding } = useTabletLayout();
   // lower base bottom to bring bar closer to the bottom
   const baseBottom = Platform.OS === 'ios' ? 4 : 3;
   const bottomOffset = baseBottom + Math.max(0, insets.bottom - 6);
@@ -62,7 +63,7 @@ const ConsultantTabNavigator: React.FC = () => {
         tabBarStyle: {
           position: 'absolute',
           bottom: bottomOffset,
-          marginHorizontal: 10,
+          marginHorizontal: horizontalPadding / 2,
           height: Platform.OS === 'ios' ? 70 : 62,
           borderRadius: 40,
           backgroundColor: isDark ? '#0E1B16' : 'rgba(255,255,255,0.95)',

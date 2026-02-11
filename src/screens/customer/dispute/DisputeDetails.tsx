@@ -23,6 +23,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import DisputeDetailsSkeleton from '@/common/components/skeletons/DisputeDetailsSkeleton';
 import ChatInput from '@/components/chat/ChatInput';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 type DisputeDetailsNavigationProp = StackNavigationProp<ProfileStackParamList, 'DisputeDetails'>;
 type DisputeDetailsRouteProp = RouteProp<ProfileStackParamList, 'DisputeDetails'>;
@@ -65,6 +66,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
   const { disputeId } = route.params;
   const { isDark } = useTheme();
   const { user } = useAuth();
+  const { horizontalPadding } = useTabletLayout();
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -270,7 +272,8 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
 
           <ScrollView
             ref={scrollViewRef}
-            className="flex-1 px-6 pt-6"
+            className="flex-1 pt-6"
+            style={[{ paddingHorizontal: horizontalPadding }]}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 100 }}
           >

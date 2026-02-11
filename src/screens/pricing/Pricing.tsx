@@ -25,6 +25,7 @@ import { AppStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import GradientBackground from '@/common/components/GradientBackground';
 import { restorePurchase, type RestorePurchasePayload } from '@/api/subscription/verifyPurchase';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 interface PlanDisplay {
   key: string;
@@ -60,7 +61,7 @@ export default function PricingScreen() {
   });
   const profileSubscription = profileData?.subscription ?? null;
   const { data: subscriptionPlans, isLoading, error } = useGetSubscriptionPlans();
-
+  const { horizontalPadding } = useTabletLayout();
   const navigateToProfileHome = useCallback(() => {
     try {
       // Pricing is customer-only: always route back to customer Profile
@@ -219,7 +220,8 @@ export default function PricingScreen() {
   return (
     <GradientBackground>
       <ScrollView
-        className="flex-1 px-6"
+        className="flex-1"
+        style={[{ paddingHorizontal: horizontalPadding }]}
         contentContainerStyle={{ paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
       >

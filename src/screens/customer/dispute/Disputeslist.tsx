@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { DisputeListSkeleton } from '@/common/components/skeletons/DisputeItemSkeleton';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 type DisputeListNavigationProp = StackNavigationProp<ProfileStackParamList, 'DisputeList'>;
 
@@ -126,6 +127,7 @@ const getStatusLabel = (status: string) => {
 const DisputeList: React.FC<Props> = ({ navigation }) => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
+  const { horizontalPadding } = useTabletLayout();
   const isFocused = useIsFocused();
   const { user } = useAuth();
   const { data: profileData, isLoading: isProfileLoading } = useGetProfile({
@@ -306,7 +308,7 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
       </View>
 
       {/* Content */}
-      <View className="flex-1 px-6 pt-5 pb-5 w-full">
+      <View className="flex-1 pt-5 pb-5 w-full" style={[{ paddingHorizontal: horizontalPadding }]}>
         {/* Filter Tabs */}
         <View className="flex-row gap-2 justify-between w-full mb-4">
           {(['all', 'open', 'resolved'] as FilterType[]).map((filter) => (

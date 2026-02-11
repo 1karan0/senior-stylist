@@ -14,12 +14,14 @@ import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 
-import GradientBackground from '@/common/components/GradientBackground';
-import Button from '@/common/components/Button';
-import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useGetMyEarning } from '@/api/consultant/earning/useGetMyEarning';
 import { useWithdrawFunds } from '@/api/consultant/earning/useWithdrawFunds';
+import GradientBackground from '@/common/components/GradientBackground';
+import Button from '@/common/components/Button';
+import InfoModal from '@/common/components/modals/InfoModal';
+import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 const CURRENCY_SYMBOL = '£';
 const MIN_WITHDRAWAL = 100;
@@ -49,7 +51,7 @@ const WithdrawFunds = () => {
   const queryClient = useQueryClient();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-
+  const { horizontalPadding } = useTabletLayout();
   const { data: myEarning, isLoading: isMyEarningLoading } = useGetMyEarning();
   const { mutateAsync: withdrawFunds, isPending: isWithdrawPending } = useWithdrawFunds();
 
@@ -60,6 +62,7 @@ const WithdrawFunds = () => {
 
   const [amountText, setAmountText] = useState<string>('');
   const [activePreset, setActivePreset] = useState<'all' | '100' | '200' | null>(null);
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
 
   useEffect(() => {
     // Initialize amount with available balance (once) when data loads
@@ -134,8 +137,8 @@ const WithdrawFunds = () => {
         queryClient.invalidateQueries({ queryKey: ['recent-earning'] }),
         queryClient.invalidateQueries({ queryKey: ['earning-history'] }),
       ]);
-      Alert.alert('Withdraw Funds', 'Your withdrawal request has been submitted.');
-      navigation.goBack();
+
+      setInfoModalVisible(true);
     } catch (err: any) {
       Alert.alert('Withdraw Funds', err?.message ?? 'Something went wrong. Please try again.');
     }
@@ -171,7 +174,8 @@ const WithdrawFunds = () => {
         <View className="px-5 pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0" />
 
         <ScrollView
-          className="flex-1 px-5 absolute top-5 left-0 right-0 bottom-5 z-10"
+          className="flex-1 absolute top-5 left-0 right-0 bottom-5 z-10"
+          style={{ paddingHorizontal: horizontalPadding }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingBottom }}
@@ -341,6 +345,18 @@ const WithdrawFunds = () => {
           </View>
         </ScrollView>
       </View>
+
+      <InfoModal
+        visible={infoModalVisible}
+        title="Withdrawal Request Submitted"
+        message="Your withdrawal request has been submitted successfully. Funds will be transferred to your bank account within 2-5 business days."
+        buttonText="OK"
+        variant="success"
+        onConfirm={() => {
+          setInfoModalVisible(false);
+          navigation.goBack();
+        }}
+      />
     </GradientBackground>
   );
 };

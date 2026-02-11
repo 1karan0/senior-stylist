@@ -10,13 +10,14 @@ import { useIsFocused } from '@react-navigation/native';
 import GradientBackground from '@/common/components/GradientBackground';
 import Button from '@/common/components/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 const Consultation = () => {
   const { user, exitGuest } = useAuth();
   const { data, isLoading, isFetching } = useGetConsultation({ enabled: !!user });
   const { isDark } = useTheme();
   const isFocused = useIsFocused();
-
+  const { horizontalPadding } = useTabletLayout();
   const { data: profileData, isLoading: isProfileLoading } = useGetProfile({
     // Poll every 5s while this screen is visible so subscription/profile updates show live
     refetchInterval: isFocused && !!user ? 5_000 : false,
@@ -32,7 +33,7 @@ const Consultation = () => {
   if (!user) {
     return (
       <GradientBackground>
-        <View className="flex-1 px-5 pt-6">
+        <View className="flex-1 pt-6" style={[{ paddingHorizontal: horizontalPadding }]}>
           <Text className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Chats
           </Text>
@@ -71,7 +72,7 @@ const Consultation = () => {
         </GradientBackground>
       ) : isFetching && !shouldShowLoading ? (
         <GradientBackground>
-          <View className="flex-1 px-5 mb-8 mt-4">
+          <View className="flex-1 mb-8 mt-4" style={[{ paddingHorizontal: horizontalPadding }]}>
             <Text className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
               Chats
             </Text>

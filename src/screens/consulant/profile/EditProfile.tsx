@@ -26,7 +26,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import ImageModal from '@/common/components/modals/ImageModal';
 import TextInputField from '@/common/components/TextInputField';
 import PhoneNumberInput from '@/common/components/PhoneNumberInput';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';
 import { useEditProfile } from '@/api/user/profile/useEditProfile';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
@@ -41,7 +41,7 @@ const EditProfile: React.FC = () => {
   const { paddingBottom } = useTabBarSafePadding();
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
-
+  const { horizontalPadding } = useTabletLayout();
   // fetch current user
   const { data: profileData, isLoading: profileLoading } = useGetProfile();
   const user = profileData?.user as any;
@@ -246,7 +246,7 @@ const EditProfile: React.FC = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1  px-5 py-6">
+      <View className="flex-1 py-6" style={{ paddingHorizontal: horizontalPadding }}>
         {/* Header */}
         <View className=" mb-2">
           <View className="flex-row items-center">
@@ -548,7 +548,8 @@ const EditProfile: React.FC = () => {
             onPress={() => setShowImageModal(false)}
           >
             <Pressable
-              className={`rounded-t-3xl p-6 ${isDark ? 'bg-buttonSecondaryText' : 'bg-white'}`}
+              className={`rounded-t-3xl p-6 ${isDark ? 'bg-buttonSecondaryText' : 'bg-white'} `}
+              style={{ paddingHorizontal: horizontalPadding }}
             >
               <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-6" />
 

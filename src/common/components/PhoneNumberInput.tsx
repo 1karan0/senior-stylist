@@ -49,7 +49,7 @@ export default function PhoneNumberInput({
   };
 
   return (
-    <View style={{ marginTop: verticalScale(16) }}>
+    <View style={{ marginTop: verticalScale(0) }}>
       {/* Label from props */}
       {label && (
         <Text className={`mb-1 text-[14px] font-medium ${isDark ? 'text-white' : 'text-textDark'}`}>

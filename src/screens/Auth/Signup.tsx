@@ -12,6 +12,7 @@ import PhoneNumberInput from '@/common/components/PhoneNumberInput';
 import { useTheme } from '@/contexts/ThemeContext';
 import { requestStoragePermission, showPermissionDeniedAlert } from '@/utils/imagePermissions';
 import { Platform } from 'react-native';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 export default function SignupScreen({ navigation, route }: any) {
   const {
@@ -33,7 +34,7 @@ export default function SignupScreen({ navigation, route }: any) {
   const user = route.params.user; // expects 'consultant' or other
   const signupMutation = useSignupApi();
   const isConsultant = user === 'consultant';
-
+  const { horizontalPadding } = useTabletLayout();
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     setToast({
       visible: true,
@@ -157,7 +158,7 @@ export default function SignupScreen({ navigation, route }: any) {
             onClose={() => setToast({ ...toast, visible: false })}
           />
 
-          <View className="flex-1 px-6">
+          <View className="flex-1" style={[{ paddingHorizontal: horizontalPadding }]}>
             {/* Logo + Headings */}
             <View className="items-center mt-14 mb-10">
               <Image

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, Image, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import LinearGradient from 'react-native-linear-gradient';
 
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
@@ -10,6 +9,7 @@ import Toast from '@/common/components/Toast';
 import TextInputField from '@/common/components/TextInputField';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 export default function LoginScreen({ navigation }: any) {
   const {
@@ -24,6 +24,7 @@ export default function LoginScreen({ navigation }: any) {
     type: 'info' as any,
   });
   const { isDark } = useTheme();
+  const { screenContentStyle, horizontalPadding } = useTabletLayout();
 
   const { login, continueAsGuest } = useAuth();
 
@@ -70,7 +71,7 @@ export default function LoginScreen({ navigation }: any) {
             paddingBottom: insets.bottom + 20,
             flexGrow: 1,
           }}
-          className="px-6"
+          style={[{ paddingHorizontal: horizontalPadding }]}
         >
           {/* Logo & Header */}
           <View className="items-center mt-14 mb-10">

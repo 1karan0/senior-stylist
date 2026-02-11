@@ -13,7 +13,7 @@ import { useDeleteAccount } from '@/api/auth/useDeletAccount';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useUpdateAvailability } from '@/api/consultant/useUpdateAvailability';
 import Toast from '@/common/components/Toast';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 const Settings: React.FC = () => {
   const { theme, isDark, setTheme } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
@@ -22,7 +22,7 @@ const Settings: React.FC = () => {
   const deleteAccountMutation = useDeleteAccount();
   const { data: profileData } = useGetProfile();
   const updateAvailabilityMutation = useUpdateAvailability();
-
+  const { horizontalPadding } = useTabletLayout();
   const user = profileData?.user as any;
   const isAway = user?.is_away ?? false;
   const isApproved = user?.consultant_details?.is_approved ?? false;
@@ -182,7 +182,7 @@ const Settings: React.FC = () => {
 
   return (
     <GradientBackground>
-      <View className="flex-1  px-5 py-6">
+      <View className="flex-1 py-6" style={{ paddingHorizontal: horizontalPadding }}>
         <Toast
           visible={toast.visible}
           message={toast.message}

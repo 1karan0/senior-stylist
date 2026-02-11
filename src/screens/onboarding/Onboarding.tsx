@@ -7,13 +7,14 @@ import GradientBackground from '@/common/components/GradientBackground';
 import OnboardItem from './components/OnboardItem';
 import { useTheme } from '@/contexts/ThemeContext';
 import onboardData from '@/lib/onboardData';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 const OnboardingScreen = ({ navigation }: any) => {
   const pagerRef = useRef<PagerView>(null);
   const [page, setPage] = useState(0);
   const { isDark } = useTheme();
   const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-
+  const { isTablet } = useTabletLayout();
   const goNext = () => {
     if (page < onboardData.length - 1) {
       pagerRef.current?.setPage(page + 1);
@@ -100,7 +101,7 @@ const OnboardingScreen = ({ navigation }: any) => {
             text={page === onboardData.length - 1 ? 'Get Started' : 'Next'}
             variant="gradient"
             onPress={goNext}
-            className={`${page === onboardData.length - 1 ? 'w-full px-3' : 'w-[160px]'} rounded-2xl`}
+            className={`${page === onboardData.length - 1 ? ` ${isTablet ? 'px-24 w-[60%]' : 'px-3 w-full'} ` : 'w-[160px]'} rounded-2xl`}
           />
         </View>
       </GradientBackground>

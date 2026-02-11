@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useConsultations } from '@/hooks/useConsultations';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 import GradientBackground from '@/common/components/GradientBackground';
 import ConversationSkeleton from '@/common/components/skeletons/ConversationSkeleton';
@@ -33,7 +34,7 @@ const CustomerChatHome: React.FC = () => {
   const { paddingBottom } = useTabBarSafePadding();
   const navigation = useNavigation<NativeStackNavigationProp<NavParamList>>();
   const queryClient = useQueryClient();
-
+  const { horizontalPadding } = useTabletLayout();
   const userKey = useMemo(() => (user?.id ? String(user.id) : null), [user?.id]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentReviewIndex, setCurrentReviewIndex] = useState<number | null>(null);
@@ -203,7 +204,7 @@ const CustomerChatHome: React.FC = () => {
         />
 
         {loading && consultations.length === 0 ? (
-          <View className="flex-1 px-5 mb-8 mt-4">
+          <View className="flex-1 mb-8 mt-4" style={[{ paddingHorizontal: horizontalPadding }]}>
             <View>
               {[...Array(8)].map((_, i) => (
                 <ConversationSkeleton key={i} />
@@ -211,7 +212,7 @@ const CustomerChatHome: React.FC = () => {
             </View>
           </View>
         ) : (
-          <View className="flex-1 px-5 mb-8 mt-4">
+          <View className="flex-1 mb-8 mt-4" style={[{ paddingHorizontal: horizontalPadding }]}>
             <FlashList
               data={filteredConvos}
               keyExtractor={(item: ConversationPreview) => item.id.toString()}
@@ -230,7 +231,10 @@ const CustomerChatHome: React.FC = () => {
               onRefresh={refreshConversations}
               refreshing={refreshing}
               ListEmptyComponent={() => (
-                <View className="flex-1 items-center justify-center mt-14 px-10">
+                <View
+                  className="flex-1 items-center justify-center mt-14"
+                  style={[{ paddingHorizontal: horizontalPadding }]}
+                >
                   <Text className={`${isDark ? 'text-white' : 'text-textMuted'} text-base mb-1`}>
                     No consultations yet
                   </Text>

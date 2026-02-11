@@ -42,13 +42,7 @@ const InfoModal: React.FC<InfoModalProps> = ({
   return (
     <ModalWrapper visible={visible} onClose={onClose ?? onConfirm} dismissOnBackdropPress={true}>
       <View className="items-center">
-        <Text
-          className={`text-xl font-poppins-semibold mb-3 text-center ${
-            isDark ? 'text-white' : 'text-textDark'
-          }`}
-        >
-          {title}
-        </Text>
+        <Text className={`text-xl font-poppins-semibold mb-3 text-center `}>{title}</Text>
 
         <Text
           className={`font-poppins-regular mb-6 text-center text-[#658176] ${

@@ -12,6 +12,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { FindingStylistModalProvider } from '@/contexts/FindingStylistModalContext';
 import FindingStylistModal from '@/common/components/modals/FindingStylistModal';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -49,7 +50,7 @@ const UserTabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
   const { isGuest } = useAuth();
-
+  const { horizontalPadding } = useTabletLayout();
   // lower base bottom to bring bar closer to the bottom
   const baseBottom = Platform.OS === 'ios' ? 4 : 3;
   const bottomOffset = baseBottom + Math.max(0, insets.bottom - 6);
@@ -67,7 +68,7 @@ const UserTabNavigator: React.FC = () => {
             tabBarStyle: {
               position: 'absolute',
               bottom: bottomOffset,
-              marginHorizontal: 10,
+              marginHorizontal: horizontalPadding / 2,
               height: Platform.OS === 'ios' ? 70 : 62,
               borderRadius: 40,
               backgroundColor: isDark ? '#0E1B16' : 'rgba(255,255,255,0.95)',

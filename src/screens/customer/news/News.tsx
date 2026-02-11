@@ -19,7 +19,7 @@ import NewsWebViewModal from './components/NewsWebViewModal';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
-
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 const NewsScreen = () => {
   const [page, setPage] = useState(1);
   const [list, setList] = useState<any[]>([]);
@@ -39,7 +39,7 @@ const NewsScreen = () => {
   const navigation = useNavigation<any>();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-
+  const { horizontalPadding } = useTabletLayout();
   const { mutateAsync: getArticles, isPending } = useGetNewsArticles();
   const { data: rawCategories = [] } = useGetNewsCategories();
   const categories = [{ id: 'all', name: 'All' }, ...rawCategories];
@@ -58,19 +58,20 @@ const NewsScreen = () => {
     loadPage(true);
   }, []);
 
+  const searchLower = (search ?? '').trim().toLowerCase();
   const filtered = list
     .filter((a: any) => (selectedCategory === 'All' ? true : a.category?.name === selectedCategory))
     .filter((a: any) =>
-      search.trim().length === 0
+      searchLower.length === 0
         ? true
-        : a.title.toLowerCase().includes(search.toLowerCase()) ||
-          a.excerpt.toLowerCase().includes(search.toLowerCase()) ||
-          a.category?.name?.toLowerCase().includes(search.toLowerCase())
+        : (a.title ?? '').toLowerCase().includes(searchLower) ||
+          (a.excerpt ?? '').toLowerCase().includes(searchLower) ||
+          (a.category?.name ?? '').toLowerCase().includes(searchLower)
     );
 
   return (
     <GradientBackground>
-      <View className="flex-1 px-5 pt-6 mb-5">
+      <View className="flex-1 pt-6 mb-5" style={{ paddingHorizontal: horizontalPadding }}>
         {/* Header */}
         <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
           News Feed
