@@ -23,6 +23,8 @@ interface ConsultantSignupData {
     name: string;
     type: string;
   };
+  salon_code?: string;
+  referral_code?: string;
 }
 
 interface SignupParams {
@@ -45,6 +47,12 @@ export const useSignupApi = () => {
 
           if ('cv' in data && data.cv) {
             formData.append('cv', data.cv as any);
+          }
+          if ('salon_code' in data && data.salon_code) {
+            formData.append('salon_code', data.salon_code);
+          }
+          if ('referral_code' in data && data.referral_code) {
+            formData.append('referral_code', data.referral_code);
           }
 
           const res = await axios.post(`${BASE_URL}/api/consultant/register`, formData, {

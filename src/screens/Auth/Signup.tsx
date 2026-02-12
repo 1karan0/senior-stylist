@@ -29,6 +29,7 @@ export default function SignupScreen({ navigation, route }: any) {
     type: 'info' as any,
   });
   const [selectedCallingCode, setSelectedCallingCode] = useState<any>(null);
+  const [belongsToSalon, setBelongsToSalon] = useState<boolean | null>(false);
 
   const { isDark } = useTheme();
   const user = route.params.user; // expects 'consultant' or other
@@ -119,6 +120,12 @@ export default function SignupScreen({ navigation, route }: any) {
             type: cvFile.type,
           };
         }
+        if (belongsToSalon && form.salonCode?.trim()) {
+          signupData.salon_code = form.salonCode.trim();
+        }
+        if (form.referral?.trim()) {
+          signupData.referral_code = form.referral.trim();
+        }
       } else {
         // Customer signup: include referral_code if provided
         if (form.referral) {
@@ -149,15 +156,14 @@ export default function SignupScreen({ navigation, route }: any) {
 
   return (
     <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, visible: false })}
+      />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <GradientBackground>
-          <Toast
-            visible={toast.visible}
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast({ ...toast, visible: false })}
-          />
-
           <View className="flex-1" style={[{ paddingHorizontal: horizontalPadding }]}>
             {/* Logo + Headings */}
             <View className="items-center mt-14 mb-10">
@@ -274,6 +280,97 @@ export default function SignupScreen({ navigation, route }: any) {
               )}
             />
 
+            {/* Consultant: Do you belong to a salon? + Salon Code + Referral Code */}
+            {isConsultant && (
+              <>
+                <View className="mb-4">
+                  <Text
+                    className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                  >
+                    Do you belong to a salon?
+                  </Text>
+                  <View className="flex-row gap-3">
+                    <Pressable
+                      onPress={() => setBelongsToSalon(true)}
+                      className={`flex-1 py-3 rounded-[14px] border ${
+                        belongsToSalon === true
+                          ? 'bg-textPrimary border-textPrimary'
+                          : isDark
+                            ? 'border-commonGradientStop7 bg-commonGradientStop6'
+                            : 'border-[#DADADA] bg-[#F5F9F7]'
+                      }`}
+                    >
+                      <Text
+                        className={`text-center font-medium ${
+                          belongsToSalon === true
+                            ? 'text-white'
+                            : isDark
+                              ? 'text-white'
+                              : 'text-textDark'
+                        }`}
+                      >
+                        Yes
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => setBelongsToSalon(false)}
+                      className={`flex-1 py-3 rounded-[14px] border ${
+                        belongsToSalon === false
+                          ? 'bg-textPrimary border-textPrimary'
+                          : isDark
+                            ? 'border-commonGradientStop7 bg-commonGradientStop6'
+                            : 'border-[#DADADA] bg-[#F5F9F7]'
+                      }`}
+                    >
+                      <Text
+                        className={`text-center font-medium ${
+                          belongsToSalon === false
+                            ? 'text-white'
+                            : isDark
+                              ? 'text-white'
+                              : 'text-textDark'
+                        }`}
+                      >
+                        No
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                {belongsToSalon === true && (
+                  <Controller
+                    control={control}
+                    name="salonCode"
+                    rules={{}}
+                    render={({ field: { onChange, value } }) => (
+                      <TextInputField
+                        label="Salon Code"
+                        placeholder="Enter your salon code"
+                        value={value}
+                        onChangeText={onChange}
+                        error={errors.salonCode?.message as string}
+                      />
+                    )}
+                  />
+                )}
+
+                <Controller
+                  control={control}
+                  name="referral"
+                  rules={{}}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInputField
+                      label="Referral Code (optional)"
+                      placeholder="Enter referral code (optional)"
+                      value={value}
+                      onChangeText={onChange}
+                      error={errors.referral?.message as string}
+                    />
+                  )}
+                />
+              </>
+            )}
+
             {/* Referral: SHOW ONLY WHEN NOT A CONSULTANT */}
             {!isConsultant && (
               <Controller
@@ -338,7 +435,6 @@ export default function SignupScreen({ navigation, route }: any) {
                 onPress={handleSubmit(handleSignup)}
                 loading={loading || signupMutation.isPending}
                 disabled={loading || signupMutation.isPending}
-                className="rounded-lg"
               />
             </View>
 

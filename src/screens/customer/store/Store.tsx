@@ -25,7 +25,7 @@ const StoreScreen = () => {
   const promoCardWidth = Math.max(1, windowWidth - 40);
   const promoCardHeight = isTablet
     ? Math.max(360, Math.min(765, Math.round(promoCardWidth * 1.6)))
-    : Math.max(360, Math.min(565, Math.round(promoCardWidth * 1.6)));
+    : Math.max(360, Math.min(765, Math.round(promoCardWidth * 1.6)));
 
   const handleShopNow = () => {
     Linking.openURL(STORE_URL);
@@ -49,7 +49,7 @@ const StoreScreen = () => {
           </Text>
 
           {/* Promo card */}
-          <View className="relative">
+          <View className="relative mt-6">
             <View
               className="w-full mt-3"
               style={{
