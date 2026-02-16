@@ -620,7 +620,7 @@ const FindingStylistModal: React.FC = () => {
           closeAllAndDismiss();
         }}
         dismissOnBackdropPress={false}
-        containerClassName={isDark ? 'bg-[#0D1A16] rounded-2xl' : 'bg-white rounded-2xl'}
+        containerClassName={`border rounded-2xl ${isDark ? 'bg-[#0D1A16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
         overlay={
           showAd ? (
             <AdModal visible={showAd && visible} ad={currentAd} onFinished={handleAdFinished} />
@@ -658,11 +658,18 @@ const FindingStylistModal: React.FC = () => {
 
             {!searchFailedMessage && canCancelConsultation && (
               <TouchableOpacity
-                className="mt-4 w-full rounded-xl border border-red-300 py-3.5 items-center"
+                activeOpacity={0.7}
+                className={`mt-4 w-full rounded-xl border py-3.5 items-center ${
+                  isDark ? 'bg-red-500/10 border-red-500/40' : 'bg-red-50 border-red-200'
+                } ${cancelConsultationMutation.isPending || loading ? 'opacity-60' : ''}`}
                 onPress={handleCancelConsultation}
                 disabled={cancelConsultationMutation.isPending || loading}
               >
-                <Text className="text-red-500 text-[15px] font-semibold">
+                <Text
+                  className={`text-[15px] font-semibold ${
+                    isDark ? 'text-red-400' : 'text-red-600'
+                  }`}
+                >
                   {cancelConsultationMutation.isPending ? 'Cancelling...' : 'Cancel Consultation'}
                 </Text>
               </TouchableOpacity>

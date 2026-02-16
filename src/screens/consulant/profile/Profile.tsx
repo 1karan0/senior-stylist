@@ -25,6 +25,7 @@ const Profile: React.FC = () => {
   const user = profileData?.user as any;
   const totalSessions = user?.consultant_details?.total_sessions ?? 0;
   const averageRating = user?.consultant_details?.average_rating ?? 0;
+  console.log('profileData', profileData);
 
   const { paddingBottom } = useTabBarSafePadding();
   const { horizontalPadding } = useTabletLayout();
@@ -90,7 +91,7 @@ const Profile: React.FC = () => {
         >
           {/* Profile Card */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}  rounded-xl p-4 border mb-5`}
+            className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  rounded-xl p-4 border mb-5`}
           >
             <View className="flex-row items-center gap-4 mb-4">
               {/* Avatar */}
@@ -155,6 +156,7 @@ const Profile: React.FC = () => {
                 </View>
               </View>
             </View>
+
             <Button
               text="Edit Profile"
               variant="light"
@@ -165,7 +167,7 @@ const Profile: React.FC = () => {
 
           {/* Account Information */}
           <View
-            className={`rounded-xl border p-6 mb-5 shadow-sm ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
+            className={`rounded-xl border p-6 mb-5 shadow-sm ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
           >
             <Text
               className={`text-xl font-urbanist-semibold mb-4 ${isDark ? 'text-white' : 'text-textDark'}`}
@@ -195,7 +197,7 @@ const Profile: React.FC = () => {
               </View>
 
               {/* Member Since */}
-              <View className="flex-row items-center">
+              <View className="flex-row items-center mb-3">
                 <Ionicons name="calendar-outline" size={20} color="#10b981" />
                 <Text
                   className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
@@ -203,12 +205,22 @@ const Profile: React.FC = () => {
                   Member since {user?.created_at?.split('T')[0]}
                 </Text>
               </View>
+              {user?.consultant_details?.salon_name ? (
+                <View className="flex-row items-center">
+                  <Ionicons name="business-outline" size={18} color="#10b981" />
+                  <Text
+                    className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
+                  >
+                    {user.consultant_details.salon_name}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </View>
 
           {/* Performance Overview */}
           <View
-            className={`rounded-xl p-6 mb-5 shadow-sm ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}`}
+            className={`rounded-xl p-6 mb-5 border shadow-sm ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
           >
             <Text
               className={`text-xl font-urbanist-semibold mb-2 ${isDark ? 'text-white' : 'text-textDark'}`}
@@ -259,7 +271,7 @@ const Profile: React.FC = () => {
 
           {/* ---------- Referral Program ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mb-5`}
+            className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mb-5`}
           >
             <View>
               <View className="flex-row gap-2 items-baseline">

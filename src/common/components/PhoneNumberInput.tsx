@@ -53,7 +53,7 @@ export default function PhoneNumberInput({
       {/* Label from props */}
       {label && (
         <Text
-          className={`mb-3 mt-3 text-[14px] font-medium ${isDark ? 'text-white' : 'text-textDark'}`}
+          className={`mb-3 mt-3 text-sm font-poppins-medium ${isDark ? 'text-white' : 'text-textDark'}`}
         >
           {label}
         </Text>

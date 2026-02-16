@@ -25,7 +25,7 @@ const DownloadSuccessModal: React.FC<DownloadSuccessModalProps> = ({
       visible={visible}
       onClose={onClose}
       dismissOnBackdropPress={true}
-      containerClassName={isDark ? 'bg-[#0D1A16] rounded-2xl' : 'bg-white rounded-2xl'}
+      containerClassName={`border rounded-2xl ${isDark ? 'bg-[#0D1A16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
     >
       <View className="items-center">
         <View className="w-16 h-16 rounded-full items-center justify-center mb-4 bg-[#27B07D]/10">

@@ -649,7 +649,9 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
   return (
     <View className="absolute inset-0 bg-black/80 items-center justify-center px-6">
-      <View className={`${isDark ? 'bg-[#0D1A16]' : 'bg-white'} w-full rounded-md p-7 max-w-md`}>
+      <View
+        className={`border ${isDark ? 'bg-[#0D1A16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} w-full rounded-2xl p-7 max-w-md`}
+      >
         {/* CLOSE BUTTON */}
         <Button
           variant="light"

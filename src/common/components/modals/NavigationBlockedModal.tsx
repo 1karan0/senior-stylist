@@ -23,7 +23,7 @@ const NavigationBlockedModal: React.FC<NavigationBlockedModalProps> = ({
       visible={visible}
       onClose={onClose}
       dismissOnBackdropPress={true}
-      containerClassName={isDark ? 'bg-buttonSecondaryText' : 'bg-white'}
+      containerClassName={`border rounded-2xl ${isDark ? 'bg-[#0D1A16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
     >
       <View className="items-center">
         {/* Info Icon */}

@@ -84,7 +84,9 @@ const RatingModal: React.FC<RatingModalProps> = ({
             showsVerticalScrollIndicator={false}
           >
             <View className="items-center">
-              <View className={`${isDark ? 'bg-[#0D1A16]' : 'bg-white'} w-full rounded-2xl p-6`}>
+              <View
+                className={`border rounded-2xl ${isDark ? 'bg-[#0D1A16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} w-full rounded-2xl p-6`}
+              >
                 {/* Close Icon */}
                 <TouchableOpacity
                   onPress={handleClose}

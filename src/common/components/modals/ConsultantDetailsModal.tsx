@@ -73,7 +73,7 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
     <ModalWrapper
       visible={visible}
       onClose={onClose}
-      containerClassName={`px-2 py-4 ${isDark ? 'bg-[#0D1A16]' : 'bg-white'} rounded-2xl`}
+      containerClassName={`px-2 py-4 border rounded-2xl ${isDark ? 'bg-[#0D1A16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
     >
       <View className="" style={{ position: 'relative' }}>
         <ScrollView

@@ -270,7 +270,7 @@ const EditProfile = () => {
             } rounded-2xl p-4 border flex-col gap-3`}
           >
             <TextInputField
-              label="FULL NAME"
+              label="full name"
               value={watch('name')}
               onChangeText={(t) => setValue('name', t)}
             />
@@ -312,7 +312,7 @@ const EditProfile = () => {
                   isDark ? 'text-white' : 'text-black'
                 }`}
               >
-                EMAIL
+                email
               </Text>
               <View
                 className={`border rounded-xl px-4 py-3 ${isDark ? 'bg-[#0A1410] border-commonGradientStop7' : 'bg-[#e4e4e4] border-[#DAE7E0]'}`}
@@ -376,7 +376,7 @@ const EditProfile = () => {
                     }}
                     render={({ field: { onChange, value } }) => (
                       <TextInputField
-                        label="NEW PASSWORD"
+                        label="new password"
                         placeholder="Enter new password"
                         value={value || ''}
                         onChangeText={onChange}
@@ -399,7 +399,7 @@ const EditProfile = () => {
                     }}
                     render={({ field: { onChange, value } }) => (
                       <TextInputField
-                        label="CONFIRM NEW PASSWORD"
+                        label="confirm new password"
                         placeholder="Confirm new password"
                         value={value || ''}
                         onChangeText={onChange}

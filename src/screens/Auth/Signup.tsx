@@ -4,9 +4,12 @@ import { useForm, Controller } from 'react-hook-form';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 
 import { useSignupApi } from '@/api/auth/useSignup';
+import { useGetSalons } from '@/api/auth/useGetSalons';
+
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import TextInputField from '@/common/components/TextInputField';
+import SearchableSelectField from '@/common/components/SearchableSelectField';
 import Toast from '@/common/components/Toast';
 import PhoneNumberInput from '@/common/components/PhoneNumberInput';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -36,6 +39,12 @@ export default function SignupScreen({ navigation, route }: any) {
   const signupMutation = useSignupApi();
   const isConsultant = user === 'consultant';
   const { horizontalPadding } = useTabletLayout();
+  const { data: salonsData } = useGetSalons();
+  const salonOptions =
+    salonsData?.data?.map((s: { id: number; name: string; code: string }) => ({
+      label: s.name,
+      value: s.code,
+    })) ?? [];
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     setToast({
       visible: true,
@@ -341,13 +350,16 @@ export default function SignupScreen({ navigation, route }: any) {
                   <Controller
                     control={control}
                     name="salonCode"
-                    rules={{}}
+                    rules={{
+                      required: 'Please select a salon',
+                    }}
                     render={({ field: { onChange, value } }) => (
-                      <TextInputField
-                        label="Salon Code"
-                        placeholder="Enter your salon code"
-                        value={value}
-                        onChangeText={onChange}
+                      <SearchableSelectField
+                        label="Salon"
+                        placeholder="Search and select your salon"
+                        options={salonOptions}
+                        value={value ?? ''}
+                        onSelect={onChange}
                         error={errors.salonCode?.message as string}
                       />
                     )}
@@ -403,7 +415,7 @@ export default function SignupScreen({ navigation, route }: any) {
                   onPress={pickDocument}
                   className={`border border-dashed ${
                     cvError
-                      ? 'border-red-500 bg-red-50'
+                      ? 'border-red-500'
                       : isDark
                         ? 'bg-commonGradientStop6 border-commonGradientStop7'
                         : 'bg-[#F5F9F7] border-textPrimary'

@@ -23,7 +23,7 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
       visible={visible}
       onClose={onClose}
       dismissOnBackdropPress={!isLoading}
-      containerClassName={isDark ? 'bg-[#0D1A16] rounded-2xl' : 'bg-white rounded-2xl'}
+      containerClassName={`border rounded-2xl ${isDark ? 'bg-[#0D1A16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
     >
       <View className="items-center">
         <Text

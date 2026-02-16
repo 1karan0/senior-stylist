@@ -291,7 +291,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
         >
           {/* ---------- Profile Card ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'}  rounded-2xl p-4 border`}
+            className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  rounded-2xl p-4 border`}
           >
             <View className="flex-row items-center gap-4 mb-4">
               {/* Avatar */}
@@ -366,7 +366,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
           {/* ---------- Account Information ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
+            className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
           >
             <Text
               className={`text-[22px] ${isDark ? 'text-white' : 'text-textDark'} font-urbanist-semibold mb-2`}
@@ -428,7 +428,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
           {/* ---------- Subscription ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
+            className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
           >
             <Text
               className={`text-[22px] ${isDark ? 'text-white' : 'text-textDark'} font-urbanist-semibold mb-2`}
@@ -659,7 +659,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
           {/* ---------- Referral Program ---------- */}
           <View
-            className={` ${isDark ? 'bg-[#11211c] border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
+            className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
           >
             <View>
               <View className="flex-row gap-2 items-baseline">

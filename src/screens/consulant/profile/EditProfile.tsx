@@ -333,7 +333,7 @@ const EditProfile: React.FC = () => {
             {/* Full Name */}
             <View className="mb-5">
               <Text
-                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                className={`text-xs font-urbanist-semibold mb-2 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
               >
                 Full Name
               </Text>
@@ -352,7 +352,7 @@ const EditProfile: React.FC = () => {
             {/* Bio */}
             <View className="mb-5">
               <Text
-                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                className={`text-xs font-urbanist-semibold mb-2 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
               >
                 Bio
               </Text>
@@ -400,7 +400,7 @@ const EditProfile: React.FC = () => {
             {/* Email (Disabled) */}
             <View className="mb-5">
               <Text
-                className={`text-xs font-urbanist-semibold mb-2 uppercase ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+                className={`text-xs font-urbanist-semibold mb-2 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
               >
                 Email
               </Text>
@@ -468,7 +468,7 @@ const EditProfile: React.FC = () => {
                     }}
                     render={({ field: { onChange, value } }) => (
                       <TextInputField
-                        label="NEW PASSWORD"
+                        label="new password"
                         placeholder="Enter new password"
                         value={value || ''}
                         onChangeText={onChange}
@@ -491,7 +491,7 @@ const EditProfile: React.FC = () => {
                     }}
                     render={({ field: { onChange, value } }) => (
                       <TextInputField
-                        label="CONFIRM NEW PASSWORD"
+                        label="confirm new password"
                         placeholder="Confirm new password"
                         value={value || ''}
                         onChangeText={onChange}

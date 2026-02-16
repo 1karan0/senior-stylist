@@ -24,7 +24,7 @@ const FinishConsultationModal: React.FC<FinishConsultationModalProps> = ({
       <StatusBar translucent backgroundColor="#000000D1" barStyle="light-content" />
       <View className="flex-1 justify-center items-center bg-black/80">
         <View
-          className={`${isDark ? 'bg-[#0D1A16]' : 'bg-white'} rounded-md px-5 py-7 w-[90%]`}
+          className={`border rounded-2xl ${isDark ? 'bg-[#0D1A16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} px-5 py-7 w-[90%]`}
           style={{ position: 'relative' }}
         >
           {/* Close Icon */}
