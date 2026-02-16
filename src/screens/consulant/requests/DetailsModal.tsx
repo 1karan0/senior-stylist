@@ -2,7 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 
 import { ModalWrapper } from '@/common/components/ModalWrapper';
+import ImageModal from '@/common/components/modals/ImageModal';
 import { RequestItem } from './List';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export interface DetailsModalProps {
   visible: boolean;
@@ -20,7 +23,8 @@ const formatTimestamp = (timestamp?: number) => {
 
 const DetailsModal: React.FC<DetailsModalProps> = ({ visible, onClose, request }) => {
   const [isImageLoading, setIsImageLoading] = useState(false);
-
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const { isDark } = useTheme();
   useEffect(() => {
     if (request?.imageUrl) {
       setIsImageLoading(true);
@@ -34,13 +38,15 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ visible, onClose, request }
   const requestedAtText = formatTimestamp(request.requestedAt);
 
   return (
-    <ModalWrapper visible={visible} onClose={onClose} containerClassName="w-[95%] mx-4 p-2">
+    <ModalWrapper
+      visible={visible}
+      onClose={onClose}
+      containerClassName={`w-[95%] mx-4 p-2 ${isDark ? 'bg-[#0D1A16]' : 'bg-white'} rounded-2xl`}
+    >
       <TouchableOpacity className="absolute top-4 right-4 z-10" onPress={onClose}>
-        <Image
-          source={require('@/assets/icons/close.png')}
-          className="w-5 h-5"
-          resizeMode="contain"
-        />
+        <Text>
+          <Ionicons name="close" size={24} color={isDark ? 'white' : 'textDark'} />
+        </Text>
       </TouchableOpacity>
 
       <ScrollView className="pt-5" contentContainerStyle={{ paddingBottom: 24 }}>
@@ -55,11 +61,17 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ visible, onClose, request }
           />
         </View>
 
-        <Text className="text-2xl font-urbanist font-bold text-textDark">
+        <Text
+          className={`text-2xl font-urbanist font-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+        >
           {request.customerName}
         </Text>
         {requestedAtText ? (
-          <Text className="text-sm font-poppins text-textMuted mt-1">{requestedAtText}</Text>
+          <Text
+            className={`text-sm font-poppins ${isDark ? 'text-textSecondary' : 'text-textMuted'} mt-1`}
+          >
+            {requestedAtText}
+          </Text>
         ) : null}
 
         {request.hasImage && (
@@ -76,14 +88,16 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ visible, onClose, request }
         )}
         {request.imageUrl && (
           <View className="mt-4">
-            <Image
-              source={{ uri: request.imageUrl }}
-              className="w-full h-64 rounded-xl"
-              resizeMode="cover"
-              onLoadStart={() => setIsImageLoading(true)}
-              onLoadEnd={() => setIsImageLoading(false)}
-              onError={() => setIsImageLoading(false)}
-            />
+            <TouchableOpacity onPress={() => setImageModalVisible(true)} activeOpacity={0.9}>
+              <Image
+                source={{ uri: request.imageUrl }}
+                className={`w-full h-64 rounded-xl border ${isDark ? 'border-[#1A2E28]' : 'border-[#DAE7E0]'}`}
+                resizeMode="cover"
+                onLoadStart={() => setIsImageLoading(true)}
+                onLoadEnd={() => setIsImageLoading(false)}
+                onError={() => setIsImageLoading(false)}
+              />
+            </TouchableOpacity>
             {isImageLoading && (
               <View className="absolute inset-0 items-center justify-center rounded-xl bg-black/10">
                 <ActivityIndicator size="small" color="#0E9F6E" />
@@ -92,12 +106,24 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ visible, onClose, request }
           </View>
         )}
         <View className="mt-6">
-          <Text className="text-lg font-poppins font-bold text-textDark mb-2">Requirements</Text>
-          <Text className="text-textMuted font-poppins leading-6">
+          <Text
+            className={`text-lg font-poppins font-bold ${isDark ? 'text-white' : 'text-textDark'} mb-2`}
+          >
+            Requirements
+          </Text>
+          <Text
+            className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins leading-6`}
+          >
             {request.problemDescription || 'No specific requirements provided.'}
           </Text>
         </View>
       </ScrollView>
+
+      <ImageModal
+        visible={imageModalVisible}
+        imageUri={request.imageUrl ?? null}
+        onClose={() => setImageModalVisible(false)}
+      />
     </ModalWrapper>
   );
 };

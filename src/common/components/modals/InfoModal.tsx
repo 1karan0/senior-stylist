@@ -40,9 +40,20 @@ const InfoModal: React.FC<InfoModalProps> = ({
   const cfg = variantConfig[variant];
 
   return (
-    <ModalWrapper visible={visible} onClose={onClose ?? onConfirm} dismissOnBackdropPress={true}>
+    <ModalWrapper
+      visible={visible}
+      onClose={onClose ?? onConfirm}
+      dismissOnBackdropPress={true}
+      containerClassName={isDark ? 'bg-[#0D1A16] rounded-2xl' : 'bg-white rounded-2xl'}
+    >
       <View className="items-center">
-        <Text className={`text-xl font-poppins-semibold mb-3 text-center `}>{title}</Text>
+        <Text
+          className={`text-xl font-poppins-semibold mb-3 text-center ${
+            isDark ? 'text-white' : 'text-textDark'
+          }`}
+        >
+          {title}
+        </Text>
 
         <Text
           className={`font-poppins-regular mb-6 text-center text-[#658176] ${

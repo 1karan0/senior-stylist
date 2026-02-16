@@ -31,7 +31,8 @@ const FOLLOW_UP_AD_DELAY = 3000; // 3 seconds delay before showing follow-up ad
 
 const FindingStylistModal: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { visible, consultationId, close, setConsultationId } = useFindingStylistModal();
+  const { visible, consultationId, close, setConsultationId, searchTimeoutSeconds } =
+    useFindingStylistModal();
 
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -65,6 +66,7 @@ const FindingStylistModal: React.FC = () => {
   const nextAdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showStylistProfileRef = useRef(false);
   const adLoopActiveRef = useRef(false);
+  const progressStartTimeRef = useRef<number>(0);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     setToast({
@@ -306,10 +308,16 @@ const FindingStylistModal: React.FC = () => {
     if (!visible) return;
     if (!consultationId || !Number.isFinite(consultationId)) return;
 
+    const timeoutSec = searchTimeoutSeconds > 0 ? searchTimeoutSeconds : 300;
+    progressStartTimeRef.current = Date.now();
+
     checkConsultationStatus();
     statusIntervalRef.current = setInterval(checkConsultationStatus, STATUS_POLL_INTERVAL);
     progressIntervalRef.current = setInterval(() => {
-      setProgress((prev) => (prev >= 95 ? prev : prev + 2));
+      const elapsedMs = Date.now() - progressStartTimeRef.current;
+      const elapsedSec = elapsedMs / 1000;
+      const percent = Math.min(95, (elapsedSec / timeoutSec) * 100);
+      setProgress(percent);
     }, PROGRESS_INTERVAL);
 
     if (isAdsEnabled && !hasShownInitialAd) {
@@ -322,6 +330,7 @@ const FindingStylistModal: React.FC = () => {
   }, [
     visible,
     consultationId,
+    searchTimeoutSeconds,
     checkConsultationStatus,
     stopAllTimers,
     isAdsEnabled,
@@ -361,7 +370,8 @@ const FindingStylistModal: React.FC = () => {
       }
 
       await storage.removeConsultationDraft();
-      setConsultationId(Number(newId));
+      const searchTimeoutSeconds = response?.data?.search_timeout_seconds;
+      setConsultationId(Number(newId), searchTimeoutSeconds);
     } catch (err: any) {
       showToast(err?.message || 'Retry failed. Please try again.', 'error');
     } finally {
@@ -409,17 +419,25 @@ const FindingStylistModal: React.FC = () => {
       <View className={` justify-center items-center mb-4`}>
         <Image source={require('@/assets/icons/animation.png')} className="w-16 h-16" />
       </View>
-      <Text className="text-[21px] font-semibold text-textDark text-center mb-2">
+      <Text
+        className={`text-[21px] font-semibold ${isDark ? 'text-white' : 'text-textDark'} text-center mb-2`}
+      >
         Finding your Stylist...
       </Text>
-      <Text className="text-[15px] text-textMuted text-center mb-5">
+      <Text
+        className={`text-[15px] ${isDark ? 'text-textSecondary' : 'text-textMuted'} text-center mb-5`}
+      >
         We&apos;re matching you with the best stylist for your needs.
       </Text>
 
-      <View className="w-full h-2 rounded bg-[#ECECEC] overflow-hidden mb-3">
+      <View
+        className={`w-full h-2 rounded ${isDark ? 'bg-white/20' : 'bg-[#ECECEC]'} overflow-hidden mb-3`}
+      >
         <View className="h-full rounded bg-buttonPrimaryBg" style={{ width: `${progress}%` }} />
       </View>
-      <Text className="text-[13px] text-textMuted mb-5 text-center">
+      <Text
+        className={`text-[13px] ${isDark ? 'text-textSecondary' : 'text-textMuted'} mb-5 text-center`}
+      >
         {loading ? 'This usually takes just a few seconds.' : 'Hang tight, we are still looking...'}
       </Text>
     </>
@@ -453,55 +471,107 @@ const FindingStylistModal: React.FC = () => {
         : null;
 
     return (
-      <>
-        <View className="justify-center items-center mb-4">
+      <View className={`${isDark ? 'bg-[#0D1A16]' : 'bg-white'} rounded-2xl`}>
+        {/* Profile Section - Centered */}
+        <View className="items-center mb-2">
           {consultant.profile_picture_url ? (
             <Image
               source={{ uri: consultant.profile_picture_url }}
-              className="w-20 h-20 rounded-full"
+              className="w-24 h-24 rounded-full mb-2"
             />
           ) : (
-            <View className="w-20 h-20 rounded-full bg-buttonPrimaryBg justify-center items-center">
-              <Text className="text-white text-2xl font-bold">
+            <View className="w-24 h-24 rounded-full bg-buttonPrimaryBg justify-center items-center mb-4">
+              <Text className="text-white text-3xl font-bold">
                 {consultant.name?.charAt(0)?.toUpperCase() || 'S'}
               </Text>
             </View>
           )}
-        </View>
-        <Text className="text-[21px] font-semibold text-textDark text-center mb-2">
-          {consultant.name}
-        </Text>
-        {specialization && (
-          <Text className="text-[15px] text-textMuted text-center mb-2">{specialization}</Text>
-        )}
-        {formattedRating && (
-          <View className="flex-row items-center justify-center mb-2">
-            <Ionicons name="star" size={16} color="#FFD700" />
-            <Text className="text-[14px] ml-1 font-medium text-textDark">{formattedRating}</Text>
-          </View>
-        )}
-        {yearsExperience && (
-          <Text className="text-[13px] text-textMuted text-center mb-4">
-            {yearsExperience} years of experience
+
+          <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-textDark'}`}>
+            {consultant.name}
           </Text>
-        )}
-        {bio && <Text className="text-[14px] text-textMuted text-center mb-5 px-4">{bio}</Text>}
-        <TouchableOpacity
-          className="mt-4 w-full rounded-xl bg-buttonPrimaryBg py-3.5 items-center"
-          onPress={showSecondAd}
-        >
-          <Text className="text-white text-[15px] font-bold">Go to Chat</Text>
-        </TouchableOpacity>
-      </>
+
+          {specialization && (
+            <Text className={`text-base ${isDark ? 'text-[#8AA897]' : 'text-textMuted'}`}>
+              {specialization}
+            </Text>
+          )}
+        </View>
+
+        {/* Stats Section - Horizontal Cards */}
+        <View className=" mt-2 mb-2">
+          <View className={`flex-row justify-center items-center gap-4 w-full`}>
+            {formattedRating && (
+              <View className="items-center">
+                <View className="flex-row items-center mb-1">
+                  <Text
+                    className={`text-lg font-bold ${isDark ? 'text-white' : 'text-textDark'} ml-1`}
+                  >
+                    {formattedRating} <Ionicons name="star" size={12} color="#FFD700" />
+                  </Text>
+                </View>
+                <Text className={`text-xs ${isDark ? 'text-[#8AA897]' : 'text-textMuted'}`}>
+                  Rating
+                </Text>
+              </View>
+            )}
+            <View
+              className={`${isDark ? 'bg-commonGradientStop7' : 'bg-[#DAE7E0]'} w-[1px] h-full my-2 mx-2`}
+            />
+
+            {yearsExperience && (
+              <View className="items-center">
+                <Text
+                  className={`text-lg font-bold ${isDark ? 'text-white' : 'text-textDark'} mb-1`}
+                >
+                  {yearsExperience}
+                </Text>
+                <Text className={`text-xs ${isDark ? 'text-[#8AA897]' : 'text-textMuted'}`}>
+                  Years Exp.
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Bio Section */}
+        <View>
+          {bio && (
+            <View className="mb-6 mt-2 w-full items-center">
+              <Text
+                className={`text-lg font-poppins-semibold ${isDark ? 'text-white' : 'text-textDark'} mb-2`}
+              >
+                About
+              </Text>
+              <Text
+                className={`text-sm font-poppins-regular text-center ${isDark ? 'text-[#8AA897]' : 'text-textMuted'} leading-5`}
+              >
+                {bio}
+              </Text>
+            </View>
+          )}
+
+          {/* CTA Button */}
+          <TouchableOpacity
+            className="w-full rounded-2xl bg-buttonPrimaryBg py-3 px-4 items-center "
+            onPress={showSecondAd}
+            activeOpacity={0.8}
+          >
+            <Text className="text-white text-base font-bold text-center">Start Chatting</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     );
   };
 
   const renderFailureState = () => (
     <>
-      <View className="w-22 h-22 rounded-full bg-[#FEECEC] justify-center items-center mb-4">
+      <View className={`w-22 h-22 rounded-full  justify-center items-center mb-4`}>
         <Ionicons name="alert-circle" size={36} color="#E05959" />
       </View>
-      <Text className="text-[21px] font-semibold text-textDark text-center mb-2">
+      <Text
+        className={`text-[21px] font-semibold ${isDark ? 'text-white' : 'text-textDark'} text-center mb-2`}
+      >
         No stylists available right now
       </Text>
       <Text className="text-[15px] text-textMuted text-center mb-5">
@@ -516,10 +586,14 @@ const FindingStylistModal: React.FC = () => {
         <Text className="text-white text-[15px] font-bold">Try again</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        className="mt-2.5 w-full rounded-xl border border-[#DAE7E0] py-3.5 items-center"
+        className={`mt-2.5 w-full rounded-xl border border-[#DAE7E0] py-3.5 items-center ${isDark ? 'border-commonGradientStop7' : 'border-[#DAE7E0]'}`}
         onPress={closeAllAndDismiss}
       >
-        <Text className="text-commonGradientStop6 text-[15px] font-semibold">Close</Text>
+        <Text
+          className={`text-commonGradientStop6 text-[15px] font-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
+        >
+          Close
+        </Text>
       </TouchableOpacity>
     </>
   );
@@ -546,7 +620,7 @@ const FindingStylistModal: React.FC = () => {
           closeAllAndDismiss();
         }}
         dismissOnBackdropPress={false}
-        containerClassName={isDark ? 'bg-buttonSecondaryText' : 'bg-white'}
+        containerClassName={isDark ? 'bg-[#0D1A16] rounded-2xl' : 'bg-white rounded-2xl'}
         overlay={
           showAd ? (
             <AdModal visible={showAd && visible} ad={currentAd} onFinished={handleAdFinished} />
@@ -564,7 +638,9 @@ const FindingStylistModal: React.FC = () => {
             {!searchFailedMessage && loading && (
               <View className="flex-row items-center gap-2 mt-3">
                 <ActivityIndicator color="#27B07D" size="small" />
-                <Text className="text-[13px] text-[#7C7C7C]">Connecting you with stylists…</Text>
+                <Text className={`text-[13px] ${isDark ? 'text-textSecondary' : 'text-[#7C7C7C]'}`}>
+                  Connecting you with stylists…
+                </Text>
               </View>
             )}
             {cancelConsultationMutation.isPending &&
@@ -572,7 +648,11 @@ const FindingStylistModal: React.FC = () => {
               !showStylistProfile && (
                 <View className="flex-row items-center gap-2 mt-3">
                   <ActivityIndicator color="#27B07D" size="small" />
-                  <Text className="text-[13px] text-[#7C7C7C]">Cancelling your consultation…</Text>
+                  <Text
+                    className={`text-[13px] ${isDark ? 'text-textSecondary' : 'text-[#7C7C7C]'}`}
+                  >
+                    Cancelling your consultation…
+                  </Text>
                 </View>
               )}
 

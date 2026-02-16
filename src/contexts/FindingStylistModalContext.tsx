@@ -1,11 +1,14 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
+const DEFAULT_SEARCH_TIMEOUT_SECONDS = 300;
+
 type FindingStylistModalContextValue = {
   visible: boolean;
   consultationId: number | null;
-  open: (consultationId: number) => void;
+  searchTimeoutSeconds: number;
+  open: (consultationId: number, searchTimeoutSeconds?: number) => void;
   close: () => void;
-  setConsultationId: (consultationId: number) => void;
+  setConsultationId: (consultationId: number, searchTimeoutSeconds?: number) => void;
 };
 
 const FindingStylistModalContext = createContext<FindingStylistModalContextValue | null>(null);
@@ -15,9 +18,17 @@ export const FindingStylistModalProvider: React.FC<{ children: React.ReactNode }
 }) => {
   const [visible, setVisible] = useState(false);
   const [consultationId, setConsultationIdState] = useState<number | null>(null);
+  const [searchTimeoutSeconds, setSearchTimeoutSecondsState] = useState<number>(
+    DEFAULT_SEARCH_TIMEOUT_SECONDS
+  );
 
-  const open = useCallback((id: number) => {
+  const open = useCallback((id: number, timeoutSeconds?: number) => {
     setConsultationIdState(id);
+    setSearchTimeoutSecondsState(
+      timeoutSeconds != null && Number.isFinite(timeoutSeconds) && timeoutSeconds > 0
+        ? timeoutSeconds
+        : DEFAULT_SEARCH_TIMEOUT_SECONDS
+    );
     setVisible(true);
   }, []);
 
@@ -25,13 +36,16 @@ export const FindingStylistModalProvider: React.FC<{ children: React.ReactNode }
     setVisible(false);
   }, []);
 
-  const setConsultationId = useCallback((id: number) => {
+  const setConsultationId = useCallback((id: number, timeoutSeconds?: number) => {
     setConsultationIdState(id);
+    if (timeoutSeconds != null && Number.isFinite(timeoutSeconds) && timeoutSeconds > 0) {
+      setSearchTimeoutSecondsState(timeoutSeconds);
+    }
   }, []);
 
   const value = useMemo(
-    () => ({ visible, consultationId, open, close, setConsultationId }),
-    [visible, consultationId, open, close, setConsultationId]
+    () => ({ visible, consultationId, searchTimeoutSeconds, open, close, setConsultationId }),
+    [visible, consultationId, searchTimeoutSeconds, open, close, setConsultationId]
   );
 
   return (

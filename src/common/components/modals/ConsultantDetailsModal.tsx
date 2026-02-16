@@ -5,6 +5,7 @@ import { ModalWrapper } from '../ModalWrapper';
 import { ConsultantConsultation } from '@/api/consultant/consultations';
 import Button from '../Button';
 import ImageModal from '@/common/components/modals/ImageModal';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ConsultantDetailsProps {
   visible: boolean;
@@ -28,7 +29,7 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
   isConsultant = false,
 }: ConsultantDetailsProps) => {
   const [showImageModal, setShowImageModal] = useState(false);
-
+  const { isDark } = useTheme();
   const handleShowImageModal = () => {
     setShowImageModal(true);
   };
@@ -66,8 +67,14 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
   const hasRating = averageRating && parseFloat(averageRating.toString()) > 0;
   const hasSessions = totalSessions && totalSessions > 0;
 
+  console.log(consultantDetails);
+
   return (
-    <ModalWrapper visible={visible} onClose={onClose} containerClassName="px-2 py-4">
+    <ModalWrapper
+      visible={visible}
+      onClose={onClose}
+      containerClassName={`px-2 py-4 ${isDark ? 'bg-[#0D1A16]' : 'bg-white'} rounded-2xl`}
+    >
       <View className="" style={{ position: 'relative' }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -76,7 +83,7 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
           <View className="flex-row justify-end">
             <TouchableOpacity onPress={onClose}>
               <Text>
-                <Ionicons name="close" size={24} color="#162721" />
+                <Ionicons name="close" size={24} color={isDark ? 'white' : 'textDark'} />
               </Text>
             </TouchableOpacity>
           </View>
@@ -84,10 +91,12 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
           <View className="flex-row items-center justify-start mb-4 px-4 ">
             <TouchableOpacity onPress={onClose} className="">
               <Text>
-                <Ionicons name="arrow-back" size={24} color="#162721" />
+                <Ionicons name="arrow-back" size={24} color={isDark ? 'white' : 'textDark'} />
               </Text>
             </TouchableOpacity>
-            <Text className="text-[18px] w-[90%] text-center font-urbanist-bold text-textDark">
+            <Text
+              className={`text-[18px] w-[90%] text-center font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+            >
               {personProfile.name || ''}
             </Text>
           </View>
@@ -119,30 +128,38 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
 
           {/* Name and Details */}
           <View className="px-4 mt-4">
-            <Text className="text-[22px] font-urbanist-bold text-textDark">
+            <Text
+              className={`text-[22px] font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+            >
               {personProfile.name || ''}
             </Text>
 
             {isShowingConsultant && specialization && (
-              <Text className="text-sm text-textMuted mt-1">{specialization}</Text>
+              <Text className={`text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'} mt-1`}>
+                {specialization}
+              </Text>
             )}
 
             {!isShowingConsultant && personProfile.email && (
-              <Text className="text-sm text-textMuted mt-1">{personProfile.email}</Text>
+              <Text className={`text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'} mt-1`}>
+                {personProfile.email}
+              </Text>
             )}
 
             {/* Rating - Only show for consultants */}
             {isShowingConsultant && hasRating && averageRating && (
               <View className="flex-row items-center mt-2">
                 <Text>
-                  <Ionicons name="star" size={17} color="#FFD700" />
+                  <Ionicons name="star" size={17} color={isDark ? 'white' : '#FFD700'} />
                 </Text>
-                <Text className="text-[14px] ml-1 font-poppins-medium text-textDark">
+                <Text
+                  className={`text-[14px] ml-1 font-poppins-medium ${isDark ? 'text-white' : 'text-textDark'}`}
+                >
                   {`${
                     typeof averageRating === 'number'
                       ? averageRating.toFixed(1)
                       : parseFloat(String(averageRating)).toFixed(1)
-                  } (${totalSessions || 0} reviews)`}
+                  } (${totalSessions || 0} sessions)`}
                 </Text>
               </View>
             )}
@@ -154,9 +171,13 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
                   {hasSessions && (
                     <View className="flex-row items-center mb-2">
                       <Text>
-                        <Ionicons name="people-outline" size={18} color="#162721" />
+                        <Ionicons
+                          name="people-outline"
+                          size={18}
+                          color={isDark ? 'white' : '#162721'}
+                        />
                       </Text>
-                      <Text className="text-sm text-textDark ml-2">
+                      <Text className={`text-sm ${isDark ? 'text-white' : 'text-textDark'} ml-2`}>
                         {totalSessions} consultations
                       </Text>
                     </View>
@@ -164,31 +185,40 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
 
                   <View className="flex-row items-center mb-2">
                     <Text>
-                      <Ionicons name="time-outline" size={18} color="#162721" />
+                      <Ionicons
+                        name="time-outline"
+                        size={18}
+                        color={isDark ? 'white' : '#162721'}
+                      />
                     </Text>
-                    <Text className="text-sm text-textDark ml-2">responds in less than a day</Text>
+                    <Text className={`text-sm ${isDark ? 'text-white' : 'text-textDark'} ml-2`}>
+                      responds in less than a day
+                    </Text>
                   </View>
 
                   <View className="flex-row items-center mb-2">
                     <Text>
-                      <Ionicons name="checkmark-circle-outline" size={18} color="#162721" />
+                      <Ionicons
+                        name="checkmark-circle-outline"
+                        size={18}
+                        color={isDark ? 'white' : '#162721'}
+                      />
                     </Text>
-                    <Text className="text-sm text-textDark ml-2">93% response rate</Text>
-                  </View>
-
-                  <View className="flex-row items-center mb-2">
-                    <Text>
-                      <Ionicons name="eye-outline" size={18} color="#162721" />
+                    <Text className={`text-sm ${isDark ? 'text-white' : 'text-textDark'} ml-2`}>
+                      {consultantDetails.years_experience} years of experience
                     </Text>
-                    <Text className="text-sm text-textDark ml-2">1677 profile views</Text>
                   </View>
 
                   {yearsExperience && yearsExperience > 0 && (
                     <View className="flex-row items-center mb-2">
                       <Text>
-                        <Ionicons name="briefcase-outline" size={18} color="#162721" />
+                        <Ionicons
+                          name="briefcase-outline"
+                          size={18}
+                          color={isDark ? 'white' : '#162721'}
+                        />
                       </Text>
-                      <Text className="text-sm text-textDark ml-2">
+                      <Text className={`text-sm ${isDark ? 'text-white' : 'text-textDark'} ml-2`}>
                         {yearsExperience} years experience
                       </Text>
                     </View>
@@ -199,16 +229,26 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
               <View className="mt-4">
                 <View className="flex-row items-center mb-2">
                   <Text>
-                    <Ionicons name="person-outline" size={18} color="#162721" />
+                    <Ionicons
+                      name="person-outline"
+                      size={18}
+                      color={isDark ? 'white' : '#162721'}
+                    />
                   </Text>
-                  <Text className="text-sm text-textDark ml-2">Client</Text>
+                  <Text className={`text-sm ${isDark ? 'text-white' : 'text-textDark'} ml-2`}>
+                    Client
+                  </Text>
                 </View>
                 {consultation.problem_description && (
                   <View className="mt-3">
-                    <Text className="text-sm font-urbanist-semibold text-textDark mb-1">
+                    <Text
+                      className={`text-sm font-urbanist-semibold ${isDark ? 'text-white' : 'text-textDark'} mb-1`}
+                    >
                       Consultation Request
                     </Text>
-                    <Text className="text-sm text-textMuted leading-5">
+                    <Text
+                      className={`text-sm ${isDark ? 'text-textSecondary' : 'text-textMuted'} leading-5`}
+                    >
                       {consultation.problem_description}
                     </Text>
                   </View>
@@ -220,31 +260,16 @@ const ConsultantDetails: React.FC<ConsultantDetailsProps> = ({
           {/* About Me - Only show for consultants */}
           {isShowingConsultant && bio && (
             <View className="px-4 mt-6">
-              <Text className="text-lg font-urbanist-bold mb-2 text-textDark">About Me</Text>
-              <Text className="text-sm leading-6 text-textDark">{bio}</Text>
-            </View>
-          )}
-
-          {/* Reviews - Only show for consultants */}
-          {isShowingConsultant && hasRating && averageRating && (
-            <View className="px-4 mt-2">
-              {/* Sample Review Card - Replace with actual reviews data */}
-              <View className="bg-gray-50 p-4 rounded-xl mb-3">
-                <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-base font-urbanist-semibold text-textDark">
-                    Lyda Loudon Oulfaye
-                  </Text>
-                  <View className="flex-row">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Text key={star}>
-                        <Ionicons name="star" size={14} color="#FFD700" />
-                      </Text>
-                    ))}
-                  </View>
-                </View>
-                <Text className="text-xs text-textMuted mb-2">Nov 13, 2025 at 01:49 AM</Text>
-                <Text className="text-sm text-textDark">This is great thank you so much!</Text>
-              </View>
+              <Text
+                className={`text-lg font-urbanist-bold mb-2 ${isDark ? 'text-white' : 'text-textDark'}`}
+              >
+                About Me
+              </Text>
+              <Text
+                className={`text-sm leading-6 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+              >
+                {bio}
+              </Text>
             </View>
           )}
         </ScrollView>
