@@ -242,7 +242,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
         <KeyboardAvoidingView
           className="flex-1"
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? insets.bottom : 0}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 70 : 0}
         >
           {/* Header */}
           <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">

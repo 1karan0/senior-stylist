@@ -10,6 +10,14 @@ try {
   RNFS = null;
 }
 
+// react-native-share for iOS Save to Files (RNFS DownloadDirectoryPath doesn't exist on iOS)
+let Share: { open: (options: Record<string, unknown>) => Promise<unknown> } | null = null;
+try {
+  Share = require('react-native-share').default;
+} catch {
+  Share = null;
+}
+
 interface DownloadDirectory {
   dir: string;
   name: string;
@@ -102,10 +110,6 @@ export const downloadFile = async (
   filename: string,
   onSuccess: (result: DownloadFileResult) => void
 ): Promise<void> => {
-  if (!RNFS) {
-    throw new Error('File system is not available on this device.');
-  }
-
   const url =
     payload?.url ||
     payload?.file_url ||
@@ -117,6 +121,40 @@ export const downloadFile = async (
 
   if (!url && !base64) {
     throw new Error('Download data was not in a supported format.');
+  }
+
+  // iOS: Use react-native-share with saveToFiles - RNFS DownloadDirectoryPath doesn't exist on iOS,
+  // and app Documents folder is sandboxed. Share opens Files app so user can save to iCloud/On My iPhone.
+  if (Platform.OS === 'ios' && Share && base64) {
+    try {
+      const dataUrl = `data:text/csv;base64,${base64}`;
+      await Share.open({
+        saveToFiles: true,
+        url: dataUrl,
+        filename,
+        type: 'text/csv',
+        failOnCancel: true,
+      });
+      onSuccess({ filename, directoryName: 'Files' });
+      return;
+    } catch (error: any) {
+      // User cancelled - don't show error
+      const msg = String(error?.message ?? '').toLowerCase();
+      if (
+        msg.includes('user did not share') ||
+        msg.includes('cancel') ||
+        msg.includes('dismissed') ||
+        msg.includes('user cancelled')
+      ) {
+        return;
+      }
+      throw error;
+    }
+  }
+
+  // Android (and fallback): Use RNFS to save directly to Downloads
+  if (!RNFS) {
+    throw new Error('File system is not available on this device.');
   }
 
   const { dir, name } = await getDownloadDirectory();
@@ -158,6 +196,31 @@ export const downloadFile = async (
       showPermissionDeniedAlert('storage');
       throw new Error('Storage permission is required to download files.');
     }
+
+    // Android fallback: Use Share when RNFS fails - user can save via share sheet
+    if (Platform.OS === 'android' && Share && base64) {
+      try {
+        const dataUrl = `data:text/csv;base64,${base64}`;
+        await Share.open({
+          url: dataUrl,
+          filename,
+          type: 'text/csv',
+          failOnCancel: true,
+        });
+        onSuccess({ filename, directoryName: 'Files / Downloads' });
+        return;
+      } catch (shareError: any) {
+        const msg = String(shareError?.message ?? '').toLowerCase();
+        if (
+          msg.includes('user did not share') ||
+          msg.includes('cancel') ||
+          msg.includes('dismissed')
+        ) {
+          return;
+        }
+      }
+    }
+
     throw error;
   }
 };

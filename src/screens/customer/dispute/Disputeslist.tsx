@@ -205,7 +205,7 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
               <Text
                 className={`text-base font-poppins-semibold ${isDark ? 'text-white' : 'text-textDark'}`}
               >
-                {item.consultation?.problem_description?.slice(0, 20) || 'Consultation'}
+                {DisputeMessage?.message?.slice(0, 20) || 'Consultation'}
               </Text>
               {/* Date */}
               <Text

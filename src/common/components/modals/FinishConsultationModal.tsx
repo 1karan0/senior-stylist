@@ -3,7 +3,6 @@ import { Modal, View, Text, TouchableOpacity, StatusBar } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/common/components/Button';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 interface FinishConsultationModalProps {
   visible: boolean;
@@ -19,16 +18,13 @@ const FinishConsultationModal: React.FC<FinishConsultationModalProps> = ({
   isLoading = false,
 }) => {
   const { isDark } = useTheme();
-  const { horizontalPadding } = useTabletLayout();
+
   return (
     <Modal transparent visible={visible} animationType="fade">
       <StatusBar translucent backgroundColor="#000000D1" barStyle="light-content" />
-      <View
-        className="flex-1 justify-center items-center bg-black/80"
-        style={{ paddingHorizontal: horizontalPadding }}
-      >
+      <View className="flex-1 justify-center items-center bg-black/80">
         <View
-          className={`${isDark ? 'bg-[#0D1A16]' : 'bg-white'} rounded-md py-7 px-5  w-[90%]`}
+          className={`${isDark ? 'bg-[#0D1A16]' : 'bg-white'} rounded-md px-5 py-7 w-[90%]`}
           style={{ position: 'relative' }}
         >
           {/* Close Icon */}

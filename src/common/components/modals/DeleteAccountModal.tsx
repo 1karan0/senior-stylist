@@ -3,26 +3,26 @@ import { View, Text } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { ModalWrapper } from '@/common/components/ModalWrapper';
 import { Button } from '@/common/components/Button';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface DeleteAccountModalProps {
   visible: boolean;
-  isDark: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
 const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
   visible,
-  isDark,
   onConfirm,
   onCancel,
 }) => {
+  const { isDark } = useTheme();
   return (
     <ModalWrapper
       visible={visible}
       onClose={onCancel}
       dismissOnBackdropPress={false}
-      containerClassName={isDark ? 'bg-buttonSecondaryText' : 'bg-white'}
+      containerClassName={isDark ? 'bg-[#0D1A16] rounded-2xl' : 'bg-white rounded-2xl'}
     >
       <View className="items-center">
         {/* Warning Icon */}

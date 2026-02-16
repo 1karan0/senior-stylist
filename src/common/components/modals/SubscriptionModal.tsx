@@ -7,6 +7,7 @@ import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import InfoModal from '@/common/components/modals/InfoModal';
 import { Linking } from 'react-native';
 import Button from '@/common/components/Button';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface SubscriptionModalProps {
   plan: {
@@ -32,6 +33,7 @@ interface SubscriptionModalProps {
 }
 
 export default function SubscriptionModal({ plan, onClose }: SubscriptionModalProps) {
+  const { isDark } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessingPurchase, setIsProcessingPurchase] = useState(false);
   const [isSyncingWithStore, setIsSyncingWithStore] = useState(false);
@@ -647,7 +649,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
   return (
     <View className="absolute inset-0 bg-black/80 items-center justify-center px-6">
-      <View className="bg-white w-full rounded-md p-7 max-w-md">
+      <View className={`${isDark ? 'bg-[#0D1A16]' : 'bg-white'} w-full rounded-md p-7 max-w-md`}>
         {/* CLOSE BUTTON */}
         <Button
           variant="light"
@@ -668,35 +670,59 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
         {/* PRICES */}
         <View className="flex-row items-center gap-0">
-          <Text className="text-[#162721] font-medium text-[22px]">{plan.price}</Text>
-          <Text className="text-[#658176] font-medium text-[16px]">/</Text>
-          <Text className="text-[#658176] font-medium text-[16px]">Monthly</Text>
-          <Text className="text-[#658176] font-medium text-[14px] ml-1">
+          <Text className={`${isDark ? 'text-white' : 'text-[#162721]'} font-medium text-[22px]`}>
+            {plan.price}
+          </Text>
+          <Text
+            className={`${isDark ? 'text-textSecondary' : 'text-[#658176]'} font-medium text-[16px]`}
+          >
+            {' '}
+            /{' '}
+          </Text>
+          <Text
+            className={`${isDark ? 'text-textSecondary' : 'text-[#658176]'} font-medium text-[16px]`}
+          >
+            Monthly
+          </Text>
+          <Text
+            className={`${isDark ? 'text-textSecondary' : 'text-[#658176]'} font-medium text-[14px] ml-1`}
+          >
             {`- ${plan.consulationPerMonth} consultations`}
           </Text>
         </View>
 
         {/* DESCRIPTION */}
-        <Text className="text-textMuted mt-1 mb-4">{plan.desc}</Text>
+        <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} mb-3`}>
+          {plan.desc}
+        </Text>
 
         {/* FEATURES */}
-        <View className="mb-6">
+        <View className="mb-3">
           {plan.features.map((feature, index) => (
             <View key={index} className="flex-row items-center mb-2">
-              <Text className="text-[#23A76F] mr-2">✓</Text>
-              <Text className="text-textDark">{feature}</Text>
+              <Text className={`${isDark ? 'text-textPrimary' : 'text-[#23A76F]'} mr-2`}>✓</Text>
+              <Text className={`${isDark ? 'text-white' : 'text-textDark'}`}>{feature}</Text>
             </View>
           ))}
         </View>
 
         {/* IAP Error Indicator */}
         {!iapInitialized && iapError && (
-          <View className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+          <View
+            className={`${isDark ? 'bg-[#0D1A16] border-white/20' : 'bg-yellow-50 border-yellow-200'} mb-4 p-3 rounded-lg border`}
+          >
             <View className="flex-row items-center mb-1">
-              <Ionicons name="warning" size={20} color="#D97706" className="mr-2" />
-              <Text className="text-yellow-800 font-semibold">Payment System Unavailable</Text>
+              <Ionicons
+                name="warning"
+                size={20}
+                color={isDark ? 'white' : '#D97706'}
+                className="mr-2"
+              />
+              <Text className={`${isDark ? 'text-white' : 'text-yellow-800'} font-semibold`}>
+                Payment System Unavailable
+              </Text>
             </View>
-            <Text className="text-yellow-700 text-xs mt-1">
+            <Text className={`${isDark ? 'text-textSecondary' : 'text-yellow-700'} text-xs mt-1`}>
               {Platform.OS === 'android'
                 ? 'Google Play Services is required. Use a device with Google Play or a properly configured emulator.'
                 : 'App Store is required. Use a physical device or TestFlight.'}
@@ -706,60 +732,82 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
 
         {/* Purchase/Upgrade/Verification Status Indicator */}
         {isUpgradeAppliedMessageVisible ? (
-          <View className="mb-4 p-3 bg-green-50 rounded-lg border border-green-100">
+          <View
+            className={`${isDark ? 'bg-[#0D1A16] border-white/20' : 'bg-green-50 border-green-100'} mb-4 p-3 rounded-lg border`}
+          >
             <View className="flex-row items-center">
-              <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
-              <Text className="text-green-700 font-medium">
+              <ActivityIndicator
+                size="small"
+                color={isDark ? 'white' : '#23A76F'}
+                className="mr-2"
+              />
+              <Text className={`${isDark ? 'text-white' : 'text-green-700'} font-medium`}>
                 Upgrade requested. It will be applied shortly.
               </Text>
             </View>
           </View>
         ) : isSyncingWithStore ? (
-          <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+          <View
+            className={`${isDark ? 'bg-[#0D1A16] border-white/20' : 'bg-blue-50 border-blue-100'} mb-4 p-3 rounded-lg border`}
+          >
             <View className="flex-row items-center">
               <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
-              <Text className="text-blue-700 font-medium">
+              <Text className={`${isDark ? 'text-white' : 'text-blue-700'} font-medium`}>
                 Syncing with {Platform.OS === 'ios' ? 'App Store' : 'Google Play Store'}...
               </Text>
             </View>
           </View>
         ) : isUpgradeConfirmationPending ? (
-          <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+          <View
+            className={`${isDark ? 'bg-[#0D1A16] border-white/20' : 'bg-blue-50 border-blue-100'} mb-4 p-3 rounded-lg border`}
+          >
             <View className="flex-row items-center">
               <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
-              <Text className="text-blue-700 font-medium">
+              <Text className={`${isDark ? 'text-white' : 'text-blue-700'} font-medium`}>
                 Upgrade requested. We'll apply it as soon as Google confirms.
               </Text>
             </View>
           </View>
         ) : awaitingProfileConfirmation && hasStorePurchaseCallback ? (
-          <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+          <View
+            className={`${isDark ? 'bg-[#0D1A16] border-white/20' : 'bg-blue-50 border-blue-100'} mb-4 p-3 rounded-lg border`}
+          >
             <View className="flex-row items-center">
               <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
-              <Text className="text-blue-700 font-medium">Verifying purchase...</Text>
+              <Text className={`${isDark ? 'text-white' : 'text-blue-700'} font-medium`}>
+                Verifying purchase...
+              </Text>
             </View>
-            <Text className="text-blue-600 text-sm mt-1">
+            <Text className={`${isDark ? 'text-textSecondary' : 'text-blue-600'} text-sm mt-1`}>
               Waiting for confirmation from our server. Please don’t close this screen.
             </Text>
           </View>
         ) : isVerifyingBackend ? (
-          <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+          <View
+            className={`${isDark ? 'bg-[#0D1A16] border-white/20' : 'bg-blue-50 border-blue-100'} mb-4 p-3 rounded-lg border`}
+          >
             <View className="flex-row items-center">
               <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
-              <Text className="text-blue-700 font-medium">Verifying purchase...</Text>
+              <Text className={`${isDark ? 'text-white' : 'text-blue-700'} font-medium`}>
+                Verifying purchase...
+              </Text>
             </View>
-            <Text className="text-blue-600 text-sm mt-1">
+            <Text className={`${isDark ? 'text-textSecondary' : 'text-blue-600'} text-sm mt-1`}>
               Waiting for confirmation from our server. Please don’t close this screen.
             </Text>
           </View>
         ) : (
           isProcessingPurchase && (
-            <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <View
+              className={`${isDark ? 'bg-[#0D1A16] border-white/20' : 'bg-blue-50 border-blue-100'} mb-4 p-3 rounded-lg border`}
+            >
               <View className="flex-row items-center">
                 <ActivityIndicator size="small" color="#23A76F" className="mr-2" />
-                <Text className="text-blue-700 font-medium">Processing your purchase...</Text>
+                <Text className={`${isDark ? 'text-white' : 'text-blue-700'} font-medium`}>
+                  Processing your purchase...
+                </Text>
               </View>
-              <Text className="text-blue-600 text-sm mt-1">
+              <Text className={`${isDark ? 'text-textSecondary' : 'text-blue-600'} text-sm mt-1`}>
                 Please wait while we confirm your payment.
               </Text>
             </View>
@@ -771,12 +819,16 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
           (currentSubscription.status === 'active' || currentSubscription.is_active) &&
           !awaitingProfileConfirmation &&
           !isVerifyingBackend && (
-            <View className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+            <View
+              className={`${isDark ? 'bg-[#0D1A16] border-white/20' : 'bg-yellow-50 border-yellow-200'} mb-4 p-3 rounded-lg border`}
+            >
               <View className="flex-row items-center mb-1">
                 <Ionicons name="information-circle" size={20} color="#D97706" className="mr-2" />
-                <Text className="text-yellow-800 font-semibold">Active Subscription</Text>
+                <Text className={`${isDark ? 'text-white' : 'text-yellow-800'} font-semibold`}>
+                  Active Subscription
+                </Text>
               </View>
-              <Text className="text-yellow-700 text-xs mt-1">
+              <Text className={`${isDark ? 'text-textSecondary' : 'text-yellow-700'} text-xs mt-1`}>
                 You currently have an active {currentSubscription.plan_name || 'subscription'}.
                 {currentSubscription.plan_id !== plan.originalPlan.id
                   ? ' Switching plans will cancel your current subscription.'
@@ -811,36 +863,50 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         />
 
         {/* Payment Terms and Subscription Info */}
-        <View className="mt-4 pt-4 border-t border-gray-100">
+        <View
+          className={`${isDark ? 'border-t border-white/20' : 'border-t border-gray-100'} mt-1 pt-4`}
+        >
           {Platform.OS === 'ios' ? (
             <>
-              <Text className="text-center text-gray-500 text-xs mb-2">
+              <Text
+                className={`${isDark ? 'text-textSecondary' : 'text-gray-500'} text-center text-xs mb-2`}
+              >
                 Payment will be charged to your Apple ID account at confirmation of purchase.
               </Text>
-              <Text className="text-center text-gray-500 text-xs mb-2">
+              <Text
+                className={`${isDark ? 'text-textSecondary' : 'text-gray-500'} text-center text-xs mb-2`}
+              >
                 Subscription automatically renews unless cancelled at least 24 hours before the end
                 of the current period.
               </Text>
-              <Text className="text-center text-gray-500 text-xs mb-2">
+              <Text
+                className={`${isDark ? 'text-textSecondary' : 'text-gray-500'} text-center text-xs mb-2`}
+              >
                 Your account will be charged for renewal within 24 hours prior to the end of the
                 current period.
               </Text>
-              <Text className="text-center text-gray-500 text-xs">
+              <Text
+                className={`${isDark ? 'text-textSecondary' : 'text-gray-500'} text-center text-xs`}
+              >
                 You can manage or cancel your subscription in your App Store account settings.
               </Text>
             </>
           ) : (
             <>
-              <Text className="text-center text-gray-500 text-xs mb-2">
+              <Text
+                className={`${isDark ? 'text-textSecondary' : 'text-gray-500'} text-center text-xs mb-2`}
+              >
                 Payment will be processed through Google Play Store
               </Text>
-              <Text className="text-center text-gray-500 text-xs mb-3">
+              <Text
+                className={`${isDark ? 'text-textSecondary' : 'text-gray-500'} text-center text-xs mb-3`}
+              >
                 Subscription automatically renews monthly unless cancelled at least 24 hours before
                 the end of the current period.
               </Text>
             </>
           )}
-          <View className="flex-row justify-center items-center gap-2 my-2">
+          <View className="flex-row justify-center items-center gap-2 ">
             <Pressable
               onPress={() => {
                 const termsUrl =
@@ -852,9 +918,13 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
                 );
               }}
             >
-              <Text className="text-gray-500 text-xs underline">Terms of Use</Text>
+              <Text
+                className={`${isDark ? 'text-textSecondary' : 'text-gray-500'} text-xs underline`}
+              >
+                Terms of Use
+              </Text>
             </Pressable>
-            <Text className="text-gray-500 text-xs">|</Text>
+            <Text className={`${isDark ? 'text-textSecondary' : 'text-gray-500'} text-xs`}>|</Text>
             <Pressable
               onPress={() => {
                 Linking.openURL('https://senior-stylist.com/privacy-policy').catch((err) =>
@@ -862,7 +932,11 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
                 );
               }}
             >
-              <Text className="text-gray-500 text-xs underline">Privacy Policy</Text>
+              <Text
+                className={`${isDark ? 'text-textSecondary' : 'text-gray-500'} text-xs underline`}
+              >
+                Privacy Policy
+              </Text>
             </Pressable>
           </View>
         </View>

@@ -68,7 +68,7 @@ const Dashboard: React.FC = () => {
                   <View className="flex-row items-center justify-between w-full mb-1">
                     <View className="flex-1" /> {/* Spacer to balance the layout */}
                     <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
-                      <Ionicons name="chatbubble-outline" size={20} color="#14B8A6" />
+                      <Ionicons name="chatbubble-outline" size={20} color="#27B07D" />
                     </View>
                     <Text className="text-textPrimary text-sm font-poppins-medium">
                       {totalSessionsChange}
@@ -95,7 +95,7 @@ const Dashboard: React.FC = () => {
                   <View className="flex-row items-center justify-between w-full mb-1">
                     <View className="flex-1" /> {/* Spacer to balance the layout */}
                     <View className="w-10 h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
-                      <Ionicons name="star-outline" size={20} color="#14B8A6" />
+                      <Ionicons name="star-outline" size={20} color="#27B07D" />
                     </View>
                     <Text className="text-textPrimary text-sm font-poppins-medium">
                       {averageRatingChange.toFixed
@@ -125,7 +125,7 @@ const Dashboard: React.FC = () => {
                 <View className="flex-col items-center">
                   <View className="flex-row items-center justify-center w-full mb-1">
                     <View className="w-10 h-10 flex items-center justify-center">
-                      <Ionicons name="chatbubble-ellipses-outline" size={20} color="#14B8A6" />
+                      <Ionicons name="chatbubble-ellipses-outline" size={20} color="#27B07D" />
                     </View>
                   </View>
                   <Text

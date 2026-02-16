@@ -1,12 +1,12 @@
 import { View, ActivityIndicator, Text } from 'react-native';
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { useGetConsultation } from '@/api/user/consultation/usegetconsultation';
 import CustomerChatHome from './ChatHome';
 import NoConsultant from './NoConsultant';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useFocusEffect } from '@react-navigation/native';
 import GradientBackground from '@/common/components/GradientBackground';
 import Button from '@/common/components/Button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,9 +14,18 @@ import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 const Consultation = () => {
   const { user, exitGuest } = useAuth();
-  const { data, isLoading, isFetching } = useGetConsultation({ enabled: !!user });
+  const { data, isLoading, isFetching, refetch } = useGetConsultation({ enabled: !!user });
   const { isDark } = useTheme();
   const isFocused = useIsFocused();
+
+  // Refetch consultations when screen gains focus (e.g. when user navigates back from
+  // Conversation after their first consultation was accepted) so the list is up to date.
+  useFocusEffect(
+    useCallback(() => {
+      if (user) refetch();
+    }, [user, refetch])
+  );
+
   const { horizontalPadding } = useTabletLayout();
   const { data: profileData, isLoading: isProfileLoading } = useGetProfile({
     // Poll every 5s while this screen is visible so subscription/profile updates show live

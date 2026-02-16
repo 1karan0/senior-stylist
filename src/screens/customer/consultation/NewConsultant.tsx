@@ -189,7 +189,8 @@ const NewConsultant = ({ navigation }: any) => {
         return;
       }
 
-      openFindingStylistModal(consultationId);
+      const searchTimeoutSeconds = response?.data?.search_timeout_seconds;
+      openFindingStylistModal(consultationId, searchTimeoutSeconds);
     } catch (err: any) {
       showToast(err?.message || 'Something went wrong', 'error');
       // Draft stays in storage for retry

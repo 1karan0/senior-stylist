@@ -20,12 +20,12 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
 }) => {
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-      <View className="flex-1 justify-center items-center bg-black/80">
+      <View className="flex-1 justify-center items-center bg-black/70">
         <Pressable
           className="absolute inset-0"
           onPress={dismissOnBackdropPress ? onClose : undefined}
         />
-        <View className={`rounded-md p-6 bg-white w-[90%] max-w-md mx-4 ${containerClassName}`}>
+        <View className={`rounded-md p-6 w-[90%] max-w-md mx-4 ${containerClassName}`}>
           {children}
         </View>
         {overlay ? (
