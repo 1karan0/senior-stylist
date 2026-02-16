@@ -283,13 +283,13 @@ export default function SignupScreen({ navigation, route }: any) {
             {/* Consultant: Do you belong to a salon? + Salon Code + Referral Code */}
             {isConsultant && (
               <>
-                <View className="mb-4">
+                <View className="mb-3 mt-3">
                   <Text
-                    className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                    className={`font-medium mb-3 text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
                   >
-                    Do you belong to a salon?
+                    Do you work for any salon?
                   </Text>
-                  <View className="flex-row gap-3">
+                  <View className="flex-row gap-3 w-[50%] items-center justify-center ">
                     <Pressable
                       onPress={() => setBelongsToSalon(true)}
                       className={`flex-1 py-3 rounded-[14px] border ${

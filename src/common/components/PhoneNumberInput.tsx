@@ -52,7 +52,9 @@ export default function PhoneNumberInput({
     <View style={{ marginTop: verticalScale(0) }}>
       {/* Label from props */}
       {label && (
-        <Text className={`mb-1 text-[14px] font-medium ${isDark ? 'text-white' : 'text-textDark'}`}>
+        <Text
+          className={`mb-3 mt-3 text-[14px] font-medium ${isDark ? 'text-white' : 'text-textDark'}`}
+        >
           {label}
         </Text>
       )}
@@ -70,7 +72,7 @@ export default function PhoneNumberInput({
         <Pressable
           onPress={() => setVisible(true)}
           className="flex-row items-center"
-          style={{ width: '24%' }}
+          style={{ width: '10%' }}
         >
           <Text className={`${isDark ? 'text-white' : 'text-textDark'} text-[14px]`}>
             {country.callingCode}
