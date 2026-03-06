@@ -22,6 +22,7 @@ export default function SignupScreen({ navigation, route }: any) {
     control,
     handleSubmit,
     formState: { errors },
+    trigger,
   } = useForm();
   const [loading, setLoading] = useState(false);
   const [cvFile, setCvFile] = useState<any>(null);
@@ -34,8 +35,10 @@ export default function SignupScreen({ navigation, route }: any) {
   });
   const [selectedCallingCode, setSelectedCallingCode] = useState<any>(null);
   const [belongsToSalon, setBelongsToSalon] = useState<boolean | null>(false);
-  const [hasMinimumSalonExperience, setHasMinimumSalonExperience] = useState<boolean | null>();
+  const [hasMinimumSalonExperience, setHasMinimumSalonExperience] = useState<boolean | null>(null);
   const [isTechCapable, setIsTechCapable] = useState<boolean | null>(null);
+  const [salonExperienceError, setSalonExperienceError] = useState<string>('');
+  const [techCapabilityError, setTechCapabilityError] = useState<string>('');
 
   const { isDark } = useTheme();
   const user = route.params.user; // expects 'consultant' or other
@@ -152,11 +155,13 @@ export default function SignupScreen({ navigation, route }: any) {
     }
 
     if (isConsultant && hasMinimumSalonExperience === null) {
+      setSalonExperienceError('Please confirm your salon experience.');
       showToast('Please confirm your salon experience.', 'warning');
       return;
     }
 
     if (isConsultant && isTechCapable === null) {
+      setTechCapabilityError('Please confirm your tech capability.');
       showToast('Please confirm your tech capability.', 'warning');
       return;
     }
@@ -513,7 +518,10 @@ export default function SignupScreen({ navigation, route }: any) {
                   </Text>
                   <View className="flex-row gap-3 w-[100%] items-center justify-center ">
                     <Pressable
-                      onPress={() => setHasMinimumSalonExperience(true)}
+                      onPress={() => {
+                        setHasMinimumSalonExperience(true);
+                        setSalonExperienceError('');
+                      }}
                       className={`flex-1 py-3 rounded-[14px] border ${
                         hasMinimumSalonExperience === true
                           ? 'bg-textPrimary border-textPrimary'
@@ -535,7 +543,10 @@ export default function SignupScreen({ navigation, route }: any) {
                       </Text>
                     </Pressable>
                     <Pressable
-                      onPress={() => setHasMinimumSalonExperience(false)}
+                      onPress={() => {
+                        setHasMinimumSalonExperience(false);
+                        setSalonExperienceError('');
+                      }}
                       className={`flex-1 py-3 rounded-[14px] border ${
                         hasMinimumSalonExperience === false
                           ? 'bg-textPrimary border-textPrimary'
@@ -557,6 +568,11 @@ export default function SignupScreen({ navigation, route }: any) {
                       </Text>
                     </Pressable>
                   </View>
+                  {salonExperienceError ? (
+                    <Text className="text-red-500 text-[12px] mt-2 ml-1">
+                      {salonExperienceError}
+                    </Text>
+                  ) : null}
                 </View>
 
                 <View className="mb-3 mt-2">
@@ -568,7 +584,10 @@ export default function SignupScreen({ navigation, route }: any) {
                   </Text>
                   <View className="flex-row gap-3 w-[100%] items-center justify-center ">
                     <Pressable
-                      onPress={() => setIsTechCapable(true)}
+                      onPress={() => {
+                        setIsTechCapable(true);
+                        setTechCapabilityError('');
+                      }}
                       className={`flex-1 py-3 rounded-[14px] border ${
                         isTechCapable === true
                           ? 'bg-textPrimary border-textPrimary'
@@ -590,7 +609,10 @@ export default function SignupScreen({ navigation, route }: any) {
                       </Text>
                     </Pressable>
                     <Pressable
-                      onPress={() => setIsTechCapable(false)}
+                      onPress={() => {
+                        setIsTechCapable(false);
+                        setTechCapabilityError('');
+                      }}
                       className={`flex-1 py-3 rounded-[14px] border ${
                         isTechCapable === false
                           ? 'bg-textPrimary border-textPrimary'
@@ -612,6 +634,11 @@ export default function SignupScreen({ navigation, route }: any) {
                       </Text>
                     </Pressable>
                   </View>
+                  {techCapabilityError ? (
+                    <Text className="text-red-500 text-[12px] mt-2 ml-1">
+                      {techCapabilityError}
+                    </Text>
+                  ) : null}
                 </View>
 
                 <View className="mb-5 mt-2">
@@ -653,7 +680,35 @@ export default function SignupScreen({ navigation, route }: any) {
               <Button
                 text="Create Account"
                 variant="gradient"
-                onPress={handleSubmit(handleSignup)}
+                onPress={async () => {
+                  // 1) Trigger react-hook-form validation for all inputs
+                  const isFormValid = await trigger();
+
+                  // 2) Validate custom Yes/No fields
+                  let hasCustomError = false;
+
+                  if (isConsultant && hasMinimumSalonExperience === null) {
+                    setSalonExperienceError('Please confirm your salon experience.');
+                    hasCustomError = true;
+                  } else {
+                    setSalonExperienceError('');
+                  }
+
+                  if (isConsultant && isTechCapable === null) {
+                    setTechCapabilityError('Please confirm your tech capability.');
+                    hasCustomError = true;
+                  } else {
+                    setTechCapabilityError('');
+                  }
+
+                  // 3) If any validation failed, do not submit
+                  if (!isFormValid || hasCustomError) {
+                    return;
+                  }
+
+                  // 4) All good: submit via react-hook-form
+                  handleSubmit(handleSignup)();
+                }}
                 loading={loading || signupMutation.isPending}
                 disabled={loading || signupMutation.isPending}
               />
