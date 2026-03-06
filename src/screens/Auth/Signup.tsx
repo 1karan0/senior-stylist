@@ -26,6 +26,7 @@ export default function SignupScreen({ navigation, route }: any) {
   const [loading, setLoading] = useState(false);
   const [cvFile, setCvFile] = useState<any>(null);
   const [cvError, setCvError] = useState<string>('');
+  const [photoIdFile, setPhotoIdFile] = useState<any>(null);
   const [toast, setToast] = useState({
     visible: false,
     message: '',
@@ -33,6 +34,8 @@ export default function SignupScreen({ navigation, route }: any) {
   });
   const [selectedCallingCode, setSelectedCallingCode] = useState<any>(null);
   const [belongsToSalon, setBelongsToSalon] = useState<boolean | null>(false);
+  const [hasMinimumSalonExperience, setHasMinimumSalonExperience] = useState<boolean | null>();
+  const [isTechCapable, setIsTechCapable] = useState<boolean | null>(null);
 
   const { isDark } = useTheme();
   const user = route.params.user; // expects 'consultant' or other
@@ -98,11 +101,63 @@ export default function SignupScreen({ navigation, route }: any) {
     }
   };
 
+  const pickPhotoIdDocument = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        const androidVersion =
+          typeof Platform.Version === 'number'
+            ? Platform.Version
+            : parseInt(String(Platform.Version), 10);
+        if (androidVersion < 33) {
+          const hasPermission = await requestStoragePermission();
+          if (!hasPermission) {
+            showPermissionDeniedAlert('storage');
+            return;
+          }
+        }
+      }
+
+      const pickerResult = await pick({
+        type: [types.allFiles],
+        allowMultiSelection: false,
+      });
+
+      if (pickerResult && pickerResult.length > 0) {
+        setPhotoIdFile(pickerResult[0]);
+        showToast('Photo ID uploaded successfully', 'success');
+      }
+    } catch (err: any) {
+      if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
+        // User cancelled, no action needed
+      } else {
+        console.error('Error picking photo ID document:', err);
+        if (
+          err?.message?.toLowerCase().includes('permission') ||
+          err?.code?.includes('permission')
+        ) {
+          showPermissionDeniedAlert('storage');
+        } else {
+          showToast('Failed to upload Photo ID. Please try again.', 'error');
+        }
+      }
+    }
+  };
+
   const handleSignup = async (form: any) => {
     // CV required only for consultant
     if (isConsultant && !cvFile) {
       setCvError('CV is required to register as a consultant');
       showToast('Please upload your CV to continue', 'warning');
+      return;
+    }
+
+    if (isConsultant && hasMinimumSalonExperience === null) {
+      showToast('Please confirm your salon experience.', 'warning');
+      return;
+    }
+
+    if (isConsultant && isTechCapable === null) {
+      showToast('Please confirm your tech capability.', 'warning');
       return;
     }
 
@@ -129,6 +184,15 @@ export default function SignupScreen({ navigation, route }: any) {
             type: cvFile.type,
           };
         }
+        if (photoIdFile) {
+          signupData.photo_id = {
+            uri: photoIdFile.uri,
+            name: photoIdFile.name,
+            type: photoIdFile.type,
+          };
+        }
+        signupData.has_minimum_salon_experience = hasMinimumSalonExperience;
+        signupData.is_tech_capable = isTechCapable;
         if (belongsToSalon && form.salonCode?.trim()) {
           signupData.salon_code = form.salonCode.trim();
         }
@@ -141,6 +205,7 @@ export default function SignupScreen({ navigation, route }: any) {
           signupData.referral_code = form.referral;
         }
       }
+      console.log(signupData, 'signupData');
 
       await signupMutation.mutateAsync({
         data: signupData,
@@ -404,39 +469,183 @@ export default function SignupScreen({ navigation, route }: any) {
 
             {/* CV upload: only for consultant */}
             {isConsultant && (
-              <View className="mb-5 mt-2">
-                <Text
-                  className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
-                >
-                  Upload CV <Text className="text-red-500">*</Text>
-                </Text>
-
-                <Pressable
-                  onPress={pickDocument}
-                  className={`border border-dashed ${
-                    cvError
-                      ? 'border-red-500'
-                      : isDark
-                        ? 'bg-commonGradientStop6 border-commonGradientStop7'
-                        : 'bg-[#F5F9F7] border-textPrimary'
-                  } rounded-lg h-[120px] justify-center items-center`}
-                >
-                  <Image
-                    source={require('../../assets/icons/upload.png')}
-                    className="w-10 h-10 mb-2"
-                  />
-
+              <>
+                <View className="mb-3 mt-2">
                   <Text
-                    className={`${isDark ? 'text-white' : 'text-textDark'} font-medium text-center px-4`}
+                    className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
                   >
-                    {cvFile ? cvFile.name : 'Upload your CV'}
+                    Upload CV <Text className="text-red-500">*</Text>
                   </Text>
 
-                  <Text className="text-textMuted text-[12px] mt-1">.pdf , .docx , .doc</Text>
-                </Pressable>
+                  <Pressable
+                    onPress={pickDocument}
+                    className={`border border-dashed ${
+                      cvError
+                        ? 'border-red-500'
+                        : isDark
+                          ? 'bg-commonGradientStop6 border-commonGradientStop7'
+                          : 'bg-[#F5F9F7] border-textPrimary'
+                    } rounded-lg h-[120px] justify-center items-center`}
+                  >
+                    <Image
+                      source={require('../../assets/icons/upload.png')}
+                      className="w-10 h-10 mb-2"
+                    />
 
-                {cvError && <Text className="text-red-500 text-[12px] mt-2 ml-1">{cvError}</Text>}
-              </View>
+                    <Text
+                      className={`${isDark ? 'text-white' : 'text-textDark'} font-medium text-center px-4`}
+                    >
+                      {cvFile ? cvFile.name : 'Upload your CV'}
+                    </Text>
+
+                    <Text className="text-textMuted text-[12px] mt-1">.pdf , .docx , .doc</Text>
+                  </Pressable>
+
+                  {cvError && <Text className="text-red-500 text-[12px] mt-2 ml-1">{cvError}</Text>}
+                </View>
+
+                <View className="mb-3 mt-2">
+                  <Text
+                    className={`font-medium mb-3 text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                  >
+                    10+ Years Salon Experience
+                    <Text className="text-red-500"> *</Text>
+                  </Text>
+                  <View className="flex-row gap-3 w-[100%] items-center justify-center ">
+                    <Pressable
+                      onPress={() => setHasMinimumSalonExperience(true)}
+                      className={`flex-1 py-3 rounded-[14px] border ${
+                        hasMinimumSalonExperience === true
+                          ? 'bg-textPrimary border-textPrimary'
+                          : isDark
+                            ? 'border-commonGradientStop7 bg-commonGradientStop6'
+                            : 'border-[#DADADA] bg-[#F5F9F7]'
+                      }`}
+                    >
+                      <Text
+                        className={`text-center font-medium ${
+                          hasMinimumSalonExperience === true
+                            ? 'text-white'
+                            : isDark
+                              ? 'text-white'
+                              : 'text-textDark'
+                        }`}
+                      >
+                        Yes
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => setHasMinimumSalonExperience(false)}
+                      className={`flex-1 py-3 rounded-[14px] border ${
+                        hasMinimumSalonExperience === false
+                          ? 'bg-textPrimary border-textPrimary'
+                          : isDark
+                            ? 'border-commonGradientStop7 bg-commonGradientStop6'
+                            : 'border-[#DADADA] bg-[#F5F9F7]'
+                      }`}
+                    >
+                      <Text
+                        className={`text-center font-medium ${
+                          hasMinimumSalonExperience === false
+                            ? 'text-white'
+                            : isDark
+                              ? 'text-white'
+                              : 'text-textDark'
+                        }`}
+                      >
+                        No
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                <View className="mb-3 mt-2">
+                  <Text
+                    className={`font-medium mb-3 text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                  >
+                    Smartphone & Internet Access
+                    <Text className="text-red-500"> *</Text>
+                  </Text>
+                  <View className="flex-row gap-3 w-[100%] items-center justify-center ">
+                    <Pressable
+                      onPress={() => setIsTechCapable(true)}
+                      className={`flex-1 py-3 rounded-[14px] border ${
+                        isTechCapable === true
+                          ? 'bg-textPrimary border-textPrimary'
+                          : isDark
+                            ? 'border-commonGradientStop7 bg-commonGradientStop6'
+                            : 'border-[#DADADA] bg-[#F5F9F7]'
+                      }`}
+                    >
+                      <Text
+                        className={`text-center font-medium ${
+                          isTechCapable === true
+                            ? 'text-white'
+                            : isDark
+                              ? 'text-white'
+                              : 'text-textDark'
+                        }`}
+                      >
+                        Yes
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => setIsTechCapable(false)}
+                      className={`flex-1 py-3 rounded-[14px] border ${
+                        isTechCapable === false
+                          ? 'bg-textPrimary border-textPrimary'
+                          : isDark
+                            ? 'border-commonGradientStop7 bg-commonGradientStop6'
+                            : 'border-[#DADADA] bg-[#F5F9F7]'
+                      }`}
+                    >
+                      <Text
+                        className={`text-center font-medium ${
+                          isTechCapable === false
+                            ? 'text-white'
+                            : isDark
+                              ? 'text-white'
+                              : 'text-textDark'
+                        }`}
+                      >
+                        No
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                <View className="mb-5 mt-2">
+                  <Text
+                    className={`font-medium text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
+                  >
+                    Photo ID (Passport / Driver&apos;s Licence) (optional)
+                  </Text>
+
+                  <Pressable
+                    onPress={pickPhotoIdDocument}
+                    className={`border border-dashed ${
+                      isDark
+                        ? 'bg-commonGradientStop6 border-commonGradientStop7'
+                        : 'bg-[#F5F9F7] border-textPrimary'
+                    } rounded-lg h-[120px] justify-center items-center`}
+                  >
+                    <Image
+                      source={require('../../assets/icons/upload.png')}
+                      className="w-10 h-10 mb-2"
+                    />
+
+                    <Text
+                      className={`${isDark ? 'text-white' : 'text-textDark'} font-medium text-center px-4`}
+                    >
+                      {photoIdFile ? photoIdFile.name : 'Upload your Photo ID'}
+                    </Text>
+
+                    <Text className="text-textMuted text-[12px] mt-1">
+                      .jpg , .jpeg , .png , .pdf
+                    </Text>
+                  </Pressable>
+                </View>
+              </>
             )}
 
             {/* Sign Up Button */}

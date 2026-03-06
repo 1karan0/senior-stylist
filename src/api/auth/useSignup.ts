@@ -25,6 +25,13 @@ interface ConsultantSignupData {
   };
   salon_code?: string;
   referral_code?: string;
+  photo_id?: {
+    uri: string;
+    name: string;
+    type: string;
+  };
+  has_minimum_salon_experience?: boolean;
+  is_tech_capable?: boolean;
 }
 
 interface SignupParams {
@@ -54,7 +61,21 @@ export const useSignupApi = () => {
           if ('referral_code' in data && data.referral_code) {
             formData.append('referral_code', data.referral_code);
           }
-
+          if ('photo_id' in data && data.photo_id) {
+            formData.append('photo_id', data.photo_id as any);
+          }
+          if (
+            'has_minimum_salon_experience' in data &&
+            typeof data.has_minimum_salon_experience === 'boolean'
+          ) {
+            formData.append(
+              'has_minimum_salon_experience',
+              String(data.has_minimum_salon_experience)
+            );
+          }
+          if ('is_tech_capable' in data && typeof data.is_tech_capable === 'boolean') {
+            formData.append('is_tech_capable', String(data.is_tech_capable));
+          }
           const res = await axios.post(`${BASE_URL}/api/consultant/register`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
