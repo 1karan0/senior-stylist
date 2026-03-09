@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 
@@ -13,12 +13,17 @@ import { useGetLeaderboard } from '@/api/consultant/useGetLeaderboard';
 import Button from '@/common/components/Button';
 import { BASE_URL } from '@/config';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
+import { ModalWrapper } from '@/common/components/ModalWrapper';
+import { useNavigation } from '@react-navigation/native';
 
 const Dashboard: React.FC = () => {
   const [pdfModalVisible, setPdfModalVisible] = useState(false);
+  const [showBioPrompt, setShowBioPrompt] = useState(false);
+  const [hasPromptedBio, setHasPromptedBio] = useState(false);
   const { isDark } = useTheme();
   const { data: profileData } = useGetProfile();
   const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useGetLeaderboard();
+  const navigation = useNavigation<any>();
 
   const user = profileData?.user as any;
   const totalSessions = user?.consultant_details?.total_sessions ?? 0;
@@ -26,6 +31,21 @@ const Dashboard: React.FC = () => {
   const activeSessions = user?.consultant_details?.active_sessions ?? 0;
   const totalSessionsChange = user?.consultant_details?.total_sessions_change ?? 0;
   const averageRatingChange = user?.consultant_details?.average_rating_change ?? 0;
+
+  useEffect(() => {
+    if (hasPromptedBio) return;
+    if (!user) return;
+
+    const role = user?.role;
+    const bioFromConsultantDetails = user?.consultant_details?.bio;
+    const fallbackBio = user?.bio;
+    const bio = (bioFromConsultantDetails ?? fallbackBio ?? '').trim();
+
+    if (role === 'consultant' && !bio) {
+      setShowBioPrompt(true);
+      setHasPromptedBio(true);
+    }
+  }, [user, hasPromptedBio]);
 
   // Keep these values in sync with your tab navigator
   const { paddingBottom } = useTabBarSafePadding();
@@ -35,6 +55,11 @@ const Dashboard: React.FC = () => {
 
   const handleOpenEarningsPDF = () => {
     setPdfModalVisible(true);
+  };
+
+  const handleEditBioNow = () => {
+    setShowBioPrompt(false);
+    navigation.navigate('ProfileTab' as never, { screen: 'EditProfile' } as never);
   };
 
   return (
@@ -246,6 +271,39 @@ const Dashboard: React.FC = () => {
           pdfUrl={EARNINGS_PDF_URL}
           onClose={() => setPdfModalVisible(false)}
         />
+        {/* Prompt stylist to add bio if missing */}
+        <ModalWrapper
+          visible={showBioPrompt}
+          onClose={() => setShowBioPrompt(false)}
+          containerClassName={`border ${
+            isDark ? 'bg-[#0D1A16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+          }`}
+        >
+          <Text
+            className={`text-xl font-urbanist-bold mb-2 text-center ${
+              isDark ? 'text-white' : 'text-textDark'
+            }`}
+          >
+            Complete your bio
+          </Text>
+          <Text
+            className={`text-sm mb-5 text-center ${
+              isDark ? 'text-textSecondary' : 'text-textMuted'
+            }`}
+          >
+            Add a short bio so clients can get to know you better before booking.
+          </Text>
+
+          <View className="gap-3">
+            <Button text="Edit Bio Now" onPress={handleEditBioNow} variant="gradient" />
+            <Button
+              text="Maybe Later"
+              onPress={() => setShowBioPrompt(false)}
+              variant="light"
+              className="rounded-[14px]"
+            />
+          </View>
+        </ModalWrapper>
       </View>
     </GradientBackground>
   );

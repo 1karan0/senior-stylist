@@ -198,7 +198,7 @@ const EditProfile: React.FC = () => {
             onPress: () => {
               resetPasswordForm();
               setShowPasswordSection(false);
-              navigation.goBack();
+              navigation.navigate('ProfileMain');
             },
           },
         ]);
@@ -225,7 +225,7 @@ const EditProfile: React.FC = () => {
   const handleCancel = () => {
     Alert.alert('Discard Changes', 'Are you sure you want to discard changes?', [
       { text: 'No' },
-      { text: 'Yes', onPress: () => navigation.goBack() },
+      { text: 'Yes', onPress: () => navigation.navigate('ProfileMain') },
     ]);
   };
 
@@ -250,7 +250,7 @@ const EditProfile: React.FC = () => {
         {/* Header */}
         <View className=" mb-2">
           <View className="flex-row items-center">
-            <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
+            <TouchableOpacity onPress={() => navigation.navigate('ProfileMain')} className="mr-3">
               <Ionicons name="arrow-back" size={24} color={isDark ? '#FFFFFF' : '#162721'} />
             </TouchableOpacity>
             <Text

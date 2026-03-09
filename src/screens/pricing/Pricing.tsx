@@ -243,7 +243,7 @@ export default function PricingScreen() {
         <View className="mt-2 items-center">
           <View className="bg-[#E7B008] rounded-xl py-2 px-4 w-60">
             <Text className="text-center text-base font-urbanist-bold text-white">
-              Introductory offer: 50% off for first 6 months
+              Introductory offer: 50% off for first 3 months
               {/* {Platform.OS === 'ios'
                 ? 'Available for eligible Apple IDs. Apple determines eligibility.'
                 : 'Available for eligible Google accounts. Eligibility is determined by Google Play.'} */}
