@@ -27,7 +27,7 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
         style={{
           width: '100%',
           // In landscape we give the image a bit more vertical space so text doesn't overlap too much.
-          height: isLandscape ? '80%' : '75%',
+          height: isLandscape ? '70%' : '75%',
           position: 'absolute',
           top: 0,
           left: 0,
@@ -39,7 +39,7 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
         style={{
           position: 'absolute',
           // Use dynamic height so this reacts correctly when rotating.
-          top: screenHeight * (isLandscape ? 0.4 : 0.6),
+          top: screenHeight * (isLandscape ? 0.5 : 0.6),
           left: 0,
           right: 0,
           width: '100%',

@@ -18,7 +18,9 @@ export function useTabletLayout() {
   const isLandscape = width > height;
   const isPortrait = !isLandscape;
 
-  const isTablet = Math.max(width, height) >= TABLET_BREAKPOINT;
+  // Use the shortest side so phones in landscape are not treated as tablets
+  const shortestSide = Math.min(width, height);
+  const isTablet = shortestSide >= TABLET_BREAKPOINT;
 
   const maxContentWidth = isLandscape ? MAX_CONTENT_WIDTH_LANDSCAPE : MAX_CONTENT_WIDTH_PORTRAIT;
 

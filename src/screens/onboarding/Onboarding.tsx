@@ -109,7 +109,7 @@ const OnboardingScreen = ({ navigation }: any) => {
             text={page === onboardData.length - 1 ? 'Get Started' : 'Next'}
             variant="gradient"
             onPress={goNext}
-            className={`${page === onboardData.length - 1 ? ` ${isTablet ? 'px-24 w-[60%]' : 'px-3 w-full'} ` : 'w-[160px]'} rounded-2xl`}
+            className={`${page === onboardData.length - 1 ? ` ${isTablet && isLandscape ? 'px-24 w-[60%]' : 'px-3 w-full'} ` : 'w-[160px]'} rounded-2xl`}
           />
         </View>
       </GradientBackground>
