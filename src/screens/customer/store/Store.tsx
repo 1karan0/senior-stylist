@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  Linking,
-  ScrollView,
-  useWindowDimensions,
-} from 'react-native';
+import { View, Text, Image, TouchableOpacity, Linking, ScrollView } from 'react-native';
 
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -18,14 +10,17 @@ const STORE_URL = 'https://shop.senior-stylist.com/';
 const StoreScreen = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-  const { width: windowWidth } = useWindowDimensions();
-  const { horizontalPadding, isTablet } = useTabletLayout();
+  const { horizontalPadding, isTablet, isLandscape, maxContentWidth } = useTabletLayout();
   // Width-driven sizing is much more consistent than height-driven sizing across devices.
-  // The screen uses `px-5` (20px) so the card width is windowWidth - 40.
-  const promoCardWidth = Math.max(1, windowWidth - 40);
-  const promoCardHeight = isTablet
-    ? Math.max(360, Math.min(765, Math.round(promoCardWidth * 1.6)))
-    : Math.max(360, Math.min(765, Math.round(promoCardWidth * 1.6)));
+  // Base width on the same content width we use elsewhere so tablet landscape looks centered.
+  const promoCardWidth = Math.max(1, maxContentWidth - 200);
+
+  // Slightly different aspect ratio caps for landscape vs portrait for better fit.
+  const baseAspectRatio = isLandscape ? 1.2 : 1.6;
+  const promoCardHeight = Math.max(
+    isLandscape ? 700 : 500,
+    Math.min(640, Math.round(promoCardWidth * baseAspectRatio))
+  );
 
   const handleShopNow = () => {
     Linking.openURL(STORE_URL);
@@ -38,7 +33,7 @@ const StoreScreen = () => {
         contentContainerStyle={{ paddingBottom: paddingBottom }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="flex-1 pt-6" style={[{ paddingHorizontal: horizontalPadding }]}>
+        <View className="flex-1 pt-6 pb-10" style={[{ paddingHorizontal: horizontalPadding }]}>
           {/* Header */}
 
           <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
@@ -50,25 +45,15 @@ const StoreScreen = () => {
 
           {/* Promo card */}
           <View className="relative mt-6">
-            <View
-              className="w-full mt-3"
-              style={{
-                height: promoCardHeight,
-                borderRadius: 24,
-                overflow: 'hidden',
-                // Prevent "white corners" in dark mode when the image doesn't perfectly cover.
-                backgroundColor: isDark ? '#0B1220' : '#FFFFFF',
-              }}
-            >
+            <View className="w-full mt-3 mx-auto items-center justify-center">
               <Image
                 source={require('@/assets/images/discount-card.jpg')}
                 resizeMode="cover"
                 style={{
-                  width: '100%',
-                  height: '100%',
                   borderRadius: 24,
-                  backgroundColor: isDark ? '#0B1220' : '#FFFFFF',
                 }}
+                width={promoCardWidth}
+                height={promoCardHeight}
               />
             </View>
 

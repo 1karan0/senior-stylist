@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text, Image, ImageSourcePropType, Dimensions } from 'react-native';
+import { View, Text, Image, ImageSourcePropType, useWindowDimensions } from 'react-native';
 
 import { useTheme } from '@/contexts/ThemeContext';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 interface Props {
   item: {
@@ -16,16 +15,19 @@ interface Props {
 
 const OnboardItem: React.FC<Props> = ({ item }) => {
   const { isDark } = useTheme();
+  const { height: screenHeight } = useWindowDimensions();
+  const { isLandscape } = useTabletLayout();
 
   return (
     <View className="flex-1 relative">
-      {/* IMAGE FIX — remove bottom offset + use cover */}
+      {/* IMAGE */}
       <Image
         source={item.image}
         resizeMode="cover"
         style={{
           width: '100%',
-          height: '75%',
+          // In landscape we give the image a bit more vertical space so text doesn't overlap too much.
+          height: isLandscape ? '80%' : '75%',
           position: 'absolute',
           top: 0,
           left: 0,
@@ -36,11 +38,12 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
       <View
         style={{
           position: 'absolute',
-          top: SCREEN_HEIGHT * 0.6, // Start at 70% (just above where 75% image ends)
+          // Use dynamic height so this reacts correctly when rotating.
+          top: screenHeight * (isLandscape ? 0.4 : 0.6),
           left: 0,
           right: 0,
           width: '100%',
-          height: SCREEN_HEIGHT * 0.3, // 30% height to ensure it reaches bottom
+          height: screenHeight * (isLandscape ? 0.4 : 0.3),
           paddingHorizontal: 20,
           paddingTop: 40,
           borderTopLeftRadius: 30,

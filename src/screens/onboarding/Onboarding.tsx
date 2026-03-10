@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StatusBar, Platform, Dimensions } from 'react-native';
+import { View, StatusBar, Platform, useWindowDimensions } from 'react-native';
 import PagerView from 'react-native-pager-view';
 
 import Button from '@/common/components/Button';
@@ -13,8 +13,8 @@ const OnboardingScreen = ({ navigation }: any) => {
   const pagerRef = useRef<PagerView>(null);
   const [page, setPage] = useState(0);
   const { isDark } = useTheme();
-  const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-  const { isTablet } = useTabletLayout();
+  const { height: screenHeight } = useWindowDimensions();
+  const { isTablet, isLandscape } = useTabletLayout();
   const goNext = () => {
     if (page < onboardData.length - 1) {
       pagerRef.current?.setPage(page + 1);
@@ -60,7 +60,8 @@ const OnboardingScreen = ({ navigation }: any) => {
           className="flex-row justify-center"
           style={{
             position: 'absolute',
-            top: SCREEN_HEIGHT * 0.8, // Position just below the text section (which ends at ~90%)
+            // In landscape, bring the dots a bit higher so they don't collide with buttons.
+            top: screenHeight * (isLandscape ? 0.7 : 0.8),
             left: 0,
             right: 0,
             zIndex: 10,
@@ -84,8 +85,15 @@ const OnboardingScreen = ({ navigation }: any) => {
 
         {/* BUTTONS */}
         <View
-          className={`${page === onboardData.length - 1 ? 'items-center' : 'flex-row items-center justify-center gap-4'} px-6`}
-          style={{ marginBottom: Platform.OS === 'android' ? 35 : 0 }}
+          className={`${
+            page === onboardData.length - 1
+              ? 'items-center'
+              : 'flex-row items-center justify-center gap-4'
+          } px-6`}
+          style={{
+            marginBottom: Platform.OS === 'android' ? 35 : 0,
+            paddingBottom: isLandscape ? 12 : 0,
+          }}
         >
           {page !== onboardData.length - 1 && (
             <Button
