@@ -21,7 +21,7 @@ const StoreScreen = () => {
     : Platform.OS === 'ios'
       ? 160
       : typeof Platform.Version === 'number' && Platform.Version < 33
-        ? 140
+        ? 170
         : 100;
 
   const promoCardWidth = Math.max(1, maxContentWidth - platformOffset);
