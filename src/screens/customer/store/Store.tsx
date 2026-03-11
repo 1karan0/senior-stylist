@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, Linking, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Linking, ScrollView, Platform } from 'react-native';
 
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -13,7 +13,10 @@ const StoreScreen = () => {
   const { horizontalPadding, isTablet, isLandscape, maxContentWidth } = useTabletLayout();
   // Width-driven sizing is much more consistent than height-driven sizing across devices.
   // Base width on the same content width we use elsewhere so tablet landscape looks centered.
-  const promoCardWidth = Math.max(1, maxContentWidth - 200);
+  const promoCardWidth = Math.max(
+    1,
+    maxContentWidth - (isLandscape ? 200 : Platform.OS == 'ios' ? 160 : 100)
+  );
 
   // Slightly different aspect ratio caps for landscape vs portrait for better fit.
   const baseAspectRatio = isLandscape ? 1.2 : 1.6;
