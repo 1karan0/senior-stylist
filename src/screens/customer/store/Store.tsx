@@ -11,12 +11,20 @@ const StoreScreen = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
   const { horizontalPadding, isTablet, isLandscape, maxContentWidth } = useTabletLayout();
+
   // Width-driven sizing is much more consistent than height-driven sizing across devices.
   // Base width on the same content width we use elsewhere so tablet landscape looks centered.
-  const promoCardWidth = Math.max(
-    1,
-    maxContentWidth - (isLandscape ? 200 : Platform.OS == 'ios' ? 160 : 100)
-  );
+  // On Android < 13 (SDK < 33), subtract a bit more so the promo card
+  // doesn't appear overly wide on older devices.
+  const platformOffset = isLandscape
+    ? 200
+    : Platform.OS === 'ios'
+      ? 160
+      : typeof Platform.Version === 'number' && Platform.Version < 33
+        ? 140
+        : 100;
+
+  const promoCardWidth = Math.max(1, maxContentWidth - platformOffset);
 
   // Slightly different aspect ratio caps for landscape vs portrait for better fit.
   const baseAspectRatio = isLandscape ? 1.2 : 1.6;

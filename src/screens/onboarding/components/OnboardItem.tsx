@@ -39,7 +39,7 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
         style={{
           position: 'absolute',
           // Use dynamic height so this reacts correctly when rotating.
-          top: screenHeight * (isLandscape ? 0.5 : 0.6),
+          top: screenHeight * (isLandscape ? 0.4 : 0.6),
           left: 0,
           right: 0,
           width: '100%',
