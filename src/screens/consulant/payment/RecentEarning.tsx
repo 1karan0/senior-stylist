@@ -80,7 +80,7 @@ const RecentEarning = () => {
   const [page, setPage] = useState(1);
   const [allEarnings, setAllEarnings] = useState<EarningItem[]>([]);
   const perPage = 10;
-  const { horizontalPadding } = useTabletLayout();
+  const { horizontalPadding, isTablet } = useTabletLayout();
   const {
     data: earningHistoryData,
     isLoading,
@@ -370,7 +370,9 @@ const RecentEarning = () => {
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
 
         {/* Header */}
-        <View className="px-5 pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0" />
+        <View
+          className={`px-5 pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0 ${isTablet ? ' -mt-4' : ' -mt-0'}`}
+        />
 
         {/* Content */}
         <View

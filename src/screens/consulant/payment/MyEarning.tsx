@@ -36,7 +36,7 @@ const MyEarning = () => {
   const navigation = useNavigation<any>();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-  const { horizontalPadding } = useTabletLayout();
+  const { horizontalPadding, isTablet } = useTabletLayout();
   const { data: myEarning, isLoading: isMyEarningLoading } = useGetMyEarning();
   const {
     data: stripAccount,
@@ -169,7 +169,9 @@ const MyEarning = () => {
       <View className="flex-1 ">
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
         {/* Header */}
-        <View className="px-5  pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0" />
+        <View
+          className={`px-5  pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0 ${isTablet ? ' -mt-4' : ' -mt-0'}`}
+        />
 
         {/* Content */}
         <ScrollView

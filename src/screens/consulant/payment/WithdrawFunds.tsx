@@ -51,7 +51,7 @@ const WithdrawFunds = () => {
   const queryClient = useQueryClient();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-  const { horizontalPadding } = useTabletLayout();
+  const { horizontalPadding, isTablet } = useTabletLayout();
   const { data: myEarning, isLoading: isMyEarningLoading } = useGetMyEarning();
   const { mutateAsync: withdrawFunds, isPending: isWithdrawPending } = useWithdrawFunds();
 
@@ -171,7 +171,9 @@ const WithdrawFunds = () => {
     <GradientBackground topOverlayColor="#27B07D">
       <View className="flex-1">
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
-        <View className="px-5 pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0" />
+        <View
+          className={`px-5 pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0 ${isTablet ? ' -mt-4' : ' -mt-0'}`}
+        />
 
         <ScrollView
           className="flex-1 absolute top-5 left-0 right-0 bottom-5 z-10"

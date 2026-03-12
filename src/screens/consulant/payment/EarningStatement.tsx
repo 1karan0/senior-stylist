@@ -15,7 +15,7 @@ import { useTabletLayout } from '@/hooks/useTabletLayout';
 const EarningStatement = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-  const { horizontalPadding } = useTabletLayout();
+  const { horizontalPadding, isTablet } = useTabletLayout();
   const getUkTaxYearStartYear = (d: Date) => {
     // UK tax year starts on Apr 6
     const year = d.getFullYear();
@@ -126,7 +126,9 @@ const EarningStatement = () => {
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
 
         {/* Header spacer (same pattern as other payout screens) */}
-        <View className="px-5 pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0" />
+        <View
+          className={`px-5 pb-4 bg-buttonPrimaryBg rounded-b-[24px] h-[141px] relative z-0 ${isTablet ? ' -mt-4' : ' -mt-0'}`}
+        />
 
         <ScrollView
           className="flex-1 absolute top-5 left-0 right-0 bottom-5 z-10"

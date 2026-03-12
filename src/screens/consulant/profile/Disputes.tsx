@@ -79,7 +79,7 @@ const Disputes: React.FC<Props> = ({ navigation }) => {
   const { paddingBottom } = useTabBarSafePadding();
   const { data, isLoading, error, refetch, isRefetching } = useGetConsultantDisputes();
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
-  const { horizontalPadding } = useTabletLayout();
+  const { horizontalPadding, isTablet } = useTabletLayout();
   const disputes: ConsultantDispute[] = data?.data?.disputes || [];
   const filteredDisputes = useMemo(() => {
     if (activeFilter === 'all') return disputes;
@@ -211,7 +211,10 @@ const Disputes: React.FC<Props> = ({ navigation }) => {
     <GradientBackground topOverlayColor="#27B07D">
       <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
       {/* Header */}
-      <View className="px-6 pt-5 pb-5 rounded-b-2xl " style={{ backgroundColor: '#27B07D' }}>
+      <View
+        className={`px-6 pt-5 pb-5 -mt-4 rounded-b-2xl ${isTablet ? '-mt-4' : '-mt-0'}`}
+        style={{ backgroundColor: '#27B07D' }}
+      >
         <View className="">
           <View className="flex-row gap-3 items-center mb-2">
             <TouchableOpacity onPress={handleBack}>

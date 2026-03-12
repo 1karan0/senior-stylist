@@ -393,7 +393,6 @@ const FindingStylistModal: React.FC = () => {
     try {
       stopAllTimers();
       await cancelConsultationMutation.mutateAsync(String(consultationId));
-      showToast('Consultation cancelled successfully.', 'success');
       await storage.removeConsultationDraft();
       closeAllAndDismiss();
     } catch (err: any) {
