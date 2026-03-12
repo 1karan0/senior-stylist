@@ -127,7 +127,7 @@ const getStatusLabel = (status: string) => {
 const DisputeList: React.FC<Props> = ({ navigation }) => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
-  const { horizontalPadding } = useTabletLayout();
+  const { horizontalPadding, isTablet } = useTabletLayout();
   const isFocused = useIsFocused();
   const { user } = useAuth();
   const { data: profileData, isLoading: isProfileLoading } = useGetProfile({
@@ -287,7 +287,10 @@ const DisputeList: React.FC<Props> = ({ navigation }) => {
       <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
 
       {/* Header */}
-      <View className="px-6 pt-10 pb-5 rounded-b-2xl" style={{ backgroundColor: '#27B07D' }}>
+      <View
+        className={`px-6 pt-10 pb-5 rounded-b-2xl ${isTablet ? '-mt-4' : '-mt-0'}`}
+        style={{ backgroundColor: '#27B07D' }}
+      >
         <View className="">
           <View className="flex-row justify-between items-center mb-2">
             <View className="flex-1">

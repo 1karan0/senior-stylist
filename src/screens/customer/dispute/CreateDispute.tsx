@@ -49,7 +49,7 @@ const CreateDispute: React.FC<Props> = ({ navigation }) => {
   const { isDark } = useTheme();
   const { data, isLoading, error } = useGetDisputeConsultations();
   const [selectedConsultationId, setSelectedConsultationId] = useState<number | null>(null);
-  const { horizontalPadding } = useTabletLayout();
+  const { horizontalPadding, isTablet } = useTabletLayout();
   const consultations: Consultation[] = data?.data.consultations || [];
 
   const formatDate = (dateString: string): string => {
@@ -102,7 +102,9 @@ const CreateDispute: React.FC<Props> = ({ navigation }) => {
       <GradientBackground topOverlayColor="#27B07D">
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
         {/* Header Section with Green Background */}
-        <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">
+        <View
+          className={`px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl ${isTablet ? '-mt-4' : '-mt-0'}`}
+        >
           <Text className="text-white text-2xl font-urbanist-bold">Create Dispute</Text>
           <Text className="text-white  font-poppins-regular opacity-90">
             Report an issue with your consultation
@@ -157,7 +159,9 @@ const CreateDispute: React.FC<Props> = ({ navigation }) => {
     <GradientBackground topOverlayColor="#27B07D">
       <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
       {/* Header Section with Green Background */}
-      <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">
+      <View
+        className={`px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl ${isTablet ? '-mt-4' : '-mt-0'}`}
+      >
         <Text className="text-white text-2xl font-urbanist-bold">Create Dispute</Text>
         <Text className="text-white  font-poppins-regular opacity-90">
           Report an issue with your consultation

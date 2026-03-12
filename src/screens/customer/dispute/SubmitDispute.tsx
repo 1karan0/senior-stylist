@@ -39,7 +39,7 @@ const SubmitDispute: React.FC<Props> = ({ navigation, route }) => {
   const [error, setError] = useState('');
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const { horizontalPadding } = useTabletLayout();
+  const { horizontalPadding, isTablet } = useTabletLayout();
   const handleBack = () => {
     navigation.goBack();
   };
@@ -107,7 +107,9 @@ const SubmitDispute: React.FC<Props> = ({ navigation, route }) => {
         <StatusBar translucent backgroundColor="#27B07D" barStyle="light-content" />
 
         {/* Header Section with Green Background */}
-        <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">
+        <View
+          className={`px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl ${isTablet ? '-mt-4' : '-mt-0'}`}
+        >
           <Text className="text-white text-2xl font-urbanist-bold mb-2">Submit a Request</Text>
           <Text className="text-white  font-poppins-regular opacity-90">
             Report an issue with your consultation

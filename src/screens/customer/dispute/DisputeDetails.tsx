@@ -66,7 +66,7 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
   const { disputeId } = route.params;
   const { isDark } = useTheme();
   const { user } = useAuth();
-  const { horizontalPadding } = useTabletLayout();
+  const { horizontalPadding, isTablet } = useTabletLayout();
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -245,7 +245,9 @@ const DisputeDetails: React.FC<Props> = ({ navigation, route }) => {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 70 : 0}
         >
           {/* Header */}
-          <View className="px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl">
+          <View
+            className={`px-6 pt-10 pb-5 bg-buttonPrimaryBg rounded-b-2xl ${isTablet ? '-mt-4' : '-mt-0'}`}
+          >
             <View className="flex-row items-center mb-2">
               <TouchableOpacity
                 onPress={handleBack}
