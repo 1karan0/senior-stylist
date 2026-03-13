@@ -126,8 +126,8 @@ android {
         applicationId "com.seniorstylist.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 26
-        versionName "1.2.1"
+        versionCode 28
+        versionName "1.2.3"
         missingDimensionStrategy "environment", "prod"
     }
     
