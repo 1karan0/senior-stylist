@@ -25,6 +25,9 @@ export interface StylistRequestListenerCallbacks {
   onError?: (error: Error) => void;
 }
 
+/** Type for the function returned by Firestore onSnapshot (and similar) to unsubscribe. */
+export type Unsubscribe = () => void;
+
 // React Native Firebase auto-initializes from google-services.json
 // Use getApp() to ensure Firebase is initialized (new API, non-deprecated)
 export const initializeFirebase = (): boolean => {

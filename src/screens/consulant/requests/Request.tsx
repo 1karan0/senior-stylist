@@ -1,15 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Text, View, Platform } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import RequestDetailsModal from './DetailsModal';
 import RequestList, { RequestItem } from './List';
 import { consultantConsultationsApi, ConsultantConsultation } from '@/api/consultant/consultations';
 import GradientBackground from '@/common/components/GradientBackground';
+import InfoModal from '@/common/components/modals/InfoModal';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { initializeFirebase, listenToStylistRequests, StylistRequest } from '@/services/firebase';
+import {
+  initializeFirebase,
+  listenToStylistRequests,
+  StylistRequest,
+  Unsubscribe,
+} from '@/services/firebase';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 const mapConsultationToRequestItem = (consultation: ConsultantConsultation): RequestItem => {
   const customerName = consultation.user?.name || 'Unknown User';
@@ -63,6 +69,7 @@ const Request: React.FC = () => {
   const [connected, setConnected] = useState(false);
   const [requirementsModal, setRequirementsModal] = useState<RequestItem | null>(null);
   const [acceptingId, setAcceptingId] = useState<number | null>(null);
+  const [errorModalMessage, setErrorModalMessage] = useState<string | null>(null);
   const unsubscribeRef = useRef<Unsubscribe | null>(null);
 
   useEffect(() => {
@@ -207,10 +214,11 @@ const Request: React.FC = () => {
         asCustomer: false, // Consultant view
       });
     } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        'Failed to accept the consultation. It might have been assigned already.';
-      Alert.alert('Unable to accept request', message);
+      const apiMessage = error?.response?.data?.message;
+      const fallbackMessage =
+        'Consultation Assigned. Thanks for responding. Another stylist was selected for this consultation. Please keep your app open as new consultations are sent out regularly.';
+      const message = apiMessage || fallbackMessage;
+      setErrorModalMessage(message);
     } finally {
       setAcceptingId(null);
     }
@@ -348,6 +356,15 @@ const Request: React.FC = () => {
             </View>
           </View>
         )}
+
+        <InfoModal
+          visible={Boolean(errorModalMessage)}
+          title="Unable to accept request"
+          message={errorModalMessage || ''}
+          variant="error"
+          onConfirm={() => setErrorModalMessage(null)}
+          onClose={() => setErrorModalMessage(null)}
+        />
       </View>
     </GradientBackground>
   );

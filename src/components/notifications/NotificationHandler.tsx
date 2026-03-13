@@ -43,7 +43,10 @@ const NotificationHandler: React.FC = () => {
   // Determine if user is a consultant
   const isConsultant = user?.role === 'consultant';
 
-  // Handle notification navigation
+  // Handle notification navigation:
+  // - new_request → stylist: Requests screen (RequestTab)
+  // - new_message → user or stylist: that consultation's chat (ConsultantChat)
+  // - consultation_completed → stylist: that completed consultation's chat (ConsultantChat)
   const handleNotification = (data: NotificationData) => {
     // Normalize data keys - support both snake_case and camelCase
     const consultationId = data.consultation_id || (data as any).consultationId;
@@ -63,26 +66,18 @@ const NotificationHandler: React.FC = () => {
 
     try {
       if (data.type === 'new_message' && consultationId) {
-        // Navigate to chat screen
+        // new_message: user or stylist → open that consultation's chat (consultations screen)
         const consultationIdStr = String(consultationId);
-        if (!consultationIdStr) {
-          console.error('🔔 [NOTIFICATION] Missing consultation_id in notification data');
-          return;
-        }
-
         const consultationIdNum = Number(consultationIdStr);
         if (isNaN(consultationIdNum) || consultationIdNum <= 0) {
           console.error('🔔 [NOTIFICATION] Invalid consultation_id:', consultationIdStr);
           return;
         }
 
-        // Set asCustomer based on user role: true for customers, false for consultants
         const asCustomer = !isConsultant;
-        console.log('🔔 [NOTIFICATION] Navigating to chat screen:', {
+        console.log('🔔 [NOTIFICATION] Navigating to consultation chat (new_message):', {
           consultationId: consultationIdNum,
-          consultationIdStr,
           userRole: user?.role,
-          isConsultant,
           asCustomer,
         });
 
@@ -90,17 +85,10 @@ const NotificationHandler: React.FC = () => {
           consultationId: consultationIdNum,
           asCustomer,
         });
-        console.log('🔔 [NOTIFICATION] Navigation to chat completed');
-      } else if (data.type === 'consultation_completed' && consultationId) {
-        // Navigate to chat screen for completed consultation (for consultants)
+        console.log('🔔 [NOTIFICATION] Navigation to consultation chat completed');
+      } else if (data.type === 'consultation_completed' && consultationId && isConsultant) {
+        // consultation_completed: stylist only → open that completed consultation's chat
         const consultationIdStr = String(consultationId);
-        if (!consultationIdStr) {
-          console.error(
-            '🔔 [NOTIFICATION] Missing consultation_id in consultation_completed notification'
-          );
-          return;
-        }
-
         const consultationIdNum = Number(consultationIdStr);
         if (isNaN(consultationIdNum) || consultationIdNum <= 0) {
           console.error('🔔 [NOTIFICATION] Invalid consultation_id:', consultationIdStr);
@@ -109,23 +97,17 @@ const NotificationHandler: React.FC = () => {
 
         console.log('🔔 [NOTIFICATION] Navigating to completed consultation:', {
           consultationId: consultationIdNum,
-          consultationIdStr,
-          userRole: user?.role,
-          isConsultant,
         });
 
-        // Navigate to chat screen (consultant view)
         navigation.navigate('ConsultantChat', {
           consultationId: consultationIdNum,
           asCustomer: false,
         });
         console.log('🔔 [NOTIFICATION] Navigation to completed consultation completed');
-      } else if (data.type === 'new_request' && requestId) {
-        // Navigate to requests screen (for consultants)
-        // RequestTab is nested inside ConsultantTabs
-        console.log('🔔 [NOTIFICATION] Navigating to requests screen:', { requestId });
+      } else if (data.type === 'new_request' && isConsultant) {
+        // new_request: stylist only → Requests screen
+        console.log('🔔 [NOTIFICATION] Navigating to requests screen');
         try {
-          // Try nested navigation first (if we're in AppStack)
           navigation.navigate(
             'ConsultantTabs' as never,
             {
@@ -134,7 +116,6 @@ const NotificationHandler: React.FC = () => {
           );
           console.log('🔔 [NOTIFICATION] Navigation to requests completed');
         } catch (error) {
-          // Fallback: try direct navigation (if we're already in ConsultantTabs)
           try {
             navigation.navigate('RequestTab' as never);
             console.log('🔔 [NOTIFICATION] Navigation to requests completed (direct)');
@@ -342,7 +323,7 @@ const NotificationHandler: React.FC = () => {
       }
       subscription.remove();
     };
-  }, [navigation]);
+  }, [navigation, user, isConsultant]);
 
   return null; // This component doesn't render anything
 };

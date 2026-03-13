@@ -25,6 +25,13 @@ try {
   }
 }
 
+/** Resolve numeric AuthorizationStatus to its enum key name for logging. */
+function getAuthorizationStatusName(status: number): string {
+  const statusObj = messaging.AuthorizationStatus as Record<string, number>;
+  const key = Object.keys(statusObj).find((k) => statusObj[k] === status);
+  return key ?? String(status);
+}
+
 // Create notification channel for Android (required for displaying notifications)
 const createNotificationChannel = async (): Promise<string | null> => {
   if (Platform.OS !== 'android') {
@@ -81,7 +88,7 @@ export const checkNotificationPermission = async (): Promise<boolean> => {
       console.log('[notifications] Current permission status:', {
         authStatus,
         enabled,
-        statusName: messaging.AuthorizationStatus[authStatus],
+        statusName: getAuthorizationStatusName(authStatus),
       });
     }
 
@@ -157,7 +164,7 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
       console.log('[notifications] FCM permission status:', {
         authStatus,
         enabled,
-        statusName: messaging.AuthorizationStatus[authStatus],
+        statusName: getAuthorizationStatusName(authStatus),
         platform: Platform.OS,
       });
     }
