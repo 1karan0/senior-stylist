@@ -4,12 +4,10 @@ import { useForm, Controller } from 'react-hook-form';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 
 import { useSignupApi } from '@/api/auth/useSignup';
-import { useGetSalons } from '@/api/auth/useGetSalons';
 
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import TextInputField from '@/common/components/TextInputField';
-import SearchableSelectField from '@/common/components/SearchableSelectField';
 import Toast from '@/common/components/Toast';
 import PhoneNumberInput from '@/common/components/PhoneNumberInput';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -45,12 +43,6 @@ export default function SignupScreen({ navigation, route }: any) {
   const signupMutation = useSignupApi();
   const isConsultant = user === 'consultant';
   const { horizontalPadding } = useTabletLayout();
-  const { data: salonsData } = useGetSalons();
-  const salonOptions =
-    salonsData?.data?.map((s: { id: number; name: string; code: string }) => ({
-      label: s.name,
-      value: s.code,
-    })) ?? [];
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     setToast({
       visible: true,
@@ -198,8 +190,8 @@ export default function SignupScreen({ navigation, route }: any) {
         }
         signupData.has_minimum_salon_experience = hasMinimumSalonExperience;
         signupData.is_tech_capable = isTechCapable;
-        if (belongsToSalon && form.salonCode?.trim()) {
-          signupData.salon_code = form.salonCode.trim();
+        if (belongsToSalon && form.salonName?.trim()) {
+          signupData.salon_name = form.salonName.trim();
         }
         if (form.referral?.trim()) {
           signupData.referral_code = form.referral.trim();
@@ -419,18 +411,18 @@ export default function SignupScreen({ navigation, route }: any) {
                 {belongsToSalon === true && (
                   <Controller
                     control={control}
-                    name="salonCode"
+                    name="salonName"
                     rules={{
-                      required: 'Please select a salon',
+                      required: 'Salon name is required',
+                      minLength: { value: 2, message: 'Salon name must be at least 2 characters' },
                     }}
                     render={({ field: { onChange, value } }) => (
-                      <SearchableSelectField
-                        label="Salon"
-                        placeholder="Search and select your salon"
-                        options={salonOptions}
+                      <TextInputField
+                        label="Salon Name"
+                        placeholder="Enter your salon name"
                         value={value ?? ''}
-                        onSelect={onChange}
-                        error={errors.salonCode?.message as string}
+                        onChangeText={onChange}
+                        error={errors.salonName?.message as string}
                       />
                     )}
                   />

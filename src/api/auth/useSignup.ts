@@ -24,6 +24,7 @@ interface ConsultantSignupData {
     type: string;
   };
   salon_code?: string;
+  salon_name?: string;
   referral_code?: string;
   photo_id?: {
     uri: string;
@@ -58,6 +59,9 @@ export const useSignupApi = () => {
           if ('salon_code' in data && data.salon_code) {
             formData.append('salon_code', data.salon_code);
           }
+          if ('salon_name' in data && data.salon_name) {
+            formData.append('salon_name', data.salon_name);
+          }
           if ('referral_code' in data && data.referral_code) {
             formData.append('referral_code', data.referral_code);
           }
@@ -79,6 +83,7 @@ export const useSignupApi = () => {
           const res = await axios.post(`${BASE_URL}/api/consultant/register`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
+          console.log('res.data===========', res.data);
           return res.data;
         } else {
           // Customer signup with JSON payload
