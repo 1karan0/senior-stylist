@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { BASE_URL } from '@/config';
 import { parseApiError } from '@/utils/parseApiError';
+import { storage } from '@/services/storage';
 
 export interface SubPlan {
   id: number;
@@ -63,8 +64,17 @@ export const useGetSubscriptionPlans = () => {
     queryKey: ['subscription-plans'],
     queryFn: async () => {
       try {
+        const token = await storage.getToken();
+        if (!token) throw new Error('Auth token missing');
+
         const res = await axios.get<SubscriptionPlansResponse>(
-          `${BASE_URL}/api/subscription-plans`
+          `${BASE_URL}/api/subscription-plans`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
         );
 
         return res.data.data;
