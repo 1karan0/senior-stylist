@@ -229,6 +229,7 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
         purchaseTokenAndroid = currentPurchaseToken;
         replacementModeAndroid = targetIndex > currentIndex ? 5 : 3;
       }
+      const obfuscatedAccountId = profileData?.user?.uuid ?? null;
 
       await RNIap.requestPurchase({
         type: 'subs',
@@ -241,10 +242,10 @@ export default function SubscriptionModal({ plan, onClose }: SubscriptionModalPr
                 offerToken: targetOffer.offerToken,
               },
             ],
-            obfuscatedAccountIdAndroid: profileData?.user?.uuid,
+            obfuscatedAccountId: obfuscatedAccountId,
             ...(purchaseTokenAndroid && {
-              purchaseTokenAndroid,
-              replacementModeAndroid,
+              purchaseToken: purchaseTokenAndroid,
+              replacementMode: replacementModeAndroid,
             }),
           } as any,
         },
