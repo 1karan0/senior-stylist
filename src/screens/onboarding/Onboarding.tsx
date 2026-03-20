@@ -63,7 +63,7 @@ const OnboardingScreen = ({ navigation }: any) => {
       <SafeAreaView edges={['bottom', 'left', 'right']}>
         <View className="">
           {/* DOTS */}
-          <View className="flex-row justify-center z-10 mb-5">
+          <View className="flex-row justify-center z-10 mb-7">
             {onboardData.map((_, i) => (
               <View
                 key={i}

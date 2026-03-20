@@ -505,7 +505,7 @@ export default function SignupScreen({ navigation, route }: any) {
                   <Text
                     className={`font-medium mb-3 text-[14px] ${isDark ? 'text-[#ffff]' : 'text-black'} mb-2`}
                   >
-                    10+ Years Salon Experience
+                    5-10 Years Salon Experience
                     <Text className="text-red-500"> *</Text>
                   </Text>
                   <View className="flex-row gap-3 w-[100%] items-center justify-center ">
