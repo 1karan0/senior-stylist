@@ -144,6 +144,13 @@ export default function PricingScreen() {
     const sortedPlans = platformFilteredPlans.sort((a, b) => a.sort_order - b.sort_order);
 
     const mappedPlans = sortedPlans.map((plan: SubscriptionPlan) => {
+      // On iOS, if the discount duration is 6 months, show an offer-labeled plan title.
+      // On Android, always show the original plan name regardless of discount duration.
+      const displayTitle =
+        Platform.OS === 'ios' && plan.discount_duration_months === 6
+          ? `${plan.name} (6-Month Intro)`
+          : plan.name;
+
       // Helper function to remove decimals from price
       const formatPriceWithoutDecimals = (priceString: string): string => {
         const priceMatch = priceString.match(/£?([\d,]+\.?\d*)/);
@@ -167,7 +174,7 @@ export default function PricingScreen() {
 
       const planDisplay = {
         key: plan.slug,
-        title: plan.name,
+        title: displayTitle,
         price: formattedPrice, // Just the price number without decimals
         priceSub: `${plan.monthly_price_formatted}/month`, // Kept for SubscriptionModal compatibility
         priceWithConsultations, // Full price line with consultations
@@ -191,6 +198,20 @@ export default function PricingScreen() {
     // Return only API plans (no hardcoded plans)
     return mappedPlans;
   }, [subscriptionPlans]);
+
+  const referralOfferText =
+    plans[0]?.discountDurationMonths === 6
+      ? 'Exclusive referral offer: 50% off for 6 months'
+      : `Introductory offer: 50% off for first ${plans[0]?.discountDurationMonths ?? 0} months`;
+
+  const referralOfferSubtitleText =
+    plans[0]?.discountDurationMonths === 6
+      ? Platform.OS === 'ios'
+        ? 'Exclusive referral offer available for eligible Apple IDs. Apple determines eligibility.'
+        : 'Exclusive referral offer available for eligible Google accounts. Eligibility is determined by Google Play.'
+      : Platform.OS === 'ios'
+        ? 'Introductory offer available for eligible Apple IDs. Apple determines eligibility.'
+        : 'Introductory offer available for eligible Google accounts. Eligibility is determined by Google Play.';
 
   // Profile API is the source of truth for subscription status.
   useEffect(() => {
@@ -243,17 +264,14 @@ export default function PricingScreen() {
         <View className="mt-2 items-center">
           <View className="bg-[#E7B008] rounded-xl py-2 px-4 w-60">
             <Text className="text-center text-base font-urbanist-bold text-white">
-              Introductory offer: 50% off for first {plans[0]?.discountDurationMonths ?? 0} months
+              {referralOfferText}
               {/* {Platform.OS === 'ios'
                 ? 'Available for eligible Apple IDs. Apple determines eligibility.'
                 : 'Available for eligible Google accounts. Eligibility is determined by Google Play.'} */}
             </Text>
           </View>
           <Text className="w-80 text-center text-[10px] text-textMuted mt-2 font-poppins-regular">
-            {/* Introductory offer available for eligible Apple IDs. Apple determines eligibility. */}
-            {Platform.OS === 'ios'
-              ? 'Introductory offer available for eligible Apple IDs. Apple determines eligibility.'
-              : 'Introductory offer available for eligible Google accounts. Eligibility is determined by Google Play.'}
+            {referralOfferSubtitleText}
           </Text>
         </View>
 
