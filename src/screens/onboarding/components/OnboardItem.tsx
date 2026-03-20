@@ -39,11 +39,11 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
         style={{
           position: 'absolute',
           // Use dynamic height so this reacts correctly when rotating.
-          top: screenHeight * (isLandscape ? 0.4 : 0.6),
+          top: screenHeight * (isLandscape ? 0.6 : 0.6),
           left: 0,
           right: 0,
           width: '100%',
-          height: screenHeight * (isLandscape ? 0.4 : 0.3),
+          height: screenHeight * (isLandscape ? 0.2 : 0.3),
           paddingHorizontal: 10,
           paddingTop: 30,
           borderTopLeftRadius: 30,
@@ -61,9 +61,9 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
         </Text>
 
         <Text
-          className={`text-base font-poppins-normal px-6 text-center leading-6 ${
+          className={`text-base font-poppins-normal  text-center leading-6 ${
             isDark ? 'text-textMuted' : 'text-[#8AA897]'
-          }`}
+          } ${isLandscape ? 'px-24' : 'px-6'}`}
         >
           {item.description}
         </Text>
