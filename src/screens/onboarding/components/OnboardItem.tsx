@@ -44,8 +44,8 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
           right: 0,
           width: '100%',
           height: screenHeight * (isLandscape ? 0.4 : 0.3),
-          paddingHorizontal: 20,
-          paddingTop: 40,
+          paddingHorizontal: 10,
+          paddingTop: 30,
           borderTopLeftRadius: 30,
           borderTopRightRadius: 30,
           overflow: 'hidden',
@@ -61,7 +61,7 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
         </Text>
 
         <Text
-          className={`text-base font-poppins-regular text-center px-6 leading-6 ${
+          className={`text-base font-poppins-normal px-6 text-center leading-6 ${
             isDark ? 'text-textMuted' : 'text-[#8AA897]'
           }`}
         >

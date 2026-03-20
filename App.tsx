@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './global.css';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -55,15 +56,17 @@ const AppContent = () => {
   return (
     <ThemeProvider>
       <AdProvider>
-        <AuthProvider>
-          <NavigationContainer>
-            <View className="flex-1 bg-white dark:bg-black">
-              <AppNavigator />
-              <PurchaseVerificationRecovery />
-              <NotificationHandler />
-            </View>
-          </NavigationContainer>
-        </AuthProvider>
+        <SafeAreaProvider>
+          <AuthProvider>
+            <NavigationContainer>
+              <View className="flex-1 bg-white dark:bg-black">
+                <AppNavigator />
+                <PurchaseVerificationRecovery />
+                <NotificationHandler />
+              </View>
+            </NavigationContainer>
+          </AuthProvider>
+        </SafeAreaProvider>
       </AdProvider>
     </ThemeProvider>
   );
