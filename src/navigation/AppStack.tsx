@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
+import { AppStackParamList } from '@/common/types';
+import { useAuth } from '@/contexts/AuthContext';
+
 import UserTabNavigator from '@/navigation/UserTabNavigator';
 import ConsultantTabNavigator from '@/navigation/ConsultantTabNavigator';
 import PricingScreen from '@/screens/pricing/Pricing';
 import ConsultantChatScreen from '@/screens/consulant/chat/Conversation';
-import { AppStackParamList } from '@/common/types';
-import { useAuth } from '@/contexts/AuthContext';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -15,11 +18,18 @@ const AppStack: React.FC = () => {
   const [initialRoute, setInitialRoute] = useState<keyof AppStackParamList | undefined>(undefined);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(true);
 
+  const needsProfileForSubscription = Boolean(user) && !isGuest && userRole !== 'consultant';
+
+  const { data: profileData, isLoading: isProfileLoading } = useGetProfile({
+    enabled: needsProfileForSubscription,
+  });
+
+  const subscription = profileData?.subscription ?? null;
+  const hasActiveSubscription = !!subscription;
+
   // Determine initial route based on user role and subscription status
   useEffect(() => {
     const determineInitialRoute = () => {
-      console.log('user', user);
-
       // For guest users, go to UserTabs (which will show StoreTab)
       if (!user && isGuest) {
         setInitialRoute('UserTabs');
@@ -39,9 +49,10 @@ const AppStack: React.FC = () => {
         return;
       }
 
-      // For customers: Check active_subscription from user object
-      const activeSubscription = (user as any)?.active_subscription;
-      const hasActiveSubscription = !!activeSubscription;
+      // Customers: wait for profile — otherwise subscription is undefined and we incorrectly pick Pricing
+      if (needsProfileForSubscription && isProfileLoading) {
+        return;
+      }
 
       if (hasActiveSubscription) {
         setInitialRoute('UserTabs');
@@ -54,7 +65,14 @@ const AppStack: React.FC = () => {
     };
 
     determineInitialRoute();
-  }, [user, userRole]);
+  }, [
+    user,
+    isGuest,
+    userRole,
+    needsProfileForSubscription,
+    isProfileLoading,
+    hasActiveSubscription,
+  ]);
 
   // Note: We use initialRouteName to set Pricing as the initial route
   // React Navigation handles the navigation automatically, no manual navigation needed
