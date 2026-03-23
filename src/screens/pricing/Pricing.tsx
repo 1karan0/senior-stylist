@@ -41,6 +41,25 @@ interface PlanDisplay {
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'Pricing'>;
 
+/** iOS + 6‑month discount: show Creator-branded titles; Android keeps API `name`. */
+function getIosSixMonthCreatorDisplayTitle(plan: SubscriptionPlan): string {
+  const slug = plan.slug.toLowerCase();
+  const nameLower = plan.name.toLowerCase();
+
+  const isBusiness = slug.includes('business') || nameLower.includes('business');
+  const isProfessional =
+    slug.includes('professional') ||
+    nameLower.includes('professional') ||
+    /\bpro\b/.test(slug) ||
+    /^pro$/i.test(plan.name.trim());
+  const isStarter = slug.includes('starter') || nameLower.includes('starter');
+
+  if (isBusiness) return 'Business Creator';
+  if (isProfessional) return 'Pro Creator';
+  if (isStarter) return 'Creator Starter';
+  return plan.name;
+}
+
 export default function PricingScreen() {
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<PlanDisplay | null>(null);
@@ -144,11 +163,11 @@ export default function PricingScreen() {
     const sortedPlans = platformFilteredPlans.sort((a, b) => a.sort_order - b.sort_order);
 
     const mappedPlans = sortedPlans.map((plan: SubscriptionPlan) => {
-      // On iOS, if the discount duration is 6 months, show an offer-labeled plan title.
-      // On Android, always show the original plan name regardless of discount duration.
+      // iOS + 6‑month discount: Starter → Creator Starter, Professional → Pro Creator, Business → Business Creator.
+      // Android (or other durations): keep API plan name.
       const displayTitle =
         Platform.OS === 'ios' && plan.discount_duration_months === 6
-          ? `${plan.name} (6-Month Intro)`
+          ? getIosSixMonthCreatorDisplayTitle(plan)
           : plan.name;
 
       // Helper function to remove decimals from price
@@ -199,19 +218,12 @@ export default function PricingScreen() {
     return mappedPlans;
   }, [subscriptionPlans]);
 
-  const referralOfferText =
-    plans[0]?.discountDurationMonths === 6
-      ? 'Exclusive referral offer: 50% off for 6 months'
-      : `Introductory offer: 50% off for first ${plans[0]?.discountDurationMonths ?? 0} months`;
+  const referralOfferText = `Introductory offer: 50% off for first ${plans[0]?.discountDurationMonths ?? 0} months`;
 
   const referralOfferSubtitleText =
-    plans[0]?.discountDurationMonths === 6
-      ? Platform.OS === 'ios'
-        ? 'Exclusive referral offer available for eligible Apple IDs. Apple determines eligibility.'
-        : 'Exclusive referral offer available for eligible Google accounts. Eligibility is determined by Google Play.'
-      : Platform.OS === 'ios'
-        ? 'Introductory offer available for eligible Apple IDs. Apple determines eligibility.'
-        : 'Introductory offer available for eligible Google accounts. Eligibility is determined by Google Play.';
+    Platform.OS === 'ios'
+      ? 'Introductory offer available for eligible Apple IDs. Apple determines eligibility.'
+      : 'Introductory offer available for eligible Google accounts. Eligibility is determined by Google Play.';
 
   // Profile API is the source of truth for subscription status.
   useEffect(() => {
