@@ -25,21 +25,21 @@ const OnboardingScreen = ({ navigation }: any) => {
   };
 
   // Auto-slide
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPage((prev) => {
-        if (prev < onboardData.length - 1) {
-          pagerRef.current?.setPage(prev + 1);
-          return prev + 1;
-        } else {
-          clearInterval(interval);
-          return prev;
-        }
-      });
-    }, 3500);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setPage((prev) => {
+  //       if (prev < onboardData.length - 1) {
+  //         pagerRef.current?.setPage(prev + 1);
+  //         return prev + 1;
+  //       } else {
+  //         clearInterval(interval);
+  //         return prev;
+  //       }
+  //     });
+  //   }, 3500);
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   return (
     <View
