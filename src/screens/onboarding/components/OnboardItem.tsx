@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, Image, ImageSourcePropType, useWindowDimensions } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  ImageSourcePropType,
+  useWindowDimensions,
+  Platform,
+} from 'react-native';
 
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
@@ -39,11 +46,19 @@ const OnboardItem: React.FC<Props> = ({ item }) => {
         style={{
           position: 'absolute',
           // Use dynamic height so this reacts correctly when rotating.
-          top: screenHeight * (isLandscape ? 0.6 : 0.6),
+          top:
+            screenHeight *
+            (isLandscape
+              ? typeof Platform.Version === 'number' && Platform.Version < 33
+                ? 0.2
+                : 0.3
+              : typeof Platform.Version === 'number' && Platform.Version < 33
+                ? 0.5
+                : 0.6),
           left: 0,
           right: 0,
           width: '100%',
-          height: screenHeight * (isLandscape ? 0.2 : 0.3),
+          height: screenHeight * (isLandscape ? 0.9 : 0.3),
           paddingHorizontal: 10,
           paddingTop: 30,
           borderTopLeftRadius: 30,
