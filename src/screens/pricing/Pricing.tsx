@@ -54,9 +54,9 @@ function getIosSixMonthCreatorDisplayTitle(plan: SubscriptionPlan): string {
     /^pro$/i.test(plan.name.trim());
   const isStarter = slug.includes('starter') || nameLower.includes('starter');
 
-  if (isBusiness) return 'Business Creator';
-  if (isProfessional) return 'Pro Creator';
-  if (isStarter) return 'Creator Starter';
+  if (isBusiness) return 'Business';
+  if (isProfessional) return 'Professional';
+  if (isStarter) return 'Starter';
   return plan.name;
 }
 
