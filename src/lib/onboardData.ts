@@ -15,14 +15,14 @@ const onboardData = [
   },
   {
     id: 2,
-    title: 'Because You Deserve to Be Seen',
+    title: 'Because you deserve to be seen',
     description:
       "We believe the right connection changes everything. That’s why we provide direct access to the beauty sector's most seasoned experts—to bring your unique vision to life.",
     image: require('@/assets/images/second-screen.jpg'),
   },
   {
     id: 3,
-    title: 'Professional Care, Curated for You',
+    title: 'Professional care, curated for you',
     description:
       'We believe your hair deserves the same standard of care at home as it gets in the chair. Access the elite tools and products chosen by our Senior Stylists to keep your vision alive every single day.',
     image: require('@/assets/images/third-screen.jpg'),
