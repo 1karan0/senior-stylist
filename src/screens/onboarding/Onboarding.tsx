@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StatusBar, Platform, useWindowDimensions } from 'react-native';
+import { View, StatusBar, Platform } from 'react-native';
 import PagerView from 'react-native-pager-view';
 
 import Button from '@/common/components/Button';
-import GradientBackground from '@/common/components/GradientBackground';
 import OnboardItem from './components/OnboardItem';
 import { useTheme } from '@/contexts/ThemeContext';
 import onboardData from '@/lib/onboardData';
@@ -14,7 +13,6 @@ const OnboardingScreen = ({ navigation }: any) => {
   const pagerRef = useRef<PagerView>(null);
   const [page, setPage] = useState(0);
   const { isDark } = useTheme();
-  const { height: screenHeight } = useWindowDimensions();
   const { isTablet, isLandscape } = useTabletLayout();
   const isTabletLandscape = isTablet && isLandscape;
   const isTabletPortrait = isTablet && !isLandscape;
@@ -110,7 +108,7 @@ const OnboardingScreen = ({ navigation }: any) => {
                 paddingBottom: isTabletPortrait ? 18 : isLandscape ? (isTablet ? 12 : 1) : 5,
               }}
             >
-              {page !== onboardData.length - 1 && (
+              {/* {page !== onboardData.length - 1 && (
                 <Button
                   text="Skip"
                   variant="light"
@@ -118,22 +116,16 @@ const OnboardingScreen = ({ navigation }: any) => {
                   className={`w-[160px]  ${isDark ? 'bg-[#0E1B17] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'} rounded-2xl border`}
                   textClassName={`${isDark ? 'text-[#ffffff]' : 'text-[#162721]'} ${isTabletPortrait ? 'text-xl' : 'text-base'} font-urbanist-bold`}
                 />
-              )}
+              )} */}
 
               <Button
                 text={page === onboardData.length - 1 ? 'Elevate my routine' : 'Next'}
                 variant="gradient"
                 onPress={goNext}
                 className={`${
-                  page === onboardData.length - 1
-                    ? isTabletPortrait
-                      ? 'w-[68%]'
-                      : isLandscape
-                        ? 'px-24 w-[70%]'
-                        : 'px-3 w-full'
-                    : 'w-[160px]'
+                  isLandscape ? 'px-24 w-[70%]' : isTabletPortrait ? 'w-[60%]' : 'w-[68%]'
                 } rounded-2xl`}
-                textClassName={`${isTabletPortrait && page === onboardData.length - 1 ? 'text-xl font-urbanist-bold' : `${isTabletPortrait ? 'text-xl' : 'text-base'}`}`}
+                textClassName={`${isTabletPortrait ? 'text-xl font-urbanist-bold' : `${isTabletPortrait ? 'text-xl' : 'text-base'}`}`}
               />
             </View>
           </View>

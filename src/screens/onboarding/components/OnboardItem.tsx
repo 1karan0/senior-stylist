@@ -111,7 +111,7 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
                   }`}
                   style={{ paddingBottom: 12 }}
                 >
-                  {!isLastPage && (
+                  {/* {!isLastPage && (
                     <Button
                       text="Skip"
                       variant="light"
@@ -119,13 +119,14 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
                       className={`w-[160px] ${isDark ? 'bg-[#0E1B17] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'} rounded-2xl border`}
                       textClassName={`${isDark ? 'text-[#ffffff]' : 'text-[#162721]'} text-base font-urbanist-bold`}
                     />
-                  )}
+                  )} */}
 
                   <Button
                     text={isLastPage ? 'Elevate my routine' : 'Next'}
                     variant="gradient"
                     onPress={onNext}
-                    className={`${isLastPage ? 'w-[80%]' : 'w-[160px]'} rounded-2xl`}
+                    className={`w-full rounded-2xl`}
+                    textClassName={`text-xl`}
                   />
                 </View>
               </View>
@@ -155,7 +156,7 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
                 screenHeight *
                 (isLandscape
                   ? Platform.OS === 'ios'
-                    ? 0.45
+                    ? 0.4
                     : lessThanAndroid13
                       ? 0.36
                       : 0.45
@@ -163,7 +164,9 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
                     ? 0.61
                     : lessThanAndroid13
                       ? 0.54
-                      : 0.63),
+                      : Platform.OS === 'ios'
+                        ? 0.61
+                        : 0.63),
               left: 0,
               right: 0,
               width: '100%',
