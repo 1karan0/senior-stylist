@@ -154,9 +154,11 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
               top:
                 screenHeight *
                 (isLandscape
-                  ? lessThanAndroid13
-                    ? 0.36
-                    : 0.52
+                  ? Platform.OS === 'ios'
+                    ? 0.45
+                    : lessThanAndroid13
+                      ? 0.36
+                      : 0.52
                   : isTabletPortrait
                     ? 0.61
                     : lessThanAndroid13
