@@ -158,7 +158,7 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
                     ? 0.45
                     : lessThanAndroid13
                       ? 0.36
-                      : 0.52
+                      : 0.45
                   : isTabletPortrait
                     ? 0.61
                     : lessThanAndroid13
