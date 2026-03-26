@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, Image, ImageSourcePropType, useWindowDimensions } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  ImageSourcePropType,
+  useWindowDimensions,
+  Platform,
+} from 'react-native';
 
 import Button from '@/common/components/Button';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -26,6 +33,7 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
   const isTabletLandscape = isTablet && isLandscape;
   const isTabletPortrait = isTablet && !isLandscape;
   const isLastPage = page === totalPages - 1;
+  const lessThanAndroid13 = Platform.OS === 'android' && Platform.Version < 33;
 
   return (
     <View className="flex-1 relative">
@@ -143,13 +151,25 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
           <View
             style={{
               position: 'absolute',
-              top: screenHeight * (isLandscape ? 0.52 : isTabletPortrait ? 0.61 : 0.63),
+              top:
+                screenHeight *
+                (isLandscape
+                  ? lessThanAndroid13
+                    ? 0.36
+                    : 0.52
+                  : isTabletPortrait
+                    ? 0.61
+                    : lessThanAndroid13
+                      ? 0.54
+                      : 0.63),
               left: 0,
               right: 0,
               width: '100%',
-              height: screenHeight * (isLandscape ? 0.45 : isTabletPortrait ? 0.34 : 0.3),
+              height:
+                screenHeight *
+                (isLandscape ? 0.45 : isTabletPortrait ? 0.34 : lessThanAndroid13 ? 0.4 : 0.3),
               paddingHorizontal: isTabletPortrait ? 20 : 12,
-              paddingTop: isLandscape ? 14 : isTabletPortrait ? 34 : 25,
+              paddingTop: isLandscape ? 14 : isTabletPortrait ? 34 : lessThanAndroid13 ? 15 : 25,
               borderTopLeftRadius: 30,
               borderTopRightRadius: 30,
               overflow: 'hidden',
