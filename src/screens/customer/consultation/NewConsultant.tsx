@@ -28,6 +28,7 @@ import {
 } from '@/utils/imagePermissions';
 import { useFindingStylistModal } from '@/contexts/FindingStylistModalContext';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
+import ActiveStylist from '@/common/components/ActiveStylists';
 const NewConsultant = ({ navigation }: any) => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -242,7 +243,8 @@ const NewConsultant = ({ navigation }: any) => {
             <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} -mt-3 mb-4`}>
               Tell us about your styling needs
             </Text>
-
+            {/* Active stylist count */}
+            <ActiveStylist />
             {/* Card */}
             <View
               className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-gray-100'} rounded-md p-5 border `}
