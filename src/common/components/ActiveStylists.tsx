@@ -1,9 +1,11 @@
 import { Text, View } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useState } from 'react';
-
+import { useGetAvailableStylists } from '@/api/user/consultation/useGetAvailableStylists';
 const ActiveStylist = () => {
-  const [activeStylistCount] = useState<number | null>(null);
+  const { data: availableStylists } = useGetAvailableStylists();
+  const activeStylistCount = availableStylists?.total_online_consultants || 0;
+  const message = availableStylists?.message || '';
   const { isDark } = useTheme();
   return (
     <View>
@@ -16,8 +18,8 @@ const ActiveStylist = () => {
           />
           <Text className={`font-semibold  ${isDark ? 'text-white' : 'text-textDark'}`}>
             {activeStylistCount && activeStylistCount > 0
-              ? `${activeStylistCount} Stylists Available`
-              : 'No Stylists Available'}
+              ? `${activeStylistCount} ${message}`
+              : message}
           </Text>
         </View>
       </View>
