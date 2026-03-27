@@ -17,9 +17,9 @@ const ActiveStylist = () => {
             className={`w-3 h-3 ${!activeStylistCount ? 'bg-[#7d8a86]' : 'bg-[#66cb76]'} rounded-full`}
           />
           <Text className={`font-semibold  ${isDark ? 'text-white' : 'text-textDark'}`}>
-            {activeStylistCount && activeStylistCount > 0
+            {activeStylistCount && activeStylistCount >= 0
               ? `${activeStylistCount} ${message}`
-              : message}
+              : `No ${message}`}
           </Text>
         </View>
       </View>
