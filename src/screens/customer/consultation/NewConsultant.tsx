@@ -96,6 +96,8 @@ const NewConsultant = ({ navigation }: any) => {
         quality: 0.8,
         saveToPhotos: false,
         includeBase64: true,
+        maxWidth: 1000,
+        maxHeight: 1000,
       });
 
       if (result.didCancel) return;
@@ -129,11 +131,24 @@ const NewConsultant = ({ navigation }: any) => {
 
       const result = await launchImageLibrary({
         mediaType: 'photo',
+        selectionLimit: 1,
         quality: 0.8,
         includeBase64: true,
+        maxWidth: 1000,
+        maxHeight: 1000,
       });
 
       if (result.didCancel) return;
+      const toMB = (bytes?: number) => (bytes ? (bytes / (1024 * 1024)).toFixed(2) : null);
+      console.log('[chat image picked]', {
+        fileSizeBytes: result?.assets?.[0]?.fileSize,
+        fileSizeMB: toMB(result?.assets?.[0]?.fileSize),
+        width: result?.assets?.[0]?.width,
+        height: result?.assets?.[0]?.height,
+        type: result?.assets?.[0]?.type,
+        fileName: result?.assets?.[0]?.fileName,
+        hasBase64: !!result?.assets?.[0]?.base64,
+      });
 
       // Handle permission errors
       if (

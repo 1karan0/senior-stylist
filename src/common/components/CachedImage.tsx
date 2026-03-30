@@ -94,7 +94,7 @@ const CachedImage: React.FC<CachedImageProps> = ({
       />
       {loading ? (
         <View style={styles.loader} pointerEvents="none">
-          <ActivityIndicator size="small" color="#27B07D" />
+          <ActivityIndicator size="large" color="#27B07D" />
         </View>
       ) : null}
     </View>

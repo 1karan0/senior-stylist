@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-  ActionSheetIOS,
-  Alert,
-  Platform,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Image,
-} from 'react-native';
+import { Platform, TextInput, TouchableOpacity, View, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { launchCamera, launchImageLibrary, Asset } from 'react-native-image-picker';
@@ -17,6 +9,7 @@ import {
   requestPhotoLibraryPermission,
   showPermissionDeniedAlert,
 } from '@/utils/imagePermissions';
+import ImagePickerModal from '@/common/components/modals/ImagePickerModal';
 
 interface ChatInputProps {
   onSend: (message: string, imageUri?: string) => void;
@@ -32,6 +25,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const insets = useSafeAreaInsets();
   const [message, setMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isPickerVisible, setIsPickerVisible] = useState(false);
+  const [pickerLoading, setPickerLoading] = useState(false);
 
   const { isDark } = useTheme();
 
@@ -68,6 +63,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   const pickFromLibrary = async () => {
     try {
+      setPickerLoading(true);
       // Request photo library permission before opening gallery
       const hasPermission = await requestPhotoLibraryPermission();
       if (!hasPermission && Platform.OS === 'android') {
@@ -80,6 +76,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         selectionLimit: 1,
         quality: 0.8,
         includeBase64: true,
+        maxWidth: 1000,
+        maxHeight: 1000,
       });
 
       // Handle permission errors
@@ -94,11 +92,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
       handlePickerResult(result.assets?.[0]);
     } catch (error) {
       console.error('Error picking from library:', error);
+    } finally {
+      setPickerLoading(false);
     }
   };
 
   const takePhoto = async () => {
     try {
+      setPickerLoading(true);
       // Request camera permission before opening camera
       const hasPermission = await requestCameraPermission();
       if (!hasPermission && Platform.OS === 'android') {
@@ -111,6 +112,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         quality: 0.8,
         saveToPhotos: false,
         includeBase64: true,
+        maxWidth: 1000,
+        maxHeight: 1000,
       });
 
       // Handle permission errors
@@ -125,6 +128,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
       handlePickerResult(result.assets?.[0]);
     } catch (error) {
       console.error('Error taking photo:', error);
+    } finally {
+      setPickerLoading(false);
     }
   };
 
@@ -132,25 +137,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     if (disabled) {
       return;
     }
-
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Cancel', 'Take Photo', 'Choose from Library'],
-          cancelButtonIndex: 0,
-        },
-        (index) => {
-          if (index === 1) takePhoto();
-          if (index === 2) pickFromLibrary();
-        }
-      );
-    } else {
-      Alert.alert('Add attachment', 'Choose an option', [
-        { text: 'Take Photo', onPress: takePhoto },
-        { text: 'Choose from Library', onPress: pickFromLibrary },
-        { text: 'Cancel', style: 'cancel' },
-      ]);
-    }
+    setIsPickerVisible(true);
   };
 
   return (
@@ -160,6 +147,20 @@ const ChatInput: React.FC<ChatInputProps> = ({
         paddingBottom: Platform.OS === 'ios' ? 0 : Math.max(insets.bottom, 12),
       }}
     >
+      <ImagePickerModal
+        visible={isPickerVisible}
+        loading={pickerLoading}
+        onClose={() => setIsPickerVisible(false)}
+        onCamera={() => {
+          setIsPickerVisible(false);
+          takePhoto();
+        }}
+        onGallery={() => {
+          setIsPickerVisible(false);
+          pickFromLibrary();
+        }}
+      />
+
       {selectedImage ? (
         <View className="mb-3 relative">
           <Image source={{ uri: selectedImage }} className="w-[100px] h-[100px] rounded-xl" />
