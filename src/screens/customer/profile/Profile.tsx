@@ -22,6 +22,7 @@ import { useIsFocused } from '@react-navigation/native';
 
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import Button from '@/common/components/Button';
+import InfoModal from '@/common/components/modals/InfoModal';
 import GradientBackground from '@/common/components/GradientBackground';
 import { CancelSubscriptionModal } from '@/common/components/modals/CancelSubscriptionModal';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
@@ -30,6 +31,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { restorePurchase, type RestorePurchasePayload } from '@/api/subscription/verifyPurchase';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
+import ActiveStylist from '@/common/components/ActiveStylists';
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 interface Props {
@@ -54,6 +56,15 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const [isRestoring, setIsRestoring] = useState(false);
   const scaleAnim = useState(new Animated.Value(1))[0];
   const fadeAnim = useState(new Animated.Value(0))[0];
+  const [restoreMessage, setRestoreMessage] = useState('');
+  const [restoreModalVariant, setRestoreModalVariant] = useState<
+    'success' | 'error' | 'info' | 'warning'
+  >('info');
+
+  const dismissRestoreModal = () => {
+    setRestoreMessage('');
+    setRestoreModalVariant('info');
+  };
 
   const user = profileData?.user as ProfileUser;
   const subscription = profileData?.subscription;
@@ -183,10 +194,8 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       const availablePurchases = await RNIap.getAvailablePurchases();
 
       if (!availablePurchases || availablePurchases.length === 0) {
-        Alert.alert(
-          'No History Found',
-          "We couldn't find any previous purchases for this account."
-        );
+        setRestoreModalVariant('info');
+        setRestoreMessage("We couldn't find any previous purchases for this account.");
         return;
       }
 
@@ -206,14 +215,23 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           // ✅ MUST finish transaction on BOTH platforms in 2026
           await finishTransaction({ purchase, isConsumable: false });
 
-          Alert.alert('Restored', 'Your subscription has been successfully restored.');
+          setRestoreModalVariant('success');
+          setRestoreMessage('Your subscription has been successfully restored.');
+          return;
+        } else {
+          setRestoreModalVariant('error');
+          setRestoreMessage('Failed to restore subscription. Please try again.');
           return;
         }
       }
     } catch (error: any) {
-      // Check for user cancellation to avoid showing "Error" alerts
       if (error.code !== 'E_USER_CANCELLED') {
-        Alert.alert('Restore Error', error.message);
+        setRestoreModalVariant('error');
+        setRestoreMessage(
+          typeof error?.message === 'string'
+            ? error.message
+            : 'Something went wrong. Please try again.'
+        );
       }
     } finally {
       setIsRestoring(false);
@@ -289,6 +307,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}
         >
+          <ActiveStylist />
           {/* ---------- Profile Card ---------- */}
           <View
             className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  rounded-2xl p-4 border`}
@@ -800,6 +819,14 @@ const Profile: React.FC<Props> = ({ navigation }) => {
         onClose={() => setShowCancelModal(false)}
         onConfirm={handleCancelSubscription}
         isLoading={isCancelling}
+      />
+      <InfoModal
+        visible={!!restoreMessage}
+        onClose={dismissRestoreModal}
+        onConfirm={dismissRestoreModal}
+        title="Restore Purchase"
+        message={restoreMessage}
+        variant={restoreModalVariant}
       />
     </GradientBackground>
   );

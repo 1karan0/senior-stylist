@@ -27,14 +27,14 @@
     "_developerTeamID" : "VZS82HCU5Z",
     "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
-    "_lastSynchronizedDate" : 795942104.86313903,
-    "_locale" : "en_US",
+    "_lastSynchronizedDate" : 796629863.831141,
+    "_locale" : "hi",
     "_renewalBillingIssuesEnabled" : true,
-    "_storefront" : "GBR",
+    "_storefront" : "IND",
     "_storeKitErrors" : [
 
     ],
-    "_timeRate" : 13
+    "_timeRate" : 15
   },
   "subscriptionGroups" : [
     {
@@ -51,13 +51,13 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "24.0",
+          "displayPrice" : "3499.0",
           "familyShareable" : false,
           "groupNumber" : 3,
           "internalID" : "6757796681",
           "introductoryOffer" : {
-            "displayPrice" : "12.0",
-            "internalID" : "E9D9F6A3",
+            "displayPrice" : "1749.0",
+            "internalID" : "1AA56445",
             "numberOfPeriods" : 3,
             "paymentMode" : "payAsYouGo",
             "subscriptionPeriod" : "P1M"
@@ -85,13 +85,13 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "24.0",
+          "displayPrice" : "3499.0",
           "familyShareable" : false,
           "groupNumber" : 6,
           "internalID" : "6760957607",
           "introductoryOffer" : {
-            "displayPrice" : "12.0",
-            "internalID" : "7BDA5D65",
+            "displayPrice" : "1749.0",
+            "internalID" : "1D0B3B27",
             "numberOfPeriods" : 6,
             "paymentMode" : "payAsYouGo",
             "subscriptionPeriod" : "P1M"
@@ -119,13 +119,13 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "14.49",
+          "displayPrice" : "2050.0",
           "familyShareable" : false,
           "groupNumber" : 4,
           "internalID" : "6760839178",
           "introductoryOffer" : {
-            "displayPrice" : "7.29",
-            "internalID" : "7F0C4C5D",
+            "displayPrice" : "1039.0",
+            "internalID" : "349DE129",
             "numberOfPeriods" : 6,
             "paymentMode" : "payAsYouGo",
             "subscriptionPeriod" : "P1M"
@@ -153,13 +153,13 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "19.49",
+          "displayPrice" : "2799.0",
           "familyShareable" : false,
           "groupNumber" : 5,
           "internalID" : "6760955800",
           "introductoryOffer" : {
-            "displayPrice" : "9.69",
-            "internalID" : "8D2A58EF",
+            "displayPrice" : "1329.0",
+            "internalID" : "FAA3A158",
             "numberOfPeriods" : 6,
             "paymentMode" : "payAsYouGo",
             "subscriptionPeriod" : "P1M"
@@ -187,13 +187,13 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "19.49",
+          "displayPrice" : "2799.0",
           "familyShareable" : false,
           "groupNumber" : 2,
           "internalID" : "6757796511",
           "introductoryOffer" : {
-            "displayPrice" : "9.69",
-            "internalID" : "57ACA685",
+            "displayPrice" : "1329.0",
+            "internalID" : "F5238A44",
             "numberOfPeriods" : 3,
             "paymentMode" : "payAsYouGo",
             "subscriptionPeriod" : "P1M"
@@ -220,11 +220,11 @@
           ],
           "codeOffers" : [
             {
-              "displayPrice" : "7.49",
+              "displayPrice" : "799.0",
               "eligibility" : [
                 "new"
               ],
-              "internalID" : "FF74A5E0",
+              "internalID" : "2A37BD13",
               "isStackable" : false,
               "numberOfPeriods" : 6,
               "paymentMode" : "payAsYouGo",
@@ -232,13 +232,13 @@
               "subscriptionPeriod" : "P1M"
             }
           ],
-          "displayPrice" : "14.49",
+          "displayPrice" : "2050.0",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "6757702110",
           "introductoryOffer" : {
-            "displayPrice" : "7.29",
-            "internalID" : "EE77F741",
+            "displayPrice" : "1039.0",
+            "internalID" : "2F849C66",
             "numberOfPeriods" : 3,
             "paymentMode" : "payAsYouGo",
             "subscriptionPeriod" : "P1M"

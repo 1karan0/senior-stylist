@@ -25,6 +25,7 @@ import type {
 } from '@/common/types';
 import { createPreview, filterConversations } from '@/utils/consultationUtils';
 import InfoModal from '@/common/components/modals/InfoModal';
+import ActiveStylist from '@/common/components/ActiveStylists';
 
 type NavParamList = AppStackParamList & ConsultationStackParamList;
 
@@ -213,6 +214,7 @@ const CustomerChatHome: React.FC = () => {
           </View>
         ) : (
           <View className="flex-1 mb-8 mt-4" style={[{ paddingHorizontal: horizontalPadding }]}>
+            <ActiveStylist />
             <FlashList
               data={filteredConvos}
               keyExtractor={(item: ConversationPreview) => item.id.toString()}

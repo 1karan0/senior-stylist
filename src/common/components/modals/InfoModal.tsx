@@ -46,6 +46,9 @@ const InfoModal: React.FC<InfoModalProps> = ({
       dismissOnBackdropPress={true}
       containerClassName={`border rounded-2xl ${isDark ? 'bg-[#0D1A16] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}`}
     >
+      <Text className={`text-center mb-4`}>
+        <Ionicons name={cfg.icon} size={42} color={cfg.color} />
+      </Text>
       <View className="items-center">
         <Text
           className={`text-xl font-poppins-semibold mb-3 text-center ${

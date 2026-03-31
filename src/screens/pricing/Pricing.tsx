@@ -20,6 +20,7 @@ import {
   SubscriptionPlan,
 } from '@/api/subscription/useGetSubscriptionPlans';
 import { Button } from '@/common/components/Button';
+import InfoModal from '@/common/components/modals/InfoModal';
 import SubscriptionModal from '@/common/components/modals/SubscriptionModal';
 import { AppStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -65,6 +66,15 @@ export default function PricingScreen() {
   const [selectedPlan, setSelectedPlan] = useState<PlanDisplay | null>(null);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [restoreMessage, setRestoreMessage] = useState('');
+  const [restoreModalVariant, setRestoreModalVariant] = useState<
+    'success' | 'error' | 'info' | 'warning'
+  >('info');
+
+  const dismissRestoreModal = () => {
+    setRestoreMessage('');
+    setRestoreModalVariant('info');
+  };
 
   const navigation = useNavigation<NavigationProp>();
   const { isDark } = useTheme();
@@ -101,10 +111,8 @@ export default function PricingScreen() {
       const availablePurchases = await RNIap.getAvailablePurchases();
 
       if (!availablePurchases || availablePurchases.length === 0) {
-        Alert.alert(
-          'No History Found',
-          "We couldn't find any previous purchases for this account."
-        );
+        setRestoreModalVariant('info');
+        setRestoreMessage("We couldn't find any previous purchases for this account.");
         return;
       }
 
@@ -127,14 +135,23 @@ export default function PricingScreen() {
           // Refetch profile to update subscription status
           await refetchProfile();
 
-          Alert.alert('Restored', 'Your subscription has been successfully restored.');
+          setRestoreModalVariant('success');
+          setRestoreMessage('Your subscription has been successfully restored.');
+          return;
+        } else {
+          setRestoreModalVariant('error');
+          setRestoreMessage('Failed to restore subscription. Please try again.');
           return;
         }
       }
     } catch (error: any) {
-      // Check for user cancellation to avoid showing "Error" alerts
       if (error.code !== 'E_USER_CANCELLED') {
-        Alert.alert('Restore Error', error.message);
+        setRestoreModalVariant('error');
+        setRestoreMessage(
+          typeof error?.message === 'string'
+            ? error.message
+            : 'Something went wrong. Please try again.'
+        );
       }
     } finally {
       setIsRestoring(false);
@@ -529,6 +546,14 @@ export default function PricingScreen() {
           }}
         />
       )}
+      <InfoModal
+        visible={!!restoreMessage}
+        onClose={dismissRestoreModal}
+        onConfirm={dismissRestoreModal}
+        title="Restore Purchase"
+        message={restoreMessage}
+        variant={restoreModalVariant}
+      />
     </GradientBackground>
   );
 }
