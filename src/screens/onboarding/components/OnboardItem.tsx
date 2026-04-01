@@ -33,7 +33,9 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
   const isTabletLandscape = isTablet && isLandscape;
   const isTabletPortrait = isTablet && !isLandscape;
   const isLastPage = page === totalPages - 1;
-  const lessThanAndroid13 = Platform.OS === 'android' && Platform.Version < 33;
+  const phoneAspectRatio = screenHeight / screenWidth;
+  const isTallPhone = !isTablet && !isLandscape && phoneAspectRatio > 2;
+  const isCompactPhone = !isTablet && !isLandscape && phoneAspectRatio < 1.85;
 
   return (
     <View className="flex-1 relative">
@@ -157,24 +159,22 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
                 (isLandscape
                   ? Platform.OS === 'ios'
                     ? 0.4
-                    : lessThanAndroid13
-                      ? 0.36
-                      : 0.45
+                    : 0.42
                   : isTabletPortrait
                     ? 0.61
-                    : lessThanAndroid13
-                      ? 0.54
-                      : Platform.OS === 'ios'
-                        ? 0.61
-                        : 0.63),
+                    : isTallPhone
+                      ? 0.64
+                      : isCompactPhone
+                        ? 0.65
+                        : 0.62),
               left: 0,
               right: 0,
               width: '100%',
               height:
                 screenHeight *
-                (isLandscape ? 0.45 : isTabletPortrait ? 0.34 : lessThanAndroid13 ? 0.4 : 0.3),
+                (isLandscape ? 0.45 : isTabletPortrait ? 0.34 : isTallPhone ? 0.32 : 0.3),
               paddingHorizontal: isTabletPortrait ? 20 : 12,
-              paddingTop: isLandscape ? 14 : isTabletPortrait ? 34 : lessThanAndroid13 ? 15 : 25,
+              paddingTop: isLandscape ? 14 : isTabletPortrait ? 34 : isTallPhone ? 20 : 24,
               borderTopLeftRadius: 30,
               borderTopRightRadius: 30,
               overflow: 'hidden',
