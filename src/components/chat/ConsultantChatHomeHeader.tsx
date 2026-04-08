@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import SearchBar from './SearchBar';
 import FilterButtons from './FilterButtons';
+import ActiveStylist from '@/common/components/ActiveStylists';
 
 type FilterKey = 'all' | 'unread';
 
@@ -39,6 +40,9 @@ const ConsultantChatHomeHeader: React.FC<ConsultantChatHomeHeaderProps> = ({
         onSearchChange={onSearchChange}
         placeholder="Search clients or topics..."
       />
+      <View className="mt-4">
+        <ActiveStylist />
+      </View>
 
       <FilterButtons activeFilter={activeFilter} onFilterChange={onFilterChange} />
     </View>

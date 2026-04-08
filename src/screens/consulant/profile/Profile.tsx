@@ -11,6 +11,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Button from '@/common/components/Button';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import Clipboard from '@react-native-clipboard/clipboard';
+import ActiveStylist from '@/common/components/ActiveStylists';
 
 const Profile: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
@@ -80,6 +81,9 @@ const Profile: React.FC = () => {
           >
             Profile
           </Text>
+          <View className="mt-4">
+            <ActiveStylist />
+          </View>
         </View>
 
         {/* Content */}

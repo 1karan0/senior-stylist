@@ -20,6 +20,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
+import ActiveStylist from '@/common/components/ActiveStylists';
 const NewsScreen = () => {
   const [page, setPage] = useState(1);
   const [list, setList] = useState<any[]>([]);
@@ -106,6 +107,10 @@ const NewsScreen = () => {
               includeFontPadding: false,
             }}
           />
+        </View>
+
+        <View className="mt-4 mb-2">
+          <ActiveStylist />
         </View>
 
         {/* Categories */}

@@ -5,6 +5,7 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
+import ActiveStylist from '@/common/components/ActiveStylists';
 const STORE_URL = 'https://shop.senior-stylist.com/';
 
 const StoreScreen = () => {
@@ -53,6 +54,9 @@ const StoreScreen = () => {
           <Text className={`mt-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
             Discover our professional hair care collection
           </Text>
+          <View className="mt-4">
+            <ActiveStylist />
+          </View>
 
           {/* Promo card */}
           <View className="relative mt-6">

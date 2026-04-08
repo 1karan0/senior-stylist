@@ -17,6 +17,7 @@ import {
   Unsubscribe,
 } from '@/services/firebase';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
+import ActiveStylist from '@/common/components/ActiveStylists';
 const mapConsultationToRequestItem = (consultation: ConsultantConsultation): RequestItem => {
   const customerName = consultation.user?.name || 'Unknown User';
   const requestedAt = new Date(consultation.requested_at).getTime();
@@ -271,6 +272,9 @@ const Request: React.FC = () => {
           )}
         </View>
 
+        <View className="mt-4">
+          <ActiveStylist />
+        </View>
         <View>
           <View className="flex-row justify-between items-center mt-4">
             <View

@@ -214,7 +214,9 @@ const CustomerChatHome: React.FC = () => {
           </View>
         ) : (
           <View className="flex-1 mb-8 mt-4" style={[{ paddingHorizontal: horizontalPadding }]}>
-            <ActiveStylist />
+            <View className="mb-4">
+              <ActiveStylist />
+            </View>
             <FlashList
               data={filteredConvos}
               keyExtractor={(item: ConversationPreview) => item.id.toString()}

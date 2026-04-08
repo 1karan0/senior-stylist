@@ -15,6 +15,7 @@ import { BASE_URL } from '@/config';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import { ModalWrapper } from '@/common/components/ModalWrapper';
 import { useNavigation } from '@react-navigation/native';
+import ActiveStylist from '@/common/components/ActiveStylists';
 
 const Dashboard: React.FC = () => {
   const [pdfModalVisible, setPdfModalVisible] = useState(false);
@@ -72,6 +73,9 @@ const Dashboard: React.FC = () => {
           >
             Dashboard
           </Text>
+          <View className="mt-4">
+            <ActiveStylist />
+          </View>
         </View>
 
         {/* Content */}

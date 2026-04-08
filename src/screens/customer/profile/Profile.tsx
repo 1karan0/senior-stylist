@@ -307,7 +307,9 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}
         >
-          <ActiveStylist />
+          <View className="mb-4">
+            <ActiveStylist />
+          </View>
           {/* ---------- Profile Card ---------- */}
           <View
             className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  rounded-2xl p-4 border`}
@@ -639,7 +641,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           </View>
 
           {/* ---------- Rewards ---------- */}
-          <View
+          {/* <View
             className="p-4 mt-5"
             style={{
               borderRadius: 12,
@@ -674,10 +676,10 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 </View>
               </View>
             </View>
-          </View>
+          </View> */}
 
           {/* ---------- Referral Program ---------- */}
-          <View
+          {/* <View
             className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
           >
             <View>
@@ -704,7 +706,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             </View>
 
             {/* Code Box */}
-            <View className="flex-row justify-between mb-3 relative">
+          {/* <View className="flex-row justify-between mb-3 relative">
               <View
                 className={` w-[80%] items-center text-center bg-[#F5F9F7] border-[#DAE7E0] border rounded-lg py-3 `}
               >
@@ -751,8 +753,8 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   </LinearGradient>
                 </Animated.View>
               </View>
-            </View>
-          </View>
+            </View> */}
+          {/* </View>  */}
 
           <View
             className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl p-4 mt-5 border`}
