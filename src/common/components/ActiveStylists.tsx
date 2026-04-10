@@ -6,27 +6,42 @@ import { useGetAvailableStylists } from '@/api/user/consultation/useGetAvailable
 const ActiveStylist = () => {
   const { data: availableStylists } = useGetAvailableStylists();
   const activeStylistCount = availableStylists?.total_online_consultants || 0;
+  const isStylistActive = activeStylistCount > 0;
   const message = availableStylists?.message || '';
   const { isDark } = useTheme();
-  const dotOpacity = useRef(new Animated.Value(1)).current;
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  const pulseOpacity = useRef(new Animated.Value(0.7)).current;
 
   useEffect(() => {
-    if (!activeStylistCount) {
-      dotOpacity.setValue(1);
+    if (!isStylistActive) {
+      pulseScale.setValue(1);
+      pulseOpacity.setValue(0);
       return;
     }
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(dotOpacity, {
-          toValue: 0.35,
-          duration: 2200,
-          easing: Easing.inOut(Easing.sin),
+        Animated.parallel([
+          Animated.timing(pulseScale, {
+            toValue: 2.5,
+            duration: 1500,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseOpacity, {
+            toValue: 0,
+            duration: 1500,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.timing(pulseScale, {
+          toValue: 1,
+          duration: 0,
           useNativeDriver: true,
         }),
-        Animated.timing(dotOpacity, {
-          toValue: 1,
-          duration: 2200,
-          easing: Easing.inOut(Easing.sin),
+        Animated.timing(pulseOpacity, {
+          toValue: 0.7,
+          duration: 0,
           useNativeDriver: true,
         }),
       ])
@@ -34,28 +49,42 @@ const ActiveStylist = () => {
     loop.start();
     return () => {
       loop.stop();
-      dotOpacity.setValue(1);
+      pulseScale.setValue(1);
+      pulseOpacity.setValue(0);
     };
-  }, [activeStylistCount, dotOpacity]);
+  }, [isStylistActive, pulseOpacity, pulseScale]);
 
   return (
     <View>
       <View className="flex-row">
         <View
-          className={` flex-row items-center justify-start gap-2 ${!activeStylistCount ? `${isDark ? 'bg-[#222a26]' : 'bg-[#e7e7e7]'}` : `${isDark ? 'bg-[#254c37]' : 'bg-[#cadaca]'}`} rounded-full px-4 py-2`}
+          className={` flex-row items-center justify-start gap-2 ${!isStylistActive ? `${isDark ? 'bg-[#222a26]' : 'bg-[#e7e7e7]'}` : `${isDark ? 'bg-[#254c37]' : 'bg-[#cadaca]'}`} rounded-full px-4 py-2`}
         >
-          {activeStylistCount ? (
-            <Animated.View
-              className="w-3 h-3 bg-[#66cb76] rounded-full"
-              style={{ opacity: dotOpacity }}
-            />
+          {isStylistActive ? (
+            <View className="w-3 h-3 items-center justify-center">
+              <Animated.View
+                className="absolute w-3 h-3 rounded-full bg-[#2cff88]"
+                style={{
+                  opacity: pulseOpacity,
+                  transform: [{ scale: pulseScale }],
+                }}
+              />
+              <View
+                className="w-3 h-3 rounded-full bg-[#2cff88]"
+                style={{
+                  shadowColor: '#2cff88',
+                  shadowOpacity: 0.9,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 0 },
+                  elevation: 4,
+                }}
+              />
+            </View>
           ) : (
             <View className="w-3 h-3 bg-[#7d8a86] rounded-full" />
           )}
           <Text className={`font-semibold  ${isDark ? 'text-white' : 'text-textDark'}`}>
-            {activeStylistCount && activeStylistCount >= 0
-              ? `${activeStylistCount} ${message}`
-              : `No ${message}`}
+            {isStylistActive ? `${activeStylistCount} ${message}` : `No ${message}`}
           </Text>
         </View>
       </View>
