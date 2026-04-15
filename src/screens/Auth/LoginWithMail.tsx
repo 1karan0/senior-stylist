@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 
-export default function LoginScreen({ navigation }: any) {
+export default function LoginWithMailScreen({ navigation }: any) {
   const {
     control,
     handleSubmit,
@@ -169,7 +169,7 @@ export default function LoginScreen({ navigation }: any) {
             className="mb-6"
           />
 
-          <View className="flex-row items-center mb-5">
+          {/* <View className="flex-row items-center mb-5">
             <View className={`flex-1 h-px ${isDark ? 'bg-[#273F36]' : 'bg-[#DAE7E0]'}`} />
             <Text
               className={`mx-3 text-xs font-poppins ${
@@ -179,9 +179,9 @@ export default function LoginScreen({ navigation }: any) {
               OR
             </Text>
             <View className={`flex-1 h-px ${isDark ? 'bg-[#273F36]' : 'bg-[#DAE7E0]'}`} />
-          </View>
+          </View> */}
 
-          <View className="mb-6">
+          {/* <View className="mb-6">
             <Button
               text="Sign Up"
               onPress={() => navigation.navigate('Signup', { user: 'customer' })}
@@ -189,17 +189,17 @@ export default function LoginScreen({ navigation }: any) {
               className={`rounded-[14px] ${isDark ? 'bg-[#0E1B17] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'} border`}
               textClassName={`${isDark ? 'text-[#ffffff]' : 'text-[#162721]'} text-base font-urbanist-bold`}
             />
-          </View>
+          </View> */}
 
           {/* Sign Up */}
-          <View className="flex-row justify-center">
+          {/* <View className="flex-row justify-center">
             <Pressable onPress={() => handleContinueAsGuest()}>
               <Text className="text-textPrimary">Continue as Guest</Text>
             </Pressable>
-          </View>
+          </View> */}
 
           {/* Consultant */}
-          <View className="flex-row justify-center mt-3">
+          {/* <View className="flex-row justify-center mt-3">
             <Text
               className={`text-center ${
                 isDark ? 'text-white' : 'text-textDark'
@@ -210,7 +210,12 @@ export default function LoginScreen({ navigation }: any) {
             <Pressable onPress={() => navigation.navigate('Signup', { user: 'consultant' })}>
               <Text className="text-textPrimary">Register here</Text>
             </Pressable>
-          </View>
+          </View> */}
+          <Pressable onPress={() => navigation.goBack()} className="items-center">
+            <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-medium`}>
+              Use a different login method? <Text className="text-primary">Go back</Text>
+            </Text>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </GradientBackground>

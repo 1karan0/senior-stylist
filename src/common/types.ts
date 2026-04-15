@@ -1,8 +1,12 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ReactNode } from 'react';
 
 export type AuthStackParamList = {
   Onboarding: undefined;
-  Login: undefined;
+  LoginWithMail: undefined;
+  PhoneOtp: undefined;
+  LoginWithPhone: undefined;
+  MainLogin: undefined;
   Signup: undefined;
   ForgetPassword: undefined;
   ResetPassword: { token?: string } | undefined;
