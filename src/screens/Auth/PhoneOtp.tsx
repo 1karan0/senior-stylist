@@ -40,13 +40,15 @@ const PhoneOtpScreen = () => {
               resizeMode="contain"
             />
             <Text
-              className={`font-bold text-[28px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}
+              className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}
             >
               Verify Your Number
             </Text>
 
             <Text
-              className={`font-urbanist-medium text-[15px] text-center px-8 mt-2 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+              className={`font-normal text-[14px] ${
+                isDark ? 'text-textSecondary' : 'text-textMuted'
+              }  mt-1`}
             >
               We'll send a secure <Text className="text-primary font-bold">OTP</Text> code to verify
               your identity.
@@ -91,11 +93,14 @@ const PhoneOtpScreen = () => {
               onPress={handleSubmit(() => navigation.navigate('LoginWithPhone'))}
             />
 
-            <Pressable onPress={() => navigation.goBack()} className="items-center">
-              <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-medium`}>
-                Use a different login method? <Text className="text-primary">Go back</Text>
+            <View className="flex-row items-center justify-center">
+              <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} text-[14px]`}>
+                Use a different login method?{' '}
               </Text>
-            </Pressable>
+              <Pressable onPress={() => navigation.goBack()}>
+                <Text className="text-textPrimary font-bold text-[14px]">Go back</Text>
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -41,15 +41,15 @@ const MainLogin = () => {
             />
 
             <Text
-              className={`font-bold text-[28px] ${isDark ? 'text-white' : 'text-textDark'} mt-5`}
+              className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}
             >
               Elevate Your Style
             </Text>
 
             <Text
-              className={`font-normal text-[15px] text-center px-6 ${
+              className={`font-normal text-[14px] ${
                 isDark ? 'text-textSecondary' : 'text-textMuted'
-              } mt-2`}
+              }  mt-1`}
             >
               Sign in to access your personalized StyleHub
             </Text>
@@ -62,7 +62,7 @@ const MainLogin = () => {
               text="Login with Email"
               variant="light"
               onPress={() => navigation.navigate('LoginWithMail')}
-              className="rounded-[14px] border "
+              className="rounded-[14px]"
             />
           </View>
 

@@ -88,7 +88,7 @@ export default function LoginWithMailScreen({ navigation }: any) {
             <Text
               className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}
             >
-              Welcome Back
+              Login to your account
             </Text>
 
             <Text
@@ -96,7 +96,7 @@ export default function LoginWithMailScreen({ navigation }: any) {
                 isDark ? 'text-textSecondary' : 'text-textMuted'
               }  mt-1`}
             >
-              Sign in to continue to StyleHub
+              Enter your email and password to continue
             </Text>
           </View>
 
@@ -168,54 +168,14 @@ export default function LoginWithMailScreen({ navigation }: any) {
             variant="gradient"
             className="mb-6"
           />
-
-          {/* <View className="flex-row items-center mb-5">
-            <View className={`flex-1 h-px ${isDark ? 'bg-[#273F36]' : 'bg-[#DAE7E0]'}`} />
-            <Text
-              className={`mx-3 text-xs font-poppins ${
-                isDark ? 'text-textSecondary' : 'text-textMuted'
-              }`}
-            >
-              OR
+          <View className="flex-row items-center justify-center">
+            <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} text-[14px]`}>
+              Use a different login method?{' '}
             </Text>
-            <View className={`flex-1 h-px ${isDark ? 'bg-[#273F36]' : 'bg-[#DAE7E0]'}`} />
-          </View> */}
-
-          {/* <View className="mb-6">
-            <Button
-              text="Sign Up"
-              onPress={() => navigation.navigate('Signup', { user: 'customer' })}
-              variant="light"
-              className={`rounded-[14px] ${isDark ? 'bg-[#0E1B17] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'} border`}
-              textClassName={`${isDark ? 'text-[#ffffff]' : 'text-[#162721]'} text-base font-urbanist-bold`}
-            />
-          </View> */}
-
-          {/* Sign Up */}
-          {/* <View className="flex-row justify-center">
-            <Pressable onPress={() => handleContinueAsGuest()}>
-              <Text className="text-textPrimary">Continue as Guest</Text>
+            <Pressable onPress={() => navigation.goBack()}>
+              <Text className="text-textPrimary font-bold text-[14px]">Go back</Text>
             </Pressable>
-          </View> */}
-
-          {/* Consultant */}
-          {/* <View className="flex-row justify-center mt-3">
-            <Text
-              className={`text-center ${
-                isDark ? 'text-white' : 'text-textDark'
-              }  font-medium text-[14px]`}
-            >
-              Want to be a Consultant?{' '}
-            </Text>
-            <Pressable onPress={() => navigation.navigate('Signup', { user: 'consultant' })}>
-              <Text className="text-textPrimary">Register here</Text>
-            </Pressable>
-          </View> */}
-          <Pressable onPress={() => navigation.goBack()} className="items-center">
-            <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} font-medium`}>
-              Use a different login method? <Text className="text-primary">Go back</Text>
-            </Text>
-          </Pressable>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </GradientBackground>

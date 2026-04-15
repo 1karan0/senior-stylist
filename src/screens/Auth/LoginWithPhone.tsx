@@ -1,7 +1,15 @@
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
-import { Image, KeyboardAvoidingView, ScrollView, Text, TextInput, View } from 'react-native';
+import {
+  Image,
+  KeyboardAvoidingView,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRef, useState } from 'react';
@@ -31,6 +39,10 @@ const LoginWithPhoneScreen = ({ navigation }: any) => {
     console.log('otp======> ', otp);
   };
 
+  const handleResend = () => {
+    console.log('resend======> ');
+  };
+
   return (
     <GradientBackground>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
@@ -56,7 +68,7 @@ const LoginWithPhoneScreen = ({ navigation }: any) => {
             <Text
               className={`font-bold text-[24px] ${isDark ? 'text-white' : 'text-textDark'} mt-4`}
             >
-              Welcome Back
+              Verify Your Number
             </Text>
 
             <Text
@@ -64,7 +76,7 @@ const LoginWithPhoneScreen = ({ navigation }: any) => {
                 isDark ? 'text-textSecondary' : 'text-textMuted'
               }  mt-1`}
             >
-              Sign in to continue to StyleHub
+              Enter the 6-digit code sent to your phone
             </Text>
           </View>
           {/* OTP BOXES */}
@@ -93,7 +105,16 @@ const LoginWithPhoneScreen = ({ navigation }: any) => {
               />
             ))}
           </View>
-          <View className="mt-5">
+          {/* Resend */}
+          <View className="flex-row mb-6 justify-center">
+            <Text className={` ${isDark ? 'text-textSecondary' : 'text-[#6B6B6B]'} text-[13px]`}>
+              Didn't receive the code?{' '}
+            </Text>
+            <Pressable onPress={handleResend}>
+              <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend</Text>
+            </Pressable>
+          </View>
+          <View className="">
             <Button
               text="Login with Phone"
               onPress={handleLogin}
@@ -101,6 +122,14 @@ const LoginWithPhoneScreen = ({ navigation }: any) => {
               loading={loading}
               variant="gradient"
             />
+          </View>
+          <View className="flex-row items-center justify-center mt-2">
+            <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} text-[14px]`}>
+              Use a different login method?{' '}
+            </Text>
+            <Pressable onPress={() => navigation.goBack()}>
+              <Text className="text-textPrimary font-bold text-[14px]">Go back</Text>
+            </Pressable>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

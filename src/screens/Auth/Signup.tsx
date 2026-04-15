@@ -713,7 +713,7 @@ export default function SignupScreen({ navigation, route }: any) {
               >
                 Already have an account?{' '}
               </Text>
-              <Pressable onPress={() => navigation.navigate('Login')}>
+              <Pressable onPress={() => navigation.navigate('MainLogin')}>
                 <Text className="text-textPrimary font-semibold">Sign In</Text>
               </Pressable>
             </View>

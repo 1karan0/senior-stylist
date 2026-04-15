@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Senior Stylist - Workable Flow Demo</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+        color: #1d1d1d;
+        background: linear-gradient(145deg, #0f1f18, #152a21);
+      }
+      .header {
+        max-width: 1120px;
+        margin: 0 auto 16px;
+        padding: 16px 18px;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+      }
+      .header h1 {
+        margin: 0 0 6px;
+        font-size: 24px;
+      }
+      .header p {
+        margin: 0;
+        color: #555;
+      }
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .phone {
+        width: 470px;
+        height: 900px;
+        padding: 16px;
+        border-radius: 40px;
+        background: #101010;
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.45);
+      }
+      .screen {
+        width: 100%;
+        height: 100%;
+        border-radius: 28px;
+        background: linear-gradient(180deg, #f4fbf7, #f9f9f9);
+        padding: 26px 22px 20px;
+        position: relative;
+        overflow: hidden;
+      }
+      .status {
+        flex: 1;
+        min-width: 300px;
+        padding: 16px;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+      }
+      .status h3 {
+        margin: 0 0 10px;
+      }
+      .status p {
+        margin: 0 0 12px;
+        color: #4d4d4d;
+      }
+      .tag {
+        display: inline-block;
+        margin-bottom: 10px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #e7f7ef;
+        border: 1px solid #b9e6d0;
+        color: #23865a;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .card {
+        margin-bottom: 12px;
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid #deeee6;
+        background: #fff;
+      }
+      h2 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+      p {
+        margin: 0 0 12px;
+        color: #616161;
+        line-height: 1.4;
+      }
+      .field {
+        margin-bottom: 10px;
+      }
+      .label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #3c3c3c;
+      }
+      .input {
+        width: 100%;
+        border: 1px solid #d6e4dd;
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 14px;
+        color: #333;
+        background: #fcfefc;
+      }
+      button {
+        border: none;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .primary {
+        width: 100%;
+        background: linear-gradient(90deg, #27b07d, #36d399);
+        color: #fff;
+        margin-top: 4px;
+      }
+      .secondary {
+        width: 100%;
+        margin-top: 8px;
+        background: #eef7f1;
+        color: #2f7f5c;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+      }
+      .row button {
+        flex: 1;
+      }
+      .otp-row {
+        display: flex;
+        gap: 10px;
+        margin: 0 0 12px;
+      }
+      .otp-cell {
+        width: 57px;
+        height: 62px;
+        border-radius: 12px;
+        border: 1px solid #b8e2ce;
+        background: #f2fcf6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #215f43;
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .otp-input {
+        width: 46px;
+        height: 54px;
+        border-radius: 10px;
+        border: 1px solid #b8e2ce;
+        background: #f2fcf6;
+        text-align: center;
+        font-size: 20px;
+        font-weight: 700;
+        color: #215f43;
+        outline: none;
+      }
+      .profile-alert {
+        margin-bottom: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #ecc3c8;
+        background: #fff4f6;
+        color: #a8414b;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .modal-bg {
+        position: absolute;
+        inset: 0;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.48);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal {
+        width: 100%;
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid #dcebe3;
+        background: #fff;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+        max-height: 90%;
+        overflow-y: auto;
+      }
+      .qa-line {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #dbede5;
+        border-radius: 10px;
+        background: #f5faf8;
+        color: #334640;
+        font-size: 14px;
+      }
+      .options {
+        margin: 0 0 10px;
+        padding: 10px;
+        border: 1px solid #dbede5;
+        border-radius: 10px;
+        background: #f9fdfb;
+        display: grid;
+        gap: 7px;
+      }
+      .option {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 13px;
+        color: #2d463d;
+      }
+      .option input[type='checkbox'] {
+        width: 16px;
+        height: 16px;
+        accent-color: #27b07d;
+        margin-top: 2px;
+        flex-shrink: 0;
+      }
+      .chat-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .chat-title {
+        font-size: 30px;
+        margin: 0;
+      }
+      .new-btn {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: none;
+        background: #fde047;
+        color: #1f7a4f;
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .search {
+        width: 100%;
+        margin-bottom: 8px;
+        border: 1px solid #d5e4de;
+        background: #fff;
+        border-radius: 12px;
+        padding: 11px 12px;
+        color: #6a6a6a;
+        font-size: 14px;
+      }
+      .sync-status {
+        font-size: 11px;
+        color: #6a7a72;
+        margin-bottom: 12px;
+      }
+      .active-wrap {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        overflow-x: auto;
+      }
+      .active-chip {
+        white-space: nowrap;
+        font-size: 12px;
+        border: 1px solid #cde7db;
+        background: #eef8f3;
+        color: #2c7b59;
+        padding: 7px 10px;
+        border-radius: 999px;
+      }
+      .chat-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid #dbe9e3;
+        border-radius: 12px;
+        background: #fff;
+        margin-bottom: 10px;
+      }
+      .chat-item h4 {
+        margin: 0 0 4px;
+        font-size: 15px;
+      }
+      .chat-item p {
+        margin: 0;
+        font-size: 13px;
+        color: #6d6d6d;
+      }
+      .chat-meta {
+        text-align: right;
+        font-size: 12px;
+        color: #6b7a73;
+        min-width: 42px;
+      }
+      .tabs {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 12px;
+        display: flex;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 30px;
+        border: 1px solid #d7e6df;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+      }
+      .tab-btn {
+        flex: 1;
+        border: 1px solid #cfe4da;
+        background: #eef7f2;
+        color: #2b7f5c;
+        border-radius: 999px;
+        padding: 10px 8px;
+        font-size: 12px;
+      }
+      .tab-btn.active {
+        background: linear-gradient(90deg, #27b07d, #36d399);
+        color: #fff;
+        border-color: #2bb884;
+      }
+      .profile-card {
+        padding: 14px;
+        border: 1px solid #dbe9e3;
+        border-radius: 12px;
+        background: #fff;
+        margin-bottom: 10px;
+      }
+      .avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(90deg, #2ccb91, #23a76f);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+      .member-tag {
+        display: inline-block;
+        margin-top: 4px;
+        border-radius: 10px;
+        padding: 4px 10px;
+        font-size: 12px;
+        background: #2ccb91;
+        color: #fff;
+        font-weight: 700;
+      }
+      .section-title {
+        margin: 0 0 8px;
+        font-size: 20px;
+        color: #20362e;
+      }
+      .app-area {
+        height: calc(100% - 88px);
+        overflow-y: auto;
+        padding-bottom: 10px;
+      }
+      .plan-card {
+        border: 2px solid #dae7e0;
+        border-radius: 12px;
+        background: #fff;
+        padding: 12px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .plan-card.active {
+        border-color: #27b07d;
+      }
+      .radio {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid #27b07d;
+        margin-top: 3px;
+        position: relative;
+        flex-shrink: 0;
+      }
+      .plan-card.active .radio::after {
+        content: '';
+        position: absolute;
+        inset: 3px;
+        border-radius: 50%;
+        background: #27b07d;
+      }
+      .offer {
+        margin: 10px auto;
+        width: fit-content;
+        background: #e7b008;
+        color: #fff;
+        border-radius: 12px;
+        padding: 8px 12px;
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .verify-badge {
+        display: inline-block;
+        padding: 5px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .not-verified {
+        background: #fff4e5;
+        color: #9a5c17;
+        border: 1px solid #f0cc96;
+      }
+      .verified {
+        background: #e8f9f0;
+        color: #1f7a4f;
+        border: 1px solid #bfe9d2;
+      }
+      .q-head {
+        margin: 12px 0 6px;
+        font-size: 15px;
+        color: #243b33;
+        font-weight: 700;
+      }
+      .top-alert {
+        margin-bottom: 12px;
+        padding: 10px;
+        border-radius: 12px;
+        border: 1px solid #f0c8a5;
+        background: #fff2e6;
+        color: #935c2d;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .top-alert button {
+        width: auto;
+        margin: 0;
+        padding: 8px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        background: #f59e0b;
+        color: #fff;
+      }
+      .error-text {
+        margin: 6px 0 10px;
+        font-size: 12px;
+        color: #b42318;
+        font-weight: 700;
+      }
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="header">
+      <h1>Senior Stylist Workable Client Demo</h1>
+      <p>
+        Simple flow: Signup -> SMS code -> Payment -> App tabs at bottom (Consultation, Store, News,
+        Profile).
+      </p>
+    </section>
+
+    <section class="wrap">
+      <div class="phone">
+        <div class="screen">
+          <div class="tag" id="screenTag">Screen 1: Signup</div>
+
+          <div id="signupView">
+            <div class="card">
+              <h2>Create Account</h2>
+              <p>Join us today</p>
+              <div class="field">
+                <label class="label">Full Name</label>
+                <div class="input">Sarah Johnson</div>
+              </div>
+              <div class="field">
+                <label class="label">Email Address</label>
+                <div class="input">sarah@example.com</div>
+              </div>
+              <div class="field">
+                <label class="label">Phone Number</label>
+                <div class="input">+1 555 320 8841</div>
+              </div>
+              <button id="createAccountBtn" class="primary">Create Account</button>
+            </div>
+          </div>
+
+          <div id="otpView" class="hidden">
+            <div class="card">
+              <h2>Enter 6-digit code</h2>
+              <p>We sent a code to +1 (555) 320-8841 by SMS.</p>
+              <div class="otp-row">
+                <div class="otp-cell">4</div>
+                <div class="otp-cell">7</div>
+                <div class="otp-cell">2</div>
+                <div class="otp-cell">9</div>
+                <div class="otp-cell">1</div>
+                <div class="otp-cell">5</div>
+              </div>
+              <button id="verifyOtpBtn" class="primary">Verify</button>
+              <button class="secondary">Resend code</button>
+            </div>
+          </div>
+
+          <div id="paymentView" class="hidden">
+            <div class="card">
+              <h2>Choose your plan</h2>
+              <p>Select a subscription to start consultations.</p>
+              <div class="offer">50% off for first 6 months</div>
+              <div class="plan-card active">
+                <div class="radio"></div>
+                <div>
+                  <strong>Starter</strong>
+                  <p>£6/month for first 6 months, then £12/month</p>
+                  <p>4 consultations per month</p>
+                </div>
+              </div>
+              <div class="plan-card">
+                <div class="radio"></div>
+                <div>
+                  <strong>Professional</strong>
+                  <p>£12/month for first 6 months, then £24/month</p>
+                  <p>8 consultations per month</p>
+                </div>
+              </div>
+              <button id="continuePaymentBtn" class="primary">Pay & Continue</button>
+              <button class="secondary">Restore Purchase</button>
+              <button id="resetDemoBtn" class="secondary">Reset Demo</button>
+            </div>
+          </div>
+
+          <div id="chatHomeView" class="hidden">
+            <div class="app-area">
+              <div id="chatQuestionnaireAlert" class="top-alert hidden">
+                <span>Please complete your hair questions.</span>
+                <button id="openQuestionnaireFromChatBtn" type="button">Complete now</button>
+              </div>
+              <div id="chatTabView">
+                <div class="chat-top">
+                  <h2 class="chat-title">Consultations</h2>
+                  <button class="new-btn">+ New</button>
+                </div>
+                <div class="search">Search stylist or conversation</div>
+                <div class="sync-status">Connected to live updates</div>
+
+                <div class="active-wrap">
+                  <div class="active-chip">Active: Maya R.</div>
+                  <div class="active-chip">Active: Jordan M.</div>
+                  <div class="active-chip">Active: Priya K.</div>
+                </div>
+
+                <div class="chat-item">
+                  <div>
+                    <h4>Maya Rodriguez</h4>
+                    <p>I checked your hair profile and sent your routine.</p>
+                  </div>
+                  <div class="chat-meta">2m</div>
+                </div>
+                <div class="chat-item">
+                  <div>
+                    <h4>Jordan Miles</h4>
+                    <p>Your consultation is in progress.</p>
+                  </div>
+                  <div class="chat-meta">1h</div>
+                </div>
+                <div class="chat-item">
+                  <div>
+                    <h4>Priya Kapoor</h4>
+                    <p>Let's adjust your anti-frizz plan this week.</p>
+                  </div>
+                  <div class="chat-meta">3h</div>
+                </div>
+              </div>
+
+              <div id="profileTabView" class="hidden">
+                <h2 class="section-title">Profile</h2>
+                <div class="profile-card">
+                  <div class="avatar">S</div>
+                  <strong style="font-size: 22px">Sarah Johnson</strong><br />
+                  <span class="member-tag">Member</span>
+                  <button class="secondary">Edit Profile</button>
+                </div>
+                <div class="profile-card">
+                  <h3 style="margin: 0 0 8px">Account Information</h3>
+                  <p>Email: sarah@example.com</p>
+                  <p>Phone: +1 555 320 8841</p>
+                  <p>Member since: 2026-04-01</p>
+                  <div id="emailBadge" class="verify-badge not-verified">Email not verified</div>
+                  <button id="verifyEmailBtn" class="primary">Verify Email</button>
+                </div>
+                <div class="profile-card">
+                  <h3 style="margin: 0 0 8px">Subscription</h3>
+                  <p>Starter - 4 consultations/month</p>
+                  <p>Status: Active</p>
+                  <button class="secondary">Manage Subscription</button>
+                  <button id="openQuestionnaireFromProfileBtn" class="secondary">
+                    Open Hair Questions
+                  </button>
+                </div>
+              </div>
+              <button id="resetFromChatBtn" class="secondary">Reset Demo</button>
+            </div>
+            <div class="tabs">
+              <button id="chatTabBtn" class="tab-btn active" type="button">Consultation</button>
+              <button class="tab-btn" type="button">Store</button>
+              <button class="tab-btn" type="button">News</button>
+              <button id="profileTabBtn" class="tab-btn" type="button">Profile</button>
+            </div>
+          </div>
+
+          <div id="questionnaireModal" class="modal-bg hidden">
+            <div class="modal">
+              <h2>User Hair Questionnaire</h2>
+              <p>Document 5: "Hair ID" onboarding questions.</p>
+              <div class="q-head">1) Ethnic background</div>
+              <div class="options">
+                <label class="option"
+                  ><input type="checkbox" data-group="q1" /> Black / African / Caribbean</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q1" /> White / Caucasian</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q1" /> East / South Asian</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q1" /> Hispanic / Latino</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q1" /> Middle Eastern / North African</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q1" /> Mixed / Multiracial</label
+                >
+              </div>
+              <div class="q-head">2) Natural hair texture</div>
+              <div class="options">
+                <label class="option"><input type="checkbox" data-group="q2" /> Straight</label>
+                <label class="option"><input type="checkbox" data-group="q2" /> Wavy</label>
+                <label class="option"><input type="checkbox" data-group="q2" /> Curly</label>
+                <label class="option"
+                  ><input type="checkbox" data-group="q2" /> Coily / Kinky</label
+                >
+              </div>
+              <div class="q-head">3) Current hair length</div>
+              <div class="options">
+                <label class="option"><input type="checkbox" data-group="q3" /> Short</label>
+                <label class="option"><input type="checkbox" data-group="q3" /> Medium</label>
+                <label class="option"><input type="checkbox" data-group="q3" /> Long</label>
+                <label class="option"><input type="checkbox" data-group="q3" /> Extra long</label>
+              </div>
+              <div class="q-head">4) Current hair color</div>
+              <div class="options">
+                <label class="option"
+                  ><input type="checkbox" data-group="q4" /> Black / Darkest Brown</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q4" /> Brunette / Medium Brown</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q4" /> Blonde (Natural or Dyed)</label
+                >
+                <label class="option"><input type="checkbox" data-group="q4" /> Red / Auburn</label>
+                <label class="option"
+                  ><input type="checkbox" data-group="q4" /> Grey / White / Silver</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q4" /> Fashion Color</label
+                >
+              </div>
+              <div class="q-head">5) Chemically treated in last 12 months?</div>
+              <div class="options">
+                <label class="option"><input type="checkbox" data-group="q5" /> No</label>
+                <label class="option"
+                  ><input type="checkbox" data-group="q5" /> Yes, color / bleach</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q5" /> Yes, relaxer / perm</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q5" /> Yes, keratin or smoothing
+                  treatment</label
+                >
+              </div>
+              <div class="q-head">6) Hair thickness (density)</div>
+              <div class="options">
+                <label class="option"><input type="checkbox" data-group="q6" /> Fine</label>
+                <label class="option"><input type="checkbox" data-group="q6" /> Medium</label>
+                <label class="option"><input type="checkbox" data-group="q6" /> Thick</label>
+              </div>
+              <div class="q-head">7) Daily styling routine</div>
+              <div class="options">
+                <label class="option"
+                  ><input type="checkbox" data-group="q7" /> Natural / Air-dry</label
+                >
+                <label class="option"><input type="checkbox" data-group="q7" /> Heat-styled</label>
+                <label class="option"
+                  ><input type="checkbox" data-group="q7" /> Protective styling</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q7" /> Tied back / Up-do</label
+                >
+              </div>
+              <div class="q-head">8) Top long-term goal</div>
+              <div class="options">
+                <label class="option"
+                  ><input type="checkbox" data-group="q8" /> Growth and length retention</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q8" /> Scalp health and thickness</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q8" /> Color vibrancy and maintenance</label
+                >
+                <label class="option"
+                  ><input type="checkbox" data-group="q8" /> Texture definition and frizz
+                  control</label
+                >
+              </div>
+              <div id="questionnaireError" class="error-text hidden">
+                Please select at least one option for every question before submitting.
+              </div>
+              <div class="row">
+                <button id="closeQuestionnaireBtn" class="secondary">Close</button>
+                <button id="submitQuestionnaireBtn" class="primary">Submit</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="emailVerificationModal" class="modal-bg hidden">
+            <div class="modal">
+              <h2>Verify your email</h2>
+              <p>We sent a 6-digit code to sarah@example.com</p>
+              <div class="otp-row">
+                <input class="otp-input email-code-input" maxlength="1" />
+                <input class="otp-input email-code-input" maxlength="1" />
+                <input class="otp-input email-code-input" maxlength="1" />
+                <input class="otp-input email-code-input" maxlength="1" />
+                <input class="otp-input email-code-input" maxlength="1" />
+                <input class="otp-input email-code-input" maxlength="1" />
+              </div>
+              <div id="emailVerificationError" class="error-text hidden">
+                Please enter all 6 digits.
+              </div>
+              <div class="row">
+                <button id="closeEmailVerificationBtn" class="secondary">Close</button>
+                <button id="submitEmailVerificationBtn" class="primary">Verify Email</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="status">
+        <h3>Demo Status</h3>
+        <p id="statusText">Start at Signup. Click Create Account to continue.</p>
+        <p><strong>How to present:</strong></p>
+        <p>
+          1) Signup -> 2) SMS verify -> 3) Payment -> 4) App opens with bottom tabs -> 5) Profile
+          tab can verify email.
+        </p>
+      </aside>
+    </section>
+
+    <script>
+      const signupView = document.getElementById('signupView');
+      const otpView = document.getElementById('otpView');
+      const paymentView = document.getElementById('paymentView');
+      const chatHomeView = document.getElementById('chatHomeView');
+      const screenTag = document.getElementById('screenTag');
+      const statusText = document.getElementById('statusText');
+      const questionnaireModal = document.getElementById('questionnaireModal');
+      const emailVerificationModal = document.getElementById('emailVerificationModal');
+      const createAccountBtn = document.getElementById('createAccountBtn');
+      const continuePaymentBtn = document.getElementById('continuePaymentBtn');
+      const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+      const closeQuestionnaireBtn = document.getElementById('closeQuestionnaireBtn');
+      const submitQuestionnaireBtn = document.getElementById('submitQuestionnaireBtn');
+      const resetDemoBtn = document.getElementById('resetDemoBtn');
+      const resetFromChatBtn = document.getElementById('resetFromChatBtn');
+      const chatQuestionnaireAlert = document.getElementById('chatQuestionnaireAlert');
+      const openQuestionnaireFromChatBtn = document.getElementById('openQuestionnaireFromChatBtn');
+      const openQuestionnaireFromProfileBtn = document.getElementById(
+        'openQuestionnaireFromProfileBtn'
+      );
+      const questionnaireError = document.getElementById('questionnaireError');
+      const questionnaireInputs = document.querySelectorAll(
+        "#questionnaireModal input[type='checkbox']"
+      );
+      const chatTabBtn = document.getElementById('chatTabBtn');
+      const profileTabBtn = document.getElementById('profileTabBtn');
+      const chatTabView = document.getElementById('chatTabView');
+      const profileTabView = document.getElementById('profileTabView');
+      const verifyEmailBtn = document.getElementById('verifyEmailBtn');
+      const emailBadge = document.getElementById('emailBadge');
+      const closeEmailVerificationBtn = document.getElementById('closeEmailVerificationBtn');
+      const submitEmailVerificationBtn = document.getElementById('submitEmailVerificationBtn');
+      const emailVerificationError = document.getElementById('emailVerificationError');
+      const emailCodeInputs = document.querySelectorAll('.email-code-input');
+
+      let isCompleted = false;
+      let emailVerified = false;
+
+      function setTab(tabName) {
+        chatTabView.classList.add('hidden');
+        profileTabView.classList.add('hidden');
+        chatTabBtn.classList.remove('active');
+        profileTabBtn.classList.remove('active');
+        if (tabName === 'chat') {
+          chatTabView.classList.remove('hidden');
+          chatTabBtn.classList.add('active');
+        } else {
+          profileTabView.classList.remove('hidden');
+          profileTabBtn.classList.add('active');
+        }
+      }
+
+      function setView(viewName) {
+        signupView.classList.add('hidden');
+        otpView.classList.add('hidden');
+        paymentView.classList.add('hidden');
+        chatHomeView.classList.add('hidden');
+        if (viewName === 'signup') signupView.classList.remove('hidden');
+        if (viewName === 'otp') otpView.classList.remove('hidden');
+        if (viewName === 'payment') paymentView.classList.remove('hidden');
+        if (viewName === 'chatHome') chatHomeView.classList.remove('hidden');
+      }
+
+      function resetDemo() {
+        isCompleted = false;
+        emailVerified = false;
+        setView('signup');
+        questionnaireModal.classList.add('hidden');
+        emailVerificationModal.classList.add('hidden');
+        questionnaireError.classList.add('hidden');
+        emailVerificationError.classList.add('hidden');
+        chatQuestionnaireAlert.classList.add('hidden');
+        questionnaireInputs.forEach(function (input) {
+          input.checked = false;
+        });
+        emailCodeInputs.forEach(function (input) {
+          input.value = '';
+        });
+        setTab('chat');
+        emailBadge.className = 'verify-badge not-verified';
+        emailBadge.textContent = 'Email not verified';
+        screenTag.textContent = 'Screen 1: Signup';
+        statusText.textContent = 'Start at Signup. Tap Create Account.';
+      }
+
+      createAccountBtn.addEventListener('click', function () {
+        setView('otp');
+        screenTag.textContent = 'Screen 2: SMS Code';
+        statusText.textContent = 'User created account. Now verify code sent by SMS.';
+      });
+
+      verifyOtpBtn.addEventListener('click', function () {
+        setView('payment');
+        screenTag.textContent = 'Screen 3: Payment';
+        statusText.textContent = 'Code verified. User now sees payment/plan screen.';
+      });
+
+      continuePaymentBtn.addEventListener('click', function () {
+        setView('chatHome');
+        setTab('chat');
+        questionnaireModal.classList.remove('hidden');
+        chatQuestionnaireAlert.classList.add('hidden');
+        screenTag.textContent = 'Screen 4: App Tabs';
+        statusText.textContent =
+          'Payment complete. User enters app with bottom tabs. Questionnaire opens first time.';
+      });
+      openQuestionnaireFromChatBtn.addEventListener('click', function () {
+        questionnaireModal.classList.remove('hidden');
+        questionnaireError.classList.add('hidden');
+        screenTag.textContent = 'Questionnaire';
+        statusText.textContent = 'User opened questionnaire from top banner.';
+      });
+      openQuestionnaireFromProfileBtn.addEventListener('click', function () {
+        questionnaireModal.classList.remove('hidden');
+        questionnaireError.classList.add('hidden');
+        screenTag.textContent = 'Questionnaire';
+        statusText.textContent = 'User opened questionnaire from Profile tab.';
+      });
+
+      closeQuestionnaireBtn.addEventListener('click', function () {
+        questionnaireModal.classList.add('hidden');
+        questionnaireError.classList.add('hidden');
+        if (!isCompleted) {
+          setView('chatHome');
+          chatQuestionnaireAlert.classList.remove('hidden');
+          screenTag.textContent = 'Screen 4: App Tabs';
+          statusText.textContent =
+            'Questionnaire closed. User can keep using app. Banner stays on top.';
+        }
+      });
+
+      submitQuestionnaireBtn.addEventListener('click', function () {
+        const requiredGroups = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'];
+        const allGroupsSelected = requiredGroups.every(function (groupName) {
+          return document.querySelector(
+            "#questionnaireModal input[data-group='" + groupName + "']:checked"
+          );
+        });
+
+        if (!allGroupsSelected) {
+          questionnaireError.classList.remove('hidden');
+          statusText.textContent =
+            'Questionnaire is incomplete. Please select at least one option for each question.';
+          return;
+        }
+
+        isCompleted = true;
+        questionnaireModal.classList.add('hidden');
+        questionnaireError.classList.add('hidden');
+        chatQuestionnaireAlert.classList.add('hidden');
+        setView('chatHome');
+        screenTag.textContent = 'Screen 5: App Tabs';
+        statusText.textContent = 'Questions submitted. Top banner is removed.';
+      });
+
+      chatTabBtn.addEventListener('click', function () {
+        setTab('chat');
+      });
+      profileTabBtn.addEventListener('click', function () {
+        setTab('profile');
+      });
+
+      verifyEmailBtn.addEventListener('click', function () {
+        emailVerificationModal.classList.remove('hidden');
+        emailVerificationError.classList.add('hidden');
+        statusText.textContent = 'Enter the 6-digit code sent to email.';
+      });
+
+      closeEmailVerificationBtn.addEventListener('click', function () {
+        emailVerificationModal.classList.add('hidden');
+        emailVerificationError.classList.add('hidden');
+        statusText.textContent = 'Email is not verified yet.';
+      });
+
+      submitEmailVerificationBtn.addEventListener('click', function () {
+        const allFilled = Array.from(emailCodeInputs).every(function (input) {
+          return input.value && input.value.trim() !== '';
+        });
+
+        if (!allFilled) {
+          emailVerificationError.classList.remove('hidden');
+          statusText.textContent = 'Please enter all 6 digits to verify email.';
+          return;
+        }
+
+        emailVerified = true;
+        emailVerificationModal.classList.add('hidden');
+        emailVerificationError.classList.add('hidden');
+        emailBadge.className = 'verify-badge verified';
+        emailBadge.textContent = 'Email verified';
+        statusText.textContent = 'Email verified successfully.';
+      });
+
+      resetDemoBtn.addEventListener('click', resetDemo);
+      resetFromChatBtn.addEventListener('click', resetDemo);
+    </script>
+  </body>
+</html>
