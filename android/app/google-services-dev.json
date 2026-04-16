@@ -7,7 +7,45 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:128763626215:android:e7f005cab3c763249f5842",
+        "android_client_info": {
+          "package_name": "com.senior_stylist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDE46dIYncQ2_6OYSQaBr7Vr9kI6Og4w5A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:128763626215:android:424161602d3249b99f5842",
+        "android_client_info": {
+          "package_name": "com.seniorstylist.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDE46dIYncQ2_6OYSQaBr7Vr9kI6Og4w5A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:128763626215:android:a1e2be2aef7ec7a89f5842",
         "android_client_info": {
           "package_name": "com.seniorstylist.app.dev"
         }
@@ -15,7 +53,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB9QxsjVcAbGdbUVeRh2rOm0MIbPF6CsQA"
+          "current_key": "AIzaSyDE46dIYncQ2_6OYSQaBr7Vr9kI6Og4w5A"
         }
       ],
       "services": {
@@ -27,5 +65,3 @@
   ],
   "configuration_version": "1"
 }
-
-

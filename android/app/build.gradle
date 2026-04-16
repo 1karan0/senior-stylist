@@ -1,28 +1,38 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 // Copy the correct google-services.json file based on build flavor
 // This must happen BEFORE the Google Services plugin is applied
 def getCurrentFlavor() {
-    Gradle gradle = getGradle()
-    String tskReqStr = gradle.getStartParameter().getTaskRequests().toString()
-    
+    def gradle = getGradle()
+    def tskReqStr = gradle.getStartParameter().getTaskRequests().toString()
+
     if (tskReqStr.contains("Dev") || tskReqStr.contains("dev")) {
         return "dev"
     } else if (tskReqStr.contains("Prod") || tskReqStr.contains("prod")) {
         return "prod"
+    } else if (tskReqStr.contains("installDebug") || tskReqStr.contains("assembleDebug")) {
+        // Local RN debug workflows usually target dev flavor via installDebug alias.
+        return "dev"
     }
-    // Default to prod if not specified
+    // Keep production as fallback for explicit release tasks and CI.
     return "prod"
 }
 
 def currentFlavor = getCurrentFlavor()
-def googleServicesSource = file("src/${currentFlavor}/google-services.json")
+def flavorGoogleServicesSource = file("google-services-${currentFlavor}.json")
+def legacyGoogleServicesSource = file("src/${currentFlavor}/google-services.json")
+def googleServicesSource = flavorGoogleServicesSource.exists() ? flavorGoogleServicesSource : legacyGoogleServicesSource
 def googleServicesTarget = file("google-services.json")
 
 if (googleServicesSource.exists()) {
     googleServicesTarget.delete()
     googleServicesTarget << googleServicesSource.text
-    println "✓ Copied google-services.json from src/${currentFlavor}/ for ${currentFlavor} build"
+    println "✓ Copied google-services.json from ${googleServicesSource.path} for ${currentFlavor} build"
 } else {
-    println "WARNING: google-services.json not found in src/${currentFlavor}/"
+    println "WARNING: google-services config not found for flavor '${currentFlavor}'. Expected one of:"
+    println "  - ${flavorGoogleServicesSource.path}"
+    println "  - ${legacyGoogleServicesSource.path}"
 }
 
 apply plugin: "com.android.application"
@@ -184,6 +194,10 @@ dependencies {
     implementation 'com.google.android.material:material:1.10.0'
     implementation 'androidx.activity:activity:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+    implementation("com.google.firebase:firebase-auth")
+
+
 
       // ===== BILLING LIBRARY 8.x (Latest as of 2025) =====
     implementation "com.android.billingclient:billing:8.0.0"
@@ -191,7 +205,7 @@ dependencies {
     
     // Required AndroidX dependencies
     implementation "androidx.core:core-ktx:1.13.1"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
     
     if (hermesEnabled.toBoolean()) {

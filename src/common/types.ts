@@ -5,12 +5,23 @@ export type AuthStackParamList = {
   Onboarding: undefined;
   LoginWithMail: undefined;
   PhoneOtp: undefined;
-  LoginWithPhone: undefined;
+  LoginWithPhone: {
+    phoneNumber: string;
+    verificationId: string;
+  };
   MainLogin: undefined;
   Signup: undefined;
   ForgetPassword: undefined;
   ResetPassword: { token?: string } | undefined;
-  OtpVerification: undefined;
+  OtpVerification:
+    | {
+        screen?: 'signup' | 'forgotPassword';
+        email?: string;
+        /** Passed only after signup so the OTP screen can send Firebase SMS */
+        phoneE164?: string;
+        isConsultant?: boolean;
+      }
+    | undefined;
   Pricing: { fromSignup?: boolean; fromProfile?: boolean } | undefined;
 };
 

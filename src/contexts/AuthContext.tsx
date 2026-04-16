@@ -10,6 +10,7 @@ import {
   initializeFirebase,
   signInWithFirebaseCustomToken,
   signOutFirebase,
+  verifyPhoneOtpCode,
 } from '@/services/firebase';
 import {
   initializeNotifications,
@@ -37,9 +38,15 @@ interface AuthContextType {
   isLoading: boolean;
   isOnbordingCompleted: boolean;
   login: (email: string, password: string) => Promise<void>;
+  /**
+   * Post-signup (phone): pass `phoneVerificationId` from Firebase SMS.
+   * 1) Firebase validates the SMS code on the device.
+   * 2) The same code is sent to `/api/verify-email` so your server can record verification / issue tokens.
+   */
   verifyEmail: (
     email: string,
-    otp: string
+    otp: string,
+    phoneVerificationId?: string
   ) => Promise<{
     success: boolean;
     error?: string;
@@ -168,9 +175,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const verifyEmail = async (email: string, code: string) => {
+  const verifyEmail = async (email: string, code: string, phoneVerificationId?: string) => {
     try {
-      const response = await verifyEmailMutation.mutateAsync({ email, code });
+      // Step 1 — Firebase Phone Auth: must succeed before we talk to your API.
+      if (phoneVerificationId) {
+        initializeFirebase();
+        const user = await verifyPhoneOtpCode(phoneVerificationId, code);
+        console.log('user--===', user);
+      }
+
+      // Step 2 — Backend: send the same OTP + Firebase verification id
+      // so the server can validate/link the exact Firebase verification session.
+      const response = await verifyEmailMutation.mutateAsync({
+        email,
+        code,
+        verification_id: phoneVerificationId,
+      });
 
       const token = response.data?.access_token;
       const userData = response.data?.user;
@@ -179,6 +199,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Check if this is a consultant who needs admin verification
       // Consultants don't get access_token until admin verifies them
       if (!token && userData?.role === 'consultant') {
+        if (phoneVerificationId) {
+          await signOutFirebase();
+        }
         return {
           success: true,
           requiresAdminVerification: true,
@@ -188,6 +211,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('response======>', response);
 
       if (!token) {
+        if (phoneVerificationId) {
+          await signOutFirebase();
+        }
         return { success: false, error: 'Token missing' };
       }
 
@@ -205,14 +231,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await ensureFirebaseSession();
       }
 
-      // Request notification permissions and register FCM token after successful email verification
       if (__DEV__) {
-        console.log('[auth] Email verified, initializing notifications...');
+        console.log('[auth] Verification complete, initializing notifications...');
       }
       scheduleNotificationsInit();
 
       return { success: true };
     } catch (err: any) {
+      if (phoneVerificationId) {
+        try {
+          await signOutFirebase();
+        } catch {
+          /* ignore */
+        }
+      }
       const message =
         err?.response?.data?.errors?.code?.[0] || err?.message || 'Something went wrong';
 

@@ -8,6 +8,8 @@ import { Button } from '@/common/components/Button';
 import PhoneNumberInput from '@/common/components/PhoneNumberInput';
 import { Controller, useForm } from 'react-hook-form';
 import { useState } from 'react';
+import Toast from '@/common/components/Toast';
+import { sendPhoneVerificationCode } from '@/services/firebase';
 
 const PhoneOtpScreen = () => {
   const insets = useSafeAreaInsets();
@@ -19,10 +21,60 @@ const PhoneOtpScreen = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const [selectedCallingCode, setSelectedCallingCode] = useState('');
+  const [selectedCallingCode, setSelectedCallingCode] = useState('+44');
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'info' as 'success' | 'error' | 'info',
+  });
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({
+      visible: true,
+      message,
+      type,
+    });
+  };
+
+  const handleSendCode = async (form: any) => {
+    const rawPhone = String(form?.phone || '').replace(/\D/g, '');
+    const countryCode = selectedCallingCode.startsWith('+')
+      ? selectedCallingCode
+      : `+${selectedCallingCode}`;
+    const fullPhoneNumber = `${countryCode}${rawPhone}`;
+
+    if (!rawPhone) {
+      console.log('rawPhone--===', rawPhone);
+      showToast('Please enter a valid phone number.', 'error');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const verificationId = await sendPhoneVerificationCode(fullPhoneNumber);
+      navigation.navigate('LoginWithPhone', {
+        phoneNumber: fullPhoneNumber,
+        verificationId,
+      });
+      showToast('Verification code sent successfully.', 'success');
+      console.log('verificationId--===', fullPhoneNumber, verificationId);
+    } catch (error: any) {
+      console.log('error--===', error);
+      showToast(error?.message || 'Failed to send verification code.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <GradientBackground>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast((prev) => ({ ...prev, visible: false }))}
+      />
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={{ paddingBottom: insets.bottom + 20, flexGrow: 1 }}
@@ -75,7 +127,7 @@ const PhoneOtpScreen = () => {
                   value={value}
                   error={errors.phone?.message as string}
                   onPhoneChange={(country, phone) => {
-                    setSelectedCallingCode(country);
+                    setSelectedCallingCode(country?.callingCode || '+44');
                     onChange(phone);
                   }}
                   onFocus={() => {}}
@@ -90,7 +142,9 @@ const PhoneOtpScreen = () => {
             <Button
               variant="gradient"
               text="Send Verification Code"
-              onPress={handleSubmit(() => navigation.navigate('LoginWithPhone'))}
+              onPress={handleSubmit(handleSendCode)}
+              loading={loading}
+              disabled={loading}
             />
 
             <View className="flex-row items-center justify-center">

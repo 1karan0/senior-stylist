@@ -211,8 +211,13 @@ export default function SignupScreen({ navigation, route }: any) {
 
       showToast('Account created successfully!', 'success');
       setTimeout(() => {
+        const cc = selectedCallingCode?.callingCode ?? '';
+        const countryCode = cc.startsWith('+') ? cc : cc ? `+${cc}` : '+44';
+        const rawPhone = String(form.phone ?? '').replace(/\D/g, '');
+        const phoneE164 = `${countryCode}${rawPhone}`;
         navigation.navigate('OtpVerification', {
           email: form.email,
+          phoneE164,
           screen: 'signup',
           isConsultant,
         });

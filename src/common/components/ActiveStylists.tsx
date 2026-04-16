@@ -9,50 +9,46 @@ const ActiveStylist = () => {
   const isStylistActive = activeStylistCount > 0;
   const message = availableStylists?.message || '';
   const { isDark } = useTheme();
-  const pulseScale = useRef(new Animated.Value(1)).current;
-  const pulseOpacity = useRef(new Animated.Value(0.7)).current;
+  const activeProgress = useRef(new Animated.Value(isStylistActive ? 1 : 0)).current;
+  /** Soft “lamp” brightness while online — subtle fade in / fade out loop */
+  const lampGlow = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.timing(activeProgress, {
+      toValue: isStylistActive ? 1 : 0,
+      duration: isStylistActive ? 480 : 400,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, [isStylistActive, activeProgress]);
 
   useEffect(() => {
     if (!isStylistActive) {
-      pulseScale.setValue(1);
-      pulseOpacity.setValue(0);
+      lampGlow.setValue(1);
       return;
     }
-    const loop = Animated.loop(
+    const breathe = Animated.loop(
       Animated.sequence([
-        Animated.parallel([
-          Animated.timing(pulseScale, {
-            toValue: 2.5,
-            duration: 1500,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseOpacity, {
-            toValue: 0,
-            duration: 1500,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.timing(pulseScale, {
-          toValue: 1,
-          duration: 0,
+        Animated.timing(lampGlow, {
+          toValue: 0.2,
+          duration: 1400,
+          easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
-        Animated.timing(pulseOpacity, {
-          toValue: 0.7,
-          duration: 0,
+        Animated.timing(lampGlow, {
+          toValue: 1,
+          duration: 1400,
+          easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
       ])
     );
-    loop.start();
+    breathe.start();
     return () => {
-      loop.stop();
-      pulseScale.setValue(1);
-      pulseOpacity.setValue(0);
+      breathe.stop();
+      lampGlow.setValue(1);
     };
-  }, [isStylistActive, pulseOpacity, pulseScale]);
+  }, [isStylistActive, lampGlow]);
 
   return (
     <View>
@@ -60,29 +56,28 @@ const ActiveStylist = () => {
         <View
           className={` flex-row items-center justify-start gap-2 ${!isStylistActive ? `${isDark ? 'bg-[#222a26]' : 'bg-[#e7e7e7]'}` : `${isDark ? 'bg-[#254c37]' : 'bg-[#cadaca]'}`} rounded-full px-4 py-2`}
         >
-          {isStylistActive ? (
-            <View className="w-3 h-3 items-center justify-center">
-              <Animated.View
-                className="absolute w-3 h-3 rounded-full bg-[#2cff88]"
-                style={{
-                  opacity: pulseOpacity,
-                  transform: [{ scale: pulseScale }],
-                }}
-              />
-              <View
-                className="w-3 h-3 rounded-full bg-[#2cff88]"
-                style={{
-                  shadowColor: '#2cff88',
-                  shadowOpacity: 0.9,
-                  shadowRadius: 8,
-                  shadowOffset: { width: 0, height: 0 },
-                  elevation: 4,
-                }}
-              />
-            </View>
-          ) : (
-            <View className="w-3 h-3 bg-[#7d8a86] rounded-full" />
-          )}
+          <View className="w-3 h-3 items-center justify-center">
+            <Animated.View
+              className="absolute w-3 h-3 rounded-full bg-[#7d8a86]"
+              style={{
+                opacity: activeProgress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [1, 0],
+                }),
+              }}
+            />
+            <Animated.View
+              className="absolute w-3 h-3 rounded-full bg-[#2cff88]"
+              style={{
+                opacity: Animated.multiply(activeProgress, lampGlow),
+                shadowColor: '#2cff88',
+                shadowOpacity: 0.9,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 0 },
+                elevation: 4,
+              }}
+            />
+          </View>
           <Text className={`font-semibold  ${isDark ? 'text-white' : 'text-textDark'}`}>
             {isStylistActive ? `${activeStylistCount} ${message}` : `No ${message}`}
           </Text>

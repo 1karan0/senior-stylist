@@ -13,17 +13,36 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRef, useState } from 'react';
+import Toast from '@/common/components/Toast';
+import { verifyPhoneOtpCode, sendPhoneVerificationCode } from '@/services/firebase';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import { AuthStackParamList } from '@/common/types';
 
 const LoginWithPhoneScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const { horizontalPadding } = useTabletLayout();
   const { isDark } = useTheme();
+  const route = useRoute<RouteProp<AuthStackParamList, 'LoginWithPhone'>>();
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const [loading, setLoading] = useState(false);
+  const [verificationId, setVerificationId] = useState(route?.params?.verificationId ?? '');
+  const phoneNumber = route?.params?.phoneNumber ?? '';
+  const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'info' as 'success' | 'error' | 'info',
+  });
 
   const isOtpComplete = otp.every((digit) => digit !== '');
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({
+      visible: true,
+      message,
+      type,
+    });
+  };
 
   const handleChange = (value: string, index: number) => {
     const updated = [...otp];
@@ -35,16 +54,57 @@ const LoginWithPhoneScreen = ({ navigation }: any) => {
     }
   };
 
-  const handleLogin = () => {
-    console.log('otp======> ', otp);
+  const handleLogin = async () => {
+    if (!verificationId) {
+      showToast('Verification session expired. Please resend OTP.', 'error');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const code = otp.join('');
+      await verifyPhoneOtpCode(verificationId, code);
+      console.log('code--===', code, verificationId);
+      showToast('Phone number verified successfully.', 'success');
+      navigation.navigate('MainLogin');
+    } catch (error: any) {
+      console.log('error--===', error);
+      showToast(error?.message || 'Invalid code. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleResend = () => {
-    console.log('resend======> ');
+  const handleResend = async () => {
+    if (!phoneNumber) {
+      showToast('Phone number missing. Go back and try again.', 'error');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const newVerificationId = await sendPhoneVerificationCode(phoneNumber);
+      setVerificationId(newVerificationId);
+      setOtp(['', '', '', '', '', '']);
+      inputRefs.current[0]?.focus();
+      console.log('newVerificationId--===', newVerificationId);
+      showToast('A new verification code was sent.', 'success');
+    } catch (error: any) {
+      console.log('error--===', error);
+      showToast(error?.message || 'Failed to resend verification code.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <GradientBackground>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast((prev) => ({ ...prev, visible: false }))}
+      />
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={{
@@ -118,12 +178,12 @@ const LoginWithPhoneScreen = ({ navigation }: any) => {
             <Button
               text="Login with Phone"
               onPress={handleLogin}
-              disabled={!isOtpComplete}
+              disabled={!isOtpComplete || loading}
               loading={loading}
               variant="gradient"
             />
           </View>
-          <View className="flex-row items-center justify-center mt-2">
+          <View className="flex-row items-center justify-center mt-6">
             <Text className={`${isDark ? 'text-textSecondary' : 'text-textMuted'} text-[14px]`}>
               Use a different login method?{' '}
             </Text>

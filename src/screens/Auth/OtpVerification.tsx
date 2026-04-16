@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, Pressable, Image } from 'react-native';
+import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { useResendVerificationCodeApi } from '@/api/auth/useResendCode';
 import { useForgotPassword } from '@/api/auth/useForgotPasswod';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -10,8 +9,25 @@ import Toast from '@/common/components/Toast';
 import { Button } from '@/common/components/Button';
 import InfoModal from '@/common/components/modals/InfoModal';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
+import {
+  initializeFirebase,
+  sendPhoneVerificationCode,
+  verifyPhoneOtpCode,
+} from '@/services/firebase';
+
+function maskE164(e164: string) {
+  const s = e164.trim();
+  if (s.length <= 6) return s;
+  return `${s.slice(0, 4)} •••• ••${s.slice(-4)}`;
+}
 
 export default function OtpVerificationScreen({ navigation, route }: any) {
+  const { params } = route;
+  const screen = params?.screen;
+  const email = params?.email;
+  const phoneE164 = params?.phoneE164 as string | undefined;
+  const isSignupScreen = screen === 'signup';
+
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [toast, setToast] = useState({
     visible: false,
@@ -20,25 +36,20 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
   });
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(30);
-  const [isTimerActive, setIsTimerActive] = useState(true);
+  const [isTimerActive, setIsTimerActive] = useState(!isSignupScreen);
   const [showAdminVerificationModal, setShowAdminVerificationModal] = useState(false);
+
+  const [verificationId, setVerificationId] = useState('');
+  const [sendingInitialSms, setSendingInitialSms] = useState(isSignupScreen);
 
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const { verifyEmail } = useAuth();
 
   const isOtpComplete = otp.every((digit) => digit !== '');
 
-  const { params } = route;
   const { horizontalPadding } = useTabletLayout();
-  const screen = params?.screen;
-  const email = params?.email;
 
-  // Call both hooks unconditionally to follow Rules of Hooks
-  const resendVerificationMutation = useResendVerificationCodeApi();
   const forgotPasswordMutation = useForgotPassword();
-
-  // Select the appropriate mutation based on screen
-  const resendMutation = screen === 'signup' ? resendVerificationMutation : forgotPasswordMutation;
 
   const { isDark } = useTheme();
 
@@ -68,6 +79,40 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
     return () => clearInterval(interval);
   }, [isTimerActive]);
 
+  useEffect(() => {
+    if (!isSignupScreen) return;
+    if (!phoneE164) {
+      setSendingInitialSms(false);
+      showToast('Phone number missing. Go back and try again.', 'error');
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        initializeFirebase();
+        const id = await sendPhoneVerificationCode(phoneE164);
+        if (!cancelled) {
+          setVerificationId(id);
+          setTimer(30);
+          setIsTimerActive(true);
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          showToast(err?.message || 'Failed to send verification code.', 'error');
+        }
+      } finally {
+        if (!cancelled) {
+          setSendingInitialSms(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignupScreen, phoneE164]);
+
   const handleChange = (value: string, index: number) => {
     const updated = [...otp];
     updated[index] = value;
@@ -90,7 +135,13 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
         const { storage } = await import('@/services/storage');
         await storage.setIsNewSignup(true);
 
-        const res = await verifyEmail(email, code);
+        if (!verificationId) {
+          await storage.setIsNewSignup(false);
+          showToast('Please wait for the SMS code to be sent.', 'error');
+          return;
+        }
+
+        const res = await verifyEmail(email, code, verificationId);
         console.log('res======> from screen ', res);
 
         if (!res.success) {
@@ -109,7 +160,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
           return;
         }
 
-        showToast('Email verified successfully!', 'success');
+        showToast('Phone verified successfully!', 'success');
         // After email verification, user is set in AuthContext
         // AuthGate will switch from AuthStack to AppStack
         // AppStack will check the flag (already set above) and navigate to Pricing for new signups
@@ -152,15 +203,34 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
     if (isTimerActive) return;
 
     try {
-      const res = await resendMutation.mutateAsync({ email: email });
+      if (screen === 'signup') {
+        if (!phoneE164) {
+          showToast('Phone number missing. Go back and try again.', 'error');
+          return;
+        }
+        setLoading(true);
+        initializeFirebase();
+        const id = await sendPhoneVerificationCode(phoneE164);
+        console.log('id--===', id);
+        setVerificationId(id);
+        setOtp(['', '', '', '', '', '']);
+        inputRefs.current[0]?.focus();
+        setTimer(30);
+        setIsTimerActive(true);
+        showToast('A new verification code was sent to your phone.', 'success');
+        return;
+      }
+
+      await forgotPasswordMutation.mutateAsync({ email: email });
       showToast('OTP has been resent successfully to your email.', 'success');
 
-      // restart timer
       setTimer(30);
       setIsTimerActive(true);
     } catch (err: any) {
       const msg = err.message || 'Failed to resend OTP. Please try again.';
       showToast(msg, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -190,14 +260,23 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
         </Text>
 
         <Text className={`text-[13px] ${isDark ? 'text-textSecondary' : 'text-textMuted'}  mt-2`}>
-          Verification code has been sent to
+          {isSignupScreen ? 'Enter the code sent via SMS to' : 'Verification code has been sent to'}
         </Text>
 
-        <Text
-          className={`text-[14px] font-semibold ${isDark ? 'text-[#2CCB91]' : 'text-textPrimary'} mt-1`}
-        >
-          {email}
-        </Text>
+        {sendingInitialSms && isSignupScreen ? (
+          <View className="flex-row items-center gap-2 mt-3">
+            <ActivityIndicator color={isDark ? '#2CCB91' : '#2CCB91'} />
+            <Text className={`text-[13px] ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
+              Sending verification code…
+            </Text>
+          </View>
+        ) : (
+          <Text
+            className={`text-[14px] font-semibold ${isDark ? 'text-[#2CCB91]' : 'text-textPrimary'} mt-1`}
+          >
+            {isSignupScreen ? maskE164(phoneE164 || '') : email}
+          </Text>
+        )}
 
         {/* OTP BOXES */}
         <View className="flex-row justify-center gap-2 mt-6 mb-4">
@@ -232,10 +311,12 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
             Didn't receive the code?{' '}
           </Text>
 
-          {isTimerActive ? (
-            <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend in {timer}s</Text>
+          {isTimerActive || sendingInitialSms ? (
+            <Text className="text-[#2CCB91] font-semibold text-[13px]">
+              {sendingInitialSms ? 'Sending…' : `Resend in ${timer}s`}
+            </Text>
           ) : (
-            <Pressable onPress={handleResend}>
+            <Pressable onPress={handleResend} disabled={loading}>
               <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend</Text>
             </Pressable>
           )}
@@ -246,7 +327,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
           <Button
             text="Verify"
             onPress={handleVerify}
-            disabled={!isOtpComplete}
+            disabled={!isOtpComplete || (isSignupScreen && !verificationId) || sendingInitialSms}
             loading={loading}
             variant="gradient"
           />

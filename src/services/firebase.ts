@@ -115,6 +115,41 @@ export const signOutFirebase = async (): Promise<void> => {
   }
 };
 
+export const sendPhoneVerificationCode = async (phoneNumber: string): Promise<string> => {
+  getApp(); // Ensure Firebase is initialized
+  try {
+    const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+    const verificationId = confirmation.verificationId;
+
+    if (!verificationId) {
+      throw new Error('Unable to get verification ID from Firebase.');
+    }
+
+    return verificationId;
+  } catch (error: any) {
+    const errorCode = error?.code;
+
+    if (errorCode === 'auth/app-not-authorized') {
+      throw new Error(
+        'This app build is not authorized for Firebase Phone Auth. Add this build package and SHA-1/SHA-256 in Firebase Console, then rebuild.'
+      );
+    }
+
+    if (errorCode === 'auth/too-many-requests') {
+      throw new Error('Too many OTP attempts from this device. Please wait and try again later.');
+    }
+
+    throw error;
+  }
+};
+
+export const verifyPhoneOtpCode = async (verificationId: string, code: string) => {
+  getApp(); // Ensure Firebase is initialized
+  const credential = auth.PhoneAuthProvider.credential(verificationId, code);
+  const userCredential = await auth().signInWithCredential(credential);
+  return userCredential.user;
+};
+
 export const waitForFirebaseUser = (
   timeout = 5000
 ): Promise<ReturnType<typeof auth>['currentUser']> =>
