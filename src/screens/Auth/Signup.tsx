@@ -218,6 +218,8 @@ export default function SignupScreen({ navigation, route }: any) {
         navigation.navigate('OtpVerification', {
           email: form.email,
           phoneE164,
+          countryCode,
+          rawPhone,
           screen: 'signup',
           isConsultant,
         });

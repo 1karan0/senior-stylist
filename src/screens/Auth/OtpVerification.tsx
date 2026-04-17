@@ -26,6 +26,8 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
   const screen = params?.screen;
   const email = params?.email;
   const phoneE164 = params?.phoneE164 as string | undefined;
+  const countryCode = params?.countryCode as string | undefined;
+  const rawPhone = params?.rawPhone as string | undefined;
   const isSignupScreen = screen === 'signup';
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -44,6 +46,7 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
 
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const { verifyEmail } = useAuth();
+  const { verifyPhone } = useAuth();
 
   const isOtpComplete = otp.every((digit) => digit !== '');
 
@@ -141,8 +144,21 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
           return;
         }
 
-        const res = await verifyEmail(email, code, verificationId);
-        console.log('res======> from screen ', res);
+        // For phone-based signup, use verifyPhone API
+        let res;
+        if (phoneE164 && rawPhone && countryCode) {
+          // Verify with Firebase first to get ID token
+          const user = await verifyPhoneOtpCode(verificationId, code);
+          const firebaseIdToken = await user.getIdToken();
+
+          // Call verifyPhone API
+          res = await verifyPhone(email, rawPhone, countryCode, firebaseIdToken);
+          console.log('res======> from phone verification ', res);
+        } else {
+          // Fallback to email verification for email-based signups
+          res = await verifyEmail(email, code, verificationId);
+          console.log('res======> from screen ', res);
+        }
 
         if (!res.success) {
           // If verification fails, clear the flag

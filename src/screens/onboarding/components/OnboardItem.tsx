@@ -159,14 +159,14 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
                 (isLandscape
                   ? Platform.OS === 'ios'
                     ? 0.4
-                    : 0.42
+                    : 0.38
                   : isTabletPortrait
                     ? 0.61
                     : isTallPhone
                       ? 0.67
                       : isCompactPhone
                         ? 0.65
-                        : 0.62),
+                        : 0.58),
               left: 0,
               right: 0,
               width: '100%',

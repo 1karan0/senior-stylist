@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRef, useState } from 'react';
 import Toast from '@/common/components/Toast';
 import { verifyPhoneOtpCode, sendPhoneVerificationCode } from '@/services/firebase';
@@ -22,6 +23,7 @@ const LoginWithPhoneScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const { horizontalPadding } = useTabletLayout();
   const { isDark } = useTheme();
+  const { loginWithPhone } = useAuth();
   const route = useRoute<RouteProp<AuthStackParamList, 'LoginWithPhone'>>();
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -63,13 +65,22 @@ const LoginWithPhoneScreen = ({ navigation }: any) => {
     try {
       setLoading(true);
       const code = otp.join('');
-      await verifyPhoneOtpCode(verificationId, code);
-      console.log('code--===', code, verificationId);
-      showToast('Phone number verified successfully.', 'success');
-      navigation.navigate('MainLogin');
+
+      // First, verify the OTP with Firebase to get the user credential
+      const user = await verifyPhoneOtpCode(verificationId, code);
+      console.log('user--===', user);
+      // Extract the Firebase ID token
+      const idToken = await user.getIdToken();
+
+      console.log('idToken--===', idToken);
+      // Send the ID token to your backend for authentication
+      await loginWithPhone(idToken);
+
+      showToast('Login successful!', 'success');
+      // Navigation to main app will be handled by auth state change
     } catch (error: any) {
       console.log('error--===', error);
-      showToast(error?.message || 'Invalid code. Please try again.', 'error');
+      showToast(error?.message || 'Login failed. Please try again.', 'error');
     } finally {
       setLoading(false);
     }

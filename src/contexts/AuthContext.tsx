@@ -3,6 +3,8 @@ import { InteractionManager, Platform } from 'react-native';
 import { storage } from '@/services/storage';
 import { useLoginApi } from '@/api/auth/useLogin';
 import { useVerifyEmailApi } from '@/api/auth/useVerifyEmail';
+import { useLoginWithPhone } from '@/api/auth/useLoginWithPhone';
+import { useVerifyPhone } from '@/api/auth/useVerifyPhone';
 import { User } from '@/common/types';
 import { fetchFirebaseCustomToken } from '@/api/auth/getFirebaseCustomToken';
 import {
@@ -38,6 +40,7 @@ interface AuthContextType {
   isLoading: boolean;
   isOnbordingCompleted: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithPhone: (firebaseId: string) => Promise<void>;
   /**
    * Post-signup (phone): pass `phoneVerificationId` from Firebase SMS.
    * 1) Firebase validates the SMS code on the device.
@@ -47,6 +50,17 @@ interface AuthContextType {
     email: string,
     otp: string,
     phoneVerificationId?: string
+  ) => Promise<{
+    success: boolean;
+    error?: string;
+    requiresAdminVerification?: boolean;
+    user?: User;
+  }>;
+  verifyPhone: (
+    email: string,
+    phone: string,
+    phoneCountryCode: string,
+    firebaseIdToken: string
   ) => Promise<{
     success: boolean;
     error?: string;
@@ -70,6 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginMutation = useLoginApi();
   const verifyEmailMutation = useVerifyEmailApi();
+  const loginWithPhoneMutation = useLoginWithPhone();
+  const verifyPhoneMutation = useVerifyPhone();
 
   //check if user is logged in
   useEffect(() => {
@@ -175,6 +191,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithPhone = async (firebaseId: string) => {
+    try {
+      const response = await loginWithPhoneMutation.mutateAsync(firebaseId);
+
+      console.log('loginWithPhone response======>', response);
+
+      const token = response?.data?.access_token;
+      const user = response?.data?.user;
+      const firebaseToken = response?.data?.firebase_custom_token;
+
+      if (!token) throw new Error('Token missing in API response');
+
+      await Promise.all([storage.setToken(token), storage.setUserData(user)]);
+      setUser(user);
+      setIsGuest(false);
+
+      if (firebaseToken) {
+        await initializeFirebase();
+        await signInWithFirebaseCustomToken(firebaseToken);
+      } else {
+        await ensureFirebaseSession();
+      }
+
+      // Request notification permissions and register FCM token after successful login
+      if (__DEV__) {
+        console.log('[auth] User logged in with phone, initializing notifications...');
+      }
+      scheduleNotificationsInit();
+    } catch (err) {
+      throw err;
+    }
+  };
+
   const verifyEmail = async (email: string, code: string, phoneVerificationId?: string) => {
     try {
       // Step 1 — Firebase Phone Auth: must succeed before we talk to your API.
@@ -245,6 +294,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           /* ignore */
         }
       }
+      const message =
+        err?.response?.data?.errors?.code?.[0] || err?.message || 'Something went wrong';
+
+      return { success: false, error: message };
+    }
+  };
+
+  const verifyPhone = async (
+    email: string,
+    phone: string,
+    phoneCountryCode: string,
+    firebaseIdToken: string
+  ) => {
+    try {
+      const response = await verifyPhoneMutation.mutateAsync({
+        email,
+        phone,
+        phone_country_code: phoneCountryCode,
+        firebase_id_token: firebaseIdToken,
+      });
+
+      const token = response.data?.access_token;
+      const userData = response.data?.user;
+      const firebaseToken = response.data?.firebase_custom_token;
+
+      // Check if this is a consultant who needs admin verification
+      if (!token && userData?.role === 'consultant') {
+        return {
+          success: true,
+          requiresAdminVerification: true,
+          user: userData,
+        };
+      }
+
+      if (!token) {
+        return { success: false, error: 'Token missing' };
+      }
+
+      await Promise.all([storage.setToken(token), storage.setUserData(userData)]);
+
+      setUser(userData);
+      setIsGuest(false);
+
+      // Initialize Firebase session
+      if (firebaseToken) {
+        await initializeFirebase();
+        await signInWithFirebaseCustomToken(firebaseToken);
+      } else {
+        await ensureFirebaseSession();
+      }
+
+      if (__DEV__) {
+        console.log('[auth] Phone verification complete, initializing notifications...');
+      }
+      scheduleNotificationsInit();
+
+      return { success: true };
+    } catch (err: any) {
       const message =
         err?.response?.data?.errors?.code?.[0] || err?.message || 'Something went wrong';
 
@@ -332,7 +439,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     isOnbordingCompleted: isOnBordingCompleted,
     login,
+    loginWithPhone,
     verifyEmail,
+    verifyPhone,
     logout,
     completeOnbording,
     continueAsGuest,
