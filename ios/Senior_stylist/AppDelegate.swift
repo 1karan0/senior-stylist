@@ -2,6 +2,7 @@ import UIKit
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
+import FirebaseAuth
 import FirebaseCore
 import FirebaseMessaging
 
@@ -58,6 +59,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
  application.registerForRemoteNotifications()
 
  return true
+ }
+
+ /// Phone Auth (reCAPTCHA): return from Safari must be delivered to Firebase Auth.
+ func application(
+ _ application: UIApplication,
+ open url: URL,
+ options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+ ) -> Bool {
+ if Auth.auth().canHandle(url) {
+ return true
+ }
+ return false
  }
 
  // ------------------------------------------------

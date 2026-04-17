@@ -76,5 +76,19 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>FirebasePhoneAuth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>app-1-128763626215-ios-c2279e71ee776a5e9f5842</string>
+				<string>app-1-552447936882-ios-94adc74edd763f0fc535eb</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

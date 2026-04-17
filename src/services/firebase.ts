@@ -1,5 +1,13 @@
 import { getApp } from '@react-native-firebase/app';
-import auth from '@react-native-firebase/auth';
+import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import {
+  getAuth,
+  PhoneAuthProvider,
+  signInWithCredential,
+  signInWithCustomToken,
+  signInWithPhoneNumber,
+  signOut,
+} from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 
@@ -59,7 +67,7 @@ export const initializeFirebase = (): boolean => {
 export const getFirebaseAuth = () => {
   try {
     getApp(); // Ensure Firebase is initialized
-    return auth();
+    return getAuth();
   } catch (error) {
     if (__DEV__) {
       console.error('Firebase Auth not available:', error);
@@ -85,7 +93,7 @@ export const getFirestoreInstance = () => {
 export const signInWithFirebaseCustomToken = async (customToken: string) => {
   try {
     getApp(); // Ensure Firebase is initialized
-    const userCredential = await auth().signInWithCustomToken(customToken);
+    const userCredential = await signInWithCustomToken(getAuth(), customToken);
     return userCredential.user;
   } catch (error: any) {
     if (__DEV__) {
@@ -107,7 +115,7 @@ export const signInWithFirebaseCustomToken = async (customToken: string) => {
 
 export const signOutFirebase = async (): Promise<void> => {
   try {
-    await auth().signOut();
+    await signOut(getAuth());
   } catch (error) {
     if (__DEV__) {
       console.warn('Failed to sign out from Firebase:', error);
@@ -118,7 +126,7 @@ export const signOutFirebase = async (): Promise<void> => {
 export const sendPhoneVerificationCode = async (phoneNumber: string): Promise<string> => {
   getApp(); // Ensure Firebase is initialized
   try {
-    const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+    const confirmation = await signInWithPhoneNumber(getAuth(), phoneNumber);
     const verificationId = confirmation.verificationId;
 
     if (!verificationId) {
@@ -145,15 +153,13 @@ export const sendPhoneVerificationCode = async (phoneNumber: string): Promise<st
 
 export const verifyPhoneOtpCode = async (verificationId: string, code: string) => {
   getApp(); // Ensure Firebase is initialized
-  const credential = auth.PhoneAuthProvider.credential(verificationId, code);
-  const userCredential = await auth().signInWithCredential(credential);
+  const credential = PhoneAuthProvider.credential(verificationId, code);
+  const userCredential = await signInWithCredential(getAuth(), credential);
   return userCredential.user;
 };
 
-export const waitForFirebaseUser = (
-  timeout = 5000
-): Promise<ReturnType<typeof auth>['currentUser']> =>
-  new Promise<ReturnType<typeof auth>['currentUser']>((resolve) => {
+export const waitForFirebaseUser = (timeout = 5000): Promise<FirebaseAuthTypes.User | null> =>
+  new Promise<FirebaseAuthTypes.User | null>((resolve) => {
     try {
       getApp(); // Ensure Firebase is initialized
     } catch (error) {
@@ -161,7 +167,7 @@ export const waitForFirebaseUser = (
       return;
     }
 
-    const authInstance = auth();
+    const authInstance = getAuth();
     const currentUser = authInstance.currentUser;
 
     // If user is already signed in, return immediately

@@ -277,6 +277,11 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
             {isSignupScreen ? maskE164(phoneE164 || '') : email}
           </Text>
         )}
+        {isSignupScreen ? (
+          <Text className={`text-[12px] mt-2 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}>
+            You may see a quick security check (reCAPTCHA) before SMS verification.
+          </Text>
+        ) : null}
 
         {/* OTP BOXES */}
         <View className="flex-row justify-center gap-2 mt-6 mb-4">

@@ -139,6 +139,13 @@ const PhoneOtpScreen = () => {
 
           {/* Action Section */}
           <View className="gap-y-6">
+            <Text
+              className={`text-center text-[12px] ${
+                isDark ? 'text-textSecondary' : 'text-textMuted'
+              }`}
+            >
+              You may see a quick security check (reCAPTCHA) before we send your OTP.
+            </Text>
             <Button
               variant="gradient"
               text="Send Verification Code"
