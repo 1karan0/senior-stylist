@@ -56,12 +56,15 @@ interface AuthContextType {
     requiresAdminVerification?: boolean;
     user?: User;
   }>;
-  verifyPhone: (
-    email: string,
-    phone: string,
-    phoneCountryCode: string,
-    firebaseIdToken: string
-  ) => Promise<{
+  verifyPhone: (params: {
+    name: string;
+    email: string;
+    phone: string;
+    phoneCountryCode: string;
+    firebaseIdToken: string;
+    referral?: string;
+    isConsultant?: boolean;
+  }) => Promise<{
     success: boolean;
     error?: string;
     requiresAdminVerification?: boolean;
@@ -191,9 +194,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithPhone = async (firebaseId: string) => {
+  const loginWithPhone = async (firebaseIdToken: string) => {
     try {
-      const response = await loginWithPhoneMutation.mutateAsync(firebaseId);
+      const response = await loginWithPhoneMutation.mutateAsync(firebaseIdToken);
 
       console.log('loginWithPhone response======>', response);
 
@@ -301,18 +304,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const verifyPhone = async (
-    email: string,
-    phone: string,
-    phoneCountryCode: string,
-    firebaseIdToken: string
-  ) => {
+  const verifyPhone = async (params: {
+    name: string;
+    email: string;
+    phone: string;
+    phoneCountryCode: string;
+    firebaseIdToken: string;
+    referral?: string;
+    isConsultant?: boolean;
+  }) => {
     try {
       const response = await verifyPhoneMutation.mutateAsync({
-        email,
-        phone,
-        phone_country_code: phoneCountryCode,
-        firebase_id_token: firebaseIdToken,
+        name: params.name,
+        email: params.email,
+        phone: params.phone,
+        phone_country_code: params.phoneCountryCode,
+        firebase_id_token: params.firebaseIdToken,
+        referral_code: params.referral,
       });
 
       const token = response.data?.access_token;

@@ -69,17 +69,16 @@ const LoginWithPhoneScreen = ({ navigation }: any) => {
       // First, verify the OTP with Firebase to get the user credential
       const user = await verifyPhoneOtpCode(verificationId, code);
       console.log('user--===', user);
-      // Extract the Firebase ID token
-      const idToken = await user.getIdToken();
+      // Extract a fresh Firebase ID token and send it to backend for authentication
+      const idToken = await user.getIdToken(true);
 
       console.log('idToken--===', idToken);
-      // Send the ID token to your backend for authentication
       await loginWithPhone(idToken);
 
       showToast('Login successful!', 'success');
       // Navigation to main app will be handled by auth state change
     } catch (error: any) {
-      console.log('error--===', error);
+      console.log('error in login--===', error);
       showToast(error?.message || 'Login failed. Please try again.', 'error');
     } finally {
       setLoading(false);

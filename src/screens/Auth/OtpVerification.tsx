@@ -23,6 +23,7 @@ function maskE164(e164: string) {
 
 export default function OtpVerificationScreen({ navigation, route }: any) {
   const { params } = route;
+  const name = params?.name;
   const screen = params?.screen;
   const email = params?.email;
   const phoneE164 = params?.phoneE164 as string | undefined;
@@ -151,8 +152,16 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
           const user = await verifyPhoneOtpCode(verificationId, code);
           const firebaseIdToken = await user.getIdToken();
 
-          // Call verifyPhone API
-          res = await verifyPhone(email, rawPhone, countryCode, firebaseIdToken);
+          // Call verifyPhone API with collected signup data
+          res = await verifyPhone({
+            name,
+            email,
+            phone: rawPhone,
+            phoneCountryCode: countryCode,
+            referral: params?.referral,
+            isConsultant: params?.isConsultant,
+            firebaseIdToken,
+          });
           console.log('res======> from phone verification ', res);
         } else {
           // Fallback to email verification for email-based signups

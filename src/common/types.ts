@@ -16,9 +16,14 @@ export type AuthStackParamList = {
   OtpVerification:
     | {
         screen?: 'signup' | 'forgotPassword';
+        name?: string;
         email?: string;
         /** Passed only after signup so the OTP screen can send Firebase SMS */
         phoneE164?: string;
+        countryCode?: string;
+        rawPhone?: string;
+        password?: string;
+        referral?: string;
         isConsultant?: boolean;
       }
     | undefined;

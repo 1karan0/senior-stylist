@@ -3,8 +3,6 @@ import { View, Text, Pressable, Image, ScrollView, KeyboardAvoidingView } from '
 import { useForm, Controller } from 'react-hook-form';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 
-import { useSignupApi } from '@/api/auth/useSignup';
-
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import TextInputField from '@/common/components/TextInputField';
@@ -40,7 +38,6 @@ export default function SignupScreen({ navigation, route }: any) {
 
   const { isDark } = useTheme();
   const user = route.params.user; // expects 'consultant' or other
-  const signupMutation = useSignupApi();
   const isConsultant = user === 'consultant';
   const { horizontalPadding } = useTabletLayout();
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
@@ -204,28 +201,23 @@ export default function SignupScreen({ navigation, route }: any) {
       }
       console.log(signupData, 'signupData');
 
-      await signupMutation.mutateAsync({
-        data: signupData,
+      const cc = selectedCallingCode?.callingCode ?? '';
+      const countryCode = cc.startsWith('+') ? cc : cc ? `+${cc}` : '+44';
+      const rawPhone = String(form.phone ?? '').replace(/\D/g, '');
+      const phoneE164 = `${countryCode}${rawPhone}`;
+      navigation.navigate('OtpVerification', {
+        name: form.name,
+        email: form.email,
+        phoneE164,
+        countryCode,
+        rawPhone,
+        referral: form.referral?.trim(),
+        screen: 'signup',
         isConsultant,
       });
-
-      showToast('Account created successfully!', 'success');
-      setTimeout(() => {
-        const cc = selectedCallingCode?.callingCode ?? '';
-        const countryCode = cc.startsWith('+') ? cc : cc ? `+${cc}` : '+44';
-        const rawPhone = String(form.phone ?? '').replace(/\D/g, '');
-        const phoneE164 = `${countryCode}${rawPhone}`;
-        navigation.navigate('OtpVerification', {
-          email: form.email,
-          phoneE164,
-          countryCode,
-          rawPhone,
-          screen: 'signup',
-          isConsultant,
-        });
-      }, 1500);
     } catch (err: any) {
       const errorMessage = err?.message || 'Something went wrong. Please try again.';
+      console.error('Signup error:', err);
       showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
@@ -338,25 +330,27 @@ export default function SignupScreen({ navigation, route }: any) {
             />
 
             {/* Password */}
-            <Controller
-              control={control}
-              name="password"
-              rules={{
-                required: 'Password is required',
-                minLength: { value: 6, message: 'Password must be at least 6 characters' },
-              }}
-              render={({ field: { onChange, value } }) => (
-                <TextInputField
-                  label="Password"
-                  placeholder="Enter your password"
-                  icon={require('../../assets/icons/lock.png')}
-                  value={value}
-                  isPassword={true}
-                  onChangeText={onChange}
-                  error={errors.password?.message as string}
-                />
-              )}
-            />
+            {isConsultant && (
+              <Controller
+                control={control}
+                name="password"
+                rules={{
+                  required: 'Password is required',
+                  minLength: { value: 6, message: 'Password must be at least 6 characters' },
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <TextInputField
+                    label="Password"
+                    placeholder="Enter your password"
+                    icon={require('../../assets/icons/lock.png')}
+                    value={value}
+                    isPassword={true}
+                    onChangeText={onChange}
+                    error={errors.password?.message as string}
+                  />
+                )}
+              />
+            )}
 
             {/* Consultant: Do you belong to a salon? + Salon Code + Referral Code */}
             {isConsultant && (
@@ -708,8 +702,8 @@ export default function SignupScreen({ navigation, route }: any) {
                   // 4) All good: submit via react-hook-form
                   handleSubmit(handleSignup)();
                 }}
-                loading={loading || signupMutation.isPending}
-                disabled={loading || signupMutation.isPending}
+                loading={loading}
+                disabled={loading}
               />
             </View>
 
