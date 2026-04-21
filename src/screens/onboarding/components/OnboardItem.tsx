@@ -166,13 +166,13 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
                       ? 0.67
                       : isCompactPhone
                         ? 0.65
-                        : 0.58),
+                        : 0.55),
               left: 0,
               right: 0,
               width: '100%',
               height:
                 screenHeight *
-                (isLandscape ? 0.45 : isTabletPortrait ? 0.34 : isTallPhone ? 0.32 : 0.3),
+                (isLandscape ? 0.45 : isTabletPortrait ? 0.34 : isTallPhone ? 0.32 : 0.8),
               paddingHorizontal: isTabletPortrait ? 20 : 12,
               paddingTop: isLandscape ? 14 : isTabletPortrait ? 34 : isTallPhone ? 20 : 24,
               borderTopLeftRadius: 30,

@@ -10,7 +10,7 @@ const onboardData = [
     id: 1,
     title: 'Confidence starts with a connection',
     description:
-      'We believe that when you look your best, you feel unstoppable. But great hair isn’t just about a service, it’s about finding a stylist who truly sees you. We’ve brought together the world’s most elite senior stylists to ensure that every appointment is more than a booking; it’s a sanctuary for your self-expression.',
+      'We believe that when you look your best, you feel unstoppable. But great hair isn’t just about a service, it’s about finding a stylist who truly sees you. We’ve brought together the world’s most elite senior stylists to ensure that every appointment is more than a booking, it’s a sanctuary for your self-expression.',
     image: require('@/assets/images/first-screen.jpg'),
   },
   {
