@@ -205,7 +205,7 @@ const CustomerChatHome: React.FC = () => {
         />
 
         {loading && consultations.length === 0 ? (
-          <View className="flex-1 mb-8 mt-4" style={[{ paddingHorizontal: horizontalPadding }]}>
+          <View className="flex-1 mb-8 mt-7" style={[{ paddingHorizontal: horizontalPadding }]}>
             <View>
               {[...Array(8)].map((_, i) => (
                 <ConversationSkeleton key={i} />
@@ -214,9 +214,6 @@ const CustomerChatHome: React.FC = () => {
           </View>
         ) : (
           <View className="flex-1 mb-8 mt-4" style={[{ paddingHorizontal: horizontalPadding }]}>
-            <View className="mb-4">
-              <ActiveStylist />
-            </View>
             <FlashList
               data={filteredConvos}
               keyExtractor={(item: ConversationPreview) => item.id.toString()}

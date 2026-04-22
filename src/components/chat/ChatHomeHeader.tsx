@@ -6,6 +6,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import type { AppStackParamList, ConsultationStackParamList } from '@/common/types';
 import SearchBar from './SearchBar';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
+import ActiveStylist from '@/common/components/ActiveStylists';
 type NavParamList = AppStackParamList & ConsultationStackParamList;
 
 interface ChatHomeHeaderProps {
@@ -37,6 +38,9 @@ const ChatHomeHeader: React.FC<ChatHomeHeaderProps> = ({
         >
           <Text className="font-semibold text-green-700">+ New</Text>
         </TouchableOpacity>
+      </View>
+      <View className=" mt-2">
+        <ActiveStylist />
       </View>
 
       <SearchBar searchQuery={searchQuery} onSearchChange={onSearchChange} />

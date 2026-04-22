@@ -78,9 +78,12 @@ const NewsScreen = () => {
           News Feed
         </Text>
 
+        <View className="mt-2">
+          <ActiveStylist />
+        </View>
         {/* Search */}
         <View
-          className={`flex-row items-center border mt-5 rounded-xl ${
+          className={`flex-row items-center border mt-4 rounded-xl ${
             isDark
               ? 'bg-commonGradientStop6 border-commonGradientStop7'
               : 'bg-[#FAFAFA] border-[#E6E6E6]'
@@ -107,10 +110,6 @@ const NewsScreen = () => {
               includeFontPadding: false,
             }}
           />
-        </View>
-
-        <View className="mt-4 mb-2">
-          <ActiveStylist />
         </View>
 
         {/* Categories */}

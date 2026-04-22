@@ -401,7 +401,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     <GradientBackground>
       <View className="flex-1 pb-10 ">
         {/* Header */}
-        <View className="py-5" style={[{ paddingHorizontal: horizontalPadding }]}>
+        <View className="mt-6" style={[{ paddingHorizontal: horizontalPadding }]}>
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
           >
@@ -415,7 +415,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }}
         >
-          <View className="mb-4">
+          <View className="mb-4 mt-2">
             <ActiveStylist />
           </View>
           {/* ---------- Profile Card ---------- */}
