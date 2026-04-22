@@ -422,7 +422,6 @@ const Settings: React.FC = () => {
         {/* Delete Modal */}
         <DeleteAccountModal
           visible={showDeleteModal}
-          isDark={isDark}
           onConfirm={confirmDeleteAccount}
           onCancel={() => setShowDeleteModal(false)}
         />

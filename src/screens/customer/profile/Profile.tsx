@@ -391,6 +391,11 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   };
 
   const isEmailOtpComplete = emailOtp.every((digit) => digit !== '');
+  const androidVersion =
+    typeof Platform.Version === 'number'
+      ? Platform.Version
+      : parseInt(String(Platform.Version), 10);
+  const isAndroid13 = androidVersion <= 33;
 
   return (
     <GradientBackground>
@@ -753,122 +758,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
             )}
           </View>
 
-          {/* ---------- Rewards ---------- */}
-          {/* <View
-            className="p-4 mt-5"
-            style={{
-              borderRadius: 12,
-              backgroundColor: '#2CCB91',
-            }}
-          >
-            <View className=" flex-col gap-3">
-              <View className="flex-row gap-2">
-                <Image source={require('@/assets/icons/gift.png')} />
-                <Text className="text-white text-xl font-urbanist-semibold mb-4">Your Rewards</Text>
-              </View>
-
-              <View className="flex-row items-center justify-center ">
-                <View className="items-center  w-[50%]">
-                  <Text className="text-white text-[40px] font-urbanist-bold">
-                    {user?.referral_stats?.total_rewards_earned ?? 0}
-                  </Text>
-                  <Text
-                    style={{
-                      width: Platform.OS === 'ios' ? '80%' : '100%',
-                    }}
-                    className="text-white font-poppins-medium text-center text-sm"
-                  >
-                    Free Consultation Sessions
-                  </Text>
-                </View>
-                <View className="items-center  w-[50%] h-full">
-                  <Text className="text-white text-[40px] font-urbanist-bold">
-                    {user?.referral_stats?.total_referrals ?? 0}
-                  </Text>
-                  <Text className="text-white font-poppins-medium text-sm">Referrals</Text>
-                </View>
-              </View>
-            </View>
-          </View> */}
-
-          {/* ---------- Referral Program ---------- */}
-          {/* <View
-            className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'} rounded-2xl p-4 border mt-5`}
-          >
-            <View>
-              <View className="flex-row gap-2 items-baseline">
-                <Image
-                  source={
-                    isDark
-                      ? require('@/assets/icons/users-white.png')
-                      : require('@/assets/icons/users.png')
-                  }
-                  className=""
-                />
-                <Text
-                  className={`text-[22px] ${isDark ? 'text-white' : 'text-textDark'} font-urbanist-semibold mb-2`}
-                >
-                  Referral Program
-                </Text>
-              </View>
-              <Text
-                className={` ${isDark ? 'text-textSecondary' : 'text-textMuted'} font-poppins-regular text-sm mb-2 w-[90%]`}
-              >
-                Share your code with friends and earn free sessions
-              </Text>
-            </View>
-
-            {/* Code Box */}
-          {/* <View className="flex-row justify-between mb-3 relative">
-              <View
-                className={` w-[80%] items-center text-center bg-[#F5F9F7] border-[#DAE7E0] border rounded-lg py-3 `}
-              >
-                <Text className="text-black text-base font-urbanist-bold">
-                  {user?.referral_code ?? '------'}
-                </Text>
-              </View>
-              <View>
-                <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-                  <LinearGradient
-                    colors={['#2CCB91', '#23A76F']}
-                    start={{ x: 0, y: 1 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      borderRadius: 12,
-                      width: 48,
-                      height: 48,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <TouchableOpacity
-                      onPress={handleCopyCode}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Image
-                        source={
-                          isCopied
-                            ? require('@/assets/icons/white-check.png')
-                            : require('@/assets/icons/copy.png')
-                        }
-                        style={{
-                          width: 24,
-                          height: 24,
-                        }}
-                        resizeMode="contain"
-                      />
-                    </TouchableOpacity>
-                  </LinearGradient>
-                </Animated.View>
-              </View>
-            </View> */}
-          {/* </View>  */}
-
           <View
             className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-[#DAE7E0]'} rounded-xl p-4 mt-5 border`}
           >
@@ -998,7 +887,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                   }}
                   maxLength={1}
                   keyboardType="number-pad"
-                  className={`w-12 h-14 border border-textPrimary rounded-md mx-1 text-center text-[20px] ${
+                  className={`${isAndroid13 ? 'w-10 h-12 text-[16px]' : 'w-12 h-14 text-[20px]'}  border border-textPrimary rounded-md mx-1 text-center  ${
                     isDark ? 'bg-commonGradientStop6 text-white' : 'bg-white text-black'
                   }`}
                 />
