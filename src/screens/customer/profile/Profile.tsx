@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   Alert,
   Linking,
   ActivityIndicator,
+  Modal,
+  TextInput,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Clipboard from '@react-native-clipboard/clipboard';
@@ -21,6 +23,8 @@ import * as RNIap from 'react-native-iap';
 import { useIsFocused } from '@react-navigation/native';
 
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
+import { useSendEmailVerification } from '@/api/auth/useSendEmailVerification';
+import { useVerifyEmailApi } from '@/api/auth/useVerifyEmail';
 import Button from '@/common/components/Button';
 import InfoModal from '@/common/components/modals/InfoModal';
 import GradientBackground from '@/common/components/GradientBackground';
@@ -47,7 +51,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     refetchIntervalInBackground: false,
     enabled: !!authUser,
   });
-  console.log('profileData====', profileData);
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
   const { horizontalPadding } = useTabletLayout();
@@ -61,11 +64,44 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const [restoreModalVariant, setRestoreModalVariant] = useState<
     'success' | 'error' | 'info' | 'warning'
   >('info');
+  const [showVerifyEmailModal, setShowVerifyEmailModal] = useState(false);
+  const [emailOtp, setEmailOtp] = useState(['', '', '', '', '', '']);
+  const [verifyTimer, setVerifyTimer] = useState(30);
+  const [isVerifyTimerActive, setIsVerifyTimerActive] = useState(false);
+  const [emailVerificationMessage, setEmailVerificationMessage] = useState('');
+  const [emailVerificationVariant, setEmailVerificationVariant] = useState<
+    'success' | 'error' | 'info' | 'warning'
+  >('info');
+  const emailOtpRefs = React.useRef<Array<TextInput | null>>([]);
+
+  const sendEmailVerificationMutation = useSendEmailVerification();
+  const verifyEmailMutation = useVerifyEmailApi();
 
   const dismissRestoreModal = () => {
     setRestoreMessage('');
     setRestoreModalVariant('info');
   };
+
+  const dismissEmailVerificationModal = () => {
+    setEmailVerificationMessage('');
+    setEmailVerificationVariant('info');
+  };
+
+  useEffect(() => {
+    if (!isVerifyTimerActive) return;
+
+    const timer = setInterval(() => {
+      setVerifyTimer((prev) => {
+        if (prev <= 1) {
+          setIsVerifyTimerActive(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isVerifyTimerActive]);
 
   const user = profileData?.user as ProfileUser;
   const subscription = profileData?.subscription;
@@ -291,6 +327,71 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleOtpChange = (value: string, index: number) => {
+    const nextValue = value.replace(/[^0-9]/g, '').slice(0, 1);
+    const updated = [...emailOtp];
+    updated[index] = nextValue;
+    setEmailOtp(updated);
+
+    if (nextValue && index < updated.length - 1) {
+      emailOtpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleSendEmailCode = async (openModal = false) => {
+    try {
+      const response = await sendEmailVerificationMutation.mutateAsync();
+      setVerifyTimer(30);
+      setIsVerifyTimerActive(true);
+      setEmailOtp(['', '', '', '', '', '']);
+      if (openModal) {
+        setShowVerifyEmailModal(true);
+      }
+    } catch (error: any) {
+      console.log('error====', error);
+      setEmailVerificationVariant('error');
+      setEmailVerificationMessage(
+        typeof error?.message === 'string'
+          ? error.message
+          : 'Failed to send verification code. Please try again.'
+      );
+    }
+  };
+
+  const handleOpenVerifyEmailModal = async () => {
+    await handleSendEmailCode(true);
+  };
+
+  const handleVerifyEmailCode = async () => {
+    const code = emailOtp.join('');
+    if (!user?.email || code.length !== 6) return;
+
+    try {
+      await verifyEmailMutation.mutateAsync({
+        email: user.email,
+        code,
+      });
+      setShowVerifyEmailModal(false);
+      setEmailVerificationVariant('success');
+      setEmailVerificationMessage('Your email has been verified successfully.');
+      refetchProfile();
+    } catch (error: any) {
+      setEmailVerificationVariant('error');
+      setEmailVerificationMessage(
+        typeof error?.message === 'string'
+          ? error.message
+          : 'Invalid verification code. Please try again.'
+      );
+    }
+  };
+
+  const handleResendEmailCode = async () => {
+    if (isVerifyTimerActive || sendEmailVerificationMutation.isPending) return;
+    await handleSendEmailCode(false);
+  };
+
+  const isEmailOtpComplete = emailOtp.every((digit) => digit !== '');
+
   return (
     <GradientBackground>
       <View className="flex-1 pb-10 ">
@@ -408,7 +509,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 }}
               />
               <Text
-                className={` font-poppins-regular text-sm ${isDark ? ` ${emailStatus === false ? 'text-error' : 'text-textSecondary'}` : ` ${emailStatus === false ? 'text-error' : 'text-[#6A6B6E]'}`}`}
+                className={` font-poppins-regular text-sm ${isDark ? ` ${emailStatus === true ? 'text-error' : 'text-textSecondary'}` : ` ${emailStatus === true ? 'text-error' : 'text-[#6A6B6E]'}`}`}
               >
                 {user?.email}
               </Text>
@@ -447,9 +548,14 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 Member since {user?.created_at?.split('T')[0]}
               </Text>
             </View>
-            {emailStatus === false && (
+            {emailStatus === true && (
               <View className="mt-4">
-                <Button text="Verify Email" variant="gradient" />
+                <Button
+                  text="Verify Email"
+                  variant="gradient"
+                  onPress={handleOpenVerifyEmailModal}
+                  loading={sendEmailVerificationMutation.isPending && !showVerifyEmailModal}
+                />
               </View>
             )}
           </View>
@@ -837,6 +943,111 @@ const Profile: React.FC<Props> = ({ navigation }) => {
         message={restoreMessage}
         variant={restoreModalVariant}
       />
+      <InfoModal
+        visible={!!emailVerificationMessage}
+        onClose={dismissEmailVerificationModal}
+        onConfirm={dismissEmailVerificationModal}
+        title="Email Verification"
+        message={emailVerificationMessage}
+        variant={emailVerificationVariant}
+      />
+      <Modal
+        visible={showVerifyEmailModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowVerifyEmailModal(false)}
+      >
+        <View className="flex-1 bg-black/60 justify-center px-5">
+          <View
+            className={`rounded-2xl p-5 border ${
+              isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'
+            }`}
+          >
+            <Text
+              className={`text-[22px] font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
+            >
+              Enter OTP Verification Code
+            </Text>
+            <Text
+              className={`text-[13px] mt-2 ${isDark ? 'text-textSecondary' : 'text-textMuted'}`}
+            >
+              Verification code has been sent to
+            </Text>
+            <Text
+              className={`text-[14px] font-semibold mt-1 ${isDark ? 'text-[#2CCB91]' : 'text-textPrimary'}`}
+            >
+              {user?.email}
+            </Text>
+
+            <View className="flex-row justify-center gap-2 mt-6 mb-4">
+              {emailOtp.map((digit, index) => (
+                <TextInput
+                  key={index}
+                  ref={(el) => {
+                    emailOtpRefs.current[index] = el;
+                  }}
+                  value={digit}
+                  onChangeText={(value) => handleOtpChange(value, index)}
+                  onKeyPress={({ nativeEvent }) => {
+                    if (nativeEvent.key === 'Backspace' && emailOtp[index] === '' && index > 0) {
+                      emailOtpRefs.current[index - 1]?.focus();
+                      const updated = [...emailOtp];
+                      updated[index - 1] = '';
+                      setEmailOtp(updated);
+                    }
+                  }}
+                  maxLength={1}
+                  keyboardType="number-pad"
+                  className={`w-12 h-14 border border-textPrimary rounded-md mx-1 text-center text-[20px] ${
+                    isDark ? 'bg-commonGradientStop6 text-white' : 'bg-white text-black'
+                  }`}
+                />
+              ))}
+            </View>
+
+            <View className="flex-row mb-6 justify-center">
+              <Text className={`text-[13px] ${isDark ? 'text-textSecondary' : 'text-[#6B6B6B]'}`}>
+                Didn&apos;t receive the code?{' '}
+              </Text>
+              {isVerifyTimerActive ? (
+                <Text className="text-[#2CCB91] font-semibold text-[13px]">
+                  {`Resend in ${verifyTimer}s`}
+                </Text>
+              ) : (
+                <Pressable
+                  onPress={handleResendEmailCode}
+                  disabled={sendEmailVerificationMutation.isPending}
+                >
+                  {sendEmailVerificationMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#2CCB91" />
+                  ) : (
+                    <Text className="text-[#2CCB91] font-semibold text-[13px]">Resend</Text>
+                  )}
+                </Pressable>
+              )}
+            </View>
+
+            <Button
+              text="Verify"
+              onPress={handleVerifyEmailCode}
+              disabled={!isEmailOtpComplete}
+              loading={verifyEmailMutation.isPending}
+              variant="gradient"
+            />
+            <View className="mt-4">
+              <Button
+                text="Go Back"
+                onPress={() => setShowVerifyEmailModal(false)}
+                variant="light"
+                className={`rounded-[10px] ${
+                  isDark ? 'bg-[#0E1B17] border-[#273F36]' : 'bg-[#F5F9F7] border-[#DAE7E0]'
+                } border`}
+                textClassName={`${isDark ? 'text-[#ffffff]' : 'text-[#162721]'} text-base font-urbanist-bold`}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </GradientBackground>
   );
 };
