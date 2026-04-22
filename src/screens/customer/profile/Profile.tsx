@@ -47,6 +47,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     refetchIntervalInBackground: false,
     enabled: !!authUser,
   });
+  console.log('profileData====', profileData);
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
   const { horizontalPadding } = useTabletLayout();
@@ -69,6 +70,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const user = profileData?.user as ProfileUser;
   const subscription = profileData?.subscription;
   const hasSubscription = !!subscription;
+  const emailStatus = user?.email_status;
 
   if (!authUser) {
     return (
@@ -406,7 +408,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 }}
               />
               <Text
-                className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
+                className={` font-poppins-regular text-sm ${isDark ? ` ${emailStatus === false ? 'text-error' : 'text-textSecondary'}` : ` ${emailStatus === false ? 'text-error' : 'text-[#6A6B6E]'}`}`}
               >
                 {user?.email}
               </Text>
@@ -445,6 +447,11 @@ const Profile: React.FC<Props> = ({ navigation }) => {
                 Member since {user?.created_at?.split('T')[0]}
               </Text>
             </View>
+            {emailStatus === false && (
+              <View className="mt-4">
+                <Button text="Verify Email" variant="gradient" />
+              </View>
+            )}
           </View>
 
           {/* ---------- Subscription ---------- */}

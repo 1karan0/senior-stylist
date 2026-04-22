@@ -6,7 +6,7 @@ import axios from 'axios';
 export const useVerifyEmailApi = () => {
   return useMutation({
     /** `code` is the SMS OTP after Firebase has already accepted it on the client (phone signup flow). */
-    mutationFn: async (data: { email: string; code: string; verification_id?: string }) => {
+    mutationFn: async (data: { email: string; code: string }) => {
       try {
         const res = await axios.post(`${BASE_URL}/api/verify-email`, data);
         return res.data; // return success message or token

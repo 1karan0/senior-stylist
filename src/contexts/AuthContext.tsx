@@ -241,7 +241,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await verifyEmailMutation.mutateAsync({
         email,
         code,
-        verification_id: phoneVerificationId,
       });
 
       const token = response.data?.access_token;

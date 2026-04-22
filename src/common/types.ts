@@ -291,6 +291,7 @@ export interface ProfileUser {
   referral_code: string;
   created_at: string;
   is_away: boolean;
+  email_status: boolean;
   away_since: string | null;
   referral_stats?: ReferralStats;
 }
