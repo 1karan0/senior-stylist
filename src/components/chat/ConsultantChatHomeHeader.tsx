@@ -31,18 +31,18 @@ const ConsultantChatHomeHeader: React.FC<ConsultantChatHomeHeaderProps> = ({
       >
         Client Consultations
       </Text>
-      <Text className={`text-xs font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}>
+      <View className="mt-3 mb-2">
+        <ActiveStylist />
+      </View>
+      {/* <Text className={`text-xs font-poppins ${isDark ? 'text-textMuted' : 'text-textMuted'}`}>
         {isRealtimeConnected ? 'Connected to live updates' : 'Showing last synced conversations'}
-      </Text>
+      </Text> */}
 
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}
         placeholder="Search clients or topics..."
       />
-      <View className="mt-4">
-        <ActiveStylist />
-      </View>
 
       <FilterButtons activeFilter={activeFilter} onFilterChange={onFilterChange} />
     </View>

@@ -12,6 +12,7 @@ import Button from '@/common/components/Button';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import Clipboard from '@react-native-clipboard/clipboard';
 import ActiveStylist from '@/common/components/ActiveStylists';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 
 const Profile: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
@@ -76,6 +77,7 @@ const Profile: React.FC = () => {
       <View className="flex-1 ">
         {/* Header */}
         <View className="py-6" style={{ paddingHorizontal: horizontalPadding }}>
+          {/* <CompleteQuestions /> */}
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
           >

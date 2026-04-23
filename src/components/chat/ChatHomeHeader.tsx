@@ -39,7 +39,7 @@ const ChatHomeHeader: React.FC<ChatHomeHeaderProps> = ({
           <Text className="font-semibold text-green-700">+ New</Text>
         </TouchableOpacity>
       </View>
-      <View className=" mt-2">
+      <View className="mt-0.5 mb-1">
         <ActiveStylist />
       </View>
 

@@ -14,6 +14,7 @@ import ConversationItem from '@/components/chat/ConversationItem';
 import ConsultantChatHomeHeader from '@/components/chat/ConsultantChatHomeHeader';
 import { createConsultantPreview, filterConsultantConversations } from '@/utils/consultationUtils';
 import ConversationSkeleton from '@/common/components/skeletons/ConversationSkeleton';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 
 type FilterKey = 'all' | 'unread';
 
@@ -64,6 +65,7 @@ const ChatHome: React.FC = () => {
   return (
     <GradientBackground className="flex-1">
       <View className="flex-1 pt-6" style={{ paddingBottom, paddingHorizontal: horizontalPadding }}>
+        {/* <CompleteQuestions /> */}
         <ConsultantChatHomeHeader
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
