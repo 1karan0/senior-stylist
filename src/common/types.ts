@@ -279,7 +279,9 @@ export interface ProfileSubscription {
 }
 
 export interface ProfileUser {
-  phone_country_code: ReactNode;
+  phone_country_code: string | null;
+  phone_e164?: string | null;
+  phone_verified_at?: string | null;
   id: number;
   uuid: string;
   name: string;

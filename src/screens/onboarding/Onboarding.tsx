@@ -5,6 +5,7 @@ import PagerView from 'react-native-pager-view';
 import Button from '@/common/components/Button';
 import OnboardItem from './components/OnboardItem';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import onboardData from '@/lib/onboardData';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,14 +14,24 @@ const OnboardingScreen = ({ navigation }: any) => {
   const pagerRef = useRef<PagerView>(null);
   const [page, setPage] = useState(0);
   const { isDark } = useTheme();
+  const { completeOnbording } = useAuth();
   const { isTablet, isLandscape } = useTabletLayout();
   const isTabletLandscape = isTablet && isLandscape;
   const isTabletPortrait = isTablet && !isLandscape;
-  const goNext = () => {
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const goNext = async () => {
     if (page < onboardData.length - 1) {
       pagerRef.current?.setPage(page + 1);
     } else {
-      navigation.replace('MainLogin');
+      if (isCompleting) return;
+      setIsCompleting(true);
+      try {
+        await completeOnbording();
+        navigation.replace('MainLogin');
+      } finally {
+        setIsCompleting(false);
+      }
     }
   };
 

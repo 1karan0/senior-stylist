@@ -144,9 +144,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token && userData) {
         setUser(userData);
         await ensureFirebaseSession();
-
-        // Request notification permissions and register FCM token after restoring session
-        scheduleNotificationsInit();
       }
       setIsBordingCompleted(onbordingCompleted);
     } catch (error) {
@@ -172,7 +169,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!token) throw new Error('Token missing in API response');
 
-      await Promise.all([storage.setToken(token), storage.setUserData(user)]);
+      await Promise.all([
+        storage.setToken(token),
+        storage.setUserData(user),
+        storage.setPhoneVerifyPromptShown(false),
+      ]);
       setUser(user);
       setIsGuest(false);
       console.log('user======>', user);
@@ -183,12 +184,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         await ensureFirebaseSession();
       }
-
-      // Request notification permissions and register FCM token after successful login
-      if (__DEV__) {
-        console.log('[auth] User logged in, initializing notifications...');
-      }
-      scheduleNotificationsInit();
     } catch (err) {
       throw err;
     }
@@ -206,7 +201,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!token) throw new Error('Token missing in API response');
 
-      await Promise.all([storage.setToken(token), storage.setUserData(user)]);
+      await Promise.all([
+        storage.setToken(token),
+        storage.setUserData(user),
+        storage.setPhoneVerifyPromptShown(false),
+      ]);
       setUser(user);
       setIsGuest(false);
 
@@ -216,12 +215,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         await ensureFirebaseSession();
       }
-
-      // Request notification permissions and register FCM token after successful login
-      if (__DEV__) {
-        console.log('[auth] User logged in with phone, initializing notifications...');
-      }
-      scheduleNotificationsInit();
     } catch (err) {
       throw err;
     }
@@ -268,7 +261,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: 'Token missing' };
       }
 
-      await Promise.all([storage.setToken(token), storage.setUserData(userData)]);
+      await Promise.all([
+        storage.setToken(token),
+        storage.setUserData(userData),
+        storage.setPhoneVerifyPromptShown(false),
+      ]);
 
       setUser(userData);
       setIsGuest(false);
@@ -281,11 +278,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         await ensureFirebaseSession();
       }
-
-      if (__DEV__) {
-        console.log('[auth] Verification complete, initializing notifications...');
-      }
-      scheduleNotificationsInit();
 
       return { success: true };
     } catch (err: any) {
@@ -339,7 +331,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: 'Token missing' };
       }
 
-      await Promise.all([storage.setToken(token), storage.setUserData(userData)]);
+      await Promise.all([
+        storage.setToken(token),
+        storage.setUserData(userData),
+        storage.setPhoneVerifyPromptShown(false),
+      ]);
 
       setUser(userData);
       setIsGuest(false);
@@ -351,11 +347,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         await ensureFirebaseSession();
       }
-
-      if (__DEV__) {
-        console.log('[auth] Phone verification complete, initializing notifications...');
-      }
-      scheduleNotificationsInit();
 
       return { success: true };
     } catch (err: any) {
@@ -426,6 +417,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const completeOnbording = async () => {
     await storage.setOnbordingCompleted();
     setIsBordingCompleted(true);
+    if (__DEV__) {
+      console.log('[auth] Onboarding completed, initializing notifications...');
+    }
+    scheduleNotificationsInit();
   };
 
   const continueAsGuest = () => {

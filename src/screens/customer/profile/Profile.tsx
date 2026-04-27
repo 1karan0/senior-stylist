@@ -36,6 +36,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { restorePurchase, type RestorePurchasePayload } from '@/api/subscription/verifyPurchase';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
+import PhoneVerificationPrompt from '@/common/components/PhoneVerificationPrompt';
+import { useVerifyExistingPhone } from '@/api/auth/useVerifyExistingPhone';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 interface Props {
@@ -76,6 +79,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
   const sendEmailVerificationMutation = useSendEmailVerification();
   const verifyEmailMutation = useVerifyEmailApi();
+  const verifyExistingPhoneMutation = useVerifyExistingPhone();
 
   const dismissRestoreModal = () => {
     setRestoreMessage('');
@@ -86,6 +90,9 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     setEmailVerificationMessage('');
     setEmailVerificationVariant('info');
   };
+
+  console.log('authUser========', authUser);
+  console.log('profileData========', profileData);
 
   useEffect(() => {
     if (!isVerifyTimerActive) return;
@@ -396,6 +403,15 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       ? Platform.Version
       : parseInt(String(Platform.Version), 10);
   const isAndroid13 = androidVersion <= 33;
+  const phoneDisplay = [user?.phone_country_code, user?.phone].filter(Boolean).join(' ').trim();
+  const phoneE164 = user?.phone_e164 || `${user?.phone_country_code || ''}${user?.phone || ''}`;
+  const shouldVerifyPhone = Boolean(authUser && user?.phone && !user?.phone_verified_at);
+
+  const handleVerifyExistingPhone = async (firebaseIdToken: string) => {
+    const response = await verifyExistingPhoneMutation.mutateAsync(firebaseIdToken);
+    console.log('response========', response);
+    await refetchProfile();
+  };
 
   return (
     <GradientBackground>
@@ -418,6 +434,16 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           <View className="mb-4 mt-2">
             <ActiveStylist />
           </View>
+          {/* <CompleteQuestions/>÷ */}
+          {shouldVerifyPhone ? (
+            <PhoneVerificationPrompt
+              phoneE164={phoneE164}
+              phoneDisplay={phoneDisplay}
+              isSubmitting={verifyExistingPhoneMutation.isPending}
+              onVerifyToken={handleVerifyExistingPhone}
+              autoOpenIntro={false}
+            />
+          ) : null}
           {/* ---------- Profile Card ---------- */}
           <View
             className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  rounded-2xl p-4 border`}

@@ -164,7 +164,7 @@ const OnboardItem: React.FC<Props> = ({ item, index, page, totalPages, onNext, o
                     ? 0.61
                     : isTallPhone
                       ? Platform.OS === 'ios'
-                        ? 0.64
+                        ? 0.62
                         : 0.67
                       : isCompactPhone
                         ? 0.65

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
+  ActivityIndicator,
   Animated,
   Easing,
   Text,
@@ -15,7 +16,25 @@ import QuestionsModal from './modals/Questionsmodal';
 
 const SHEEN_WIDTH = 88;
 
-const CompleteQuestions: React.FC = () => {
+interface CompleteQuestionsProps {
+  title?: string;
+  subtitle?: string;
+  iconName?: string;
+  accessibilityLabel?: string;
+  onPress?: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+}
+
+const CompleteQuestions: React.FC<CompleteQuestionsProps> = ({
+  title = 'Complete your questions',
+  subtitle = 'for better results',
+  iconName = 'clipboard',
+  accessibilityLabel = 'Complete questionnaire for better stylist matches',
+  onPress,
+  disabled = false,
+  loading = false,
+}) => {
   const { isDark } = useTheme();
   const { width: windowWidth } = useWindowDimensions();
   const [reduceMotion, setReduceMotion] = useState(true);
@@ -26,6 +45,11 @@ const CompleteQuestions: React.FC = () => {
   const sweepEndX = Math.max(280, windowWidth * 0.95);
 
   const handlePress = () => {
+    if (disabled || loading) return;
+    if (onPress) {
+      onPress();
+      return;
+    }
     setShowQuestionsModal(true);
   };
 
@@ -117,8 +141,9 @@ const CompleteQuestions: React.FC = () => {
         <TouchableOpacity
           activeOpacity={0.88}
           onPress={handlePress}
+          disabled={disabled || loading}
           accessibilityRole="button"
-          accessibilityLabel="Complete questionnaire for better stylist matches"
+          accessibilityLabel={accessibilityLabel}
           className={`flex-row items-center rounded-xl border-2 px-3 py-2.5 ${
             isDark ? 'border-textPrimary bg-[#132520]' : 'border-textPrimary bg-[#E8F5EF] shadow-sm'
           }`}
@@ -145,7 +170,7 @@ const CompleteQuestions: React.FC = () => {
           </Animated.View>
 
           <View className="z-10 h-10 w-10 items-center justify-center rounded-full bg-textPrimary">
-            <Ionicons name="clipboard" size={20} color="#FFFFFF" />
+            <Ionicons name={iconName as any} size={20} color="#FFFFFF" />
           </View>
           <View className="flex-1 ml-3 ">
             <Text
@@ -153,16 +178,22 @@ const CompleteQuestions: React.FC = () => {
                 isDark ? 'text-textWhite' : 'text-textDark'
               }`}
             >
-              Complete your questions
+              {title}
             </Text>
-            <Text className="text-sm font-urbanist-regular text-textMuted">for better results</Text>
+            <Text className="text-sm font-urbanist-regular text-textMuted">{subtitle}</Text>
           </View>
           <Animated.View className="z-10" style={{ transform: [{ translateX: chevronNudge }] }}>
-            <Ionicons name="chevron-forward" size={24} color="#27B07D" />
+            {loading ? (
+              <ActivityIndicator color="#27B07D" />
+            ) : (
+              <Ionicons name="chevron-forward" size={24} color="#27B07D" />
+            )}
           </Animated.View>
         </TouchableOpacity>
       </View>
-      <QuestionsModal visible={showQuestionsModal} onClose={() => setShowQuestionsModal(false)} />
+      {!onPress ? (
+        <QuestionsModal visible={showQuestionsModal} onClose={() => setShowQuestionsModal(false)} />
+      ) : null}
     </View>
   );
 };

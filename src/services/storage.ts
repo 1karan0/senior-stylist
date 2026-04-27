@@ -15,6 +15,8 @@ const STORAGE_KEYS = {
 
   // pending IAP purchase verifications (for crash/offline recovery)
   PENDING_PURCHASE_VERIFICATIONS: 'pending_purchase_verifications',
+  // show phone verification prompt once per login session
+  PHONE_VERIFY_PROMPT_SHOWN: 'phone_verify_prompt_shown',
 };
 
 export interface PendingPurchaseVerification {
@@ -158,6 +160,19 @@ export const storage = {
     await AsyncStorage.removeItem(STORAGE_KEYS.PENDING_PURCHASE_VERIFICATIONS);
   },
 
+  setPhoneVerifyPromptShown: async (shown: boolean): Promise<void> => {
+    await AsyncStorage.setItem(STORAGE_KEYS.PHONE_VERIFY_PROMPT_SHOWN, shown ? 'true' : 'false');
+  },
+
+  getPhoneVerifyPromptShown: async (): Promise<boolean> => {
+    const value = await AsyncStorage.getItem(STORAGE_KEYS.PHONE_VERIFY_PROMPT_SHOWN);
+    return value === 'true';
+  },
+
+  removePhoneVerifyPromptShown: async (): Promise<void> => {
+    await AsyncStorage.removeItem(STORAGE_KEYS.PHONE_VERIFY_PROMPT_SHOWN);
+  },
+
   // clear all auth data (logout)
   clearAuthData: async (): Promise<void> => {
     await AsyncStorage.multiRemove([
@@ -165,6 +180,7 @@ export const storage = {
       STORAGE_KEYS.USER_DATA,
       STORAGE_KEYS.IS_NEW_SIGNUP,
       STORAGE_KEYS.PENDING_PURCHASE_VERIFICATIONS,
+      STORAGE_KEYS.PHONE_VERIFY_PROMPT_SHOWN,
     ]);
   },
 };
