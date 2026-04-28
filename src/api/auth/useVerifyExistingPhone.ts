@@ -1,10 +1,13 @@
 import { BASE_URL } from '@/config';
+import { useAuth } from '@/contexts/AuthContext';
 import { parseApiError } from '@/utils/parseApiError';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { storage } from '@/services/storage';
 
 export const useVerifyExistingPhone = () => {
+  const { refreshAuthUser } = useAuth();
+
   return useMutation({
     mutationFn: async (firebase_id_token: string) => {
       try {
@@ -25,6 +28,9 @@ export const useVerifyExistingPhone = () => {
       } catch (err) {
         throw new Error(parseApiError(err));
       }
+    },
+    onSuccess: async () => {
+      await refreshAuthUser();
     },
   });
 };

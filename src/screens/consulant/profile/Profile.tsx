@@ -12,32 +12,42 @@ import Button from '@/common/components/Button';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import Clipboard from '@react-native-clipboard/clipboard';
 import ActiveStylist from '@/common/components/ActiveStylists';
-import CompleteQuestions from '@/common/components/CompleteQuestions';
+import PhoneVerificationPrompt from '@/common/components/PhoneVerificationPrompt';
+import { useVerifyExistingPhone } from '@/api/auth/useVerifyExistingPhone';
 
 const Profile: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
   const scaleAnim = useState(new Animated.Value(1))[0];
   const { isDark } = useTheme();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigation = useNavigation<any>();
   const { data: profileData } = useGetProfile();
   console.log('profileData', profileData);
+  console.log('user======', user);
 
-  const user = profileData?.user as any;
-  const totalSessions = user?.consultant_details?.total_sessions ?? 0;
-  const averageRating = user?.consultant_details?.average_rating ?? 0;
+  const ProfileUser = profileData?.user as any;
+  const totalSessions = ProfileUser?.consultant_details?.total_sessions ?? 0;
+  const averageRating = ProfileUser?.consultant_details?.average_rating ?? 0;
+  const phoneStatus = ProfileUser?.phone_status;
+  const shouldVerifyPhone = phoneStatus === true;
+  const phoneE164 =
+    ProfileUser?.phone_e164 ||
+    `${ProfileUser?.phone_country_code || ''}${ProfileUser?.phone || ''}`;
+  const phoneDisplay = [ProfileUser?.phone_country_code, ProfileUser?.phone]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
   console.log('profileData', profileData);
-
   const { paddingBottom } = useTabBarSafePadding();
   const { horizontalPadding } = useTabletLayout();
   const goToEditProfile = () => navigation.navigate('EditProfile');
   const goToSettings = () => navigation.navigate('Settings');
   const goToMyEarning = () => navigation.navigate('MyEarning');
   const goToDisputes = () => navigation.navigate('Disputes');
-
+  const verifyExistingPhoneMutation = useVerifyExistingPhone();
   const handleCopyCode = () => {
-    const code = user?.referral_code;
+    const code = ProfileUser?.referral_code;
     if (code) {
       Clipboard.setString(code);
       setIsCopied(true);
@@ -72,18 +82,21 @@ const Profile: React.FC = () => {
       ]).start(() => setIsCopied(false));
     }
   };
+  const handleVerifyExistingPhone = async (firebaseIdToken: string) => {
+    const response = await verifyExistingPhoneMutation.mutateAsync(firebaseIdToken);
+    console.log('response======', response);
+  };
   return (
     <GradientBackground>
       <View className="flex-1 ">
         {/* Header */}
         <View className="py-6" style={{ paddingHorizontal: horizontalPadding }}>
-          {/* <CompleteQuestions /> */}
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
           >
             Profile
           </Text>
-          <View className="mt-4">
+          <View className="mt-4 ">
             <ActiveStylist />
           </View>
         </View>
@@ -95,6 +108,17 @@ const Profile: React.FC = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom }} // allow last items to scroll above tab bar
         >
+          <View className="">
+            {/* {shouldVerifyPhone ? (
+            <PhoneVerificationPrompt
+              phoneE164={phoneE164}
+              phoneDisplay={phoneDisplay}
+              isSubmitting={verifyExistingPhoneMutation.isPending}
+              onVerifyToken={handleVerifyExistingPhone}
+              autoOpenIntro={false}
+            />
+          ) : null} */}
+          </View>
           {/* Profile Card */}
           <View
             className={` ${isDark ? 'bg-[#162721] border-[#273F36]' : 'bg-white border-[#DAE7E0]'}  rounded-xl p-4 border mb-5`}
@@ -114,9 +138,9 @@ const Profile: React.FC = () => {
                   overflow: 'hidden',
                 }}
               >
-                {user?.profile_picture_url ? (
+                {ProfileUser?.profile_picture_url ? (
                   <Image
-                    source={{ uri: user.profile_picture_url }}
+                    source={{ uri: ProfileUser.profile_picture_url }}
                     style={{
                       height: 56,
                       width: 56,
@@ -125,7 +149,7 @@ const Profile: React.FC = () => {
                   />
                 ) : (
                   <Text className="text-white text-xl font-urbanist-bold">
-                    {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
+                    {ProfileUser?.name?.charAt(0)?.toUpperCase() ?? 'U'}
                   </Text>
                 )}
               </LinearGradient>
@@ -135,7 +159,7 @@ const Profile: React.FC = () => {
                 <Text
                   className={`text-2xl ${isDark ? 'text-white' : 'text-textDark'} font-urbanist-bold`}
                 >
-                  {user?.name}
+                  {ProfileUser?.name}
                 </Text>
                 <View
                   style={{
@@ -157,7 +181,7 @@ const Profile: React.FC = () => {
                       lineHeight: 14,
                     }}
                   >
-                    {user?.role || 'Member'}
+                    {ProfileUser?.role || 'Member'}
                   </Text>
                 </View>
               </View>
@@ -188,7 +212,7 @@ const Profile: React.FC = () => {
                 <Text
                   className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
                 >
-                  {user?.email}
+                  {ProfileUser?.email}
                 </Text>
               </View>
 
@@ -198,7 +222,7 @@ const Profile: React.FC = () => {
                 <Text
                   className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
                 >
-                  {user?.phone_country_code} {user?.phone}
+                  {ProfileUser?.phone_country_code} {ProfileUser?.phone}
                 </Text>
               </View>
 
@@ -208,16 +232,16 @@ const Profile: React.FC = () => {
                 <Text
                   className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
                 >
-                  Member since {user?.created_at?.split('T')[0]}
+                  Member since {ProfileUser?.created_at?.split('T')[0]}
                 </Text>
               </View>
-              {user?.consultant_details?.salon_name ? (
+              {ProfileUser?.consultant_details?.salon_name ? (
                 <View className="flex-row items-center">
                   <Ionicons name="business-outline" size={18} color="#10b981" />
                   <Text
                     className={`font-poppins-regular ml-3 ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
                   >
-                    {user.consultant_details.salon_name}
+                    {ProfileUser.consultant_details.salon_name}
                   </Text>
                 </View>
               ) : null}
@@ -308,7 +332,7 @@ const Profile: React.FC = () => {
                 className={` w-[80%] items-center text-center bg-[#F5F9F7] border-[#DAE7E0] border rounded-lg py-3 `}
               >
                 <Text className="text-black text-base font-urbanist-bold">
-                  {user?.referral_code ?? '------'}
+                  {ProfileUser?.referral_code ?? '------'}
                 </Text>
               </View>
               <View>

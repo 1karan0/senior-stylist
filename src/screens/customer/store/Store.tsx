@@ -12,7 +12,6 @@ const StoreScreen = () => {
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
   const { horizontalPadding, isTablet, isLandscape, maxContentWidth } = useTabletLayout();
-
   // Width-driven sizing is much more consistent than height-driven sizing across devices.
   // Base width on the same content width we use elsewhere so tablet landscape looks centered.
   // On Android < 13 (SDK < 33), subtract a bit more so the promo card
@@ -47,7 +46,6 @@ const StoreScreen = () => {
       >
         <View className="flex-1 pt-6 pb-10" style={[{ paddingHorizontal: horizontalPadding }]}>
           {/* Header */}
-
           <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
             Products
           </Text>

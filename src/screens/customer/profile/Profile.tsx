@@ -38,7 +38,6 @@ import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
 import PhoneVerificationPrompt from '@/common/components/PhoneVerificationPrompt';
 import { useVerifyExistingPhone } from '@/api/auth/useVerifyExistingPhone';
-import CompleteQuestions from '@/common/components/CompleteQuestions';
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 interface Props {
@@ -114,6 +113,8 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const subscription = profileData?.subscription;
   const hasSubscription = !!subscription;
   const emailStatus = user?.email_status;
+  const phoneStatus = user?.phone_status;
+  const shouldVerifyPhone = phoneStatus === true;
 
   if (!authUser) {
     return (
@@ -405,8 +406,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const isAndroid13 = androidVersion <= 33;
   const phoneDisplay = [user?.phone_country_code, user?.phone].filter(Boolean).join(' ').trim();
   const phoneE164 = user?.phone_e164 || `${user?.phone_country_code || ''}${user?.phone || ''}`;
-  const shouldVerifyPhone = Boolean(authUser && user?.phone && !user?.phone_verified_at);
-
   const handleVerifyExistingPhone = async (firebaseIdToken: string) => {
     const response = await verifyExistingPhoneMutation.mutateAsync(firebaseIdToken);
     console.log('response========', response);
@@ -434,7 +433,6 @@ const Profile: React.FC<Props> = ({ navigation }) => {
           <View className="mb-4 mt-2">
             <ActiveStylist />
           </View>
-          {/* <CompleteQuestions/>÷ */}
           {shouldVerifyPhone ? (
             <PhoneVerificationPrompt
               phoneE164={phoneE164}

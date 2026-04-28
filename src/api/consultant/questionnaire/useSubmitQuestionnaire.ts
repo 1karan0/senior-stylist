@@ -14,7 +14,7 @@ export interface SubmitQuestionnairePayload {
   answers: SubmitQuestionnaireAnswer[];
 }
 
-export const useSubmitQuestionnaire = () => {
+export const useSubmitConsultantQuestionnaire = () => {
   const queryClient = useQueryClient();
   const { refreshAuthUser } = useAuth();
 
@@ -24,7 +24,7 @@ export const useSubmitQuestionnaire = () => {
       if (!token) throw new Error('Auth token missing');
 
       try {
-        const res = await axios.post(`${BASE_URL}/api/customer/answers`, payload, {
+        const res = await axios.post(`${BASE_URL}/api/consultant/answers`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ export const useSubmitQuestionnaire = () => {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['profileData'] }),
-        queryClient.invalidateQueries({ queryKey: ['questionnaire-questions'] }),
+        queryClient.invalidateQueries({ queryKey: ['consultant-questionnaire-questions'] }),
         refreshAuthUser(),
       ]);
     },

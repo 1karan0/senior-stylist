@@ -34,7 +34,7 @@ const ChatHomeHeader: React.FC<ChatHomeHeaderProps> = ({
 
         <TouchableOpacity
           onPress={() => navigation.navigate('NewConsultant')}
-          className="bg-yellow-300 px-4 py-2 rounded-full"
+          className="bg-yellow-300 px-4 py-2  rounded-full"
         >
           <Text className="font-semibold text-green-700">+ New</Text>
         </TouchableOpacity>

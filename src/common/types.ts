@@ -116,6 +116,10 @@ export interface User {
   away_since: string | null;
   created_at: string;
   updated_at: string;
+  customer_questionnaire_completed_at: string | null;
+  stylist_questionnaire_completed_at: string | null;
+  phone_status: boolean;
+  email_status: boolean;
 }
 
 export interface LoginResponse {
@@ -296,6 +300,8 @@ export interface ProfileUser {
   email_status: boolean;
   away_since: string | null;
   referral_stats?: ReferralStats;
+  customer_questionnaire_completed_at: string | null;
+  phone_status: boolean;
 }
 
 export interface DisputeResponse {

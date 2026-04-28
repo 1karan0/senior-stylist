@@ -48,7 +48,7 @@ interface GetQuestionnaireResponse {
   };
 }
 
-type UseGetQuestionnaireOptions = Omit<
+type UseGetConsultantQuestionnaireOptions = Omit<
   UseQueryOptions<QuestionnaireQuestion[]>,
   'queryKey' | 'queryFn'
 >;
@@ -67,16 +67,16 @@ const mapQuestions = (payload: GetQuestionnaireResponse): QuestionnaireQuestion[
   }));
 };
 
-export const useGetQuestionnaire = (options?: UseGetQuestionnaireOptions) => {
+export const useGetConsultantQuestionnaire = (options?: UseGetConsultantQuestionnaireOptions) => {
   return useQuery<QuestionnaireQuestion[]>({
-    queryKey: ['questionnaire-questions'],
+    queryKey: ['consultant-questionnaire-questions'],
     queryFn: async () => {
       const token = await storage.getToken();
       if (!token) throw new Error('Auth token missing');
 
       try {
         const res = await axios.get<GetQuestionnaireResponse>(
-          `${BASE_URL}/api/customer/questions`,
+          `${BASE_URL}/api/consultant/questions`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { View } from 'react-native';
 
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { AppStackParamList } from '@/common/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerifyExistingPhone } from '@/api/auth/useVerifyExistingPhone';
 import PhoneVerificationPrompt from '@/common/components/PhoneVerificationPrompt';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 import { storage } from '@/services/storage';
 
 import UserTabNavigator from '@/navigation/UserTabNavigator';
 import ConsultantTabNavigator from '@/navigation/ConsultantTabNavigator';
 import PricingScreen from '@/screens/pricing/Pricing';
 import ConsultantChatScreen from '@/screens/consulant/chat/Conversation';
+import GradientBackground from '@/common/components/GradientBackground';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -31,6 +34,7 @@ const AppStack: React.FC = () => {
     refetch: refetchProfile,
   } = useGetProfile({
     enabled: shouldFetchProfile,
+    refetchOnMount: 'always',
   });
   const verifyExistingPhoneMutation = useVerifyExistingPhone();
 
@@ -44,10 +48,19 @@ const AppStack: React.FC = () => {
   const phoneE164 =
     profileUser?.phone_e164 ||
     `${profileUser?.phone_country_code || ''}${profileUser?.phone || ''}`;
+  const hasResolvedProfileForPrompt =
+    Boolean(user && !isGuest) && !isProfileLoading && profileUser?.id === user?.id;
+
   const shouldPromptPhoneVerification = Boolean(
-    user && !isGuest && profileUser?.phone && !profileUser?.phone_verified_at
+    hasResolvedProfileForPrompt && profileUser?.phone && profileUser?.phone_verified_at === null
   );
   const shouldAutoOpenPhonePrompt = shouldPromptPhoneVerification && hasShownPhonePrompt === false;
+  const shouldCompleteQuestions = Boolean(
+    user &&
+    !isGuest &&
+    ((user.role === 'customer' && user.customer_questionnaire_completed_at === null) ||
+      (user.role === 'consultant' && user.stylist_questionnaire_completed_at === null))
+  );
 
   const handleVerifyExistingPhone = async (firebaseIdToken: string) => {
     await verifyExistingPhoneMutation.mutateAsync(firebaseIdToken);
@@ -139,20 +152,26 @@ const AppStack: React.FC = () => {
 
   return (
     <>
-      <Stack.Navigator
-        screenOptions={{ headerShown: false }}
-        initialRouteName={defaultInitialRoute}
-      >
-        {/* Conditionally show only one tab navigator based on user role */}
-        {userRole === 'consultant' ? (
-          <Stack.Screen name="ConsultantTabs" component={ConsultantTabNavigator} />
-        ) : (
-          <Stack.Screen name="UserTabs" component={UserTabNavigator} />
-        )}
-        {/* Shared chat screen (used by both consultants and customers) */}
-        <Stack.Screen name="ConsultantChat" component={ConsultantChatScreen} />
-        <Stack.Screen name="Pricing" component={PricingScreen} />
-      </Stack.Navigator>
+      <View className={`flex-1 `}>
+        <GradientBackground
+          edges={shouldCompleteQuestions ? ['top', 'left', 'right'] : ['left', 'right']}
+        >
+          <Stack.Navigator
+            screenOptions={{ headerShown: false }}
+            initialRouteName={defaultInitialRoute}
+          >
+            {/* Conditionally show only one tab navigator based on user role */}
+            {userRole === 'consultant' ? (
+              <Stack.Screen name="ConsultantTabs" component={ConsultantTabNavigator} />
+            ) : (
+              <Stack.Screen name="UserTabs" component={UserTabNavigator} />
+            )}
+            {/* Shared chat screen (used by both consultants and customers) */}
+            <Stack.Screen name="ConsultantChat" component={ConsultantChatScreen} />
+            <Stack.Screen name="Pricing" component={PricingScreen} />
+          </Stack.Navigator>
+        </GradientBackground>
+      </View>
 
       {shouldPromptPhoneVerification ? (
         <PhoneVerificationPrompt
@@ -163,6 +182,16 @@ const AppStack: React.FC = () => {
           showBanner={false}
           autoOpenIntro={shouldAutoOpenPhonePrompt}
         />
+      ) : null}
+
+      {shouldCompleteQuestions ? (
+        <View className="absolute top-14 left-4 right-4 z-50">
+          <CompleteQuestions
+            title="Complete your questions"
+            subtitle="for better results"
+            iconName="clipboard-outline"
+          />
+        </View>
       ) : null}
     </>
   );

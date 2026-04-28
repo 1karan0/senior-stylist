@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { InteractionManager, Platform } from 'react-native';
 import { storage } from '@/services/storage';
+import { BASE_URL } from '@/config';
 import { useLoginApi } from '@/api/auth/useLogin';
 import { useVerifyEmailApi } from '@/api/auth/useVerifyEmail';
 import { useLoginWithPhone } from '@/api/auth/useLoginWithPhone';
 import { useVerifyPhone } from '@/api/auth/useVerifyPhone';
 import { User } from '@/common/types';
+import axios from 'axios';
 import { fetchFirebaseCustomToken } from '@/api/auth/getFirebaseCustomToken';
 import {
   getFirebaseAuth,
@@ -70,6 +72,7 @@ interface AuthContextType {
     requiresAdminVerification?: boolean;
     user?: User;
   }>;
+  refreshAuthUser: () => Promise<void>;
 
   logout: () => Promise<void>;
   completeOnbording: () => void;
@@ -150,6 +153,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error checking auth status:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const refreshAuthUser = async () => {
+    const token = await storage.getToken();
+    if (!token) return;
+
+    try {
+      const res = await axios.get(`${BASE_URL}/api/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'X-Device-Type': Platform.OS,
+          'X-App-Version': '1.0.0',
+        },
+      });
+
+      const latestUser = res?.data?.data?.user;
+      if (!latestUser) return;
+
+      await storage.setUserData(latestUser);
+      setUser(latestUser);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('[auth] Failed to refresh auth user:', error);
+      }
     }
   };
 
@@ -444,6 +472,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loginWithPhone,
     verifyEmail,
     verifyPhone,
+    refreshAuthUser,
     logout,
     completeOnbording,
     continueAsGuest,

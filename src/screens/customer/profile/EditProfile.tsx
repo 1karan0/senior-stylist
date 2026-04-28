@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -9,6 +9,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';
 import { useEditProfile } from '@/api/user/profile/useEditProfile';
 import { Button } from '@/common/components/Button';
+import Toast from '@/common/components/Toast';
 import GradientBackground from '@/common/components/GradientBackground';
 import { ProfileUser } from '@/common/types';
 import TextInputField from '@/common/components/TextInputField';
@@ -69,7 +70,11 @@ const EditProfile = () => {
   const [showImagePreview, setShowImagePreview] = React.useState(false);
   const [showPasswordSection, setShowPasswordSection] = React.useState(false);
   const [selectedCallingCode, setSelectedCallingCode] = React.useState<any>(null);
-
+  const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'error' as 'success' | 'error' | 'info' | 'warning',
+  });
   // Optimize Image
   const optimizeImage = (asset: ImagePicker.Asset) => {
     if (!asset) return null;
@@ -193,6 +198,13 @@ const EditProfile = () => {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['profileData'] });
         navigation.goBack();
+      },
+      onError: (err: any) => {
+        setToast({
+          visible: true,
+          message: err?.message ?? 'Failed to update profile. Try again.',
+          type: 'error',
+        });
       },
     });
   };

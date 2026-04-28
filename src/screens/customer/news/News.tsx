@@ -36,7 +36,6 @@ const NewsScreen = () => {
     url: '',
     title: '',
   });
-
   const navigation = useNavigation<any>();
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();

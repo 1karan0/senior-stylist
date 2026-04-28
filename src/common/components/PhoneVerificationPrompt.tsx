@@ -101,6 +101,7 @@ const PhoneVerificationPrompt: React.FC<PhoneVerificationPromptProps> = ({
       setTimer(30);
       setIsTimerActive(true);
     } catch (err: any) {
+      console.log('err======', err);
       setError(err?.message || 'Failed to send OTP. Please try again.');
     } finally {
       setSendingCode(false);
@@ -128,6 +129,7 @@ const PhoneVerificationPrompt: React.FC<PhoneVerificationPromptProps> = ({
       await onVerifyToken(firebaseIdToken);
       setShowModal(false);
     } catch (err: any) {
+      console.log('err======', err);
       setError(err?.message || 'Invalid code. Please try again.');
     }
   };
