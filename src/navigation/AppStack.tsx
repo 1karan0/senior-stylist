@@ -59,7 +59,7 @@ const AppStack: React.FC = () => {
     user &&
     !isGuest &&
     ((user.role === 'customer' && user.customer_questionnaire_completed_at == null) ||
-      (user.role === 'consultant' && user.stylist_questionnaire_completed_at !== null))
+      (user.role === 'consultant' && user.stylist_questionnaire_completed_at === null))
   );
 
   const handleVerifyExistingPhone = async (firebaseIdToken: string) => {

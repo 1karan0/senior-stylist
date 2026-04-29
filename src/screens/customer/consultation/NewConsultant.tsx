@@ -29,10 +29,13 @@ import {
 import { useFindingStylistModal } from '@/contexts/FindingStylistModalContext';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
+import QuestionsModal from '@/common/components/modals/Questionsmodal';
+import { useAuth } from '@/contexts/AuthContext';
 const NewConsultant = ({ navigation }: any) => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
+  const [showQuestionsModal, setShowQuestionsModal] = useState(false);
   const [toast, setToast] = useState({
     visible: false,
     message: '',
@@ -40,9 +43,11 @@ const NewConsultant = ({ navigation }: any) => {
   });
 
   const { isDark } = useTheme();
+  const { user } = useAuth();
   const { isAdsEnabled, preloadAd } = useAds();
   const { open: openFindingStylistModal } = useFindingStylistModal();
   const { horizontalPadding } = useTabletLayout();
+  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
   // Preload ad when component mounts (so it's ready when user taps "Find Stylist")
   useEffect(() => {
     if (isAdsEnabled) {
@@ -168,8 +173,15 @@ const NewConsultant = ({ navigation }: any) => {
   };
 
   const onSubmit = async (data: any) => {
-    if (!data.description.trim()) {
-      showToast('Please enter your styling requirement.', 'error');
+    if (isQuestionnaireCompleted) {
+      setToast({
+        visible: true,
+        message: 'Please complete your questions before finding a stylist.',
+        type: 'warning',
+      });
+      setTimeout(() => {
+        setShowQuestionsModal(true);
+      }, 1000);
       return;
     }
 
@@ -361,6 +373,7 @@ const NewConsultant = ({ navigation }: any) => {
           onGallery={pickFromGallery}
           title="Choose Reference Photo"
         />
+        <QuestionsModal visible={showQuestionsModal} onClose={() => setShowQuestionsModal(false)} />
       </GradientBackground>
     </View>
   );
