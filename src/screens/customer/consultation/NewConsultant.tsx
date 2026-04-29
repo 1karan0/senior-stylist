@@ -259,7 +259,9 @@ const NewConsultant = ({ navigation }: any) => {
               Tell us about your styling needs
             </Text>
             {/* Active stylist count */}
-            <ActiveStylist />
+            <View className="mb-4">
+              <ActiveStylist />
+            </View>
             {/* Card */}
             <View
               className={` ${isDark ? 'bg-buttonSecondaryText border-commonGradientStop7' : 'bg-white border-gray-100'} rounded-md p-5 border `}

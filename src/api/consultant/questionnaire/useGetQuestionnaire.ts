@@ -2,7 +2,7 @@ import { BASE_URL } from '@/config';
 import { storage } from '@/services/storage';
 import { parseApiError } from '@/utils/parseApiError';
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
-import axios from 'axios';
+import axios, { type AxiosError } from 'axios';
 
 export interface QuestionnaireOption {
   id: number;
@@ -84,8 +84,25 @@ export const useGetConsultantQuestionnaire = (options?: UseGetConsultantQuestion
           }
         );
 
+        // Debug: inspect raw API response (status + payload) during development.
+        if (__DEV__) {
+          // Avoid logging auth token; Axios will strip headers anyway.
+          console.log('[consultant-questionnaire][get] response:', {
+            status: res.status,
+            data: res.data,
+          });
+        }
+
         return mapQuestions(res.data);
       } catch (err) {
+        const axiosErr = err as AxiosError;
+        if (__DEV__) {
+          console.log('[questionnaire][get] error response:', {
+            status: axiosErr.response?.status,
+            data: axiosErr.response?.data,
+            message: axiosErr.message,
+          });
+        }
         throw new Error(parseApiError(err));
       }
     },

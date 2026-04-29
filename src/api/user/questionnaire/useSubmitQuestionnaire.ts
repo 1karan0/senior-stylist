@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { storage } from '@/services/storage';
 import { parseApiError } from '@/utils/parseApiError';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import axios, { type AxiosError } from 'axios';
 
 export interface SubmitQuestionnaireAnswer {
   question_id: number;
@@ -30,8 +30,25 @@ export const useSubmitQuestionnaire = () => {
             'Content-Type': 'application/json',
           },
         });
+
+        // Debug: inspect raw API response (status + payload) during development.
+        if (__DEV__) {
+          console.log('[questionnaire][submit] response:', {
+            status: res.status,
+            data: res.data,
+          });
+        }
+
         return res.data;
       } catch (err) {
+        const axiosErr = err as AxiosError;
+        if (__DEV__) {
+          console.log('[questionnaire][submit] error response:', {
+            status: axiosErr.response?.status,
+            data: axiosErr.response?.data,
+            message: axiosErr.message,
+          });
+        }
         throw new Error(parseApiError(err));
       }
     },
