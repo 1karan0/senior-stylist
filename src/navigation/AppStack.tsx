@@ -58,7 +58,7 @@ const AppStack: React.FC = () => {
   const shouldCompleteQuestions = Boolean(
     user &&
     !isGuest &&
-    ((user.role === 'customer' && user.customer_questionnaire_completed_at === null) ||
+    ((user.role === 'customer' && user.customer_questionnaire_completed_at == null) ||
       (user.role === 'consultant' && user.stylist_questionnaire_completed_at !== null))
   );
 
@@ -156,7 +156,7 @@ const AppStack: React.FC = () => {
       <GradientBackground
         edges={shouldCompleteQuestions ? ['top', 'left', 'right'] : ['left', 'right']}
       >
-        <View className={`flex-1 ${isAndroidBelow13 ? 'pt-16' : ''}`}>
+        <View className={`flex-1 ${isAndroidBelow13 && shouldCompleteQuestions ? 'pt-16' : ''}`}>
           <Stack.Navigator
             screenOptions={{ headerShown: false }}
             initialRouteName={defaultInitialRoute}

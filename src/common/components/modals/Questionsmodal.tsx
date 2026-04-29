@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
   Text,
@@ -52,6 +53,7 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
   const submitQuestionnaire = isConsultant
     ? submitConsultantQuestionnaire
     : submitCustomerQuestionnaire;
+  const isAndroidBelow13 = Platform.OS === 'android' && Number(Platform.Version) < 33;
 
   const { data: questions = [], isLoading, isError, error, refetch } = activeQuestionnaire;
 
@@ -134,6 +136,29 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
     if (targetIndex < 0 || targetIndex > totalQuestions - 1) return;
 
     setIsTransitioning(true);
+
+    if (isAndroidBelow13) {
+      Animated.timing(questionOpacity, {
+        toValue: 0,
+        duration: 90,
+        useNativeDriver: true,
+      }).start(() => {
+        setCurrentQuestionIndex(targetIndex);
+        questionTranslateX.setValue(0);
+        questionOpacity.setValue(0);
+
+        requestAnimationFrame(() => {
+          Animated.timing(questionOpacity, {
+            toValue: 1,
+            duration: 150,
+            useNativeDriver: true,
+          }).start(() => {
+            setIsTransitioning(false);
+          });
+        });
+      });
+      return;
+    }
 
     Animated.parallel([
       Animated.timing(questionOpacity, {
@@ -283,7 +308,7 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
                   className="flex-1"
                   style={{
                     opacity: questionOpacity,
-                    transform: [{ translateX: questionTranslateX }],
+                    transform: isAndroidBelow13 ? [] : [{ translateX: questionTranslateX }],
                   }}
                 >
                   <ScrollView className="mt-5 mb-4 flex-1" showsVerticalScrollIndicator={false}>
