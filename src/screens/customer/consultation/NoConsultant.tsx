@@ -8,6 +8,8 @@ import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
+import { useAuth } from '@/contexts/AuthContext';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 type RootStackParamList = {
   NewConsultant: undefined;
   // add other routes here if needed
@@ -18,6 +20,8 @@ const NoConsultant = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { isDark } = useTheme();
   const { horizontalPadding } = useTabletLayout();
+  const { user } = useAuth();
+  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
   const { data: profileData } = useGetProfile({
     // Poll every 5s while this screen is visible so subscription/profile updates show live
     refetchInterval: isFocused ? 5_000 : false,
@@ -56,6 +60,7 @@ const NoConsultant = () => {
     <GradientBackground className="">
       <View className="flex-1 pt-6 " style={[{ paddingHorizontal: horizontalPadding }]}>
         {/* Header */}
+        {isQuestionnaireCompleted && <CompleteQuestions />}
         <Text className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
           Chats
         </Text>

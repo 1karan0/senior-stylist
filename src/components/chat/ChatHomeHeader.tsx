@@ -7,6 +7,8 @@ import type { AppStackParamList, ConsultationStackParamList } from '@/common/typ
 import SearchBar from './SearchBar';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
+import { useAuth } from '@/contexts/AuthContext';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 type NavParamList = AppStackParamList & ConsultationStackParamList;
 
 interface ChatHomeHeaderProps {
@@ -23,9 +25,12 @@ const ChatHomeHeader: React.FC<ChatHomeHeaderProps> = ({
   const { isDark } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<NavParamList>>();
   const { horizontalPadding } = useTabletLayout();
+  const { user } = useAuth();
+  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
   return (
     <View className="pt-6" style={[{ paddingHorizontal: horizontalPadding }]}>
       <View className="flex-row justify-between items-center">
+        {isQuestionnaireCompleted && <CompleteQuestions />}
         <Text
           className={`${isDark ? 'text-white' : 'text-textDark'} text-2xl font-urbanist font-bold`}
         >

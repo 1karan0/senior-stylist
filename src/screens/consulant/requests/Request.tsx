@@ -18,6 +18,8 @@ import {
 } from '@/services/firebase';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
+
 const mapConsultationToRequestItem = (consultation: ConsultantConsultation): RequestItem => {
   const customerName = consultation.user?.name || 'Unknown User';
   const requestedAt = new Date(consultation.requested_at).getTime();
@@ -57,6 +59,7 @@ const sortRequests = (requests: RequestItem[]) =>
 
 const Request: React.FC = () => {
   const { user } = useAuth();
+  const isQuestionnaireCompleted = user?.stylist_questionnaire_completed_at === null;
   const isConsultant = user?.role === 'consultant';
   const { isDark } = useTheme();
   const navigation = useNavigation<any>();
@@ -254,6 +257,7 @@ const Request: React.FC = () => {
     <GradientBackground>
       {/* outer container with paddingBottom so non-scroll content doesn't get hidden */}
       <View className="flex-1 py-6" style={{ paddingBottom, paddingHorizontal: horizontalPadding }}>
+        {isQuestionnaireCompleted && <CompleteQuestions />}
         <View className="flex-col items-start">
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}

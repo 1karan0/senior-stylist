@@ -16,6 +16,8 @@ import { useTabletLayout } from '@/hooks/useTabletLayout';
 import { ModalWrapper } from '@/common/components/ModalWrapper';
 import { useNavigation } from '@react-navigation/native';
 import ActiveStylist from '@/common/components/ActiveStylists';
+import { useAuth } from '@/contexts/AuthContext';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 
 const Dashboard: React.FC = () => {
   const [pdfModalVisible, setPdfModalVisible] = useState(false);
@@ -25,21 +27,22 @@ const Dashboard: React.FC = () => {
   const { data: profileData } = useGetProfile();
   const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useGetLeaderboard();
   const navigation = useNavigation<any>();
-
-  const user = profileData?.user as any;
-  const totalSessions = user?.consultant_details?.total_sessions ?? 0;
-  const averageRating = user?.consultant_details?.average_rating ?? 0;
-  const activeSessions = user?.consultant_details?.active_sessions ?? 0;
-  const totalSessionsChange = user?.consultant_details?.total_sessions_change ?? 0;
-  const averageRatingChange = user?.consultant_details?.average_rating_change ?? 0;
+  const { user } = useAuth();
+  const isQuestionnaireCompleted = user?.stylist_questionnaire_completed_at === null;
+  const profileuser = profileData?.user as any;
+  const totalSessions = profileuser?.consultant_details?.total_sessions ?? 0;
+  const averageRating = profileuser?.consultant_details?.average_rating ?? 0;
+  const activeSessions = profileuser?.consultant_details?.active_sessions ?? 0;
+  const totalSessionsChange = profileuser?.consultant_details?.total_sessions_change ?? 0;
+  const averageRatingChange = profileuser?.consultant_details?.average_rating_change ?? 0;
 
   useEffect(() => {
     if (hasPromptedBio) return;
     if (!user) return;
 
     const role = user?.role;
-    const bioFromConsultantDetails = user?.consultant_details?.bio;
-    const fallbackBio = user?.bio;
+    const bioFromConsultantDetails = profileuser?.consultant_details?.bio;
+    const fallbackBio = profileuser?.bio;
     const bio = (bioFromConsultantDetails ?? fallbackBio ?? '').trim();
 
     if (role === 'consultant' && !bio) {
@@ -68,6 +71,7 @@ const Dashboard: React.FC = () => {
       <View className="flex-1">
         {/* Header */}
         <View className="py-6" style={{ paddingHorizontal: horizontalPadding }}>
+          {isQuestionnaireCompleted && <CompleteQuestions />}
           <Text
             className={`text-2xl font-urbanist-bold  ${isDark ? 'text-white' : 'text-textDark'}`}
           >

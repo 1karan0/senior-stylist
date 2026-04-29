@@ -14,6 +14,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import ActiveStylist from '@/common/components/ActiveStylists';
 import PhoneVerificationPrompt from '@/common/components/PhoneVerificationPrompt';
 import { useVerifyExistingPhone } from '@/api/auth/useVerifyExistingPhone';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 
 const Profile: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
@@ -21,6 +22,7 @@ const Profile: React.FC = () => {
   const scaleAnim = useState(new Animated.Value(1))[0];
   const { isDark } = useTheme();
   const { logout, user } = useAuth();
+  const isQuestionnaireCompleted = user?.stylist_questionnaire_completed_at === null;
   const navigation = useNavigation<any>();
   const { data: profileData } = useGetProfile();
   console.log('profileData', profileData);
@@ -91,6 +93,7 @@ const Profile: React.FC = () => {
       <View className="flex-1 ">
         {/* Header */}
         <View className="py-6" style={{ paddingHorizontal: horizontalPadding }}>
+          {isQuestionnaireCompleted && <CompleteQuestions />}
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
           >

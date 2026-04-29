@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Platform, StatusBar, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { AppStackParamList } from '@/common/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerifyExistingPhone } from '@/api/auth/useVerifyExistingPhone';
 import PhoneVerificationPrompt from '@/common/components/PhoneVerificationPrompt';
-import CompleteQuestions from '@/common/components/CompleteQuestions';
 import { storage } from '@/services/storage';
 
 import UserTabNavigator from '@/navigation/UserTabNavigator';
@@ -55,12 +54,6 @@ const AppStack: React.FC = () => {
     hasResolvedProfileForPrompt && profileUser?.phone && profileUser?.phone_verified_at === null
   );
   const shouldAutoOpenPhonePrompt = shouldPromptPhoneVerification && hasShownPhonePrompt === false;
-  const shouldCompleteQuestions = Boolean(
-    user &&
-    !isGuest &&
-    ((user.role === 'customer' && user.customer_questionnaire_completed_at == null) ||
-      (user.role === 'consultant' && user.stylist_questionnaire_completed_at === null))
-  );
 
   const handleVerifyExistingPhone = async (firebaseIdToken: string) => {
     await verifyExistingPhoneMutation.mutateAsync(firebaseIdToken);
@@ -149,14 +142,11 @@ const AppStack: React.FC = () => {
   // Determine default initial route
   const defaultInitialRoute: keyof AppStackParamList =
     initialRoute || (userRole === 'consultant' ? 'ConsultantTabs' : 'UserTabs');
-  const isAndroidBelow13 = Platform.OS === 'android' && Number(Platform.Version) < 33;
 
   return (
     <>
-      <GradientBackground
-        edges={shouldCompleteQuestions ? ['top', 'left', 'right'] : ['left', 'right']}
-      >
-        <View className={`flex-1 ${isAndroidBelow13 && shouldCompleteQuestions ? 'pt-16' : ''}`}>
+      <GradientBackground edges={['left', 'right']}>
+        <View className="flex-1">
           <Stack.Navigator
             screenOptions={{ headerShown: false }}
             initialRouteName={defaultInitialRoute}
@@ -183,16 +173,6 @@ const AppStack: React.FC = () => {
           showBanner={false}
           autoOpenIntro={shouldAutoOpenPhonePrompt}
         />
-      ) : null}
-
-      {shouldCompleteQuestions ? (
-        <View className={`absolute left-4 right-4 z-50 ${isAndroidBelow13 ? 'top-4' : 'top-14'}`}>
-          <CompleteQuestions
-            title="Complete your questions"
-            subtitle="for better results"
-            iconName="clipboard-outline"
-          />
-        </View>
       ) : null}
     </>
   );

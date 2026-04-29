@@ -4,6 +4,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import SearchBar from './SearchBar';
 import FilterButtons from './FilterButtons';
 import ActiveStylist from '@/common/components/ActiveStylists';
+import { useAuth } from '@/contexts/AuthContext';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 
 type FilterKey = 'all' | 'unread';
 
@@ -23,9 +25,11 @@ const ConsultantChatHomeHeader: React.FC<ConsultantChatHomeHeaderProps> = ({
   isRealtimeConnected,
 }) => {
   const { isDark } = useTheme();
-
+  const { user } = useAuth();
+  const isQuestionnaireCompleted = user?.stylist_questionnaire_completed_at === null;
   return (
     <View className="mb-4">
+      {isQuestionnaireCompleted && <CompleteQuestions />}
       <Text
         className={`text-2xl font-urbanist-bold mb-1 ${isDark ? 'text-textWhite' : 'text-textDark'}`}
       >

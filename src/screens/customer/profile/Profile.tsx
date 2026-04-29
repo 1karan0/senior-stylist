@@ -38,6 +38,7 @@ import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
 import PhoneVerificationPrompt from '@/common/components/PhoneVerificationPrompt';
 import { useVerifyExistingPhone } from '@/api/auth/useVerifyExistingPhone';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 interface Props {
@@ -75,7 +76,8 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     'success' | 'error' | 'info' | 'warning'
   >('info');
   const emailOtpRefs = React.useRef<Array<TextInput | null>>([]);
-
+  const { user } = useAuth();
+  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
   const sendEmailVerificationMutation = useSendEmailVerification();
   const verifyEmailMutation = useVerifyEmailApi();
   const verifyExistingPhoneMutation = useVerifyExistingPhone();
@@ -109,11 +111,11 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     return () => clearInterval(timer);
   }, [isVerifyTimerActive]);
 
-  const user = profileData?.user as ProfileUser;
+  const profileuser = profileData?.user as ProfileUser;
   const subscription = profileData?.subscription;
   const hasSubscription = !!subscription;
-  const emailStatus = user?.email_status;
-  const phoneStatus = user?.phone_status;
+  const emailStatus = profileuser?.email_status;
+  const phoneStatus = profileuser?.phone_status;
   const shouldVerifyPhone = phoneStatus === true;
 
   if (!authUser) {
@@ -168,7 +170,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleCopyCode = () => {
-    const code = user?.referral_code;
+    const code = profileuser?.referral_code;
     if (code) {
       Clipboard.setString(code);
       setIsCopied(true);
@@ -204,8 +206,8 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     }
   };
   const handleEditProfile = () => {
-    if (user) {
-      navigation.navigate('EditProfile', { profile: user });
+    if (profileuser) {
+      navigation.navigate('EditProfile', { profile: profileuser });
     }
   };
 
@@ -372,11 +374,11 @@ const Profile: React.FC<Props> = ({ navigation }) => {
 
   const handleVerifyEmailCode = async () => {
     const code = emailOtp.join('');
-    if (!user?.email || code.length !== 6) return;
+    if (!profileuser?.email || code.length !== 6) return;
 
     try {
       await verifyEmailMutation.mutateAsync({
-        email: user.email,
+        email: profileuser.email,
         code,
       });
       setShowVerifyEmailModal(false);
@@ -404,8 +406,12 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       ? Platform.Version
       : parseInt(String(Platform.Version), 10);
   const isAndroid13 = androidVersion <= 33;
-  const phoneDisplay = [user?.phone_country_code, user?.phone].filter(Boolean).join(' ').trim();
-  const phoneE164 = user?.phone_e164 || `${user?.phone_country_code || ''}${user?.phone || ''}`;
+  const phoneDisplay = [profileuser?.phone_country_code, user?.phone]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+  const phoneE164 =
+    profileuser?.phone_e164 || `${profileuser?.phone_country_code || ''}${user?.phone || ''}`;
   const handleVerifyExistingPhone = async (firebaseIdToken: string) => {
     const response = await verifyExistingPhoneMutation.mutateAsync(firebaseIdToken);
     console.log('response========', response);
@@ -417,6 +423,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       <View className="flex-1 pb-10 ">
         {/* Header */}
         <View className="mt-6" style={[{ paddingHorizontal: horizontalPadding }]}>
+          {isQuestionnaireCompleted && <CompleteQuestions />}
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
           >
@@ -557,7 +564,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
               <Text
                 className={` font-poppins-regular text-sm ${isDark ? 'text-textSecondary' : 'text-[#6A6B6E]'}`}
               >
-                {user?.phone_country_code} {user?.phone}
+                {profileuser?.phone_country_code} {profileuser?.phone}
               </Text>
             </View>
 

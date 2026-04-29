@@ -6,6 +6,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
+import { useAuth } from '@/contexts/AuthContext';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 const STORE_URL = 'https://shop.senior-stylist.com/';
 
 const StoreScreen = () => {
@@ -37,6 +39,8 @@ const StoreScreen = () => {
     Linking.openURL(STORE_URL);
   };
 
+  const { user } = useAuth();
+  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
   return (
     <GradientBackground>
       <ScrollView
@@ -46,6 +50,7 @@ const StoreScreen = () => {
       >
         <View className="flex-1 pt-6 pb-10" style={[{ paddingHorizontal: horizontalPadding }]}>
           {/* Header */}
+          {isQuestionnaireCompleted && <CompleteQuestions />}
           <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
             Products
           </Text>

@@ -21,6 +21,8 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
+import { useAuth } from '@/contexts/AuthContext';
+import CompleteQuestions from '@/common/components/CompleteQuestions';
 const NewsScreen = () => {
   const [page, setPage] = useState(1);
   const [list, setList] = useState<any[]>([]);
@@ -43,7 +45,8 @@ const NewsScreen = () => {
   const { mutateAsync: getArticles, isPending } = useGetNewsArticles();
   const { data: rawCategories = [] } = useGetNewsCategories();
   const categories = [{ id: 'all', name: 'All' }, ...rawCategories];
-
+  const { user } = useAuth();
+  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
   const loadPage = async (reset = false) => {
     const next = reset ? 1 : page + 1;
 
@@ -73,6 +76,7 @@ const NewsScreen = () => {
     <GradientBackground>
       <View className="flex-1 pt-6 mb-5" style={{ paddingHorizontal: horizontalPadding }}>
         {/* Header */}
+        {isQuestionnaireCompleted && <CompleteQuestions />}
         <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
           News Feed
         </Text>
