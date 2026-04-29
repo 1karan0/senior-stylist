@@ -12,6 +12,8 @@ export interface QuestionnaireOption {
 export interface QuestionnaireQuestion {
   id: number;
   question: string;
+  input_kind: string;
+  max_select: number | null;
   options: QuestionnaireOption[];
 }
 
@@ -60,6 +62,8 @@ const mapQuestions = (payload: GetQuestionnaireResponse): QuestionnaireQuestion[
   return rawQuestions.map((question) => ({
     id: question.id,
     question: question.question,
+    input_kind: question.input_kind,
+    max_select: question.max_select,
     options: (question.options ?? []).map((option) => ({
       id: option.id,
       label: option.label,

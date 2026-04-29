@@ -33,7 +33,7 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
   const { isDark } = useTheme();
   const { user } = useAuth();
   const isConsultant = user?.role === 'consultant';
-  const [selectedByQuestion, setSelectedByQuestion] = useState<Record<number, number>>({});
+  const [selectedByQuestion, setSelectedByQuestion] = useState<Record<number, number[]>>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -65,8 +65,32 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
     questionTranslateX.setValue(0);
   }, [visible]);
 
-  const selectOneOption = (questionId: number, optionId: number) => {
-    setSelectedByQuestion((prev) => ({ ...prev, [questionId]: optionId }));
+  const hasSelection = (questionId: number) => (selectedByQuestion[questionId]?.length ?? 0) > 0;
+
+  const toggleQuestionOption = (
+    questionId: number,
+    optionId: number,
+    inputKind: string,
+    maxSelect?: number | null
+  ) => {
+    setSelectedByQuestion((prev) => {
+      const current = prev[questionId] ?? [];
+
+      if (inputKind === 'multi_select') {
+        const isSelected = current.includes(optionId);
+        if (isSelected) {
+          return { ...prev, [questionId]: current.filter((id) => id !== optionId) };
+        }
+
+        const next = [...current, optionId];
+        if (maxSelect && next.length > maxSelect) {
+          return { ...prev, [questionId]: next.slice(next.length - maxSelect) };
+        }
+        return { ...prev, [questionId]: next };
+      }
+
+      return { ...prev, [questionId]: [optionId] };
+    });
   };
 
   useEffect(() => {
@@ -79,7 +103,7 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
   }, [questions.length]);
 
   const canContinue = useMemo(
-    () => questions.length > 0 && questions.every((question) => !!selectedByQuestion[question.id]),
+    () => questions.length > 0 && questions.every((question) => hasSelection(question.id)),
     [questions, selectedByQuestion]
   );
 
@@ -88,7 +112,7 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
 
     const answers = questions.map((question) => ({
       question_id: question.id,
-      option_ids: [selectedByQuestion[question.id]],
+      option_ids: selectedByQuestion[question.id] ?? [],
     }));
 
     await submitQuestionnaire.mutateAsync({ answers });
@@ -101,7 +125,7 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
     | undefined;
   const totalQuestions = questions.length;
   const isLastQuestion = totalQuestions > 0 && currentQuestionIndex === totalQuestions - 1;
-  const hasSelectedCurrent = activeQuestion ? !!selectedByQuestion[activeQuestion.id] : false;
+  const hasSelectedCurrent = activeQuestion ? hasSelection(activeQuestion.id) : false;
   const progressPercent =
     totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
 
@@ -143,10 +167,15 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
     });
   };
 
-  const handleOptionSelect = (questionId: number, optionId: number) => {
-    selectOneOption(questionId, optionId);
+  const handleOptionSelect = (
+    question: CustomerQuestionnaireQuestion | ConsultantQuestionnaireQuestion,
+    optionId: number
+  ) => {
+    const inputKind = 'input_kind' in question ? question.input_kind : 'single_select';
+    const maxSelect = 'max_select' in question ? question.max_select : null;
+    toggleQuestionOption(question.id, optionId, inputKind, maxSelect);
 
-    if (isLastQuestion) return;
+    if (inputKind === 'multi_select' || isLastQuestion) return;
 
     animateToQuestion(Math.min(currentQuestionIndex + 1, totalQuestions - 1), 1);
   };
@@ -267,11 +296,11 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
                       {activeQuestion.options.map((option) => (
                         <TouchableOpacity
                           key={option.id}
-                          onPress={() => handleOptionSelect(activeQuestion.id, option.id)}
+                          onPress={() => handleOptionSelect(activeQuestion, option.id)}
                           disabled={submitQuestionnaire.isPending || isTransitioning}
                           activeOpacity={0.85}
                           className={`w-full rounded-xl border px-4 py-6 ${
-                            selectedByQuestion[activeQuestion.id] === option.id
+                            (selectedByQuestion[activeQuestion.id] ?? []).includes(option.id)
                               ? isDark
                                 ? 'border-[#2CCB91] bg-[#15362D]'
                                 : 'border-[#2CCB91] bg-[#EAF9F2]'

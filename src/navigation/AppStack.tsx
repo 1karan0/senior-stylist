@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View } from 'react-native';
+import { Platform, StatusBar, View } from 'react-native';
 
 import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { AppStackParamList } from '@/common/types';
@@ -149,13 +149,14 @@ const AppStack: React.FC = () => {
   // Determine default initial route
   const defaultInitialRoute: keyof AppStackParamList =
     initialRoute || (userRole === 'consultant' ? 'ConsultantTabs' : 'UserTabs');
+  const isAndroidBelow13 = Platform.OS === 'android' && Number(Platform.Version) < 33;
 
   return (
     <>
-      <View className={`flex-1 `}>
-        <GradientBackground
-          edges={shouldCompleteQuestions ? ['top', 'left', 'right'] : ['left', 'right']}
-        >
+      <GradientBackground
+        edges={shouldCompleteQuestions ? ['top', 'left', 'right'] : ['left', 'right']}
+      >
+        <View className={`flex-1 ${isAndroidBelow13 ? 'pt-16' : ''}`}>
           <Stack.Navigator
             screenOptions={{ headerShown: false }}
             initialRouteName={defaultInitialRoute}
@@ -170,8 +171,8 @@ const AppStack: React.FC = () => {
             <Stack.Screen name="ConsultantChat" component={ConsultantChatScreen} />
             <Stack.Screen name="Pricing" component={PricingScreen} />
           </Stack.Navigator>
-        </GradientBackground>
-      </View>
+        </View>
+      </GradientBackground>
 
       {shouldPromptPhoneVerification ? (
         <PhoneVerificationPrompt
@@ -185,7 +186,7 @@ const AppStack: React.FC = () => {
       ) : null}
 
       {shouldCompleteQuestions ? (
-        <View className="absolute top-14 left-4 right-4 z-50">
+        <View className={`absolute left-4 right-4 z-50 ${isAndroidBelow13 ? 'top-4' : 'top-14'}`}>
           <CompleteQuestions
             title="Complete your questions"
             subtitle="for better results"
