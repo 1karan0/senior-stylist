@@ -1,0 +1,98 @@
+{
+    "project_info": {
+      "project_number": "1019779658570",
+      "project_id": "test-63613",
+      "storage_bucket": "test-63613.firebasestorage.app"
+    },
+    "client": [
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:1019779658570:android:7dd853b575e8f16d0187b3",
+          "android_client_info": {
+            "package_name": "com.emmemanutenzioni"
+          }
+        },
+        "oauth_client": [
+          {
+            "client_id": "1019779658570-ebqs5blfgr94er378aup10rh46c9ocj8.apps.googleusercontent.com",
+            "client_type": 3
+          }
+        ],
+        "api_key": [
+          {
+            "current_key": "AIzaSyCPoetCchV-4nWbRfI0gtVLasu769MIya4"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": [
+              {
+                "client_id": "1019779658570-ebqs5blfgr94er378aup10rh46c9ocj8.apps.googleusercontent.com",
+                "client_type": 3
+              }
+            ]
+          }
+        }
+      },
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:1019779658570:android:cd009eaca2e232f00187b3",
+          "android_client_info": {
+            "package_name": "com.emmemanutenzioni.dev"
+          }
+        },
+        "oauth_client": [
+          {
+            "client_id": "1019779658570-ebqs5blfgr94er378aup10rh46c9ocj8.apps.googleusercontent.com",
+            "client_type": 3
+          }
+        ],
+        "api_key": [
+          {
+            "current_key": "AIzaSyCPoetCchV-4nWbRfI0gtVLasu769MIya4"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": [
+              {
+                "client_id": "1019779658570-ebqs5blfgr94er378aup10rh46c9ocj8.apps.googleusercontent.com",
+                "client_type": 3
+              }
+            ]
+          }
+        }
+      },
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:1019779658570:android:339af6326e8b2cfa0187b3",
+          "android_client_info": {
+            "package_name": "emme.manutenzioni.mobile"
+          }
+        },
+        "oauth_client": [
+          {
+            "client_id": "1019779658570-ebqs5blfgr94er378aup10rh46c9ocj8.apps.googleusercontent.com",
+            "client_type": 3
+          }
+        ],
+        "api_key": [
+          {
+            "current_key": "AIzaSyCPoetCchV-4nWbRfI0gtVLasu769MIya4"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": [
+              {
+                "client_id": "1019779658570-ebqs5blfgr94er378aup10rh46c9ocj8.apps.googleusercontent.com",
+                "client_type": 3
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "configuration_version": "1"
+  }
+  

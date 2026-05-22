@@ -15,6 +15,13 @@ if linkage != nil
 end
 
 target 'EmmeManutenzioni' do
+  # Required for @react-native-firebase (firebase-ios-sdk v9+)
+  use_frameworks! :linkage => :static
+  $RNFirebaseAsStaticFramework = true
+
+  # WatermelonDB dependency (NPM-vendored @nozbe/simdjson, not CocoaPods trunk)
+  pod 'simdjson', path: '../node_modules/@nozbe/simdjson', modular_headers: true
+
   config = use_native_modules!
 
   use_react_native!(
