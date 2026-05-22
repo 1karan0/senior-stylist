@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import ActiveStylist from '@/common/components/ActiveStylists';
 import { useAuth } from '@/contexts/AuthContext';
 import CompleteQuestions from '@/common/components/CompleteQuestions';
+import { useGetConsultantQuestionnaireStatus } from '@/api/consultant/questionnaire/useGetQuestionnaire';
 
 const Dashboard: React.FC = () => {
   const [pdfModalVisible, setPdfModalVisible] = useState(false);
@@ -28,7 +29,13 @@ const Dashboard: React.FC = () => {
   const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useGetLeaderboard();
   const navigation = useNavigation<any>();
   const { user } = useAuth();
-  const isQuestionnaireCompleted = user?.stylist_questionnaire_completed_at === null;
+  const { data: questionnaireStatus } = useGetConsultantQuestionnaireStatus({
+    enabled: !!user && user?.role === 'consultant',
+  });
+  const shouldShowCompleteQuestions =
+    (questionnaireStatus?.missingRequiredQuestionIds?.length ?? 0) > 0 ||
+    (questionnaireStatus?.unansweredQuestionIds?.length ?? 0) > 0 ||
+    questionnaireStatus?.setupComplete === false;
   const profileuser = profileData?.user as any;
   const totalSessions = profileuser?.consultant_details?.total_sessions ?? 0;
   const averageRating = profileuser?.consultant_details?.average_rating ?? 0;
@@ -38,18 +45,20 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     if (hasPromptedBio) return;
-    if (!user) return;
+    if (!user || user.role !== 'consultant') return;
+    // profileData is undefined until the query succeeds — don't treat that as "missing bio"
+    if (!profileData?.user) return;
+    console.log('profileuser====', profileuser);
 
-    const role = user?.role;
     const bioFromConsultantDetails = profileuser?.consultant_details?.bio;
-    const fallbackBio = profileuser?.bio;
+    const fallbackBio = profileuser?.consultant_details?.bio;
     const bio = (bioFromConsultantDetails ?? fallbackBio ?? '').trim();
 
-    if (role === 'consultant' && !bio) {
+    if (!bio) {
       setShowBioPrompt(true);
       setHasPromptedBio(true);
     }
-  }, [user, hasPromptedBio]);
+  }, [user, hasPromptedBio, profileData?.user, profileuser]);
 
   // Keep these values in sync with your tab navigator
   const { paddingBottom } = useTabBarSafePadding();
@@ -71,7 +80,7 @@ const Dashboard: React.FC = () => {
       <View className="flex-1">
         {/* Header */}
         <View className="py-6" style={{ paddingHorizontal: horizontalPadding }}>
-          {isQuestionnaireCompleted && <CompleteQuestions />}
+          {shouldShowCompleteQuestions && <CompleteQuestions />}
           <Text
             className={`text-2xl font-urbanist-bold  ${isDark ? 'text-white' : 'text-textDark'}`}
           >

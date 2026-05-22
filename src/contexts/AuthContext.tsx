@@ -171,9 +171,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const latestUser = res?.data?.data?.user;
       if (!latestUser) return;
+      // /api/profile can return a slimmed user shape; merge to avoid losing auth-only fields.
+      const mergedUser = {
+        ...(user ?? {}),
+        ...latestUser,
+        has_new_questionnaire_questions:
+          typeof latestUser?.has_new_questionnaire_questions === 'boolean'
+            ? latestUser.has_new_questionnaire_questions
+            : (user?.has_new_questionnaire_questions ?? false),
+      };
 
-      await storage.setUserData(latestUser);
-      setUser(latestUser);
+      await storage.setUserData(mergedUser);
+      setUser(mergedUser);
     } catch (error) {
       if (__DEV__) {
         console.warn('[auth] Failed to refresh auth user:', error);

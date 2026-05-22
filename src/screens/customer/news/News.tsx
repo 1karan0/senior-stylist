@@ -14,15 +14,18 @@ import { FlashList } from '@shopify/flash-list';
 
 import { useGetNewsArticles } from '@/api/user/news/useGetNewsArticles';
 import { useGetNewsCategories } from '@/api/user/news/useGetNewsCategories';
+import { useGetQuestionnaireStatus } from '@/api/user/questionnaire/useGetQuestionnaire';
+
 import ArticleCard from './components/ArticleCard';
 import NewsWebViewModal from './components/NewsWebViewModal';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
 import { useAuth } from '@/contexts/AuthContext';
 import CompleteQuestions from '@/common/components/CompleteQuestions';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
+
 const NewsScreen = () => {
   const [page, setPage] = useState(1);
   const [list, setList] = useState<any[]>([]);
@@ -46,7 +49,14 @@ const NewsScreen = () => {
   const { data: rawCategories = [] } = useGetNewsCategories();
   const categories = [{ id: 'all', name: 'All' }, ...rawCategories];
   const { user } = useAuth();
-  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
+  const { data: questionnaireStatus } = useGetQuestionnaireStatus({
+    enabled: !!user,
+  });
+  const shouldShowCompleteQuestions =
+    (questionnaireStatus?.missingRequiredQuestionIds?.length ?? 0) > 0 ||
+    (questionnaireStatus?.unansweredQuestionIds?.length ?? 0) > 0 ||
+    questionnaireStatus?.setupComplete === false ||
+    (questionnaireStatus == null && user?.has_new_questionnaire_questions === true);
   const loadPage = async (reset = false) => {
     const next = reset ? 1 : page + 1;
 
@@ -76,7 +86,7 @@ const NewsScreen = () => {
     <GradientBackground>
       <View className="flex-1 pt-6 mb-5" style={{ paddingHorizontal: horizontalPadding }}>
         {/* Header */}
-        {isQuestionnaireCompleted && <CompleteQuestions />}
+        {shouldShowCompleteQuestions && <CompleteQuestions />}
         <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
           News Feed
         </Text>

@@ -10,6 +10,7 @@ import { Button } from '@/common/components/Button';
 import InfoModal from '@/common/components/modals/InfoModal';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import {
+  getFirebaseIdToken,
   initializeFirebase,
   sendPhoneVerificationCode,
   verifyPhoneOtpCode,
@@ -149,8 +150,8 @@ export default function OtpVerificationScreen({ navigation, route }: any) {
         let res;
         if (phoneE164 && rawPhone && countryCode) {
           // Verify with Firebase first to get ID token
-          const user = await verifyPhoneOtpCode(verificationId, code);
-          const firebaseIdToken = await user.getIdToken();
+          await verifyPhoneOtpCode(verificationId, code);
+          const firebaseIdToken = await getFirebaseIdToken(true);
 
           // Call verifyPhone API with collected signup data
           res = await verifyPhone({

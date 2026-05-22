@@ -13,7 +13,6 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { FlashList } from '@shopify/flash-list';
 
 import { useGetDisputeDetails } from '@/api/user/dispute/useGetDisputeDetails';
 import { useSendDisputeMessage } from '@/api/user/dispute/useSendDisputeMessage';

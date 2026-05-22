@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { Platform } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
@@ -9,7 +10,6 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useUploadProfilePicture } from '@/api/user/profile/useUploadProfilePicture';
 import { useEditProfile } from '@/api/user/profile/useEditProfile';
 import { Button } from '@/common/components/Button';
-import Toast from '@/common/components/Toast';
 import GradientBackground from '@/common/components/GradientBackground';
 import { ProfileUser } from '@/common/types';
 import TextInputField from '@/common/components/TextInputField';
@@ -23,7 +23,6 @@ import {
   requestPhotoLibraryPermission,
   showPermissionDeniedAlert,
 } from '@/utils/imagePermissions';
-import { Platform } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 interface EditProfileFormValues {

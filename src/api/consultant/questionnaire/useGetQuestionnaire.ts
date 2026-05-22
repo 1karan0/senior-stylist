@@ -46,8 +46,15 @@ interface GetQuestionnaireResponse {
     answers: unknown[];
     setup_complete: boolean;
     missing_required_question_ids: number[];
+    unanswered_question_ids?: number[];
     customer_questionnaire_completed_at: string | null;
   };
+}
+
+export interface ConsultantQuestionnaireStatus {
+  setupComplete: boolean;
+  missingRequiredQuestionIds: number[];
+  unansweredQuestionIds: number[];
 }
 
 type UseGetConsultantQuestionnaireOptions = Omit<
@@ -107,6 +114,49 @@ export const useGetConsultantQuestionnaire = (options?: UseGetConsultantQuestion
             message: axiosErr.message,
           });
         }
+        throw new Error(parseApiError(err));
+      }
+    },
+    ...options,
+  });
+};
+
+type UseGetConsultantQuestionnaireStatusOptions = Omit<
+  UseQueryOptions<ConsultantQuestionnaireStatus>,
+  'queryKey' | 'queryFn'
+>;
+
+const mapStatus = (payload: GetQuestionnaireResponse): ConsultantQuestionnaireStatus => ({
+  setupComplete: Boolean(payload?.data?.setup_complete),
+  missingRequiredQuestionIds: Array.isArray(payload?.data?.missing_required_question_ids)
+    ? payload.data.missing_required_question_ids
+    : [],
+  unansweredQuestionIds: Array.isArray(payload?.data?.unanswered_question_ids)
+    ? payload.data.unanswered_question_ids
+    : [],
+});
+
+export const useGetConsultantQuestionnaireStatus = (
+  options?: UseGetConsultantQuestionnaireStatusOptions
+) => {
+  return useQuery<ConsultantQuestionnaireStatus>({
+    queryKey: ['consultant-questionnaire-status'],
+    queryFn: async () => {
+      const token = await storage.getToken();
+      if (!token) throw new Error('Auth token missing');
+
+      try {
+        const res = await axios.get<GetQuestionnaireResponse>(
+          `${BASE_URL}/api/consultant/questions`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        return mapStatus(res.data);
+      } catch (err) {
         throw new Error(parseApiError(err));
       }
     },

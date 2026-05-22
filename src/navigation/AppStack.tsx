@@ -8,6 +8,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useVerifyExistingPhone } from '@/api/auth/useVerifyExistingPhone';
 import PhoneVerificationPrompt from '@/common/components/PhoneVerificationPrompt';
 import { storage } from '@/services/storage';
+import QuestionsModal from '@/common/components/modals/Questionsmodal';
+import { useGetQuestionnaireStatus } from '@/api/user/questionnaire/useGetQuestionnaire';
+import { useGetConsultantQuestionnaireStatus } from '@/api/consultant/questionnaire/useGetQuestionnaire';
 
 import UserTabNavigator from '@/navigation/UserTabNavigator';
 import ConsultantTabNavigator from '@/navigation/ConsultantTabNavigator';
@@ -23,6 +26,8 @@ const AppStack: React.FC = () => {
   const [initialRoute, setInitialRoute] = useState<keyof AppStackParamList | undefined>(undefined);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(true);
   const [hasShownPhonePrompt, setHasShownPhonePrompt] = useState<boolean | null>(null);
+  const [showQuestionnaireModal, setShowQuestionnaireModal] = useState(false);
+  const [hasAutoOpenedQuestionnaire, setHasAutoOpenedQuestionnaire] = useState(false);
 
   const needsProfileForSubscription = Boolean(user) && !isGuest && userRole !== 'consultant';
   const shouldFetchProfile = Boolean(user) && !isGuest;
@@ -36,6 +41,12 @@ const AppStack: React.FC = () => {
     refetchOnMount: 'always',
   });
   const verifyExistingPhoneMutation = useVerifyExistingPhone();
+  const customerQuestionnaireStatus = useGetQuestionnaireStatus({
+    enabled: Boolean(user && !isGuest && userRole !== 'consultant'),
+  });
+  const consultantQuestionnaireStatus = useGetConsultantQuestionnaireStatus({
+    enabled: Boolean(user && !isGuest && userRole === 'consultant'),
+  });
 
   const subscription = profileData?.subscription ?? null;
   const profileUser = profileData?.user;
@@ -54,6 +65,23 @@ const AppStack: React.FC = () => {
     hasResolvedProfileForPrompt && profileUser?.phone && profileUser?.phone_verified_at === null
   );
   const shouldAutoOpenPhonePrompt = shouldPromptPhoneVerification && hasShownPhonePrompt === false;
+  const activeQuestionnaireStatus =
+    userRole === 'consultant'
+      ? consultantQuestionnaireStatus.data
+      : customerQuestionnaireStatus.data;
+  const questionnaireStatusLoading =
+    userRole === 'consultant'
+      ? consultantQuestionnaireStatus.isLoading
+      : customerQuestionnaireStatus.isLoading;
+  const shouldPromptQuestionnaire = Boolean(
+    user &&
+    !isGuest &&
+    !questionnaireStatusLoading &&
+    activeQuestionnaireStatus &&
+    ((activeQuestionnaireStatus.missingRequiredQuestionIds?.length ?? 0) > 0 ||
+      (activeQuestionnaireStatus.unansweredQuestionIds?.length ?? 0) > 0 ||
+      activeQuestionnaireStatus.setupComplete === false)
+  );
 
   const handleVerifyExistingPhone = async (firebaseIdToken: string) => {
     await verifyExistingPhoneMutation.mutateAsync(firebaseIdToken);
@@ -83,6 +111,28 @@ const AppStack: React.FC = () => {
       /* ignore */
     });
   }, [shouldAutoOpenPhonePrompt]);
+
+  useEffect(() => {
+    setShowQuestionnaireModal(false);
+    setHasAutoOpenedQuestionnaire(false);
+  }, [user?.id, isGuest]);
+
+  useEffect(() => {
+    if (!user || isGuest) return;
+    if (hasAutoOpenedQuestionnaire) return;
+    // Avoid stacking modals; complete phone verification prompt first.
+    if (shouldPromptPhoneVerification) return;
+    if (!shouldPromptQuestionnaire) return;
+
+    setShowQuestionnaireModal(true);
+    setHasAutoOpenedQuestionnaire(true);
+  }, [
+    user,
+    isGuest,
+    hasAutoOpenedQuestionnaire,
+    shouldPromptPhoneVerification,
+    shouldPromptQuestionnaire,
+  ]);
 
   // Determine initial route based on user role and subscription status
   useEffect(() => {
@@ -174,6 +224,10 @@ const AppStack: React.FC = () => {
           autoOpenIntro={shouldAutoOpenPhonePrompt}
         />
       ) : null}
+      <QuestionsModal
+        visible={showQuestionnaireModal}
+        onClose={() => setShowQuestionnaireModal(false)}
+      />
     </>
   );
 };

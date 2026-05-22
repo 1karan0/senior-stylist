@@ -9,6 +9,7 @@ import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
 import { useAuth } from '@/contexts/AuthContext';
 import CompleteQuestions from '@/common/components/CompleteQuestions';
+import { useGetQuestionnaireStatus } from '@/api/user/questionnaire/useGetQuestionnaire';
 type NavParamList = AppStackParamList & ConsultationStackParamList;
 
 interface ChatHomeHeaderProps {
@@ -26,11 +27,18 @@ const ChatHomeHeader: React.FC<ChatHomeHeaderProps> = ({
   const navigation = useNavigation<NativeStackNavigationProp<NavParamList>>();
   const { horizontalPadding } = useTabletLayout();
   const { user } = useAuth();
-  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
+  const { data: questionnaireStatus } = useGetQuestionnaireStatus({
+    enabled: !!user,
+  });
+  const shouldShowCompleteQuestions =
+    (questionnaireStatus?.missingRequiredQuestionIds?.length ?? 0) > 0 ||
+    (questionnaireStatus?.unansweredQuestionIds?.length ?? 0) > 0 ||
+    questionnaireStatus?.setupComplete === false ||
+    (questionnaireStatus == null && user?.has_new_questionnaire_questions === true);
   return (
     <View className="pt-6" style={[{ paddingHorizontal: horizontalPadding }]}>
+      {shouldShowCompleteQuestions && <CompleteQuestions />}
       <View className="flex-row justify-between items-center">
-        {isQuestionnaireCompleted && <CompleteQuestions />}
         <Text
           className={`${isDark ? 'text-white' : 'text-textDark'} text-2xl font-urbanist font-bold`}
         >

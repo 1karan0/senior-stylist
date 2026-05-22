@@ -14,13 +14,14 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { useCreateDispute } from '@/api/user/dispute/useCreateDispute';
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { ProfileStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
-import Ionicons from '@react-native-vector-icons/ionicons';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
+
 type SubmitDisputeNavigationProp = StackNavigationProp<ProfileStackParamList, 'SubmitDispute'>;
 type SubmitDisputeRouteProp = RouteProp<ProfileStackParamList, 'SubmitDispute'>;
 

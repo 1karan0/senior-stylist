@@ -1,8 +1,7 @@
 import { BASE_URL } from '@/config';
-import { useAuth } from '@/contexts/AuthContext';
 import { storage } from '@/services/storage';
 import { parseApiError } from '@/utils/parseApiError';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 
 export interface SubmitQuestionnaireAnswer {
@@ -15,9 +14,6 @@ export interface SubmitQuestionnairePayload {
 }
 
 export const useSubmitConsultantQuestionnaire = () => {
-  const queryClient = useQueryClient();
-  const { refreshAuthUser } = useAuth();
-
   return useMutation({
     mutationFn: async (payload: SubmitQuestionnairePayload) => {
       const token = await storage.getToken();
@@ -34,13 +30,6 @@ export const useSubmitConsultantQuestionnaire = () => {
       } catch (err) {
         throw new Error(parseApiError(err));
       }
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['profileData'] }),
-        queryClient.invalidateQueries({ queryKey: ['consultant-questionnaire-questions'] }),
-        refreshAuthUser(),
-      ]);
     },
   });
 };

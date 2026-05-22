@@ -8,6 +8,7 @@ import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
 import { useAuth } from '@/contexts/AuthContext';
 import CompleteQuestions from '@/common/components/CompleteQuestions';
+import { useGetQuestionnaireStatus } from '@/api/user/questionnaire/useGetQuestionnaire';
 const STORE_URL = 'https://shop.senior-stylist.com/';
 
 const StoreScreen = () => {
@@ -40,7 +41,14 @@ const StoreScreen = () => {
   };
 
   const { user } = useAuth();
-  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
+  const { data: questionnaireStatus } = useGetQuestionnaireStatus({
+    enabled: !!user,
+  });
+  const shouldShowCompleteQuestions =
+    (questionnaireStatus?.missingRequiredQuestionIds?.length ?? 0) > 0 ||
+    (questionnaireStatus?.unansweredQuestionIds?.length ?? 0) > 0 ||
+    questionnaireStatus?.setupComplete === false ||
+    (questionnaireStatus == null && user?.has_new_questionnaire_questions === true);
   return (
     <GradientBackground>
       <ScrollView
@@ -50,7 +58,7 @@ const StoreScreen = () => {
       >
         <View className="flex-1 pt-6 pb-10" style={[{ paddingHorizontal: horizontalPadding }]}>
           {/* Header */}
-          {isQuestionnaireCompleted && <CompleteQuestions />}
+          {shouldShowCompleteQuestions && <CompleteQuestions />}
           <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
             Products
           </Text>

@@ -13,17 +13,20 @@ import { Ionicons } from '@react-native-vector-icons/ionicons';
 
 import {
   useGetQuestionnaire,
+  useGetQuestionnaireStatus,
   type QuestionnaireQuestion as CustomerQuestionnaireQuestion,
 } from '@/api/user/questionnaire/useGetQuestionnaire';
 import { useSubmitQuestionnaire } from '@/api/user/questionnaire/useSubmitQuestionnaire';
 import {
   useGetConsultantQuestionnaire,
+  useGetConsultantQuestionnaireStatus,
   type QuestionnaireQuestion as ConsultantQuestionnaireQuestion,
 } from '@/api/consultant/questionnaire/useGetQuestionnaire';
 import { useSubmitConsultantQuestionnaire } from '@/api/consultant/questionnaire/useSubmitQuestionnaire';
 
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface QuestionsModalProps {
   visible: boolean;
@@ -32,7 +35,8 @@ interface QuestionsModalProps {
 
 const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
   const { isDark } = useTheme();
-  const { user } = useAuth();
+  const { user, refreshAuthUser } = useAuth();
+  const queryClient = useQueryClient();
   const isConsultant = user?.role === 'consultant';
   const [selectedByQuestion, setSelectedByQuestion] = useState<Record<number, number[]>>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -43,7 +47,13 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
   const customerQuestionnaire = useGetQuestionnaire({
     enabled: visible && !isConsultant,
   });
+  const questionnaireStatus = useGetQuestionnaireStatus({
+    enabled: visible && !isConsultant,
+  });
   const consultantQuestionnaire = useGetConsultantQuestionnaire({
+    enabled: visible && isConsultant,
+  });
+  const consultantQuestionnaireStatus = useGetConsultantQuestionnaireStatus({
     enabled: visible && isConsultant,
   });
   const submitCustomerQuestionnaire = useSubmitQuestionnaire();
@@ -55,7 +65,30 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
     : submitCustomerQuestionnaire;
   const isAndroidBelow13 = Platform.OS === 'android' && Number(Platform.Version) < 33;
 
-  const { data: questions = [], isLoading, isError, error, refetch } = activeQuestionnaire;
+  const { data: rawQuestions = [], isLoading, isError, error, refetch } = activeQuestionnaire;
+  const shouldShowOnlyUnansweredForCustomer =
+    !isConsultant &&
+    !!user?.customer_questionnaire_completed_at &&
+    questionnaireStatus.data != null;
+  const shouldShowOnlyUnansweredForConsultant =
+    isConsultant &&
+    !!user?.stylist_questionnaire_completed_at &&
+    consultantQuestionnaireStatus.data != null;
+  const unansweredQuestionIds = isConsultant
+    ? (consultantQuestionnaireStatus.data?.unansweredQuestionIds ?? [])
+    : (questionnaireStatus.data?.unansweredQuestionIds ?? []);
+  const questions = useMemo(() => {
+    if (!shouldShowOnlyUnansweredForCustomer && !shouldShowOnlyUnansweredForConsultant)
+      return rawQuestions;
+    if (unansweredQuestionIds.length === 0) return [];
+    const unansweredSet = new Set(unansweredQuestionIds);
+    return rawQuestions.filter((question) => unansweredSet.has(question.id));
+  }, [
+    rawQuestions,
+    shouldShowOnlyUnansweredForCustomer,
+    shouldShowOnlyUnansweredForConsultant,
+    unansweredQuestionIds,
+  ]);
 
   useEffect(() => {
     if (!visible) return;
@@ -191,6 +224,7 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
       });
     });
   };
+  console.log('questions========', questions);
 
   const handleOptionSelect = (
     question: CustomerQuestionnaireQuestion | ConsultantQuestionnaireQuestion,
@@ -425,7 +459,26 @@ const QuestionsModal = ({ visible, onClose }: QuestionsModalProps) => {
             <TouchableOpacity
               className="mt-6 rounded-xl py-3 bg-textPrimary"
               activeOpacity={0.85}
-              onPress={() => {
+              onPress={async () => {
+                if (isConsultant) {
+                  await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: ['profileData'] }),
+                    queryClient.invalidateQueries({
+                      queryKey: ['consultant-questionnaire-questions'],
+                    }),
+                    queryClient.invalidateQueries({
+                      queryKey: ['consultant-questionnaire-status'],
+                    }),
+                    refreshAuthUser(),
+                  ]);
+                } else {
+                  await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: ['profileData'] }),
+                    queryClient.invalidateQueries({ queryKey: ['questionnaire-questions'] }),
+                    queryClient.invalidateQueries({ queryKey: ['questionnaire-status'] }),
+                    refreshAuthUser(),
+                  ]);
+                }
                 setShowSuccessModal(false);
                 onClose();
               }}

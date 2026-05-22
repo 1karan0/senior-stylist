@@ -1,24 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Switch,
-  Platform,
-  ActivityIndicator,
-  Linking,
-} from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Switch, Platform, Linking } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
 import DeviceInfo from 'react-native-device-info';
 
+import { useDeleteAccount } from '@/api/auth/useDeletAccount';
 import GradientBackground from '@/common/components/GradientBackground';
 import DeleteAccountModal from '@/common/components/modals/DeleteAccountModal';
 import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useDeleteAccount } from '@/api/auth/useDeletAccount';
 import Toast from '@/common/components/Toast';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 const Settings: React.FC = () => {

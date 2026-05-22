@@ -28,6 +28,12 @@ console.log('base url checking=======', BASE_URL);
 export const config = {
   ENV,
   BASE_URL,
+  FIREBASE_PROJECT_ID: Config.FIREBASE_PROJECT_ID,
+  FIREBASE_STORAGE_BUCKET: Config.FIREBASE_STORAGE_BUCKET,
+  FIREBASE_API_KEY: Config.FIREBASE_API_KEY,
+  FIREBASE_AUTH_DOMAIN: Config.FIREBASE_AUTH_DOMAIN,
+  FIREBASE_MESSAGING_SENDER_ID: Config.FIREBASE_MESSAGING_SENDER_ID,
+  FIREBASE_APP_ID: Config.FIREBASE_APP_ID,
   // Add other environment variables here as needed:
   // API_KEY: Config.API_KEY || '',
   // DEBUG_MODE: Config.DEBUG_MODE === 'true',

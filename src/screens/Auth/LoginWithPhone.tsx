@@ -15,7 +15,11 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRef, useState } from 'react';
 import Toast from '@/common/components/Toast';
-import { verifyPhoneOtpCode, sendPhoneVerificationCode } from '@/services/firebase';
+import {
+  getFirebaseIdToken,
+  sendPhoneVerificationCode,
+  verifyPhoneOtpCode,
+} from '@/services/firebase';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { AuthStackParamList } from '@/common/types';
 
@@ -67,10 +71,9 @@ const LoginWithPhoneScreen = ({ navigation }: any) => {
       const code = otp.join('');
 
       // First, verify the OTP with Firebase to get the user credential
-      const user = await verifyPhoneOtpCode(verificationId, code);
-      console.log('user--===', user);
+      await verifyPhoneOtpCode(verificationId, code);
       // Extract a fresh Firebase ID token and send it to backend for authentication
-      const idToken = await user.getIdToken(true);
+      const idToken = await getFirebaseIdToken(true);
 
       console.log('idToken--===', idToken);
       await loginWithPhone(idToken);

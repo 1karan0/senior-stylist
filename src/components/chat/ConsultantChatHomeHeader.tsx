@@ -6,6 +6,7 @@ import FilterButtons from './FilterButtons';
 import ActiveStylist from '@/common/components/ActiveStylists';
 import { useAuth } from '@/contexts/AuthContext';
 import CompleteQuestions from '@/common/components/CompleteQuestions';
+import { useGetConsultantQuestionnaireStatus } from '@/api/consultant/questionnaire/useGetQuestionnaire';
 
 type FilterKey = 'all' | 'unread';
 
@@ -26,10 +27,16 @@ const ConsultantChatHomeHeader: React.FC<ConsultantChatHomeHeaderProps> = ({
 }) => {
   const { isDark } = useTheme();
   const { user } = useAuth();
-  const isQuestionnaireCompleted = user?.stylist_questionnaire_completed_at === null;
+  const { data: questionnaireStatus } = useGetConsultantQuestionnaireStatus({
+    enabled: !!user && user?.role === 'consultant',
+  });
+  const shouldShowCompleteQuestions =
+    (questionnaireStatus?.missingRequiredQuestionIds?.length ?? 0) > 0 ||
+    (questionnaireStatus?.unansweredQuestionIds?.length ?? 0) > 0 ||
+    questionnaireStatus?.setupComplete === false;
   return (
     <View className="mb-4">
-      {isQuestionnaireCompleted && <CompleteQuestions />}
+      {shouldShowCompleteQuestions && <CompleteQuestions />}
       <Text
         className={`text-2xl font-urbanist-bold mb-1 ${isDark ? 'text-textWhite' : 'text-textDark'}`}
       >

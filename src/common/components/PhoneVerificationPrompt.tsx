@@ -5,6 +5,9 @@ import { Ionicons } from '@react-native-vector-icons/ionicons';
 import Button from '@/common/components/Button';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
+  getFirebaseIdToken,
+  getFirebaseTokenDebugInfo,
+  getFirebaseAuth,
   initializeFirebase,
   sendPhoneVerificationCode,
   verifyPhoneOtpCode,
@@ -36,6 +39,7 @@ const PhoneVerificationPrompt: React.FC<PhoneVerificationPromptProps> = ({
   const [verificationId, setVerificationId] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [sendingCode, setSendingCode] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [timer, setTimer] = useState(30);
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [error, setError] = useState('');
@@ -74,6 +78,37 @@ const PhoneVerificationPrompt: React.FC<PhoneVerificationPromptProps> = ({
     }
   }, [autoOpenIntro]);
 
+  const getFirebasePhoneErrorMessage = (err: unknown, fallback: string) => {
+    const maybeError = err as { code?: string; message?: string };
+    const code = String(maybeError?.code ?? '').toLowerCase();
+    const message = String(maybeError?.message ?? '').toLowerCase();
+
+    if (
+      code.includes('invalid-verification-code') ||
+      message.includes('invalid-verification-code')
+    ) {
+      return 'Invalid verification code. Please check the OTP and try again.';
+    }
+
+    if (
+      code.includes('code-expired') ||
+      message.includes('code-expired') ||
+      message.includes('session has expired')
+    ) {
+      return 'This verification code has expired. Please request a new OTP.';
+    }
+
+    if (code.includes('too-many-requests') || message.includes('too-many-requests')) {
+      return 'Too many attempts. Please wait a moment and try again.';
+    }
+
+    if (code.includes('invalid-phone-number') || message.includes('invalid-phone-number')) {
+      return 'The phone number looks invalid. Please check it and try again.';
+    }
+
+    return maybeError?.message || fallback;
+  };
+
   const buildE164 = () => {
     const callingCode = selectedCallingCode?.callingCode ?? '';
     const normalizedCode = callingCode.startsWith('+')
@@ -102,7 +137,7 @@ const PhoneVerificationPrompt: React.FC<PhoneVerificationPromptProps> = ({
       setIsTimerActive(true);
     } catch (err: any) {
       console.log('err======', err);
-      setError(err?.message || 'Failed to send OTP. Please try again.');
+      setError(getFirebasePhoneErrorMessage(err, 'Failed to send OTP. Please try again.'));
     } finally {
       setSendingCode(false);
     }
@@ -120,17 +155,34 @@ const PhoneVerificationPrompt: React.FC<PhoneVerificationPromptProps> = ({
 
   const handleVerify = async () => {
     const code = otp.join('');
-    if (!verificationId || code.length !== 6) return;
+    if (!verificationId || code.length !== 6 || isVerifyingOtp || isSubmitting) return;
 
     try {
+      setIsVerifyingOtp(true);
       setError('');
-      const firebaseUser = await verifyPhoneOtpCode(verificationId, code);
-      const firebaseIdToken = await firebaseUser.getIdToken(true);
+      await verifyPhoneOtpCode(verificationId, code);
+      const currentFirebaseUser = getFirebaseAuth().currentUser;
+      if (!currentFirebaseUser?.phoneNumber) {
+        throw new Error(
+          'Could not verify this phone number. Please request a new OTP and try again.'
+        );
+      }
+      const firebaseIdToken = await getFirebaseIdToken(true);
+      if (__DEV__) {
+        const debugInfo = await getFirebaseTokenDebugInfo(true);
+        console.log('[phone-verify] Firebase token debug info:', debugInfo);
+        console.log('[phone-verify] Local OTP context:', {
+          enteredPhone: buildE164(),
+          verificationIdPresent: Boolean(verificationId),
+        });
+      }
       await onVerifyToken(firebaseIdToken);
       setShowModal(false);
     } catch (err: any) {
       console.log('err======', err);
-      setError(err?.message || 'Invalid code. Please try again.');
+      setError(getFirebasePhoneErrorMessage(err, 'Invalid code. Please try again.'));
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
@@ -352,8 +404,8 @@ const PhoneVerificationPrompt: React.FC<PhoneVerificationPromptProps> = ({
             <Button
               text="Verify"
               onPress={handleVerify}
-              disabled={!isOtpComplete || isSubmitting}
-              loading={isSubmitting}
+              disabled={!isOtpComplete || isSubmitting || isVerifyingOtp}
+              loading={isSubmitting || isVerifyingOtp}
               variant="gradient"
             />
           </View>

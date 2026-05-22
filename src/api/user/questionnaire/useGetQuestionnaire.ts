@@ -46,8 +46,16 @@ interface GetQuestionnaireResponse {
     answers: unknown[];
     setup_complete: boolean;
     missing_required_question_ids: number[];
+    unanswered_question_ids?: number[];
     customer_questionnaire_completed_at: string | null;
   };
+}
+
+export interface QuestionnaireStatus {
+  setupComplete: boolean;
+  missingRequiredQuestionIds: number[];
+  unansweredQuestionIds: number[];
+  customerQuestionnaireCompletedAt: string | null;
 }
 
 type UseGetQuestionnaireOptions = Omit<
@@ -107,6 +115,48 @@ export const useGetQuestionnaire = (options?: UseGetQuestionnaireOptions) => {
             message: axiosErr.message,
           });
         }
+        throw new Error(parseApiError(err));
+      }
+    },
+    ...options,
+  });
+};
+
+type UseGetQuestionnaireStatusOptions = Omit<
+  UseQueryOptions<QuestionnaireStatus>,
+  'queryKey' | 'queryFn'
+>;
+
+const mapStatus = (payload: GetQuestionnaireResponse): QuestionnaireStatus => ({
+  setupComplete: Boolean(payload?.data?.setup_complete),
+  missingRequiredQuestionIds: Array.isArray(payload?.data?.missing_required_question_ids)
+    ? payload.data.missing_required_question_ids
+    : [],
+  unansweredQuestionIds: Array.isArray(payload?.data?.unanswered_question_ids)
+    ? payload.data.unanswered_question_ids
+    : [],
+  customerQuestionnaireCompletedAt: payload?.data?.customer_questionnaire_completed_at ?? null,
+});
+
+export const useGetQuestionnaireStatus = (options?: UseGetQuestionnaireStatusOptions) => {
+  return useQuery<QuestionnaireStatus>({
+    queryKey: ['questionnaire-status'],
+    queryFn: async () => {
+      const token = await storage.getToken();
+      if (!token) throw new Error('Auth token missing');
+
+      try {
+        const res = await axios.get<GetQuestionnaireResponse>(
+          `${BASE_URL}/api/customer/questions`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        return mapStatus(res.data);
+      } catch (err) {
         throw new Error(parseApiError(err));
       }
     },

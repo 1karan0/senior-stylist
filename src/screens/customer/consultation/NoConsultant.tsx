@@ -3,13 +3,17 @@ import { View, Text, Image } from 'react-native';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
+import { useGetQuestionnaireStatus } from '@/api/user/questionnaire/useGetQuestionnaire';
+
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import CompleteQuestions from '@/common/components/CompleteQuestions';
+import ActiveStylist from '@/common/components/ActiveStylists';
+
 type RootStackParamList = {
   NewConsultant: undefined;
   // add other routes here if needed
@@ -21,7 +25,14 @@ const NoConsultant = () => {
   const { isDark } = useTheme();
   const { horizontalPadding } = useTabletLayout();
   const { user } = useAuth();
-  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
+  const { data: questionnaireStatus } = useGetQuestionnaireStatus({
+    enabled: !!user,
+  });
+  const shouldShowCompleteQuestions =
+    (questionnaireStatus?.missingRequiredQuestionIds?.length ?? 0) > 0 ||
+    (questionnaireStatus?.unansweredQuestionIds?.length ?? 0) > 0 ||
+    questionnaireStatus?.setupComplete === false ||
+    (questionnaireStatus == null && user?.has_new_questionnaire_questions === true);
   const { data: profileData } = useGetProfile({
     // Poll every 5s while this screen is visible so subscription/profile updates show live
     refetchInterval: isFocused ? 5_000 : false,
@@ -60,13 +71,16 @@ const NoConsultant = () => {
     <GradientBackground className="">
       <View className="flex-1 pt-6 " style={[{ paddingHorizontal: horizontalPadding }]}>
         {/* Header */}
-        {isQuestionnaireCompleted && <CompleteQuestions />}
+        {shouldShowCompleteQuestions && <CompleteQuestions />}
         <Text className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} `}>
           Chats
         </Text>
         <Text className={` ${isDark ? 'text-textSecondary' : 'text-gray-500'} mt-1`}>
           Manage your styling sessions
         </Text>
+        <View className="mt-3">
+          <ActiveStylist />
+        </View>
 
         {/* Card */}
         <View

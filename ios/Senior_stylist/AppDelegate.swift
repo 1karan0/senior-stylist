@@ -20,14 +20,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
  // ------------------------------------------------
  // Firebase configuration (DEV / PROD)
+ // Use bundle identifier to avoid scheme/flag drift.
  // ------------------------------------------------
- #if DEV
-  let firebasePlistName = "GoogleService-Info-Dev"
-  print(" Firebase ENV: DEV (Simulator / TestFlight)")
- #else
-  let firebasePlistName = "GoogleService-Info-Prod"
-  print(" Firebase ENV: PROD (App Store)")
- #endif
+ let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
+ let isDevBundle = bundleIdentifier.hasSuffix(".dev")
+ let firebasePlistName = isDevBundle ? "GoogleService-Info-Dev" : "GoogleService-Info-Prod"
+ print(" Firebase ENV: \(isDevBundle ? "DEV" : "PROD") bundle=\(bundleIdentifier)")
 
  guard
   let filePath = Bundle.main.path(forResource: firebasePlistName, ofType: "plist"),

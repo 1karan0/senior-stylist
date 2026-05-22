@@ -2,6 +2,8 @@ import { getApp } from '@react-native-firebase/app';
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import {
   getAuth,
+  getIdToken,
+  getIdTokenResult,
   PhoneAuthProvider,
   signInWithCredential,
   signInWithCustomToken,
@@ -125,8 +127,20 @@ export const signOutFirebase = async (): Promise<void> => {
 
 export const sendPhoneVerificationCode = async (phoneNumber: string): Promise<string> => {
   getApp(); // Ensure Firebase is initialized
+  const normalizedPhone = String(phoneNumber ?? '')
+    .replace(/\s+/g, '')
+    .trim();
+
+  // Firebase Phone Auth expects strict E.164 format: +[country_code][subscriber_number]
+  // Example: +447700900123
+  if (!/^\+[1-9]\d{6,14}$/.test(normalizedPhone)) {
+    throw new Error(
+      'Invalid phone format. Use country code with number (e.g. +447700900123) and remove spaces/special characters.'
+    );
+  }
+
   try {
-    const confirmation = await signInWithPhoneNumber(getAuth(), phoneNumber);
+    const confirmation = await signInWithPhoneNumber(getAuth(), normalizedPhone);
     const verificationId = confirmation.verificationId;
 
     if (!verificationId) {
@@ -147,6 +161,12 @@ export const sendPhoneVerificationCode = async (phoneNumber: string): Promise<st
       throw new Error('Too many OTP attempts from this device. Please wait and try again later.');
     }
 
+    if (errorCode === 'auth/internal-error') {
+      throw new Error(
+        'Phone verification could not start. On iOS, ensure this is a real device and Firebase Phone Auth/APNs setup is complete; then try again.'
+      );
+    }
+
     throw error;
   }
 };
@@ -156,6 +176,48 @@ export const verifyPhoneOtpCode = async (verificationId: string, code: string) =
   const credential = PhoneAuthProvider.credential(verificationId, code);
   const userCredential = await signInWithCredential(getAuth(), credential);
   return userCredential.user;
+};
+
+export const getFirebaseIdToken = async (forceRefresh = true): Promise<string> => {
+  getApp(); // Ensure Firebase is initialized
+  const authInstance = getAuth();
+  const user = authInstance.currentUser;
+
+  if (!user) {
+    throw new Error('Firebase user not available. Please verify again.');
+  }
+
+  return getIdToken(user, forceRefresh);
+};
+
+export const getFirebaseTokenDebugInfo = async (forceRefresh = true) => {
+  getApp(); // Ensure Firebase is initialized
+  const authInstance = getAuth();
+  const user = authInstance.currentUser;
+
+  if (!user) {
+    return {
+      uid: null,
+      phoneNumber: null,
+      providerIds: [],
+      signInProvider: null,
+      tokenPhoneNumber: null,
+      tokenIssuedAt: null,
+    };
+  }
+
+  const tokenResult = await getIdTokenResult(user, forceRefresh);
+
+  return {
+    uid: user.uid,
+    phoneNumber: user.phoneNumber ?? null,
+    providerIds: user.providerData.map((provider) => provider.providerId),
+    signInProvider:
+      (tokenResult.claims?.firebase as { sign_in_provider?: string } | undefined)
+        ?.sign_in_provider ?? null,
+    tokenPhoneNumber: (tokenResult.claims?.phone_number as string | undefined) ?? null,
+    tokenIssuedAt: tokenResult.issuedAtTime ?? null,
+  };
 };
 
 export const waitForFirebaseUser = (timeout = 5000): Promise<FirebaseAuthTypes.User | null> =>

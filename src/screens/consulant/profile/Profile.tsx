@@ -15,6 +15,7 @@ import ActiveStylist from '@/common/components/ActiveStylists';
 import PhoneVerificationPrompt from '@/common/components/PhoneVerificationPrompt';
 import { useVerifyExistingPhone } from '@/api/auth/useVerifyExistingPhone';
 import CompleteQuestions from '@/common/components/CompleteQuestions';
+import { useGetConsultantQuestionnaireStatus } from '@/api/consultant/questionnaire/useGetQuestionnaire';
 
 const Profile: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
@@ -22,11 +23,16 @@ const Profile: React.FC = () => {
   const scaleAnim = useState(new Animated.Value(1))[0];
   const { isDark } = useTheme();
   const { logout, user } = useAuth();
-  const isQuestionnaireCompleted = user?.stylist_questionnaire_completed_at === null;
+  const { data: questionnaireStatus } = useGetConsultantQuestionnaireStatus({
+    enabled: !!user && user?.role === 'consultant',
+  });
+  const shouldShowCompleteQuestions =
+    (questionnaireStatus?.missingRequiredQuestionIds?.length ?? 0) > 0 ||
+    (questionnaireStatus?.unansweredQuestionIds?.length ?? 0) > 0 ||
+    questionnaireStatus?.setupComplete === false;
   const navigation = useNavigation<any>();
   const { data: profileData } = useGetProfile();
   console.log('profileData', profileData);
-  console.log('user======', user);
 
   const ProfileUser = profileData?.user as any;
   const totalSessions = ProfileUser?.consultant_details?.total_sessions ?? 0;
@@ -40,6 +46,7 @@ const Profile: React.FC = () => {
     .filter(Boolean)
     .join(' ')
     .trim();
+  console.log('user======', user);
   console.log('profileData', profileData);
   const { paddingBottom } = useTabBarSafePadding();
   const { horizontalPadding } = useTabletLayout();
@@ -93,7 +100,7 @@ const Profile: React.FC = () => {
       <View className="flex-1 ">
         {/* Header */}
         <View className="py-6" style={{ paddingHorizontal: horizontalPadding }}>
-          {isQuestionnaireCompleted && <CompleteQuestions />}
+          {shouldShowCompleteQuestions && <CompleteQuestions />}
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
           >

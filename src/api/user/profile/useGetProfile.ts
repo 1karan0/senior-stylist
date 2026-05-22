@@ -13,6 +13,43 @@ export interface ProfileResponse {
 
 type UseGetProfileOptions = Omit<UseQueryOptions<ProfileResponse>, 'queryKey' | 'queryFn'>;
 
+/** Normalize GET /api/profile — backends may nest user under `data` or expose it flat. */
+function parseProfilePayload(body: unknown): ProfileResponse {
+  if (body === null || typeof body !== 'object') {
+    throw new Error('Invalid profile response body');
+  }
+  const root = body as Record<string, unknown>;
+
+  // Typical: { status, message, data: { user, subscription } }
+  const nested = root.data;
+  if (nested && typeof nested === 'object') {
+    const d = nested as Record<string, unknown>;
+    if (d.user != null && typeof d.user === 'object') {
+      return {
+        user: d.user as ProfileUser,
+        subscription: (d.subscription ?? null) as ProfileSubscription | null,
+      };
+    }
+    // Some APIs return user fields directly inside `data` (no nested `user` key)
+    if ('id' in nested && typeof (nested as Record<string, unknown>).email === 'string') {
+      return {
+        user: nested as ProfileUser,
+        subscription: (root.subscription ?? null) as ProfileSubscription | null,
+      };
+    }
+  }
+
+  // Flat envelope: axios body is { user, subscription }
+  if (root.user != null && typeof root.user === 'object') {
+    return {
+      user: root.user as ProfileUser,
+      subscription: (root.subscription ?? null) as ProfileSubscription | null,
+    };
+  }
+
+  throw new Error('Profile response missing user');
+}
+
 export const useGetProfile = (options?: UseGetProfileOptions) => {
   return useQuery<ProfileResponse>({
     queryKey: ['profileData'],
@@ -29,10 +66,7 @@ export const useGetProfile = (options?: UseGetProfileOptions) => {
           },
         });
 
-        return {
-          user: res.data.data.user,
-          subscription: res.data.data.subscription || null,
-        };
+        return parseProfilePayload(res.data);
       } catch (err) {
         throw new Error(parseApiError(err));
       }

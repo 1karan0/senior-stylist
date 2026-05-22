@@ -31,6 +31,7 @@ import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
 import QuestionsModal from '@/common/components/modals/Questionsmodal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useGetQuestionnaireStatus } from '@/api/user/questionnaire/useGetQuestionnaire';
 const NewConsultant = ({ navigation }: any) => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -47,7 +48,14 @@ const NewConsultant = ({ navigation }: any) => {
   const { isAdsEnabled, preloadAd } = useAds();
   const { open: openFindingStylistModal } = useFindingStylistModal();
   const { horizontalPadding } = useTabletLayout();
-  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
+  const { data: questionnaireStatus } = useGetQuestionnaireStatus({
+    enabled: !!user,
+  });
+  const shouldShowCompleteQuestions =
+    (questionnaireStatus?.missingRequiredQuestionIds?.length ?? 0) > 0 ||
+    (questionnaireStatus?.unansweredQuestionIds?.length ?? 0) > 0 ||
+    questionnaireStatus?.setupComplete === false ||
+    (questionnaireStatus == null && user?.has_new_questionnaire_questions === true);
   // Preload ad when component mounts (so it's ready when user taps "Find Stylist")
   useEffect(() => {
     if (isAdsEnabled) {
@@ -173,7 +181,7 @@ const NewConsultant = ({ navigation }: any) => {
   };
 
   const onSubmit = async (data: any) => {
-    if (isQuestionnaireCompleted) {
+    if (shouldShowCompleteQuestions) {
       setToast({
         visible: true,
         message: 'Please complete your questions before finding a stylist.',

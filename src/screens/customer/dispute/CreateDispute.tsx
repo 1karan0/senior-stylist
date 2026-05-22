@@ -1,21 +1,11 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  ActivityIndicator,
-  Alert,
-  StatusBar,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, StatusBar } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useGetDisputeConsultations } from '@/api/user/dispute/useGetDisputeConsultations';
 import Button from '@/common/components/Button';
 import GradientBackground from '@/common/components/GradientBackground';
 import { ProfileStackParamList } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
-import LinearGradient from 'react-native-linear-gradient';
 import { ConsultationListSkeleton } from '@/common/components/skeletons/ConsultationItemSkeleton';
 import { useTabletLayout } from '@/hooks/useTabletLayout';
 

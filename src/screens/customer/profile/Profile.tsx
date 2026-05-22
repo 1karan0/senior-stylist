@@ -22,9 +22,13 @@ import { deepLinkToSubscriptions, initConnection, finishTransaction } from 'reac
 import * as RNIap from 'react-native-iap';
 import { useIsFocused } from '@react-navigation/native';
 
-import { useGetProfile } from '@/api/user/profile/useGetProfile';
 import { useSendEmailVerification } from '@/api/auth/useSendEmailVerification';
 import { useVerifyEmailApi } from '@/api/auth/useVerifyEmail';
+import { useVerifyExistingPhone } from '@/api/auth/useVerifyExistingPhone';
+import { restorePurchase, type RestorePurchasePayload } from '@/api/subscription/verifyPurchase';
+import { useGetProfile } from '@/api/user/profile/useGetProfile';
+import { useGetQuestionnaireStatus } from '@/api/user/questionnaire/useGetQuestionnaire';
+
 import Button from '@/common/components/Button';
 import InfoModal from '@/common/components/modals/InfoModal';
 import GradientBackground from '@/common/components/GradientBackground';
@@ -33,12 +37,10 @@ import { useTabBarSafePadding } from '@/common/hooks/useTabBarSafePadding';
 import { ProfileStackParamList, ProfileUser } from '@/common/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { restorePurchase, type RestorePurchasePayload } from '@/api/subscription/verifyPurchase';
-import { useTabletLayout } from '@/hooks/useTabletLayout';
 import ActiveStylist from '@/common/components/ActiveStylists';
 import PhoneVerificationPrompt from '@/common/components/PhoneVerificationPrompt';
-import { useVerifyExistingPhone } from '@/api/auth/useVerifyExistingPhone';
 import CompleteQuestions from '@/common/components/CompleteQuestions';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 type ProfileNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 interface Props {
@@ -47,12 +49,12 @@ interface Props {
 
 const Profile: React.FC<Props> = ({ navigation }) => {
   const isFocused = useIsFocused();
-  const { logout, user: authUser, exitGuest } = useAuth();
+  const { logout, user, exitGuest } = useAuth();
   const { data: profileData, refetch: refetchProfile } = useGetProfile({
     // Poll every 5s while this screen is visible so subscription/profile updates show live
-    refetchInterval: isFocused && !!authUser ? 5_000 : false,
+    refetchInterval: isFocused && !!user ? 5_000 : false,
     refetchIntervalInBackground: false,
-    enabled: !!authUser,
+    enabled: !!user,
   });
   const { isDark } = useTheme();
   const { paddingBottom } = useTabBarSafePadding();
@@ -76,8 +78,15 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     'success' | 'error' | 'info' | 'warning'
   >('info');
   const emailOtpRefs = React.useRef<Array<TextInput | null>>([]);
-  const { user } = useAuth();
-  const isQuestionnaireCompleted = user?.customer_questionnaire_completed_at === null;
+  const { data: questionnaireStatus } = useGetQuestionnaireStatus({
+    enabled: !!user,
+    refetchOnMount: 'always',
+  });
+  const shouldShowCompleteQuestions =
+    (questionnaireStatus?.missingRequiredQuestionIds?.length ?? 0) > 0 ||
+    (questionnaireStatus?.unansweredQuestionIds?.length ?? 0) > 0 ||
+    questionnaireStatus?.setupComplete === false ||
+    (questionnaireStatus == null && user?.has_new_questionnaire_questions === true);
   const sendEmailVerificationMutation = useSendEmailVerification();
   const verifyEmailMutation = useVerifyEmailApi();
   const verifyExistingPhoneMutation = useVerifyExistingPhone();
@@ -92,7 +101,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
     setEmailVerificationVariant('info');
   };
 
-  console.log('authUser========', authUser);
+  console.log('user========', user);
   console.log('profileData========', profileData);
 
   useEffect(() => {
@@ -118,7 +127,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
   const phoneStatus = profileuser?.phone_status;
   const shouldVerifyPhone = phoneStatus === true;
 
-  if (!authUser) {
+  if (!user) {
     return (
       <GradientBackground>
         <View className="flex-1 pb-10" style={{ paddingHorizontal: horizontalPadding }}>
@@ -423,7 +432,7 @@ const Profile: React.FC<Props> = ({ navigation }) => {
       <View className="flex-1 pb-10 ">
         {/* Header */}
         <View className="mt-6" style={[{ paddingHorizontal: horizontalPadding }]}>
-          {isQuestionnaireCompleted && <CompleteQuestions />}
+          {shouldShowCompleteQuestions && <CompleteQuestions />}
           <Text
             className={`text-2xl font-urbanist-bold ${isDark ? 'text-white' : 'text-textDark'}`}
           >

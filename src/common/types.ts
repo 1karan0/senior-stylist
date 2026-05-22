@@ -116,6 +116,7 @@ export interface User {
   away_since: string | null;
   created_at: string;
   updated_at: string;
+  has_new_questionnaire_questions: boolean;
   customer_questionnaire_completed_at: string | null;
   stylist_questionnaire_completed_at: string | null;
   phone_status: boolean;
