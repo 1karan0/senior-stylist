@@ -1,22 +1,26 @@
-// src/common/components/GradientBackground.tsx
 import React, { ReactNode } from 'react';
-import LinearGradient, { LinearGradientProps } from 'react-native-linear-gradient';
+import {
+  Platform,
+  StatusBar,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { SafeAreaView, Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Platform, StatusBar, View } from 'react-native';
 
-interface GradientBackgroundProps extends Omit<LinearGradientProps, 'colors'> {
+interface GradientBackgroundProps {
   children: ReactNode;
   variant?: 'light' | 'dark';
   colors?: string[];
   edges?: Edge[];
-  /**
-   * Optional solid overlay behind the status bar area.
-   * Useful when using a translucent StatusBar and you want a specific color
-   * instead of the gradient showing through.
-   */
+  className?: string;
+  style?: StyleProp<ViewStyle>;
   topOverlayColor?: string;
 }
+
 const LIGHT_BG = ['hsl(146 25% 97%)', 'hsl(158 64% 95%)'];
 const DARK_BG = ['hsl(158 32% 8%)', 'hsl(158 32% 12%)'];
 
@@ -26,13 +30,12 @@ const GradientBackground: React.FC<GradientBackgroundProps> = ({
   variant,
   colors: colorsOverride,
   edges,
+  className,
   topOverlayColor,
-  ...rest
 }) => {
   const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
-  // Priority: colorsOverride > explicit variant prop > theme (isDark)
   const colors = colorsOverride
     ? colorsOverride
     : variant === 'light'
@@ -43,10 +46,21 @@ const GradientBackground: React.FC<GradientBackgroundProps> = ({
           ? DARK_BG
           : LIGHT_BG;
 
-  const topInset = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : (insets.top ?? 0);
+  const topInset =
+    Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : (insets.top ?? 0);
 
   return (
-    <LinearGradient colors={colors} style={[{ flex: 1 }, style]} {...rest}>
+    <View className={className} style={[styles.container, style]}>
+      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
+        <Defs>
+          <LinearGradient id="backgroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor={colors[0]} />
+            <Stop offset="100%" stopColor={colors[1] ?? colors[0]} />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill="url(#backgroundGradient)" />
+      </Svg>
+
       {topOverlayColor ? (
         <View
           pointerEvents="none"
@@ -60,11 +74,21 @@ const GradientBackground: React.FC<GradientBackgroundProps> = ({
           }}
         />
       ) : null}
-      <SafeAreaView style={{ flex: 1 }} edges={edges || ['top', 'bottom', 'left', 'right']}>
+
+      <SafeAreaView style={styles.content} edges={edges ?? ['top', 'bottom', 'left', 'right']}>
         {children}
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});
 
 export default GradientBackground;
